@@ -40,10 +40,10 @@
 
 ```bash
 # Clone the repository
-git clone 
+git clone https://github.com/ayumihidalgo/E-skolarian.git
 
 # Install PHP dependencies
-composer install
+composer install 
 
 # Install NPM dependencies
 npm install
