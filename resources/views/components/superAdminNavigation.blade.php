@@ -1,10 +1,8 @@
 @extends('base')
 
 @section('content')
-    <!-- Sidebar -->
     <div class="flex">
-        <!-- Sidebar -->
-        <!-- Main Layout -->
+        <!-- Super Admin Navigation Bar Layout-->
         <div class="flex-grow w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-start space-x-6">
             <!-- Navigation Bar -->
             <a href = "#"><img src="{{ asset('images/officialLogo.svg') }}" alt="Logo" class="h-15 w-20 ml--2 -mt 5"></a>

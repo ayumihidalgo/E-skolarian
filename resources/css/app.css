@@ -19,6 +19,9 @@
     font-style: normal;
 }
 
-body {
-    font-family: 'Marcellus-SC', sans-serif;
+@font-face {
+    font-family: 'Manrope';
+    src: url('font/Manrope-VariableFont_wght.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
 }
