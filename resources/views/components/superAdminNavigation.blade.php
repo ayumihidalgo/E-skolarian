@@ -1,13 +1,24 @@
 @extends('base')
 
 @section('content')
-    <div class="flex">
-        <!-- Super Admin Navigation Bar Layout-->
-        <div class="flex-grow w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-start space-x-6">
-            <!-- Navigation Bar -->
-            <a href = "#"><img src="{{ asset('images/officialLogo.svg') }}" alt="Logo" class="h-15 w-20 ml--2 -mt 5"></a>
-            <a href = "#"><p class = "font-[Marcellus_SC] text-xl mt-2 -ml-4">E-SKOLARIAN</p></a>
+    <!-- Top Navigation Header -->
+    <div class="w-full bg-[#4d0F0F] h-[90px] flex items-center justify-between px-6">
+        <!-- Left side: Logo and Text -->
+        <div class="flex items-center space-x-3">
+            <img src="{{ asset('images/superAdminIcon.svg') }}" alt="Logo" class="h-14 w-14">
+            <div class="text-white">
+                <h1 class="font-[Marcellus_SC] text-xl leading-none">E-SKOLARI<span class="text-yellow-400">★</span>N</h1>
+                <p class="text-xs tracking-wide font-[Marcellus_SC]">DOCUMENT MANAGEMENT</p>
+            </div>
+        </div>
+
+        <!-- Right side: Super Admin and Logout -->
+        <div class="flex items-center space-x-6 text-white font-[Marcellus_SC]">
+            <span>Super Admin</span>
+            <a href="#" class="flex items-center space-x-2 hover:text-yellow-400 transition duration-200">
+                <img src="{{ asset('images/logout.svg') }}" class="h-5 w-5" alt="Log Out Icon">
+                <span>Log Out</span>
+            </a>
         </div>
     </div>
 @endsection
-
