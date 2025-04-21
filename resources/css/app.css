@@ -11,17 +11,58 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+/* Define Color Palette */
+:root {
+    --primary-color: #A98018;
+    --secondary-color: #DAA520;
+    --login-bg-color: rgba(169, 128, 24, 0.6);
+
+    --login-color-left: #FDC10B;
+    --login-color-right: #6C5903;
+}
+
+/* Student Theme */
+[data-theme="student"] {
+    --primary-color: #A98018;
+    --secondary-color: #DAA520;
+    --login-bg-color: rgba(169, 128, 24, 0.6);
+
+    --login-color-left: #FDC10B;
+    --login-color-right: #6C5903;
+  }
+
+/* Admin Theme */
+[data-theme="admin"] {
+    --primary-color: #4D0F0F;
+    --secondary-color: #7A1212;
+    --login-bg-color: rgba(77, 15, 15, 0.6);
+
+    --login-color-left: #270103;
+    --login-color-right: #4E020C;
+}
+
+
+
 /* Define the font family */
 @font-face {
     font-family: 'Marcellus SC';
-    src: url('font/MarcellusSC-Regular.ttf') format('truetype');
+    src: url('../font/MarcellusSC-Regular.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
 
 @font-face {
     font-family: 'Manrope';
-    src: url('font/Manrope-VariableFont_wght.ttf') format('truetype');
-    font-weight: normal;
+    src: url('../font/Manrope-VariableFont_wght.ttf') format('truetype');
+    font-weight: 400 700;
     font-style: normal;
 }
+
+@font-face {
+    font-family: 'Lexend';
+    src: url('../font/Lexend-VariableFont_wght.ttf') format('truetype');
+    font-weight: 400 700;
+    font-style: normal;
+}
+
+

@@ -27,11 +27,15 @@
                         <span class="sidebar-text">{{ $label }}</span>
                     </a>
                 @endforeach
-                <a href="{{ route('logout') }}"
-                    class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200 mt-60">
-                    <img src="{{ asset('images/logout.svg') }}" class="h-6 w-6" alt="Logout Icon">
-                    <span class="sidebar-text font-[Marcellus_SC] text-lg">Logout</span>
-                </a>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200 mt-60">
+                        <img src="{{ asset('images/logout.svg') }}" class="h-6 w-6" alt="Logout Icon">
+                        <span class="sidebar-text font-[Marcellus_SC] text-lg">Logout</span>
+                    </button>
+                </form>
+
             </nav>
         </div>
 

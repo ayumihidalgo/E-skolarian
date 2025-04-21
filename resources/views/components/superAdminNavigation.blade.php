@@ -15,10 +15,15 @@
         <!-- Right side: Super Admin and Logout -->
         <div class="flex items-center space-x-6 text-white font-[Marcellus_SC]">
             <span>Super Admin</span>
-            <a href="#" class="flex items-center space-x-2 hover:text-yellow-400 transition duration-200">
-                <img src="{{ asset('images/logout.svg') }}" class="h-5 w-5" alt="Log Out Icon">
-                <span>Log Out</span>
-            </a>
+            <form method="POST" action="{{ route('logout') }}" class="mt-4">
+                @csrf
+                <button type="submit" class="flex items-center space-x-2 hover:text-yellow-400 transition duration-200">
+                    <img src="{{ asset('images/logout.svg') }}" class="h-5 w-5" alt="Logout Icon">
+                    <span>Logout</span>
+                </button>
+            </form>
         </div>
+
+    </nav>
     </div>
 @endsection

@@ -28,15 +28,14 @@
                 @endforeach
             </nav>
 
-            <!-- Logout Button -->
-            <div class="mt-40">
-                <a href="{{ route('logout') }}"
-                    class="flex items-center space-x-3 text-white hover:text-yellow-400 transition duration-200">
+
+            <form method="POST" action="{{ route('logout') }}" class="mt-40">
+                @csrf
+                <button type="submit" class="flex items-center space-x-3 text-white hover:text-yellow-400 transition duration-200">
                     <img src="{{ asset('images/logout.svg') }}" class="h-6 w-6" alt="Logout Icon">
                     <span class="sidebar-text font-[Marcellus_SC]">Logout</span>
-                </a>
-            </div>
-
+                </button>
+            </form>
         </div>
 
         <!-- Fixed Toggle Button -->
