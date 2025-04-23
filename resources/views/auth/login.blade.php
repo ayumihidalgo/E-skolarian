@@ -33,6 +33,11 @@
             // Set Color Theme based on Role Type
             document.documentElement.setAttribute('data-theme', role);
 
+             // Update Forgot Password Links with Role
+             document.querySelectorAll('.forgot-password-link').forEach(link => {
+                link.href = `/forgot-password?role=${role}`;  // Update the href with the new URL
+            });
+
             // Set role value
             const roleInput = document.getElementById('role');
             if (roleInput) {
@@ -200,7 +205,7 @@
                     <div class="pb-8">
                         <label class="w-full rounded-2xl px-3 py-2 md:p-4 outline bg-white flex focus-within:outline-3 focus-within:outline-[var(--secondary-color)]">
                             <input type="email" name="email" placeholder="Email Address" required
-                                class="flex-grow outline-none mr-3">
+                                class="w-0 flex-grow outline-none mr-3">
                             <button type="button">
                                 <img src="{{ asset('images/email.png') }}" alt="Show Password" class="w-5 md:w-6" />
                             </button>
@@ -210,7 +215,7 @@
                     <div>
                         <label class="w-full rounded-2xl px-3 py-2 md:p-4 bg-white flex outline focus-within:outline-3 focus-within:outline-[var(--secondary-color)]">
                             <input id="password" type="password" name="password" placeholder="Password" required
-                                class="flex-grow outline-none mr-3">
+                                class="w-0 flex-grow outline-none mr-3">
                             <button type="button" onclick="togglePassword(event)" class="cursor-pointer">
                                 <img id="showPass" src="{{ asset('images/show_pass.png') }}" alt="Show Password" class="w-5 md:w-6" />
                                 <img id="hidePass" src="{{ asset('images/hide_pass.png') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
@@ -223,7 +228,7 @@
                             <input type="checkbox" name="remember" class="cursor-pointer">
                             <span class="ml-2">Remember Me</span>
                         </label>
-                        <a href="" class="max-md:hidden text-[14px]">Forgot Password?</a>
+                        <a href="" class="forgot-password-link max-md:hidden text-[14px]">Forgot Password?</a>
                     </div>
 
                     <!-- Error Message -->
@@ -267,7 +272,7 @@
                         </button>
                     </div>
                     <div class="pb-7 flex justify-center">
-                        <a href="" class="md:hidden">Forgot Password?</a>
+                        <a href="#" class="forgot-password-link md:hidden">Forgot Password?</a>
                     </div>
                 </form>
             </div>
