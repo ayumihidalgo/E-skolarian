@@ -63,7 +63,7 @@ class LoginController extends Controller
 
         // Return back with errors if credentials are invalid
         return back()->withErrors([
-            'email' => 'Invalid email or password.',
+            'email' => '*Incorrect email or password.',
         ]);
     }
 
@@ -85,8 +85,7 @@ class LoginController extends Controller
     // Increment the login attempts counter
     protected function incrementLoginAttempts(Request $request)
     {
-        // Set the lockout time to 60 seconds (1 minute)
-        RateLimiter::hit($this->throttleKey($request), 60);
+        RateLimiter::hit($this->throttleKey($request), 80);
     }
 
     // Get the throttle key for the request
