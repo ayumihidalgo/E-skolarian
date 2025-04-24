@@ -2,10 +2,14 @@
     $role = request()->query('role', 'student'); // Default to 'student' if not provided
 @endphp
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ $role }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $role }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <link rel="icon" href="{{ asset('images/officialLogo.svg') }}" type="image/svg+xml">
+    
     <title>Forgot Password</title>
     @vite('resources/css/app.css')
 
