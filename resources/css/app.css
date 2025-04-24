@@ -19,6 +19,9 @@
 
     --login-color-left: #FDC10B;
     --login-color-right: #6C5903;
+
+    --forgot-color-text: white;
+    --forgot-color-bg: black;
 }
 
 /* Student Theme */
@@ -29,7 +32,10 @@
 
     --login-color-left: #FDC10B;
     --login-color-right: #6C5903;
-  }
+
+    --forgot-color-text: white;
+    --forgot-color-bg: black;
+}
 
 /* Admin Theme */
 [data-theme="admin"] {
@@ -39,6 +45,9 @@
 
     --login-color-left: #270103;
     --login-color-right: #4E020C;
+
+    --forgot-color-text: black;
+    --forgot-color-bg: white;
 }
 
 
