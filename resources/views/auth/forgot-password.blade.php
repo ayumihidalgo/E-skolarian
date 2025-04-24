@@ -73,11 +73,12 @@
                     </div>
 
                     @if (session('status'))
-                    <div class="status-message text-green-500 text-center mt-3 w-full max-w-[380px] mx-auto">
-                        {{ session('status') }}
-                    </div>
+                        <div class="status-message text-green-500 text-center mt-3 w-full max-w-[380px] mx-auto">
+                            {{ session('status') }}
+                        </div>
+                        <div id="emailSentFlag" data-sent="true" class="hidden"></div>
                     @endif
-                    
+
                     {{-- Error Messages --}}
                     @if ($errors->any())
                         <div class="status-message text-red-500 text-center text-sm mt-3 w-full max-w-[380px] mx-auto">
@@ -92,12 +93,6 @@
                         class="mt-6 w-full rounded-full text-white max-w-[380px] block mx-auto mb-5 bg-[var(--secondary-color)] py-2 md:hover:text-white md:hover:bg-[var(--primary-color)] transition-all duration-200">
                         Send Email
                     </button>
-                    @if (session('status'))
-                    <div class="text-green-500 text-center mt-3 w-full max-w-[380px] mx-auto">
-                        {{ session('status') }}
-                    </div>
-                    <div id="emailSentFlag" data-sent="true" class="hidden"></div>
-                    @endif
 
                 </form>
                 <div class="mt-4 text-center">
