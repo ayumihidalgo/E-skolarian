@@ -204,12 +204,15 @@
                     <!-- Email -->
                     <div class="pb-8">
                         <label class="w-full rounded-2xl px-3 py-2 md:p-4 outline bg-white flex focus-within:outline-3 focus-within:outline-[var(--secondary-color)]">
-                            <input type="email" name="email" placeholder="Email Address" required
-                                class="w-0 flex-grow outline-none mr-3">
+                            <input type="email" id="emailInput" name="email" placeholder="Email Address" required
+                                class="w-0 flex-grow outline-none mr-3" maxlength="100">
                             <button type="button">
                                 <img src="{{ asset('images/email.png') }}" alt="Show Password" class="w-5 md:w-6" />
                             </button>
                         </label>
+                        <div id="emailLengthWarning" class="text-red-500 text-sm mt-2 text-center hidden">
+                            <strong>Email must not exceed 50 characters.</strong>
+                        </div>
                     </div>
                     <!-- Password -->
                     <div>
@@ -278,5 +281,20 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('emailInput');
+            const warningText = document.getElementById('emailLengthWarning');
+
+            emailInput.addEventListener('input', function () {
+                if (emailInput.value.length > 50) {
+                    warningText.classList.remove('hidden');
+                } else {
+                    warningText.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+    </body>
 </body>
 </html>
