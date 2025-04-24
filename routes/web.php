@@ -15,16 +15,31 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/student/dashboard', function () {
-        return view('student.dashboard');
+        return response()
+            ->view('student.dashboard')
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     })->name('student.dashboard');
 
+
     Route::get('/admin/dashboard', function () {
-        return view('admin.dashboard');
+        return response()
+            ->view('admin.dashboard')
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     })->name('admin.dashboard');
 
+
     Route::get('/super-admin/dashboard', function () {
-        return view('super-admin.dashboard');
+        return response()
+            ->view('super-admin.dashboard')
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
     })->name('super-admin.dashboard');
+
 });
 
 Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
