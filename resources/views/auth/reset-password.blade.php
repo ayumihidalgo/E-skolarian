@@ -61,6 +61,22 @@
             }
         }
 
+        /* Fade Messages  */
+        document.addEventListener('DOMContentLoaded', function () {
+            const statusMessages = document.querySelectorAll('.status-message');
+
+            statusMessages.forEach(function (message) {
+                setTimeout(function () {
+                    message.classList.add('opacity-0');
+                    message.classList.add('transition-opacity');
+
+
+                    setTimeout(function () {
+                        message.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
     </script>
 </head>
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
@@ -74,14 +90,14 @@
 
                   {{-- Success Message --}}
                     @if (session('status'))
-                        <div class="mb-4 text-green-700 font-medium text-xs text-center w-full max-w-[380px] mx-auto">
+                        <div class="status-message mb-4 text-green-700 font-medium text-xs text-center w-full max-w-[380px] mx-auto">
                             {{ session('status') }}
                         </div>
                     @endif
 
                     {{-- Error Messages --}}
                     @if ($errors->any())
-                        <div class="text-red-500 text-xs mb-4 w-full max-w-[380px] mx-auto">
+                        <div class="status-message text-red-500 text-xs mb-4 w-full max-w-[380px] mx-auto">
                             <ul>
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>

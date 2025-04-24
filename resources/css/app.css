@@ -11,6 +11,16 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+@layer utilities {
+    .opacity-0 {
+        opacity: 0 !important;
+    }
+    .transition-opacity {
+        transition: opacity 1s ease;
+    }
+}
+
+
 /* Define Color Palette */
 :root {
     --primary-color: #A98018;

@@ -25,6 +25,23 @@
                 box.style.backgroundImage = '';
             }
         }
+
+        /* Fade Messages  */
+        document.addEventListener('DOMContentLoaded', function () {
+            const statusMessages = document.querySelectorAll('.status-message');
+
+            statusMessages.forEach(function (message) {
+                setTimeout(function () {
+                    message.classList.add('opacity-0');
+                    message.classList.add('transition-opacity');
+
+
+                    setTimeout(function () {
+                        message.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
     </script>
 
 </head>
@@ -54,9 +71,16 @@
                             <strong>Email must not exceed 50 characters.</strong>
                         </div>
                     </div>
+
+                    @if (session('status'))
+                    <div class="status-message text-green-500 text-center mt-3 w-full max-w-[380px] mx-auto">
+                        {{ session('status') }}
+                    </div>
+                    @endif
+                    
                     {{-- Error Messages --}}
                     @if ($errors->any())
-                        <div class="text-red-500 text-center text-sm mt-3 w-full max-w-[380px] mx-auto">
+                        <div class="status-message text-red-500 text-center text-sm mt-3 w-full max-w-[380px] mx-auto">
                             <ul>
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
