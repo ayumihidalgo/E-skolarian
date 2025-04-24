@@ -25,6 +25,23 @@
                 box.style.backgroundImage = '';
             }
         }
+
+        /* Fade Messages  */
+        document.addEventListener('DOMContentLoaded', function () {
+            const statusMessages = document.querySelectorAll('.status-message');
+
+            statusMessages.forEach(function (message) {
+                setTimeout(function () {
+                    message.classList.add('opacity-0');
+                    message.classList.add('transition-opacity');
+
+
+                    setTimeout(function () {
+                        message.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
     </script>
 
 </head>
@@ -44,21 +61,27 @@
 
                     <div class="mt-5 mb-2">
                         <label class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 outline bg-white flex focus-within:outline-3 focus-within:outline-[var(--secondary-color)]">
-                            <input type="email" name="email" placeholder="Email Address" required
+                            <input type="email" id="emailInput" name="email" placeholder="Email Address" required
                                 class="w-0 flex-grow  outline-none mr-3 text-[14px]">
                             <button type="button">
                                 <img src="{{ asset('images/email.png') }}" alt="Show Password" class="w-4 mr-1" />
                             </button>
                         </label>
+                        <div id="emailLengthWarning" class="text-red-500 text-sm mt-2 text-center hidden">
+                            <strong>Email must not exceed 50 characters.</strong>
+                        </div>
                     </div>
+
                     @if (session('status'))
-                    <div class="text-green-500 text-center mt-3 w-full max-w-[380px] mx-auto">
-                        {{ session('status') }}
-                    </div>
+                        <div class="status-message text-green-500 text-center mt-3 w-full max-w-[380px] mx-auto">
+                            {{ session('status') }}
+                        </div>
+                        <div id="emailSentFlag" data-sent="true" class="hidden"></div>
                     @endif
+
                     {{-- Error Messages --}}
                     @if ($errors->any())
-                        <div class="text-red-500 text-center text-sm mt-3 w-full max-w-[380px] mx-auto">
+                        <div class="status-message text-red-500 text-center text-sm mt-3 w-full max-w-[380px] mx-auto">
                             <ul>
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
@@ -66,10 +89,11 @@
                             </ul>
                         </div>
                     @endif
-                    <button type="submit"
+                    <button id="sendEmailBtn" type="submit"
                         class="mt-6 w-full rounded-full text-white max-w-[380px] block mx-auto mb-5 bg-[var(--secondary-color)] py-2 md:hover:text-white md:hover:bg-[var(--primary-color)] transition-all duration-200">
-                        Resend Email (60)
+                        Send Email
                     </button>
+
                 </form>
                 <div class="mt-4 text-center">
                     <a href="{{ route('login') }}" class="flex items-center justify-center md:text-[var(--secondary-color)] font-normal group transition-all duration-75">
@@ -82,5 +106,36 @@
             </div>
         </div>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.getElementById('emailInput');
+            const warningText = document.getElementById('emailLengthWarning');
+            const sendEmailBtn = document.getElementById('sendEmailBtn');
+            const sentFlag = document.getElementById('emailSentFlag');
+
+            emailInput.addEventListener('input', function () {
+                warningText.classList.toggle('hidden', emailInput.value.length <= 50);
+            });
+
+            if (sentFlag && sentFlag.dataset.sent === 'true') {
+                let countdown = 60;
+                sendEmailBtn.disabled = true;
+                sendEmailBtn.textContent = `Resend Email (${countdown})`;
+
+                const countdownInterval = setInterval(() => {
+                    countdown--;
+                    sendEmailBtn.textContent = `Resend Email (${countdown})`;
+
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        sendEmailBtn.disabled = false;
+                        sendEmailBtn.textContent = "Resend Email";
+                    }
+                }, 1000);
+            }
+        });
+    </script>
+
+
 </body>
 </html>

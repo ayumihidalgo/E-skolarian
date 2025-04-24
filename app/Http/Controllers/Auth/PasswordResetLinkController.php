@@ -89,6 +89,13 @@ class PasswordResetLinkController extends Controller
             return back()->withErrors(['email' => 'User not found.']);
         }
 
+        // Check if new password is same as the old password
+        if (Hash::check($request->password, $user->password)) {
+            return back()->withErrors([
+                'password' => 'The new password must be different from the current password.',
+            ]);
+        }
+
         $user->password = bcrypt($request->password);
         $user->save();
 
