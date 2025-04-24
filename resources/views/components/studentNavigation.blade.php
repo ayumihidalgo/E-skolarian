@@ -1,6 +1,3 @@
-@extends('base')
-
-@section('content')
     <div class="flex relative">
         <!-- Sidebar -->
         <div id="sidebar" class="w-1/4 h-screen bg-[#7A1212] text-white p-6 transition-all duration-300 flex flex-col">
@@ -89,4 +86,3 @@
             toggleIcon.classList.toggle('rotate-180');
         }
     </script>
-@endsection
