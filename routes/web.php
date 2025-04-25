@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-
+use App\Http\Controllers\EventController;
 
 Route::get('/', function () {
     return view('auth/login');
@@ -40,6 +40,17 @@ Route::middleware(['auth'])->group(function () {
             ->header('Expires', '0');
     })->name('super-admin.dashboard');
 
+    // ...existing code...
+
+    Route::middleware(['auth'])->group(function () {
+        Route::get('/calendar', [EventController::class, 'index'])->name('calendar.index');
+        Route::post('/events', [EventController::class, 'store'])->name('events.store');
+        Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
+        Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
+    });
+
+
+
 });
 
 Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
@@ -53,6 +64,6 @@ Route::get('password-reset-confirmation', function () {
 
 
 /* Temporary Route for Email Template */
-Route::get('/custom-reset-password', function() {
+Route::get('/custom-reset-password', function () {
     return view('emails.custom-reset-password');
 });
