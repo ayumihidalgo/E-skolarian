@@ -255,8 +255,8 @@
                         <label class="w-full rounded-2xl px-3 py-2 md:p-4 outline bg-white flex focus-within:outline-3 focus-within:outline-[var(--secondary-color)]">
                             <input type="email" id="emailInput" name="email" placeholder="Email Address" required
                                 class="w-0 flex-grow outline-none mr-3" maxlength="100">
-                            <button type="button">
-                                <img src="{{ asset('images/email.svg') }}" alt="Show Password" class="w-5 md:w-6" />
+                            <button type="button" class="focus:outline-none" tabindex="-1">
+                                <img src="{{ asset('images/email.svg') }}" alt="Email Icon" class="w-5 md:w-6" />
                             </button>
                         </label>
                         <div id="emailLengthWarning" class="text-red-500 text-sm mt-2 text-center hidden">
