@@ -1,3 +1,5 @@
+<!--SUPER ADMIN-->
+
 @extends('base')
     <!-- Top Navigation Header -->
     <div class="w-full bg-[#4d0F0F] h-[90px] flex items-center justify-between px-6">

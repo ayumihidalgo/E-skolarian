@@ -1,3 +1,5 @@
+<!--STUDENT NAVIGATION-->
+
 @extends('base')
 <div class="flex relative">
     <!-- Sidebar -->

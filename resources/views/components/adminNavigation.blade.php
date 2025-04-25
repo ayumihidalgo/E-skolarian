@@ -1,3 +1,5 @@
+<!--ADMIN NAVIGATION BAR-->
+
 @extends('base')
 <div class="flex relative">
         <!-- Sidebar -->
