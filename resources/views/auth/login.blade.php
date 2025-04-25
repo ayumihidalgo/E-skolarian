@@ -334,16 +334,48 @@
         document.addEventListener('DOMContentLoaded', function () {
             const emailInput = document.getElementById('emailInput');
             const warningText = document.getElementById('emailLengthWarning');
+            const form = emailInput.closest('form');
 
+            // Prevent space character entirely
+            emailInput.addEventListener('keydown', function (e) {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                }
+            });
+
+            // Prevent pasting emails with spaces
+            emailInput.addEventListener('paste', function (e) {
+                const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                if (/\s/.test(pastedText)) {
+                    e.preventDefault();
+                    alert('Spaces are not allowed in the email address.');
+                }
+            });
+
+            // Validate and strip input on every change
             emailInput.addEventListener('input', function () {
+                if (/\s/.test(emailInput.value)) {
+                    emailInput.value = emailInput.value.replace(/\s/g, '');
+                }
+
+                // Show length warning
                 if (emailInput.value.length > 50) {
                     warningText.classList.remove('hidden');
                 } else {
                     warningText.classList.add('hidden');
                 }
             });
+
+            // Final validation before form submission
+            form.addEventListener('submit', function (e) {
+                if (/\s/.test(emailInput.value)) {
+                    e.preventDefault();
+                    alert('Email address must not contain spaces.');
+                }
+            });
         });
     </script>
+
     </body>
 </body>
 </html>
