@@ -14,7 +14,8 @@
     <script>
         /* Set Role Type to be shown onload */
         window.onload = function () {
-            changeRole('student');
+            const chosenType = localStorage.getItem('activeLoginRole') || 'student';
+            changeRole(chosenType);
         };
 
         /* Temporary fix for translate */
@@ -23,11 +24,35 @@
         });
 
         function changeRole(role) {
+            saveInputs(role);
             setRole(role);
             visibilityRememberMe(role);
             changeRadiusPanel(role);
             slidePanel(role);
         }
+
+       let emailInputs = {
+            student: '',
+            admin: ''
+        };
+
+        function saveInputs(role) {
+            localStorage.setItem('activeLoginRole', role);
+
+            const emailInput = document.getElementById('emailInput');
+            const passwordInput = document.getElementById('password');
+
+            // Save the current role's email before switching
+            const otherRole = role === 'admin' ? 'student' : 'admin';
+            emailInputs[otherRole] = emailInput.value;
+
+            // Restore email for selected role
+            emailInput.value = emailInputs[role];
+
+            // Always clear password on switch
+            passwordInput.value = '';
+        }
+
 
         function setRole(role) {
             // Set Color Theme based on Role Type
@@ -174,6 +199,24 @@
             }
         }
 
+
+          /* Fade Messages  */
+        document.addEventListener('DOMContentLoaded', function () {
+            const statusMessages = document.querySelectorAll('.status-message');
+
+            statusMessages.forEach(function (message) {
+                setTimeout(function () {
+                    message.classList.add('opacity-0');
+                    message.classList.add('transition-opacity');
+
+
+                    setTimeout(function () {
+                        message.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
+
     </script>
 </head>
 <body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] transition-all duration-500 md:bg-none font-['Manrope'] font-bold">
@@ -236,7 +279,7 @@
 
                     <!-- Error Message -->
                     @if ($errors->any() && !$errors->has('lockout_time'))
-                    <div class="text-red-500 text-sm mt-2 text-center pb-1">
+                    <div class="status-message text-red-500 text-sm mt-2 text-center pb-1">
                         <strong>{{ $errors->first() }}</strong>
                     </div>
                     @endif
