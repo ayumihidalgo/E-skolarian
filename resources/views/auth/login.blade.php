@@ -151,10 +151,15 @@
         /* To carousel set of images */
         const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
-            "{{ asset('images/PUP_Bg2.jpg') }}"
+            "{{ asset('images/PUP_Bg2.jpg') }}",
+            "{{ asset('images/PUP_Bg3.jpg') }}",
+            "{{ asset('images/PUP_Bg4.jpg') }}",
+            "{{ asset('images/PUP_Bg5.jpg') }}",
+            "{{ asset('images/PUP_Bg6.jpg') }}"
         ];
 
-        let currentIndex = 0;
+        // Pick a random starting index
+        let currentIndex = Math.floor(Math.random() * images.length);
 
         window.addEventListener('load', startBackgroundImageCycle);
         window.addEventListener('resize', setBackgroundImage);
@@ -167,6 +172,7 @@
                 box.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url(${images[currentIndex]})`;
                 box.style.backgroundRepeat = 'no-repeat';
                 box.style.backgroundSize = 'cover';
+                box.style.backgroundPosition = 'bottom';
             } else {
                 box.style.backgroundImage = '';
             }
