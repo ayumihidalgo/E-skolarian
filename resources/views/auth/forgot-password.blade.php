@@ -9,7 +9,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
     <link rel="icon" href="{{ asset('images/officialLogo.svg') }}" type="image/svg+xml">
-    
+
     <title>Forgot Password</title>
     @vite('resources/css/app.css')
 
@@ -71,13 +71,13 @@
                                 <img src="{{ asset('images/email.png') }}" alt="Show Password" class="w-4 mr-1" />
                             </button>
                         </label>
-                        <div id="emailLengthWarning" class="text-red-500 text-sm mt-2 text-center hidden">
+                        <div id="emailLengthWarning" class="text-red-600 text-xs mt-2 text-center hidden">
                             <strong>Email must not exceed 50 characters.</strong>
                         </div>
                     </div>
 
                     @if (session('status'))
-                        <div class="status-message text-green-500 text-center mt-3 w-full max-w-[380px] mx-auto">
+                        <div class="status-message text-green-600 text-center text-xs mt-3 w-full max-w-[380px] mx-auto">
                             {{ session('status') }}
                         </div>
                         <div id="emailSentFlag" data-sent="true" class="hidden"></div>
@@ -85,7 +85,7 @@
 
                     {{-- Error Messages --}}
                     @if ($errors->any())
-                        <div class="status-message text-red-500 text-center text-sm mt-3 w-full max-w-[380px] mx-auto">
+                        <div class="status-message text-red-600 text-center text-xs mt-3 w-full max-w-[380px] mx-auto">
                             <ul>
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
@@ -94,7 +94,7 @@
                         </div>
                     @endif
                     <button id="sendEmailBtn" type="submit"
-                        class="mt-6 w-full rounded-full text-white max-w-[380px] block mx-auto mb-5 bg-[var(--secondary-color)] py-2 md:hover:text-white md:hover:bg-[var(--primary-color)] transition-all duration-200">
+                        class="mt-6 w-full rounded-full text-white max-w-[380px] block mx-auto mb-5 bg-[var(--secondary-color)] py-2 md:hover:text-white md:hover:bg-[var(--primary-color)] transition-all duration-200 disabled:opacity-50">
                         Send Email
                     </button>
 
