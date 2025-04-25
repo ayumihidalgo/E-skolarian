@@ -94,14 +94,14 @@
 
                   {{-- Success Message --}}
                     @if (session('status'))
-                        <div class="status-message mb-4 text-green-700 font-medium text-xs text-center w-full max-w-[380px] mx-auto">
+                        <div class="status-message mb-4 text-green-600 font-medium text-xs text-center w-full max-w-[380px] mx-auto">
                             {{ session('status') }}
                         </div>
                     @endif
 
                     {{-- Error Messages --}}
                     @if ($errors->any())
-                        <div class="status-message text-red-500 text-xs mb-4 w-full max-w-[380px] mx-auto">
+                        <div class="status-message text-red-600 text-xs mb-4 w-full max-w-[380px] mx-auto">
                             <ul>
                                 @foreach ($errors->all() as $error)
                                     <li>{{ $error }}</li>
@@ -124,7 +124,7 @@
                                 <img id="hidePass" src="{{ asset('images/hide_pass.png') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
                             </button>
                         </label>
-                        <p id="password-requirements" class="text-red-500 text-xs mt-2 w-full rounded-full max-w-[380px] mx-auto">
+                        <p id="password-requirements" class="text-red-600 text-xs mt-2 w-full rounded-full max-w-[380px] mx-auto">
                             Password must be at least 8 characters long and contain an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#).
                         </p>
                     </div>
