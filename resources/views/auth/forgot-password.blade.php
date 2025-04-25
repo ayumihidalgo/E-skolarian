@@ -10,6 +10,7 @@
 
     <link rel="icon" href="{{ asset('images/officialLogo.svg') }}" type="image/svg+xml">
 
+
     <title>Forgot Password</title>
     @vite('resources/css/app.css')
 
@@ -66,9 +67,9 @@
                     <div class="mt-5 mb-2">
                         <label class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 outline bg-white flex focus-within:outline-3 focus-within:outline-[var(--secondary-color)]">
                             <input type="email" id="emailInput" name="email" placeholder="Email Address" required
-                                class="w-0 flex-grow  outline-none mr-3 text-[14px]">
-                            <button type="button">
-                                <img src="{{ asset('images/email.svg') }}" alt="Show Password" class="w-4 mr-1" />
+                                class="w-0 flex-grow outline-none mr-3 text-[14px]">
+                            <button type="button" class="focus:outline-none" tabindex="-1">
+                                <img src="{{ asset('images/email.svg') }}" alt="Email Icon" class="w-4 mr-1" />
                             </button>
                         </label>
                         <div id="emailLengthWarning" class="text-red-600 text-xs mt-2 text-center hidden">
