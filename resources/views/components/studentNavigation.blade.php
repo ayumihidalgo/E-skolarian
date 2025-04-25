@@ -28,7 +28,7 @@
                 @endforeach
             </nav>
 
-
+            <!-- Logout Button -->
             <form method="POST" action="{{ route('logout') }}" class="mt-40">
                 @csrf
                 <button type="submit" class="flex items-center space-x-3 text-white hover:text-yellow-400 transition duration-200">
@@ -39,15 +39,14 @@
         </div>
 
         <!-- Fixed Toggle Button -->
-        <button onclick="toggleSidebar()" class="absolute top-11 left-[24%] z-10 transition-all duration-300"
-            id="toggleBtn">
+        <button onclick="toggleSidebar()" class="absolute top-11 left-[24%] z-10 transition-all duration-300" id="toggleBtn">
             <img src="{{ asset('images/toggleSidebar.svg') }}" alt="Toggle Sidebar"
-                class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
+                 class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
         </button>
 
-
-        <!-- Main Content -->
-        <div class="flex-grow">
+        <!-- Main Content Area -->
+        <div class="flex-grow flex flex-col h-screen overflow-hidden">
+            <!-- Top Nav -->
             <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
                 <a href="#" class="hover:text-yellow-400 transition duration-200">
                     <img src="{{ asset('images/mail.svg') }}" class="h-6 w-6" alt="Mail Icon">
@@ -59,6 +58,11 @@
                     <a href="#" class="font-semibold">Organization</a>
                 </div>
             </nav>
+
+            <!-- Page Content from Child Views -->
+            <div class="overflow-y-auto p-6 flex-grow bg-gray-100">
+                @yield('studentContent')
+            </div>
         </div>
     </div>
 

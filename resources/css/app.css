@@ -34,7 +34,7 @@
 /* Admin Theme */
 [data-theme="admin"] {
     --primary-color: #4D0F0F;
-    --secondary-color: #7A1212;
+    --secondary-color: #781212;
     --login-bg-color: rgba(77, 15, 15, 0.6);
 
     --login-color-left: #270103;
@@ -65,4 +65,7 @@
     font-style: normal;
 }
 
+body {
+    font-family: 'Manrope', sans-serif;
+}
 
