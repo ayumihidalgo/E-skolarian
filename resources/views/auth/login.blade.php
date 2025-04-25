@@ -151,10 +151,15 @@
         /* To carousel set of images */
         const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
-            "{{ asset('images/PUP_Bg2.jpg') }}"
+            "{{ asset('images/PUP_Bg2.jpg') }}",
+            "{{ asset('images/PUP_Bg3.jpg') }}",
+            "{{ asset('images/PUP_Bg4.jpg') }}",
+            "{{ asset('images/PUP_Bg5.jpg') }}",
+            "{{ asset('images/PUP_Bg6.jpg') }}"
         ];
 
-        let currentIndex = 0;
+        // Pick a random starting index
+        let currentIndex = Math.floor(Math.random() * images.length);
 
         window.addEventListener('load', startBackgroundImageCycle);
         window.addEventListener('resize', setBackgroundImage);
@@ -167,6 +172,7 @@
                 box.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url(${images[currentIndex]})`;
                 box.style.backgroundRepeat = 'no-repeat';
                 box.style.backgroundSize = 'cover';
+                box.style.backgroundPosition = 'bottom';
             } else {
                 box.style.backgroundImage = '';
             }
@@ -250,7 +256,7 @@
                             <input type="email" id="emailInput" name="email" placeholder="Email Address" required
                                 class="w-0 flex-grow outline-none mr-3" maxlength="100">
                             <button type="button">
-                                <img src="{{ asset('images/email.png') }}" alt="Show Password" class="w-5 md:w-6" />
+                                <img src="{{ asset('images/email.svg') }}" alt="Show Password" class="w-5 md:w-6" />
                             </button>
                         </label>
                         <div id="emailLengthWarning" class="text-red-500 text-sm mt-2 text-center hidden">
@@ -263,8 +269,8 @@
                             <input id="password" type="password" name="password" placeholder="Password" required
                                 class="w-0 flex-grow outline-none mr-3">
                             <button type="button" onclick="togglePassword(event)" class="cursor-pointer">
-                                <img id="showPass" src="{{ asset('images/show_pass.png') }}" alt="Show Password" class="w-5 md:w-6" />
-                                <img id="hidePass" src="{{ asset('images/hide_pass.png') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
+                                <img id="showPass" src="{{ asset('images/show_pass.svg') }}" alt="Show Password" class="w-5 md:w-6" />
+                                <img id="hidePass" src="{{ asset('images/hide_pass.svg') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
                             </button>
                         </label>
                     </div>
@@ -274,7 +280,7 @@
                             <input type="checkbox" name="remember" class="cursor-pointer">
                             <span class="ml-2">Remember Me</span>
                         </label>
-                        <a href="" class="forgot-password-link max-md:hidden text-[14px]">Forgot Password?</a>
+                        <a href="" class="forgot-password-link max-md:hidden text-[14px] hover:text-[var(--secondary-color)] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
                     </div>
 
                     <!-- Error Message -->
@@ -318,7 +324,7 @@
                         </button>
                     </div>
                     <div class="pb-7 flex justify-center">
-                        <a href="#" class="forgot-password-link md:hidden">Forgot Password?</a>
+                        <a href="#" class="forgot-password-link md:hidden font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
                     </div>
                 </form>
             </div>

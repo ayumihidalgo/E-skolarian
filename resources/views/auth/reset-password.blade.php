@@ -120,8 +120,8 @@
                             <input id="password" type="password" name="password" placeholder="Password" required
                             class="w-0 flex-grow outline-none mr-3">
                             <button type="button" onclick="togglePassword()" class="cursor-pointer">
-                                <img id="showPass" src="{{ asset('images/show_pass.png') }}" alt="Show Password" class="w-5 md:w-6" />
-                                <img id="hidePass" src="{{ asset('images/hide_pass.png') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
+                                <img id="showPass" src="{{ asset('images/show_pass.svg') }}" alt="Show Password" class="w-5 md:w-6" />
+                                <img id="hidePass" src="{{ asset('images/hide_pass.svg') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
                             </button>
                         </label>
                         <p id="password-requirements" class="text-red-600 text-xs mt-2 w-full rounded-full max-w-[380px] mx-auto">
@@ -134,8 +134,8 @@
                             <input id="password_confirmation" type="password" name="password_confirmation" placeholder="Confirm Password" required
                             class="w-0 flex-grow outline-none mr-3">
                             <button type="button" onclick="togglePasswordConfirm();" class="cursor-pointer">
-                                <img id="showPassConfirm" src="{{ asset('images/show_pass.png') }}" alt="Show Password" class="w-5 md:w-6" />
-                                <img id="hidePassConfirm" src="{{ asset('images/hide_pass.png') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
+                                <img id="showPassConfirm" src="{{ asset('images/show_pass.svg') }}" alt="Show Password" class="w-5 md:w-6" />
+                                <img id="hidePassConfirm" src="{{ asset('images/hide_pass.svg') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
                             </button>
                         </label>
                         <p id="match-message" class="w-full rounded-full max-w-[380px] mx-auto text-xs mt-2 text-red-500 hidden">Passwords do not match</p>
