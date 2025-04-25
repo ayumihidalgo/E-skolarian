@@ -256,7 +256,7 @@
                             <input type="email" id="emailInput" name="email" placeholder="Email Address" required
                                 class="w-0 flex-grow outline-none mr-3" maxlength="100">
                             <button type="button">
-                                <img src="{{ asset('images/email.png') }}" alt="Show Password" class="w-5 md:w-6" />
+                                <img src="{{ asset('images/email.svg') }}" alt="Show Password" class="w-5 md:w-6" />
                             </button>
                         </label>
                         <div id="emailLengthWarning" class="text-red-500 text-sm mt-2 text-center hidden">
@@ -269,8 +269,8 @@
                             <input id="password" type="password" name="password" placeholder="Password" required
                                 class="w-0 flex-grow outline-none mr-3">
                             <button type="button" onclick="togglePassword(event)" class="cursor-pointer">
-                                <img id="showPass" src="{{ asset('images/show_pass.png') }}" alt="Show Password" class="w-5 md:w-6" />
-                                <img id="hidePass" src="{{ asset('images/hide_pass.png') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
+                                <img id="showPass" src="{{ asset('images/show_pass.svg') }}" alt="Show Password" class="w-5 md:w-6" />
+                                <img id="hidePass" src="{{ asset('images/hide_pass.svg') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
                             </button>
                         </label>
                     </div>

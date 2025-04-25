@@ -68,7 +68,7 @@
                             <input type="email" id="emailInput" name="email" placeholder="Email Address" required
                                 class="w-0 flex-grow  outline-none mr-3 text-[14px]">
                             <button type="button">
-                                <img src="{{ asset('images/email.png') }}" alt="Show Password" class="w-4 mr-1" />
+                                <img src="{{ asset('images/email.svg') }}" alt="Show Password" class="w-4 mr-1" />
                             </button>
                         </label>
                         <div id="emailLengthWarning" class="text-red-600 text-xs mt-2 text-center hidden">
