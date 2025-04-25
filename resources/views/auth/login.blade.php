@@ -14,7 +14,8 @@
     <script>
         /* Set Role Type to be shown onload */
         window.onload = function () {
-            changeRole('student');
+            const chosenType = localStorage.getItem('activeLoginRole') || 'student';
+            changeRole(chosenType);
         };
 
         /* Temporary fix for translate */
@@ -23,11 +24,35 @@
         });
 
         function changeRole(role) {
+            saveInputs(role);
             setRole(role);
             visibilityRememberMe(role);
             changeRadiusPanel(role);
             slidePanel(role);
         }
+
+       let emailInputs = {
+            student: '',
+            admin: ''
+        };
+
+        function saveInputs(role) {
+            localStorage.setItem('activeLoginRole', role);
+
+            const emailInput = document.getElementById('emailInput');
+            const passwordInput = document.getElementById('password');
+
+            // Save the current role's email before switching
+            const otherRole = role === 'admin' ? 'student' : 'admin';
+            emailInputs[otherRole] = emailInput.value;
+
+            // Restore email for selected role
+            emailInput.value = emailInputs[role];
+
+            // Always clear password on switch
+            passwordInput.value = '';
+        }
+
 
         function setRole(role) {
             // Set Color Theme based on Role Type
