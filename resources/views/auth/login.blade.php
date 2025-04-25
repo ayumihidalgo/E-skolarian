@@ -259,7 +259,7 @@
                                 <img src="{{ asset('images/email.svg') }}" alt="Email Icon" class="w-5 md:w-6" />
                             </button>
                         </label>
-                        <div id="emailLengthWarning" class="text-red-500 text-sm mt-2 text-center hidden">
+                        <div id="emailLengthWarning" class="text-red-600 text-sm mt-2 text-center hidden">
                             <strong>Email must not exceed 50 characters.</strong>
                         </div>
                     </div>
@@ -285,12 +285,12 @@
 
                     <!-- Error Message -->
                     @if ($errors->any() && !$errors->has('lockout_time'))
-                    <div class="status-message text-red-500 text-sm mt-2 text-center pb-1">
+                    <div class="status-message text-red-600 text-sm mt-2 text-center pb-1">
                         <strong>{{ $errors->first() }}</strong>
                     </div>
                     @endif
                     @if ($errors->has('lockout_time'))
-                    <div class="text-red-500 text-sm mt-2 text-center pb-1">
+                    <div class="text-red-600 text-sm mt-2 text-center pb-1">
                         <strong id="lockout-message">Too many login attempts. Please try again in <span id="lockout-timer"></span> seconds.</strong>
                     </div>
                     <script>
