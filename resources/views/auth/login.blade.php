@@ -274,7 +274,7 @@
                             <input type="checkbox" name="remember" class="cursor-pointer">
                             <span class="ml-2">Remember Me</span>
                         </label>
-                        <a href="" class="forgot-password-link max-md:hidden text-[14px]">Forgot Password?</a>
+                        <a href="" class="forgot-password-link max-md:hidden text-[14px] hover:text-[var(--secondary-color)] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
                     </div>
 
                     <!-- Error Message -->
@@ -318,7 +318,7 @@
                         </button>
                     </div>
                     <div class="pb-7 flex justify-center">
-                        <a href="#" class="forgot-password-link md:hidden">Forgot Password?</a>
+                        <a href="#" class="forgot-password-link md:hidden font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
                     </div>
                 </form>
             </div>
