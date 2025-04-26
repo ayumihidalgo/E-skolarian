@@ -8,9 +8,5 @@
 <body>
     @include('components.studentNavigation') <!-- Include the navigation component -->
 
-    <div class="content">
-        <h1>Welcome to the Student Dashboard</h1>
-        <p>This is the dashboard for students.</p>
-    </div>
 </body>
 </html>
