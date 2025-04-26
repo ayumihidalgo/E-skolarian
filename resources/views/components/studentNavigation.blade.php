@@ -1,3 +1,5 @@
+<!--SCRUM 57 UPDATES-->
+
 <!--STUDENT NAVIGATION-->
 @extends('base')
 <div class="flex relative">
