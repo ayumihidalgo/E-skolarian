@@ -1,3 +1,5 @@
+<!--SCRUM 57 Updates-->
+
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -56,3 +58,11 @@ Route::get('password-reset-confirmation', function () {
 Route::get('/custom-reset-password', function() {
     return view('emails.custom-reset-password');
 });
+
+/*Navigation Pane from "Student Dashboard --> Tracker Page" */
+
+Route::get('/tracker', [TrackerController::class, 'index'])->name('tracker.view');
+
+Route::get('/tracker', function () {
+    return view('tracker');
+})->name('tracker.view');
