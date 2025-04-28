@@ -18,12 +18,19 @@
 
             <!-- Navigation Links -->
             <nav class="space-y-4 text-lg font-[Marcellus_SC] mt-6">
-                @foreach ([['Home', 'account.svg'], ['Review', 'archive.svg'], ['Archive', 'tracker.svg'], ['Calendar', 'calendar.svg'], ['Settings', 'settings.svg']] as [$label, $icon])
-                    <a href="#" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
-                        <img src="{{ asset("images/$icon") }}" class="h-6 w-6" alt="{{ $label }} Icon">
-                        <span class="sidebar-text">{{ $label }}</span>
-                    </a>
-                @endforeach
+    @foreach ([
+        ['Home', 'account.svg', '#'], 
+        ['Review', 'archive.svg', '#'], 
+        ['Archive', 'tracker.svg', '#'], 
+        ['Calendar', 'calendar.svg', '/calendar'], 
+        ['Settings', 'settings.svg', '#']
+    ] as [$label, $icon, $url])
+        <a href="{{ $url }}" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200 {{ request()->is(ltrim($url, '/')) ? 'text-yellow-400' : '' }}">
+            <img src="{{ asset("images/$icon") }}" class="h-6 w-6" alt="{{ $label }} Icon">
+            <span class="sidebar-text">{{ $label }}</span>
+        </a>
+    @endforeach
+
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
