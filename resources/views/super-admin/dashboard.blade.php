@@ -14,6 +14,3 @@
     </div>
 </body>
 </html>
-<!-- This is a simple HTML structure for the Super Admin Dashboard page. 
-     It includes a navigation component and a content area with a welcome message. 
-     The navigation component is included at the top of the page, and the content area contains a heading and a paragraph. -->
