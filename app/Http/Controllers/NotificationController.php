@@ -47,6 +47,16 @@ class NotificationController extends Controller
         return response()->json($notifications);
     }
 
+    // Mark Notification as Read
+    public function markAsRead($id)
+    {
+        $notification = Notification::findOrFail($id);
+        $notification->is_read = true;
+        $notification->save();
+
+        return response()->json(['message' => 'Notification marked as read']);
+    }
+
  
 
 }
