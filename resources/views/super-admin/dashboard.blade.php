@@ -2,20 +2,22 @@
 @extends('base')<!-- Extend the base component -->
 @section('content')<!-- Content section -->
 <!-- This is the main content area for the super admin dashboard -->
-<!-- Super admin word under the nav var -->
-<div class="min-h-screen bg-gray-100 p-8">
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
-    </div>
-<!-- Add User Button -->
-    <div class="mb-4 flex justify-between items-center">
-        <button class="bg-[#7A1212] hover:bg-red-800 text-white px-4 py-2 rounded-[16px] font-semibold font-[Lexend] inline-flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" class="mr-2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M10 5v10m5-5H5" stroke-width="2"/>
-            </svg>
-            ADD USER
-        </button>
-<!-- Activity Log Button -->
+<!-- Super admin word under the nav var --><div x-data="{ showAddUserModal: false }">
+    <div class="min-h-screen bg-white bg-opacity-30 p-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
+        </div>
+        
+        <!-- Modified Add User Button with Alpine.js click handler -->
+        <div class="mb-4 flex justify-between items-center">
+            <button @click="showAddUserModal = true" class="bg-[#7A1212] hover:bg-red-800 text-white px-4 py-2 rounded-[16px] font-semibold font-[Lexend] inline-flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" class="mr-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 5v10m5-5H5" stroke-width="2"/>
+                </svg>
+                ADD USER
+            </button>
+            
+            <!-- Activity Log Button -->
 
         <button class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white">
             ACTIVITY LOG
@@ -25,9 +27,9 @@
                     </g>
                 </svg>
         </button>
+        </div>
 
-    </div>
-<!-- Table Header and Container -->
+        <!-- Table Header and Container -->
     <div class="overflow-hidden rounded-[25px] shadow">
         <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
             <thead>
@@ -56,5 +58,30 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
         </svg>
     </div>
+    </div>
+
+    <!-- Modal for Add User Button -->
+    <div x-show="showAddUserModal" 
+    class="fixed inset-0 flex items-center justify-center z-50 absolute inset-0 bg-black/30 backdrop-blur-sm"
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0">
+    
+    <!-- Modal Content -->
+    <div class="bg-white rounded-[25px] shadow-xl w-full max-w-lg relative z-50"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="transform scale-95 opacity-0"
+        x-transition:enter-end="transform scale-100 opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="transform scale-100 opacity-100"
+        x-transition:leave-end="transform scale-95 opacity-0">
+
+        <!-- Include the Add User component -->
+        @include('super-admin.super-admin-component.AddUser')
+    </div>
 </div>
 @endsection
+

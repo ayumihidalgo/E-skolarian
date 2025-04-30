@@ -39,7 +39,7 @@ Route::middleware(['auth'])->group(function () {
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
     })->name('super-admin.dashboard');
-
+    Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
 });
 
 Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
