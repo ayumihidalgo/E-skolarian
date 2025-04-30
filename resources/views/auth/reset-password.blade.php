@@ -1,6 +1,5 @@
 @php
     $role = request()->query('role', 'student'); // Default to 'student' if not provided
-    // Normalize role:
 if ($role === 'super admin') {
     $role = 'admin'; // treat super admin same as admin
 }
