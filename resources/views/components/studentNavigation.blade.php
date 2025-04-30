@@ -52,9 +52,15 @@
             <a href="#" class="hover:text-yellow-400 transition duration-200">
                 <img src="{{ asset('images/mail.svg') }}" class="h-6 w-6" alt="Mail Icon">
             </a>
+            @if (auth()->check())
             <div>
-                <img src="#" alt="Profile" class="h-10 w-10 rounded-full border-2 border-white">
+                <img src="{{ asset(auth()->user()->profile_pic ?? 'images/profiles/default.png') }}"
+                    alt="Profile"
+                    class="h-10 w-10 rounded-full border-2 border-white object-cover">
             </div>
+            @endif
+
+
             <div>
                 <a href="#" class="font-semibold">Organization</a>
             </div>

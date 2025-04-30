@@ -1,5 +1,8 @@
 @php
     $role = request()->query('role', 'student'); // Default to 'student' if not provided
+if ($role === 'super admin') {
+    $role = 'admin'; // treat super admin same as admin
+}
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $role }}">
