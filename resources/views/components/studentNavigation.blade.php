@@ -13,8 +13,6 @@
             <a href="#" class="font-semibold">
                 {{ Auth::user()->username }}
             </a>
-        </div>
-    </nav>
 </div>
 
 
