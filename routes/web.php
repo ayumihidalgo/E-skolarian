@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\SuperAdminController; 
 
 
 Route::get('/', function () {
@@ -31,14 +32,7 @@ Route::middleware(['auth'])->group(function () {
             ->header('Expires', '0');
     })->name('admin.dashboard');
 
-
-    Route::get('/super-admin/dashboard', function () {
-        return response()
-            ->view('super-admin.dashboard')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
-    })->name('super-admin.dashboard');
+    Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
 });
 

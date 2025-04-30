@@ -2,13 +2,15 @@
 @extends('base')<!-- Extend the base component -->
 @section('content')<!-- Content section -->
 <!-- This is the main content area for the super admin dashboard -->
-<!-- Super admin word under the nav var --><div x-data="{ showAddUserModal: false }">
-    <div class="min-h-screen bg-white bg-opacity-30 p-8">
+
+<!-- Super admin word under the nav var -->
+ <div x-data="{ showAddUserModal: false }">
+    <div class="max-h-9/10 bg-white bg-opacity-30 p-13">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
         </div>
         
-        <!-- Modified Add User Button with Alpine.js click handler -->
+        <!-- Add User Button -->
         <div class="mb-4 flex justify-between items-center">
             <button @click="showAddUserModal = true" class="bg-[#7A1212] hover:bg-red-800 text-white px-4 py-2 rounded-[16px] font-semibold font-[Lexend] inline-flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" class="mr-2">
@@ -17,8 +19,7 @@
                 ADD USER
             </button>
             
-            <!-- Activity Log Button -->
-
+        <!-- Activity Log Button -->
         <button class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white">
             ACTIVITY LOG
                 <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="ml-2 transition-colors duration-200 group-hover:fill-current">
@@ -30,58 +31,146 @@
         </div>
 
         <!-- Table Header and Container -->
-    <div class="overflow-hidden rounded-[25px] shadow">
-        <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
-            <thead>
-            <tr>
-                <th class="px-6 py-3 text-left pl-40 text-white font-['Manrope'] text-[17px] font-bold">Username</th>
-                <th class="px-6 py-3 text-center text-white font-['Manrope'] text-[17px] font-bold">Role</th>
-                <th class="px-6 py-3 text-right pr-40 text-white font-['Manrope'] text-[17px] font-bold">Creation Date</th>
-            </tr>
-            </thead>
-        </table>
-        <div class="bg-[#D9D9D9] flex-grow flex items-center justify-center text-gray-600 rounded-b-[25px] px-6" style="height: 100%;">
-            <span class="font-['Manrope'] text-[17px] text-[#625B5BB2]">No added user.</span>
+        <div class="overflow-hidden rounded-[25px] shadow bg-[#D9D9D9]"  style="width: 100%; height: 408px; flex-shrink:0;">
+            <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
+                        <thead>
+                    <tr>
+                        <th class="px-6 py-3 text-left pl-40 font-['Manrope'] text-[17px] font-bold">
+                            <div class="flex items-center">
+                                <span>Username</span>
+                                <div class="flex flex-col ml-2">
+                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <path d="M6 0L11.1962 9H0.803848L6 0Z" fill="white"/>
+                                        </svg>
+                                    </button>
+                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <path d="M6 12L0.803848 3L11.1962 3L6 12Z" fill="white"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
+                            <div class="flex items-center justify-center">
+                                <span>Role</span>
+                                <div class="flex flex-col ml-2">
+                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <path d="M6 0L11.1962 9H0.803848L6 0Z" fill="white"/>
+                                        </svg>
+                                    </button>
+                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <path d="M6 12L0.803848 3L11.1962 3L6 12Z" fill="white"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </th>
+                        <th class="px-6 py-3 text-right pr-40 font-['Manrope'] text-[17px] font-bold">
+                            <div class="flex items-center justify-end">
+                                <span>Creation Date</span>
+                                <div class="flex flex-col ml-2">
+                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <path d="M6 0L11.1962 9H0.803848L6 0Z" fill="white"/>
+                                        </svg>
+                                    </button>
+                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                            <path d="M6 12L0.803848 3L11.1962 3L6 12Z" fill="white"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </th>
+                    </tr>
+                </thead>
+                <!-- For fetching table contents from database -->
+                <tbody class="divide-y divide-[#7A1212]/70">
+                    @forelse ($users as $user)
+                    <tr class="border-y-[0.1px] border-[#7A1212] bg-[#d9c698] hover:bg-[#DAA520] transition duration-300">
+                    <td class="px-6 py-4 text-left pl-40 text-[Lexend] text-[17px] text-black text-semibold">
+                                {{ $user->username }}
+                            </td>
+                            <td class="px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
+                                {{ $user->role }}
+                            </td>
+                            <td class="px-6 py-4 text-right pr-40 text-[Lexend] text-[17px] text-black text-semibold">
+                                {{ $user->created_at->format('M-d-Y') }}
+                            </td>
+                    </tr>
+                    @empty
+                    <tr class="h-[68px] border-t-[0.3px] border-[#7A1212] bg-[#DAA52080]">
+                        <td colspan="3" class="px-6 py-4 text-center font-['Manrope'] text-[17px] text-[#625B5BB2]">No users found</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+            <!-- This shows when there are no users to be displayed -->
+            @if($users->isEmpty())
+                <div class="bg-[#D9D9D9] h-[480px] flex-grow flex items-center justify-center text-gray-600 rounded-b-[25px] px-6" style="height: 100%;">
+                    <span class="font-['Manrope'] text-[17px] text-[#625B5BB2]">No added user.</span>
+                </div>
+            @endif
         </div>
     </div>
-<!-- Previous and Next Button -->
-    <div class="flex justify-between items-center mt-4 text-sm text-gray-600">
-        <button class="flex items-center bg-[#7A121280] px-4 py-2 rounded-[8px] hover:bg-red-800 text-white">
+
+    <!-- Pagination Buttons -->
+    <div class="flex justify-between items-center px-15" style="width: 100%;">
+        <button 
+            class="flex items-center bg-[#7A121280] px-4 py-2 rounded-[8px] hover:bg-red-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            {{ $users->onFirstPage() ? 'disabled' : '' }}
+            onclick="window.location.href='{{ $users->previousPageUrl() }}'"
+        >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75 3 12m0 0 3.75-3.75M3 12h18" />
             </svg>
             Previous
         </button>
-        <button class="flex items-center bg-[#7A121280] px-4 py-2 rounded-[8px] hover:bg-red-800 text-white">
+        <!-- Pagination Indicator -->
+        <div class="flex items-center space-x-2 font-[Lexend] text-black">
+            <span>Page</span>
+            <span class="border-b-4 rounded-[3px] border-[#7A1212] px-2">{{ $users->currentPage() }}</span>
+            <span>of</span>
+            <span class="border-b-4 rounded-[3px] border-[#7A1212] px-2">{{ $users->lastPage() }}</span>
+        </div>
+        <button 
+            class="flex items-center bg-[#7A121280] px-4 py-2 rounded-[8px] hover:bg-red-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            {{ !$users->hasMorePages() ? 'disabled' : '' }}
+            onclick="window.location.href='{{ $users->nextPageUrl() }}'"
+        >
             Next
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 ml-2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
-        </svg>
-    </div>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 ml-2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
+            </svg>
+        </button>
     </div>
 
-    <!-- Modal for Add User Button -->
-    <div x-show="showAddUserModal" 
-    class="fixed inset-0 flex items-center justify-center z-50 absolute inset-0 bg-black/30 backdrop-blur-sm"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0">
-    
-    <!-- Modal Content -->
-    <div class="bg-white rounded-[25px] shadow-xl w-full max-w-lg relative z-50"
+        <!-- Modal for Add User Button -->
+        <div x-show="showAddUserModal" 
+        class="fixed inset-0 flex items-center justify-center z-50 absolute inset-0 bg-black/30 backdrop-blur-sm"
         x-transition:enter="transition ease-out duration-300"
-        x-transition:enter-start="transform scale-95 opacity-0"
-        x-transition:enter-end="transform scale-100 opacity-100"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
         x-transition:leave="transition ease-in duration-200"
-        x-transition:leave-start="transform scale-100 opacity-100"
-        x-transition:leave-end="transform scale-95 opacity-0">
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+        
+        <!-- Modal Content -->
+        <div class="bg-white rounded-[25px] shadow-xl w-full max-w-lg relative z-50"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="transform scale-95 opacity-0"
+            x-transition:enter-end="transform scale-100 opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="transform scale-100 opacity-100"
+            x-transition:leave-end="transform scale-95 opacity-0">
 
-        <!-- Include the Add User component -->
-        @include('super-admin.super-admin-component.AddUser')
+            <!-- Include the Add User component -->
+            @include('super-admin.super-admin-component.AddUser')
+        </div>
     </div>
-</div>
 @endsection
 
