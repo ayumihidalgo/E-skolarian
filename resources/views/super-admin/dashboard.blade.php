@@ -4,7 +4,13 @@
 <!-- This is the main content area for the super admin dashboard -->
 
 <!-- Super admin word under the nav var -->
- <div x-data="{ showAddUserModal: false }">
+<div 
+    x-data="{ 
+        showAddUserModal: false,
+        showSuccessModal: {{ session()->has('success') ? 'true' : 'false' }}
+    }"
+>
+        
     <div class="max-h-9/10 bg-white bg-opacity-30 p-13">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
@@ -39,16 +45,18 @@
                             <div class="flex items-center">
                                 <span>Username</span>
                                 <div class="flex flex-col ml-2">
-                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5">
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'username', 'direction' => 'asc']) }}" 
+                                class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'username' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                             <path d="M6 0L11.1962 9H0.803848L6 0Z" fill="white"/>
                                         </svg>
-                                    </button>
-                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1">
+                                </a>
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'username', 'direction' => 'desc']) }}" 
+                                class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1 {{ ($sortField === 'username' && $sortDirection === 'desc') ? 'text-yellow-300' : '' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                             <path d="M6 12L0.803848 3L11.1962 3L6 12Z" fill="white"/>
                                         </svg>
-                                    </button>
+                                </a>
                                 </div>
                             </div>
                         </th>
@@ -56,16 +64,18 @@
                             <div class="flex items-center justify-center">
                                 <span>Role</span>
                                 <div class="flex flex-col ml-2">
-                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5">
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'role', 'direction' => 'asc']) }}" 
+                                    class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'role' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                             <path d="M6 0L11.1962 9H0.803848L6 0Z" fill="white"/>
                                         </svg>
-                                    </button>
-                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1">
+                                    </a>
+                                    <a href="{{ request()->fullUrlWithQuery(['sort' => 'role', 'direction' => 'desc']) }}" 
+                                    class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1 {{ ($sortField === 'role' && $sortDirection === 'desc') ? 'text-yellow-300' : '' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                             <path d="M6 12L0.803848 3L11.1962 3L6 12Z" fill="white"/>
                                         </svg>
-                                    </button>
+                                    </a>
                                 </div>
                             </div>
                         </th>
@@ -73,16 +83,18 @@
                             <div class="flex items-center justify-end">
                                 <span>Creation Date</span>
                                 <div class="flex flex-col ml-2">
-                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5">
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => 'asc']) }}" 
+                                    class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'created_at' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                             <path d="M6 0L11.1962 9H0.803848L6 0Z" fill="white"/>
                                         </svg>
-                                    </button>
-                                    <button class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1">
+                                </a>
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => 'desc']) }}" 
+                                class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1 {{ ($sortField === 'created_at' && $sortDirection === 'desc') ? 'text-yellow-300' : '' }}">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                             <path d="M6 12L0.803848 3L11.1962 3L6 12Z" fill="white"/>
                                         </svg>
-                                    </button>
+                                </a>
                                 </div>
                             </div>
                         </th>
@@ -172,5 +184,37 @@
             @include('super-admin.super-admin-component.AddUser')
         </div>
     </div>
+
+    <!-- Success Modal -->
+    <!-- <div x-show="showSuccessModal" 
+    class="fixed inset-0 flex items-center justify-center z-50"
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0">
+     -->
+    <!-- Modal Backdrop -->
+    <!-- <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div> -->
+    
+    <!-- Modal Content -->
+    <!-- <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-50 p-6"> -->
+        <!-- Success Message -->
+        <!-- <div class="text-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 text-[Inter] mb-2">User Successfully Added!</h3>
+            <p class="text-sm text-gray-500">{{ session('success') }}</p>
+        </div> -->
+        
+        <!-- Okay Button -->
+        <!-- <div class="flex justify-center">
+            <button type="button"
+                @click="showSuccessModal = ; setTimeout(() => window.location.reload(), 300)" 
+                class="bg-[#7A1212] hover:bg-red-800 text-white px-8 py-2 rounded-[16px] font-semibold font-[Lexend] transition duration-200">
+                Okay
+            </button>
+        </div>
+    </div>
+</div> -->
 @endsection
 
