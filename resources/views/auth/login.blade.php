@@ -163,8 +163,8 @@
         }
 
 
-        /* To carousel set of images */
-        const images = [
+       /* To carousel set of images */
+       const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
             "{{ asset('images/PUP_Bg2.jpg') }}",
             "{{ asset('images/PUP_Bg3.jpg') }}",
@@ -173,33 +173,52 @@
             "{{ asset('images/PUP_Bg6.jpg') }}"
         ];
 
-        // Pick a random starting index
+        const preloadImages = images.map(src => {
+            const img = new Image();
+            img.src = src;
+            return img;
+        });
+
         let currentIndex = Math.floor(Math.random() * images.length);
+        let showingA = true;
 
-        window.addEventListener('load', startBackgroundImageCycle);
-        window.addEventListener('resize', setBackgroundImage);
+        function setLayerBackground(element, url) {
+            element.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url(${url})`;
+            element.style.backgroundRepeat = 'no-repeat';
+            element.style.backgroundSize = 'cover';
+            element.style.backgroundPosition = 'bottom';
+        }
 
-        function setBackgroundImage() {
-            const box = document.getElementById('box');
-            if (!box) return;
+        function transitionBackground() {
+            const bgA = document.getElementById('bgA');
+            const bgB = document.getElementById('bgB');
+
+            const nextIndex = (currentIndex + 1) % images.length;
+            const nextImage = images[nextIndex];
 
             if (window.innerWidth >= 768) {
-                box.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url(${images[currentIndex]})`;
-                box.style.backgroundRepeat = 'no-repeat';
-                box.style.backgroundSize = 'cover';
-                box.style.backgroundPosition = 'bottom';
-            } else {
-                box.style.backgroundImage = '';
+                if (showingA) {
+                    setLayerBackground(bgB, nextImage);
+                    bgB.classList.remove('opacity-0');
+                    bgB.classList.add('opacity-100');
+                    bgA.classList.remove('opacity-100');
+                    bgA.classList.add('opacity-0');
+                } else {
+                    setLayerBackground(bgA, nextImage);
+                    bgA.classList.remove('opacity-0');
+                    bgA.classList.add('opacity-100');
+                    bgB.classList.remove('opacity-100');
+                    bgB.classList.add('opacity-0');
+                }
+                showingA = !showingA;
+                currentIndex = nextIndex;
             }
         }
 
-        function startBackgroundImageCycle() {
-            setBackgroundImage();
-            setInterval(() => {
-                currentIndex = (currentIndex + 1) % images.length;
-                setBackgroundImage();
-            }, 10000);
-        }
+        window.addEventListener('load', () => {
+            setLayerBackground(document.getElementById('bgA'), images[currentIndex]);
+            setInterval(transitionBackground, 10000); // Change image every 10s
+        });
 
 
         /* Toggle Show/Hide Password */
@@ -240,9 +259,11 @@
 
     </script>
 </head>
-<body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] transition-all duration-500 md:bg-none font-['Manrope'] font-bold md:relative">
-    <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md ">
-        <div id="formContainer" class="flex flex-col items-center justify-center md:w-[50%] md:max-w-[600px] md:absolute md:left-0 md:top-0 md:bottom-0 px-6 bg-[#D9D9D9]/70 p-4 rounded-3xl md:rounded-tl-none md:rounded-bl-none md:rounded-tr-[100px] md:rounded-br-[100px] md:backdrop-blur-xs md:bg-white/70 md:transition-all md:duration-1000">
+<body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] transition-all duration-500 md:bg-[var(--login-bg-color)] font-['Manrope'] font-bold">
+    <div id="bgA" class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100"></div>
+    <div id="bgB" class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-0"></div>
+    <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md  md:absolute md:right-0 md:top-0 md:bottom-0">
+        <div id="formContainer" class="flex flex-col items-center justify-center h-full px-6 bg-[#D9D9D9]/70 p-4 rounded-3xl md:w-[50%] md:max-w-[600px] md:rounded-tl-none md:rounded-bl-none md:rounded-tr-[100px] md:rounded-br-[100px] md:backdrop-blur-xs md:bg-white/70 md:transition-all md:duration-1000">
             <div class="h-35 flex items-center">
                 <img class="mx-auto h-19 md:h-22" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
             </div>
