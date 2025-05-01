@@ -273,6 +273,9 @@
                                 <img id="hidePass" src="{{ asset('images/hide_pass.svg') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
                             </button>
                         </label>
+                        <div id="passwordLengthWarning" class="text-red-600 text-sm mt-2 text-center hidden">
+                            <strong>Password must not exceed 50 characters.</strong>
+                        </div>
                     </div>
                     <!-- Remember Me (Visible only for students) -->
                     <div class="flex justify-between items-center font-['Manrope'] font-normal">
@@ -318,7 +321,7 @@
 
                     <!-- Submit -->
                     <div class="pt-4 flex justify-center">
-                        <button type="submit"
+                        <button type="submit" id="signInButton"
                             class="w-full rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-2 md:py-4  hover:bg-[var(--primary-color)] transition font-semibold">
                             Sign In
                         </button>
@@ -333,17 +336,26 @@
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const emailInput = document.getElementById('emailInput');
-            const warningText = document.getElementById('emailLengthWarning');
+            const passwordInput = document.getElementById('password');
+            const emailWarning = document.getElementById('emailLengthWarning');
+            const passwordWarning = document.getElementById('passwordLengthWarning');
+            const signInButton = document.getElementById('signInButton');
             const form = emailInput.closest('form');
 
-            // Prevent space character entirely
+            function validateInputs() {
+                const isEmailValid = emailInput.value.length <= 50;
+                const isPasswordValid = passwordInput.value.length <= 50;
+                emailWarning.classList.toggle('hidden', isEmailValid);
+                passwordWarning.classList.toggle('hidden', isPasswordValid);
+                signInButton.disabled = !(isEmailValid && isPasswordValid);
+                signInButton.classList.toggle('opacity-50', signInButton.disabled);
+                signInButton.classList.toggle('cursor-not-allowed', signInButton.disabled);
+            }
+
             emailInput.addEventListener('keydown', function (e) {
-                if (e.key === ' ') {
-                    e.preventDefault();
-                }
+                if (e.key === ' ') e.preventDefault();
             });
 
-            // Prevent pasting emails with spaces
             emailInput.addEventListener('paste', function (e) {
                 const pastedText = (e.clipboardData || window.clipboardData).getData('text');
                 if (/\s/.test(pastedText)) {
@@ -352,29 +364,29 @@
                 }
             });
 
-            // Validate and strip input on every change
             emailInput.addEventListener('input', function () {
                 if (/\s/.test(emailInput.value)) {
                     emailInput.value = emailInput.value.replace(/\s/g, '');
                 }
-
-                // Show length warning
-                if (emailInput.value.length > 50) {
-                    warningText.classList.remove('hidden');
-                } else {
-                    warningText.classList.add('hidden');
-                }
+                validateInputs();
             });
 
-            // Final validation before form submission
+            passwordInput.addEventListener('input', function () {
+                validateInputs();
+            });
+
             form.addEventListener('submit', function (e) {
-                if (/\s/.test(emailInput.value)) {
+                if (emailInput.value.length > 50 || passwordInput.value.length > 50) {
                     e.preventDefault();
-                    alert('Email address must not contain spaces.');
+                    alert('Email or password exceeds the allowed length.');
                 }
             });
+
+            // Initial validation on page load
+            validateInputs();
         });
-    </script>
+        </script>
+
 
     </body>
 </body>
