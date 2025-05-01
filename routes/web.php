@@ -12,6 +12,9 @@ Route::get('/', function () {
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::get('/notification', function () {
+    return view('components.general-components.notification');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/student/dashboard', function () {
@@ -42,6 +45,10 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
+Route::get('/notifications', function () {
+    return view('notifications');
+})->name('notifications');
+
 Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
 Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
 Route::get('reset-password/{token}', [PasswordResetLinkController::class, 'edit'])->name('password.reset');
@@ -56,3 +63,4 @@ Route::get('password-reset-confirmation', function () {
 Route::get('/custom-reset-password', function() {
     return view('emails.custom-reset-password');
 });
+

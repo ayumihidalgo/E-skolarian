@@ -49,9 +49,10 @@
     <!-- Main Content -->
     <div class="flex-grow">
         <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
-            <a href="#" class="hover:text-yellow-400 transition duration-200">
+            {{-- <a href="#" class="hover:text-yellow-400 transition duration-200">
                 <img src="{{ asset('images/mail.svg') }}" class="h-6 w-6" alt="Mail Icon">
-            </a>
+            </a> --}}
+            <x-general-components.notification />
             <div>
                 <img src="#" alt="Profile" class="h-10 w-10 rounded-full border-2 border-white">
             </div>
