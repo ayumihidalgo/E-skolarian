@@ -43,10 +43,13 @@
         };
 
         function saveInputs(role) {
-            localStorage.setItem('activeLoginRole', role);
-
             const emailInput = document.getElementById('emailInput');
             const passwordInput = document.getElementById('password');
+
+            // Check if the emailInputs object exists and initialize if not
+            if (!emailInputs[role]) {
+                emailInputs[role] = '';
+            }
 
             // Save the current role's email before switching
             const otherRole = role === 'admin' ? 'student' : 'admin';
@@ -57,6 +60,8 @@
 
             // Always clear password on switch
             passwordInput.value = '';
+
+            localStorage.setItem('activeLoginRole', role);
         }
 
 
@@ -147,10 +152,12 @@
             !isSlide ? panel.classList.remove('md:transition-all', 'md:duration-1000') : panel.classList.add('md:transition-all', 'md:duration-1000');
 
             const panelWidth = panel.offsetWidth;
+            const windowWidth = window.innerWidth;
 
-            if (role === 'admin' && window.innerWidth >= 768) {
-                panel.style.transform = `translateX(${window.innerWidth - panelWidth}px)`;
-            } else if (role === 'student' && window.innerWidth >= 768) {
+            // Apply the transform for animation
+            if (role === 'admin' && windowWidth >= 768) {
+                panel.style.transform = `translateX(${windowWidth - panelWidth}px)`;
+            } else if (role === 'student' && windowWidth >= 768) {
                 panel.style.transform = `translateX(0)`;
             }
         }
@@ -233,9 +240,9 @@
 
     </script>
 </head>
-<body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] transition-all duration-500 md:bg-none font-['Manrope'] font-bold">
-    <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md  md:absolute md:right-0 md:top-0 md:bottom-0">
-        <div id="formContainer" class="flex flex-col items-center justify-center h-full px-6 bg-[#D9D9D9]/70 p-4 rounded-3xl md:w-[50%] md:max-w-[600px] md:rounded-tl-none md:rounded-bl-none md:rounded-tr-[100px] md:rounded-br-[100px] md:backdrop-blur-xs md:bg-white/70 md:transition-all md:duration-1000">
+<body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] transition-all duration-500 md:bg-none font-['Manrope'] font-bold md:relative">
+    <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md ">
+        <div id="formContainer" class="flex flex-col items-center justify-center md:w-[50%] md:max-w-[600px] md:absolute md:left-0 md:top-0 md:bottom-0 px-6 bg-[#D9D9D9]/70 p-4 rounded-3xl md:rounded-tl-none md:rounded-bl-none md:rounded-tr-[100px] md:rounded-br-[100px] md:backdrop-blur-xs md:bg-white/70 md:transition-all md:duration-1000">
             <div class="h-35 flex items-center">
                 <img class="mx-auto h-19 md:h-22" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
             </div>
@@ -243,7 +250,7 @@
             <div id="switchButton">
                 <div class="p-1 max-w-[280px] mx-auto bg-[#D9D9D9] rounded-3xl flex flex-wrap justify-center gap-1 mb-6 font-['Lexend'] font-bold">
                     <button type="button" id="studentBtn" onclick="changeRole('student');"
-                        class="group  min-w-[120px] flex items-center px-5 py-3 border border-gray-300 rounded-4xl hover:bg-[var(--secondary-color)] hover:text-white transition">
+                        class="group min-w-[120px] flex items-center px-5 py-3 border border-gray-300 rounded-4xl hover:bg-[var(--secondary-color)] hover:text-white transition">
                         <div id="studentIcon" class="pr-[10px] group-hover:invert"><img class="h-[15px]" src="{{ asset('images/student.png') }}" alt="Student Icon"></div>
                         <p class="uppercase font-bold text-[14px] font-['Lexend', 'Georgia']">Student</p>
                     </button>
@@ -259,21 +266,21 @@
                     @csrf
                     <input type="hidden" name="role" id="role" value="student">
                     <!-- Email -->
-                    <div class="pb-8">
-                        <label class="w-full rounded-2xl px-3 py-2 md:p-4 outline bg-white flex focus-within:outline-3 focus-within:outline-[var(--secondary-color)]">
+                    <div class="pb-6">
+                        <label id="emailLabel" class="w-full rounded-2xl px-3 py-2 md:p-4 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
                             <input type="email" id="emailInput" name="email" placeholder="Email Address" required
                                 class="w-0 flex-grow outline-none mr-3" maxlength="100">
                             <button type="button" class="focus:outline-none" tabindex="-1">
                                 <img src="{{ asset('images/email.svg') }}" alt="Email Icon" class="w-5 md:w-6" />
                             </button>
                         </label>
-                        <div id="emailLengthWarning" class="text-red-600 text-sm mt-2 text-center hidden">
-                            <strong>Email must not exceed 50 characters.</strong>
+                        <div id="emailLengthWarning" class="text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden">
+                            <p>*Email must not exceed 50 characters.</p>
                         </div>
                     </div>
                     <!-- Password -->
                     <div>
-                        <label class="w-full rounded-2xl px-3 py-2 md:p-4 bg-white flex outline focus-within:outline-3 focus-within:outline-[var(--secondary-color)]">
+                        <label id="passwordLabel" class="w-full rounded-2xl px-3 py-2 md:p-4 bg-white flex ring focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
                             <input id="password" type="password" name="password" placeholder="Password" required
                                 class="w-0 flex-grow outline-none mr-3">
                             <button type="button" onclick="togglePassword(event)" class="cursor-pointer">
@@ -281,28 +288,20 @@
                                 <img id="hidePass" src="{{ asset('images/hide_pass.svg') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
                             </button>
                         </label>
-                        <div id="passwordLengthWarning" class="text-red-600 text-sm mt-2 text-center hidden">
-                            <strong>Password must not exceed 50 characters.</strong>
+                        <div id="passwordLengthWarning" class="text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden">
+                            <p>*Password must not exceed 50 characters.</p>
                         </div>
-                    </div>
-                    <!-- Remember Me (Visible only for students) -->
-                    <div class="flex justify-between items-center font-['Manrope'] font-normal">
-                        <label id="rememberMeContainer" class="text-[14px] flex items-center cursor-pointer invisible">
-                            <input type="checkbox" name="remember" class="cursor-pointer">
-                            <span class="ml-2">Remember Me</span>
-                        </label>
-                        <a href="" class="forgot-password-link max-md:hidden text-[14px] hover:text-[var(--secondary-color)] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
                     </div>
 
                     <!-- Error Message -->
                     @if ($errors->any() && !$errors->has('lockout_time'))
-                    <div class="status-message text-red-600 text-sm mt-2 text-center pb-1">
-                        <strong>{{ $errors->first() }}</strong>
+                    <div class="status-message text-red-600 text-sm mt-1 pb-1.5 font-[Lexend] font-normal">
+                        <p>{{ $errors->first() }} </p>
                     </div>
                     @endif
                     @if ($errors->has('lockout_time'))
-                    <div class="text-red-600 text-sm mt-2 text-center pb-1">
-                        <strong id="lockout-message">Too many login attempts. Please try again in <span id="lockout-timer"></span> seconds.</strong>
+                    <div class="text-red-600 text-sm mt-1 pb-1.5 font-[Lexend] font-normal">
+                        <p id="lockout-message">Too many login attempts. Please try again in <span id="lockout-timer"></span> seconds.</p>
                     </div>
                     <script>
                         // Countdown Timer
@@ -327,6 +326,15 @@
                     </script>
                     @endif
 
+                    <!-- Remember Me (Visible only for students) -->
+                    <div class="flex justify-between items-center font-['Manrope'] font-normal">
+                        <label id="rememberMeContainer" class="text-[14px] flex items-center cursor-pointer invisible">
+                            <input type="checkbox" name="remember" class="cursor-pointer">
+                            <span class="ml-2">Remember Me</span>
+                        </label>
+                        <a href="" class="forgot-password-link max-md:hidden text-[14px] hover:text-[var(--secondary-color)] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
+                    </div>
+
                     <!-- Submit -->
                     <div class="pt-4 flex justify-center">
                         <button type="submit" id="signInButton"
@@ -342,63 +350,119 @@
         </div>
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const emailInput = document.getElementById('emailInput');
-            const passwordInput = document.getElementById('password');
-            const emailWarning = document.getElementById('emailLengthWarning');
-            const passwordWarning = document.getElementById('passwordLengthWarning');
-            const signInButton = document.getElementById('signInButton');
-            const form = emailInput.closest('form');
+        const hasFormErrors = {{ $errors->any() ? 'true' : 'false' }};
+    </script>
 
-            function validateInputs() {
-                const isEmailValid = emailInput.value.length <= 50;
-                const isPasswordValid = passwordInput.value.length <= 50;
-                emailWarning.classList.toggle('hidden', isEmailValid);
-                passwordWarning.classList.toggle('hidden', isPasswordValid);
-                signInButton.disabled = !(isEmailValid && isPasswordValid);
-                signInButton.classList.toggle('opacity-50', signInButton.disabled);
-                signInButton.classList.toggle('cursor-not-allowed', signInButton.disabled);
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const emailInput = document.getElementById('emailInput');
+        const passwordInput = document.getElementById('password');
+
+        const emailLabel = document.getElementById('emailLabel');
+        const emailWarning = document.getElementById('emailLengthWarning');
+
+        const passwordLabel = document.getElementById('passwordLabel');
+        const passwordWarning = document.getElementById('passwordLengthWarning');
+
+        const signInButton = document.getElementById('signInButton');
+        const form = emailInput.closest('form');
+
+        let serverErrorEmail = (hasFormErrors === true || hasFormErrors === 'true');
+        let serverErrorPassword = (hasFormErrors === true || hasFormErrors === 'true');
+
+        function validateInputs() {
+            const isEmailValid = emailInput.value.length <= 50;
+            const isPasswordValid = passwordInput.value.length <= 50;
+
+            if (!serverErrorEmail) {
+                emailLabel.classList.toggle('ring-3', !isEmailValid);
+                emailLabel.classList.toggle('!ring-red-600', !isEmailValid);
             }
 
-            emailInput.addEventListener('keydown', function (e) {
-                if (e.key === ' ') e.preventDefault();
-            });
+            emailWarning.classList.toggle('hidden', isEmailValid);
 
-            emailInput.addEventListener('paste', function (e) {
-                const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-                if (/\s/.test(pastedText)) {
-                    e.preventDefault();
-                    alert('Spaces are not allowed in the email address.');
-                }
-            });
+            if (!serverErrorPassword) {
+                passwordLabel.classList.toggle('ring-3', !isPasswordValid);
+                passwordLabel.classList.toggle('!ring-red-600', !isPasswordValid);
+            }
 
-            emailInput.addEventListener('input', function () {
-                if (/\s/.test(emailInput.value)) {
-                    emailInput.value = emailInput.value.replace(/\s/g, '');
-                }
-                validateInputs();
-            });
+            passwordWarning.classList.toggle('hidden', isPasswordValid);
 
-            passwordInput.addEventListener('input', function () {
-                validateInputs();
-            });
+            signInButton.disabled = !(isEmailValid && isPasswordValid);
+            signInButton.classList.toggle('opacity-50', signInButton.disabled);
+            signInButton.classList.toggle('cursor-not-allowed', signInButton.disabled);
+        }
 
-            form.addEventListener('submit', function (e) {
-                if (emailInput.value.length > 50 || passwordInput.value.length > 50) {
-                    e.preventDefault();
-                    alert('Email or password exceeds the allowed length.');
-                }
-                 // Disable button to prevent multiple submissions
-                signInButton.disabled = true;
-                signInButton.innerText = 'Signing in...'; // Optional: change button text
-            });
+        // Prevent spaces in email
+        emailInput.addEventListener('keydown', function (e) {
+            if (e.key === ' ') e.preventDefault();
+        });
 
-            // Initial validation on page load
+        emailInput.addEventListener('paste', function (e) {
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            if (/\s/.test(pastedText)) {
+                e.preventDefault();
+                alert('Spaces are not allowed in the email address.');
+            }
+        });
+
+        // Input event handlers
+        emailInput.addEventListener('input', function () {
+            if (/\s/.test(emailInput.value)) {
+                emailInput.value = emailInput.value.replace(/\s/g, '');
+            }
+
+            if (serverErrorEmail) {
+                emailLabel.classList.remove('ring-3', '!ring-red-600');
+                serverErrorEmail = false;
+            }
+
             validateInputs();
         });
-        </script>
 
+        emailInput.addEventListener('focus', function () {
+            if (serverErrorEmail) {
+                emailLabel.classList.remove('ring-3', '!ring-red-600');
+                serverErrorEmail = false;
+            }
+        });
 
+        passwordInput.addEventListener('input', function () {
+            if (serverErrorPassword) {
+                passwordLabel.classList.remove('ring-3', '!ring-red-600');
+                serverErrorPassword = false;
+            }
+
+            validateInputs();
+        });
+
+        form.addEventListener('submit', function (e) {
+            if (emailInput.value.length > 50 || passwordInput.value.length > 50) {
+                e.preventDefault();
+                alert('Email or password exceeds the allowed length.');
+            }
+                // Disable button to prevent multiple submissions
+            signInButton.disabled = true;
+            signInButton.innerText = 'Signing in...'; // Optional: change button text
+        });
+
+        passwordInput.addEventListener('focus', function () {
+            if (serverErrorPassword) {
+                passwordLabel.classList.remove('ring-3', '!ring-red-600');
+                serverErrorPassword = false;
+            }
+        });
+
+        // Initial server-side red rings
+        if (hasFormErrors === true || hasFormErrors === 'true') {
+            emailLabel.classList.add('ring-3', '!ring-red-600');
+            passwordLabel.classList.add('ring-3', '!ring-red-600');
+        }
+
+        // Initial validation on page load
+        validateInputs();
+    });
+    </script>
     </body>
 </body>
 </html>
