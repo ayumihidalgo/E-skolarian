@@ -380,6 +380,9 @@
                     e.preventDefault();
                     alert('Email or password exceeds the allowed length.');
                 }
+                 // Disable button to prevent multiple submissions
+                signInButton.disabled = true;
+                signInButton.innerText = 'Signing in...'; // Optional: change button text
             });
 
             // Initial validation on page load
