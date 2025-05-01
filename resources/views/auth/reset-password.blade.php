@@ -198,13 +198,15 @@ if ($role === 'super admin') {
 
             const match = password === confirmPassword;
 
-            // Update UI for password match
-            matchMessage.classList.toggle('hidden', match);
-            matchMessage.classList.toggle('text-red-500', !match);
+            if (confirmPassword.length > 0) {
+                matchMessage.classList.toggle('hidden', match);
+            } else {
+                matchMessage.classList.add('hidden'); // Always hide if user hasn't typed anything
+            }
 
-            // Return whether passwords match
             return match;
         }
+
 
         function validateForm() {
             const passwordValid = validatePassword();
