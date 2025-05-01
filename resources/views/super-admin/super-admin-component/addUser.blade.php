@@ -38,12 +38,11 @@
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
                     required>
                 <option value="" disabled selected>Choose a role for the user</option>
-                <option value="organization">Academic Organization</option>
-                <option value="organization">Non-Academic Organization</option>
-                <option value="admin">Student Services</option>
-                <option value="admin">Academic Services</option>
-                <option value="admin">Administrative Services</option>
-                <option value="superAdmin">Campus Director</option>
+                <option value="Academic Organization">Academic Organization</option>
+                <option value="Non-Academic Organization">Non-Academic Organization</option>
+                <option value="Student Services">Student Services</option>
+                <option value="Academic Services">Academic Services</option>
+                <option value="Administrative Services">Administrative Services</option>
             </select>
         </div>
 
