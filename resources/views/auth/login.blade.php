@@ -15,7 +15,13 @@
         /* Set Role Type to be shown onload */
         window.onload = function () {
             const chosenType = localStorage.getItem('activeLoginRole') || 'student';
-            changeRole(chosenType);
+
+            saveInputs(chosenType);
+            setRole(chosenType);
+            visibilityRememberMe(chosenType);
+            changeRadiusPanel(chosenType);
+
+            slidePanel(chosenType, false);
         };
 
         /* Temporary fix for translate */
@@ -28,7 +34,7 @@
             setRole(role);
             visibilityRememberMe(role);
             changeRadiusPanel(role);
-            slidePanel(role);
+            slidePanel(role, true);
         }
 
        let emailInputs = {
@@ -134,9 +140,11 @@
         }
 
         /* Slide to the left/right with animation */
-        function slidePanel(role) {
+        function slidePanel(role, isSlide) {
             const panel = document.getElementById('formContainer');
             if (!panel) return;
+
+            !isSlide ? panel.classList.remove('md:transition-all', 'md:duration-1000') : panel.classList.add('md:transition-all', 'md:duration-1000');
 
             const panelWidth = panel.offsetWidth;
 
