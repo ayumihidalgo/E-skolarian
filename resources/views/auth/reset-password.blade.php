@@ -127,7 +127,7 @@ if ($role === 'super admin') {
                                 <img id="hidePass" src="{{ asset('images/hide_pass.svg') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
                             </button>
                         </label>
-                        <p id="password-requirements" class="text-red-600 text-xs mt-2 w-full rounded-full max-w-[380px] mx-auto">
+                        <p id="password-requirements" class="hidden text-red-600 text-xs mt-2 w-full rounded-full max-w-[380px] mx-auto">
                             Password must be at least 8 characters long and contain an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#).
                         </p>
                     </div>
@@ -170,26 +170,27 @@ if ($role === 'super admin') {
 
         function validatePassword() {
             const password = passwordInput.value;
+            const requirementsText = document.getElementById('password-requirements');
 
-            // Check password requirements
+            if (password.length > 0) {
+                requirementsText.classList.remove('hidden');
+            }
+
             const lengthValid = password.length >= 8;
             const uppercaseValid = /[A-Z]/.test(password);
             const lowercaseValid = /[a-z]/.test(password);
             const numberValid = /[0-9]/.test(password);
             const specialValid = /[@$!%*?&#]/.test(password);
 
-            // Check if all requirements are valid
             const allValid = lengthValid && uppercaseValid && lowercaseValid && numberValid && specialValid;
 
-            // Update the visibility and color of the requirements text
-            const requirementsText = document.getElementById('password-requirements');
+            requirementsText.classList.toggle('text-green-700', allValid);
+            requirementsText.classList.toggle('text-red-500', !allValid);
             requirementsText.classList.toggle('hidden', allValid); // Hide if valid
-            requirementsText.classList.toggle('text-green-700', allValid); // Green if valid
-            requirementsText.classList.toggle('text-red-500', !allValid); // Red if invalid
 
-            // Return whether all requirements are valid
             return allValid;
         }
+
 
         function validateMatch() {
             const password = passwordInput.value;
@@ -197,13 +198,15 @@ if ($role === 'super admin') {
 
             const match = password === confirmPassword;
 
-            // Update UI for password match
-            matchMessage.classList.toggle('hidden', match);
-            matchMessage.classList.toggle('text-red-500', !match);
+            if (confirmPassword.length > 0) {
+                matchMessage.classList.toggle('hidden', match);
+            } else {
+                matchMessage.classList.add('hidden'); // Always hide if user hasn't typed anything
+            }
 
-            // Return whether passwords match
             return match;
         }
+
 
         function validateForm() {
             const passwordValid = validatePassword();
