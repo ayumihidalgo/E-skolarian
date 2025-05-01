@@ -116,31 +116,82 @@
             const emailInput = document.getElementById('emailInput');
             const warningText = document.getElementById('emailLengthWarning');
             const sendEmailBtn = document.getElementById('sendEmailBtn');
-            const sentFlag = document.getElementById('emailSentFlag');
+            const form = sendEmailBtn.closest('form');
 
-            emailInput.addEventListener('input', function () {
-                warningText.classList.toggle('hidden', emailInput.value.length <= 50);
-            });
+            const COUNTDOWN_SECONDS = 60;
+            const STORAGE_KEY = 'emailResendTimestamp';
 
-            if (sentFlag && sentFlag.dataset.sent === 'true') {
-                let countdown = 60;
+            // Validate email format
+            function validateEmail(email) {
+                const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return pattern.test(email);
+            }
+
+            // Countdown logic
+            function startCountdown(remainingSeconds) {
                 sendEmailBtn.disabled = true;
-                sendEmailBtn.textContent = `Resend Email (${countdown})`;
+                sendEmailBtn.textContent = `Resend Email (${remainingSeconds})`;
 
-                const countdownInterval = setInterval(() => {
-                    countdown--;
-                    sendEmailBtn.textContent = `Resend Email (${countdown})`;
+                const interval = setInterval(() => {
+                    remainingSeconds--;
+                    sendEmailBtn.textContent = `Resend Email (${remainingSeconds})`;
 
-                    if (countdown <= 0) {
-                        clearInterval(countdownInterval);
+                    if (remainingSeconds <= 0) {
+                        clearInterval(interval);
                         sendEmailBtn.disabled = false;
                         sendEmailBtn.textContent = "Resend Email";
+                        localStorage.removeItem(STORAGE_KEY);
                     }
                 }, 1000);
             }
-        });
-    </script>
 
+            // On page load, check if a countdown should resume
+            const lastSent = localStorage.getItem(STORAGE_KEY);
+            if (lastSent) {
+                const elapsed = Math.floor((Date.now() - parseInt(lastSent)) / 1000);
+                const remaining = COUNTDOWN_SECONDS - elapsed;
+                if (remaining > 0) {
+                    startCountdown(remaining);
+                } else {
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            }
+
+            // Handle email length warning
+            emailInput.addEventListener('input', function () {
+                const isTooLong = emailInput.value.length > 50;
+                warningText.classList.toggle('hidden', !isTooLong);
+                if (!isTooLong && !sendEmailBtn.disabled && !sendEmailBtn.textContent.includes("Resend Email")) {
+                    sendEmailBtn.disabled = false;
+                }
+            });
+
+            // Handle form submission (validate, but don't start countdown here)
+            form.addEventListener('submit', function (e) {
+                const email = emailInput.value.trim();
+                const tooLong = email.length > 50;
+                const invalidFormat = !validateEmail(email);
+
+                if (tooLong || invalidFormat) {
+                    e.preventDefault();
+                    warningText.classList.remove('hidden');
+                    sendEmailBtn.disabled = false;
+                    return;
+                }
+
+                sendEmailBtn.disabled = true;
+                sendEmailBtn.textContent = "Processing...";
+            });
+
+            // Start countdown ONLY if backend confirms email sent
+            const sentFlag = document.getElementById('emailSentFlag');
+            if (sentFlag && sentFlag.dataset.sent === 'true') {
+                const now = Date.now();
+                localStorage.setItem(STORAGE_KEY, now.toString());
+                startCountdown(COUNTDOWN_SECONDS);
+            }
+        });
+        </script>
 
 </body>
 </html>
