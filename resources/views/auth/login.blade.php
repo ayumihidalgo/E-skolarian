@@ -371,27 +371,42 @@
         let serverErrorPassword = (hasFormErrors === true || hasFormErrors === 'true');
 
         function validateInputs() {
-            const isEmailValid = emailInput.value.length <= 50;
-            const isPasswordValid = passwordInput.value.length <= 50;
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            const isEmailTooLong = email.length > 50;
+            const isPasswordTooLong = password.length > 50;
+
+            const isEmailValid = email.length > 0 && !isEmailTooLong;
+            const isPasswordValid = password.length > 0 && !isPasswordTooLong;
 
             if (!serverErrorEmail) {
-                emailLabel.classList.toggle('ring-3', !isEmailValid);
-                emailLabel.classList.toggle('!ring-red-600', !isEmailValid);
+                if (email.length > 0 && isEmailTooLong) {
+                    emailLabel.classList.add('ring-3', '!ring-red-600');
+                    emailWarning.classList.remove('hidden');
+                } else {
+                    emailLabel.classList.remove('ring-3', '!ring-red-600');
+                    emailWarning.classList.add('hidden');
+                }
             }
-
-            emailWarning.classList.toggle('hidden', isEmailValid);
 
             if (!serverErrorPassword) {
-                passwordLabel.classList.toggle('ring-3', !isPasswordValid);
-                passwordLabel.classList.toggle('!ring-red-600', !isPasswordValid);
+                if (password.length > 0 && isPasswordTooLong) {
+                    passwordLabel.classList.add('ring-3', '!ring-red-600');
+                    passwordWarning.classList.remove('hidden');
+                } else {
+                    passwordLabel.classList.remove('ring-3', '!ring-red-600');
+                    passwordWarning.classList.add('hidden');
+                }
             }
 
-            passwordWarning.classList.toggle('hidden', isPasswordValid);
-
-            signInButton.disabled = !(isEmailValid && isPasswordValid);
-            signInButton.classList.toggle('opacity-50', signInButton.disabled);
-            signInButton.classList.toggle('cursor-not-allowed', signInButton.disabled);
+            // Only enable Sign In button if both fields are filled and valid
+            const shouldEnableButton = isEmailValid && isPasswordValid;
+            signInButton.disabled = !shouldEnableButton;
+            signInButton.classList.toggle('opacity-50', !shouldEnableButton);
+            signInButton.classList.toggle('cursor-not-allowed', !shouldEnableButton);
         }
+
 
         // Prevent spaces in email
         emailInput.addEventListener('keydown', function (e) {
