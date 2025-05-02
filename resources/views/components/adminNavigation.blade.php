@@ -1,4 +1,5 @@
-@extends('base')
+<!--ADMIN NAVIGATION BAR-->
+
 
 @section('content')
 <div class="flex relative">
@@ -9,6 +10,7 @@
                 <img src="{{ asset('images/officialLogo.svg') }}" alt="Logo" class="h-20 w-20">
             </a>
             <div class="sidebar-text">
+
                 <a href="#">
                     <h1 class="font-[Marcellus_SC] text-xl leading-none">E-SKOLARI<span class="text-yellow-400">★</span>N</h1>
                 </a>
@@ -17,6 +19,7 @@
                 </a>
             </div>
         </div>
+
 
         <!-- Navigation Links -->
         <nav class="space-y-4 text-lg font-[Marcellus_SC] mt-6">
@@ -83,8 +86,7 @@
         // Toggle hidden text
         texts.forEach(text => text.classList.toggle('hidden'));
 
-        // Rotate toggle icon
-        toggleIcon.classList.toggle('rotate-180');
-    }
-</script>
-@endsection
+            // Rotate toggle icon
+            toggleIcon.classList.toggle('rotate-180');
+        }
+    </script>

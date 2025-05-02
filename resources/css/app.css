@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 @source "../views";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -11,6 +14,16 @@
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
+@layer utilities {
+    .opacity-0 {
+        opacity: 0 !important;
+    }
+    .transition-opacity {
+        transition: opacity 1s ease;
+    }
+}
+
+
 /* Define Color Palette */
 :root {
     --primary-color: #A98018;
@@ -19,6 +32,9 @@
 
     --login-color-left: #FDC10B;
     --login-color-right: #6C5903;
+
+    --forgot-color-text: white;
+    --forgot-color-bg: black;
 }
 
 /* Student Theme */
@@ -29,7 +45,10 @@
 
     --login-color-left: #FDC10B;
     --login-color-right: #6C5903;
-  }
+
+    --forgot-color-text: white;
+    --forgot-color-bg: black;
+}
 
 /* Admin Theme */
 [data-theme="admin"] {
@@ -39,9 +58,15 @@
 
     --login-color-left: #270103;
     --login-color-right: #4E020C;
+
+    --forgot-color-text: black;
+    --forgot-color-bg: white;
 }
 
-
+input:-webkit-autofill {
+    transition: background-color 9999s ease-in-out 0s;
+    -webkit-text-fill-color: #000 !important;
+}
 
 /* Define the font family */
 @font-face {

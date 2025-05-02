@@ -48,14 +48,20 @@ class LoginController extends Controller
             // Regenerate the session if login is successful
             $request->session()->regenerate();
 
+            $request->session()->put('user_id', Auth::id());
+            $request->session()->put('user_role', Auth::user()->role);
+            $request->session()->put('user_email', Auth::user()->email);
+
+
             // Redirect based on the role
             if (Auth::user()->role === 'student') {
-                return redirect()->intended('student/dashboard'); // Redirect to student dashboard
+                return redirect('student/dashboard');
             } elseif (Auth::user()->role === 'admin') {
-                return redirect()->intended('admin/dashboard'); // Redirect to admin dashboard
+                return redirect('admin/dashboard');
             } elseif (Auth::user()->role === 'super admin') {
-                return redirect()->intended('super-admin/dashboard'); // Redirect to super admin dashboard
+                return redirect('super-admin/dashboard');
             }
+
         }
 
         // Increment the login attempts
@@ -63,7 +69,7 @@ class LoginController extends Controller
 
         // Return back with errors if credentials are invalid
         return back()->withErrors([
-            'email' => 'Invalid email or password.',
+            'email' => '*Incorrect email or password.',
         ]);
     }
 
@@ -85,8 +91,7 @@ class LoginController extends Controller
     // Increment the login attempts counter
     protected function incrementLoginAttempts(Request $request)
     {
-        // Set the lockout time to 60 seconds (1 minute)
-        RateLimiter::hit($this->throttleKey($request), 60);
+        RateLimiter::hit($this->throttleKey($request), 80); // Increment by 1 per attempt (instead of 80)
     }
 
     // Get the throttle key for the request

@@ -12,12 +12,12 @@
         rel="stylesheet">
 
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
-
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     @vite('resources/css/app.css')
 
-    <title> ESKOLARIAN </title>
+    <title> ESKOLARIAN </title>  
 </head>
-
+    
 <body>
     <main>
         @yield('content')
