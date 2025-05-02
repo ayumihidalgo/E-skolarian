@@ -180,60 +180,43 @@
 
     <!-- Modal Content -->
     <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-50 overflow-hidden">
-        <!-- Header -->
-        <div class="bg-[#DAA520] py-4 px-6 flex justify-between items-center">
-            <h3 class="text-xl font-bold text-white font-[Lexend]">User Details</h3>
-            <button type="button" id="closeUserDetailsBtn" class="text-white hover:bg-[#7A1212]/20 rounded-full p-1 focus:outline-none">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-
+        <!-- Close Button -->
+            <button type="button" id="closeUserDetailsBtn" class="absolute top-7 right-5 text-black-500 hover:text-[#7A1212] transition-colors duration-200">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
         <!-- User Details -->
-        <div class="p-6">
-            <div class="flex items-center justify-center mb-6">
-                <!-- User Icon/Avatar -->
-                <div class="bg-[#7A1212]/20 p-4 rounded-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-[#7A1212]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        <div class="p-8">
+        <h3 class="text-xl font-semibold text-[#181D27] text-[Lexend] mb-2">View Account Details</h3>
+        <p class="text-gray-500 text-sm mb-6">View, edit, or deactivate the account</p>
+        <!-- Edit Button -->
+        <div class="flex justify-center space-x-4">
+                <button 
+                    type="button"
+                    id="editUserBtn"
+                    class="bg-[#7A1212] px-6 py- rounded-[8px] text-white font-[Lexend] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-800 transition duration-200 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
-                </div>
+                    Edit
+                </button>
             </div>
-
-            <div class="space-y-4">
-                <div class="border-b border-gray-200 pb-3">
-                    <h4 class="text-sm font-medium text-gray-500 mb-1 font-[Manrope]">Username</h4>
-                    <p id="userUsername" class="text-lg font-semibold text-[#332B2B] font-[Lexend]"></p>
+            <div class="mb-4">
+                <div class="block text-sm font-medium text-gray-700">
+                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Username</h4>
+                    <p id="userUsername" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
                 </div>
-
-                <div class="border-b border-gray-200 pb-3">
-                    <h4 class="text-sm font-medium text-gray-500 mb-1 font-[Manrope]">Email</h4>
-                    <p id="userEmail" class="text-lg font-semibold text-[#332B2B] font-[Lexend]"></p>
+                
+                <div class="block text-sm font-medium mb-2 text-gray-700">
+                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Email</h4>
+                    <p id="userEmail" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
                 </div>
-
-                <div class="border-b border-gray-200 pb-3">
-                    <h4 class="text-sm font-medium text-gray-500 mb-1 font-[Manrope]">Role</h4>
-                    <p id="userRole" class="text-lg font-semibold text-[#332B2B] font-[Lexend]"></p>
+                
+                <div class="block text-sm font-medium mb-2 text-gray-700">
+                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Role</h4>
+                    <p id="userRole" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
                 </div>
-
-                <div>
-                    <h4 class="text-sm font-medium text-gray-500 mb-1 font-[Manrope]">Joined</h4>
-                    <p id="userJoined" class="text-lg font-semibold text-[#332B2B] font-[Lexend]"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer with Close Button -->
-        <div class="bg-gray-50 px-6 py-4 flex justify-center">
-            <button
-                type="button"
-                id="closeUserDetailsModalBtn"
-                class="bg-[#7A1212] hover:bg-red-800 text-white px-6 py-2 rounded-[16px] font-semibold font-[Lexend] transition duration-200 flex items-center cursor-pointer focus:outline-none"
-            >
-                Close
-            </button>
-        </div>
     </div>
 </div>
 
@@ -257,6 +240,64 @@
                 class="bg-[#7A1212] hover:bg-red-800 text-white px-8 py-2 rounded-[16px] font-semibold font-[Lexend] transition duration-200">
                 Okay
             </button>
+        </div>
+    </div>
+</div>
+<div id="editUserModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <!-- Modal Backdrop -->
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm edit-user-backdrop"></div>
+    
+    <!-- Modal Content -->
+    <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-50 overflow-hidden">
+        <!-- Close Button -->
+        <button type="button" id="closeEditModalBtn" class="absolute top-7 right-5 text-black-500 hover:text-[#7A1212] transition-colors duration-200">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+
+        <!-- Edit Form -->
+        <div class="p-8">
+            <h3 class="text-xl font-semibold text-[#181D27] text-[Lexend] mb-2">Edit Account Details</h3>
+            <p class="text-gray-500 text-sm mb-6">Update the user's account information</p>
+            
+            <form id="editUserForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Username</label>
+                    <input type="text" id="editUsername" 
+                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] text-center">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Email</label>
+                    <input type="email" id="editEmail" 
+                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] text-center">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Role</label>
+                    <select id="editRole" 
+                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] text-center">
+                        <option value="Academic Organization">Academic Organization</option>
+                        <option value="Non-Academic Organization">Non-Academic Organization</option>
+                        <option value="Student Services">Student Services</option>
+                        <option value="Academic Services">Academic Services</option>
+                        <option value="Administrative Services">Administrative Services</option>
+                    </select>
+                </div>
+
+                <p class="text-sm text-gray-500 italic">Any changes made will notify the account owner via email.</p>
+
+                <div class="flex justify-center pt-4">
+                    <button type="submit"
+                        class="bg-[#7A1212] px-6 py-2 rounded-[10px] text-white font-[Lexend] hover:bg-red-800 transition duration-200 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Save Changes
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -387,12 +428,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('userUsername').textContent = userData.username;
             document.getElementById('userEmail').textContent = userData.email;
             document.getElementById('userRole').textContent = userData.role;
-
-            // Format the date
-            const joinedDate = new Date(userData.created_at);
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('userJoined').textContent = joinedDate.toLocaleDateString('en-US', options);
-
+            
             // Show the modal
             userDetailsModal.classList.remove('hidden');
         });
@@ -437,6 +473,46 @@ document.addEventListener('DOMContentLoaded', function() {
             successModal.classList.add('hidden');
         }
     });
+    if (editUserBtn) {
+    editUserBtn.addEventListener('click', function() {
+        // Get current user data
+        const username = document.getElementById('userUsername').textContent;
+        const email = document.getElementById('userEmail').textContent;
+        const role = document.getElementById('userRole').textContent;
+        
+        // Fill the edit form
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editRole').value = role;
+        
+        // Hide user details modal first
+        userDetailsModal.classList.add('hidden');
+        
+        // Show edit modal after a small delay to prevent overlap
+        setTimeout(() => {
+            editUserModal.classList.remove('hidden');
+        }, 100);
+    });
+}
+
+// Update the close edit modal handlers
+if (closeEditModalBtn) {
+    closeEditModalBtn.addEventListener('click', function() {
+        editUserModal.classList.add('hidden');
+        setTimeout(() => {
+            userDetailsModal.classList.remove('hidden');
+        }, 100);
+    });
+}
+
+if (editUserBackdrop) {
+    editUserBackdrop.addEventListener('click', function() {
+        editUserModal.classList.add('hidden');
+        setTimeout(() => {
+            userDetailsModal.classList.remove('hidden');
+        }, 100);
+    });
+}
 });
 </script>
 @endsection
