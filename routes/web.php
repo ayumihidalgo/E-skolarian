@@ -40,6 +40,9 @@ Route::middleware(['auth'])->group(function () {
             ->header('Expires', '0');
     })->name('super-admin.dashboard');
 
+    Route::get('/admin/review', function () {
+        return view('admin.review');
+    })->name('admin.review');
 });
 
 Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
