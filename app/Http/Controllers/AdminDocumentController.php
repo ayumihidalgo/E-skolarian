@@ -2,15 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Routing\Controller as BaseController; // Correctly import BaseController
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 
-class Controller extends BaseController
+class AdminDocumentController extends Controller
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
-
     public function preview($id)
     {
         // Get all parameters from the request
@@ -33,5 +29,4 @@ class Controller extends BaseController
         // Return the preview view with the document data
         return view('admin.documentPreview', compact('document'));
     }
-
 }

@@ -8,15 +8,15 @@
             <h2 class="text-2xl font-extrabold">Document Archive Preview</h2>
             {{-- Back Button --}}
             <a href="{{ url('/') }}"
-               class="bg-[#7A1212] text-white px-4 py-2 rounded-full hover:bg-[#DAA520]">
+               class="bg-[#7A1212] text-white px-4 py-2 rounded-full hover:bg-[#DAA520] w-[117px] h-[44px] flex items-center justify-center">
                 Back
             </a>
         </div>
 
         {{-- Document Details --}}
-        <div class="p-6 bg-[#4D0F0F] text-white rounded-[2rem] shadow-md space-y-6">
+        <div class="p-6 bg-[#4D0F0F] text-white rounded-[2rem] shadow-md space-y-6 w-full max-w-[1055px] mx-auto min-h-[450px]">
             {{-- General Information --}}
-            <div class="space-y-2">
+            <div class="space-y-3">
                 <p class="text-white/60"> <strong>{{ \Carbon\Carbon::parse($document['date'])->format('F d, Y') }}</strong></p>
                 <p><strong class="text-white/60">From:</strong> <strong>{{ $document['organization'] }}</strong></p>
                 <p><strong class="text-white/60">Title:</strong> <strong>{{ $document['title'] }}</strong></p>
@@ -28,8 +28,11 @@
                 </div>
 
                 <p><strong class="text-white/60">Attachment:</strong></p>
-                <div class="p-4 bg-[#f2f4f7] text-black rounded-xl">
-                    <p class="text-sm">Attachment content goes here.</p>
+                <div class="w-[200px] p-2 bg-[#f2f4f7] text-black rounded-xl hover:bg-gray-200 cursor-pointer transition-colors duration-200">
+                    <div class="flex items-center gap-2">
+                        <img src="{{ asset('images/Download.svg') }}" alt="Download" class="w-4 h-4">
+                        <p class="text-sm">View Attachment</p>
+                    </div>
                 </div>
 
                 <p>

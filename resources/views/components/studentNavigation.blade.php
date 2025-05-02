@@ -60,7 +60,7 @@
             </nav>
 
             <!-- Page Content from Child Views -->
-            <div class="overflow-y-auto p-6 flex-grow bg-gray-100">
+            <div class="p-0">
                 @yield('studentContent')
             </div>
         </div>

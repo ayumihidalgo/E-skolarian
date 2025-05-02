@@ -54,7 +54,7 @@
         </nav>
 
         <!-- Yield for Admin Content -->
-        <div class="p-6">
+        <div class="p-0">
             @yield('adminContent')
         </div>
     </div>
