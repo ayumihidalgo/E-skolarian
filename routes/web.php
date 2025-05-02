@@ -6,6 +6,8 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
 
+
+
 Route::get('/', function () {
     return view('auth/login');
 });
@@ -41,6 +43,9 @@ Route::middleware(['auth'])->group(function () {
     
     // User routes
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
+
+    Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
+    Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
 });
 
 Route::get('/notifications', function () {
@@ -60,3 +65,6 @@ Route::get('password-reset-confirmation', function () {
 Route::get('/custom-reset-password', function () {
     return view('emails.custom-reset-password');
 });
+
+
+

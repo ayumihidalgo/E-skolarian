@@ -65,14 +65,13 @@ class PasswordResetLinkController extends Controller
             'email' => 'required|email',
             'password' => [
                 'required',
-                'confirmed', // Ensures password and confirm password match
-                'min:8', // Minimum 8 characters
-                'regex:/[A-Z]/', // At least one uppercase letter
-                'regex:/[a-z]/', // At least one lowercase letter
-                'regex:/[0-9]/', // At least one number
-                'regex:/[@$!%*?&#]/', // At least one special character
+                'confirmed',
+                'min:8',
+                'regex:/[A-Z]/',
+                'regex:/[a-z]/',
+                'regex:/[0-9]/',
+                'regex:/[@$!%*?&#]/',
             ],
-            'role' => 'required|in:student,admin', // Validate role input
         ]);
 
         $tokenRecord = DB::table('password_reset_tokens')
@@ -89,7 +88,12 @@ class PasswordResetLinkController extends Controller
             return back()->withErrors(['email' => 'User not found.']);
         }
 
-        // Check if new password is same as the old password
+        // Check if user role is allowed to reset password
+        if (!in_array($user->role, ['student', 'admin', 'super admin'])) {
+            return back()->withErrors(['email' => 'User role not allowed to reset password.']);
+        }
+
+        // Check if new password is same as old
         if (Hash::check($request->password, $user->password)) {
             return back()->withErrors([
                 'password' => 'The new password must be different from the current password.',
@@ -101,10 +105,9 @@ class PasswordResetLinkController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
+        // Smart: set role for redirection based on user's real role
+        $role = $user->role === 'student' ? 'student' : 'admin';
 
-        $role = $request->input('role', 'student');
-
-        // Redirect to the password reset confirmation page
         return redirect()->route('password.reset.confirmation', ['role' => $role]);
     }
-}
+    }

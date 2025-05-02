@@ -63,7 +63,10 @@
     --forgot-color-bg: white;
 }
 
-
+input:-webkit-autofill {
+    transition: background-color 9999s ease-in-out 0s;
+    -webkit-text-fill-color: #000 !important;
+}
 
 /* Define the font family */
 @font-face {

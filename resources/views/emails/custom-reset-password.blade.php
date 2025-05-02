@@ -59,6 +59,7 @@
         white-space: normal;
         text-decoration: none;
         text-transform: uppercase;
+        font-weight: bold;
         font-size: 25px;
         margin: 40px auto;
         text-align: center;
@@ -94,21 +95,30 @@
 </style>
 </head>
 <body>
-<div class="card-container">
-    <div class="header-card">
-      <img class="logo" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
+    <div class="card-container">
+        <div class="header-card">
+            <img class="logo" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
+        </div>
+        <div class="body-card">
+            <h1>Hello {{ $displayRole }},</h1>
+            <p class="first-p">
+                You are receiving this email because we received a password reset request for your E-skolarian account.
+                Please click the button below to securely create a new password.
+            </p>
+            <a class="reset__link" href="{{ $url }}">Reset Password</a>
+            <p class="last-p">
+                This password reset link will expire in 60 minutes. If you did not request a password reset, no further action is required.
+            </p>
+        </div>
+        <hr>
+        <div class="footer-card">
+            <p class="first-p">© E-skolarian - Document Management System</p>
+            <p>To help keep your account secure, please do not forward this email.</p>
+            <p class="contact-info">
+                <strong>Contact No:</strong> 0961 802 3780<br>
+                <strong>Email:</strong> starosa@pup.edu.ph
+            </p>
+        </div>
     </div>
-    <div class="body-card">
-      <h1>Greetings!</h1>
-      <p class="first-p">We received a request to reset your password. No worries—just click the button below to create a new one.</p>
-      <a class="reset__link" href="{{ $url }}">Reset Password</a>
-      <p class="last-p">If you didn't request a password reset, you can safely ignore this email—your password will remain unchanged.</p>
-    </div>
-    <hr>
-    <div class="footer-card">
-      <p class="first-p">© E-skolarian - Document Managent System</p>
-      <p>To help keep your account secure, please don't forward this email.</p>
-    </div>
-  </div>
 </body>
 </html>
