@@ -7,13 +7,26 @@ use App\Models\User;
 
 class SuperAdminController extends Controller
 {
-    public function showDashboard()
+    public function showDashboard(Request $request)
     {
-        // Fetch all users from the database
-        $users = User::orderBy('created_at', 'desc')->paginate(6); // This returns a paginator instance
- 
+        // Get sort parameters
+        $sortField = $request->query('sort', 'created_at');
+        $sortDirection = $request->query('direction', 'desc');
 
-        return view('super-admin.dashboard', compact('users'));
+        // Valid sort fields to prevent SQL injection
+        $validSortFields = ['username', 'role', 'created_at'];
+
+        // Ensure sort field is valid
+        if (!in_array($sortField, $validSortFields)) {
+            $sortField = 'created_at';
+        }
+
+        // Fetch users with sorting and pagination
+        $users = User::orderBy($sortField, $sortDirection)
+                     ->paginate(6); // Adjust number per page as needed
+
+        // Return the view with the users data and sort parameters
+        return view('super-admin.dashboard', compact('users', 'sortField', 'sortDirection'));
     }
     
 }

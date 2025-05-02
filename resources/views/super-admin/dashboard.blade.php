@@ -218,8 +218,6 @@
                     <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Role</h4>
                     <p id="userRole" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
                 </div>
-                
-            
     </div>
 </div>
 
