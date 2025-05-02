@@ -51,6 +51,7 @@ Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->n
 Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
 Route::get('reset-password/{token}', [PasswordResetLinkController::class, 'edit'])->name('password.reset');
 Route::post('reset-password', [PasswordResetLinkController::class, 'update'])->name('password.update');
+
 Route::get('password-reset-confirmation', function () {
     return view('auth.password-reset-confirmation');
 })->name('password.reset.confirmation');
