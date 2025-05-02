@@ -1,6 +1,5 @@
-<!-- resources/views/components/generalcomponents/notification.blade.php -->
-
 <div class="relative">
+    <!-- Notification Button -->
     <button id="notificationBtn" class="p-2 rounded-full hover:bg-white-200 cursor-pointer transition">
         <svg class="text-gray-500 hover:text-gray-700" width="24" height="24" viewBox="0 0 24 24" fill="none"
             xmlns="http://www.w3.org/2000/svg">
@@ -11,41 +10,87 @@
         </svg>
     </button>
 
+    <!-- Notification Panel -->
     <div id="notificationPanel"
-        class="hidden absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
-        <div class="p-4 border-b">
+        class="hidden absolute right-0 mt-2 w-[440px] h-[600px] bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+        
+        <!-- Header -->
+        <div class="p-4 border-b flex flex-row justify-between">
             <h2 class="text-lg font-semibold text-gray-800">Notifications</h2>
+            <div class="right-nav flex flex-row space-x-5">
+                <!-- Dots Icon -->
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4.75 8.5C3.925 8.5 3.25 9.175 3.25 10C3.25 10.825 3.925 11.5 4.75 11.5C5.575 11.5 6.25 10.825 6.25 10C6.25 9.175 5.575 8.5 4.75 8.5ZM15.25 8.5C14.425 8.5 13.75 9.175 13.75 10C13.75 10.825 14.425 11.5 15.25 11.5C16.075 11.5 16.75 10.825 16.75 10C16.75 9.175 16.075 8.5 15.25 8.5ZM10 8.5C9.175 8.5 8.5 9.175 8.5 10C8.5 10.825 9.175 11.5 10 11.5C10.825 11.5 11.5 10.825 11.5 10C11.5 9.175 10.825 8.5 10 8.5Z" fill="#525866"/>
+                </svg>
+
+                <!-- Settings Icon -->
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10 1.75L17.125 5.875V14.125L10 18.25L2.875 14.125V5.875L10 1.75ZM10 3.48325L4.375 6.73975V13.2603L10 16.5167L15.625 13.2603V6.73975L10 3.48325ZM10 13C9.20435 13 8.44129 12.6839 7.87868 12.1213C7.31607 11.5587 7 10.7956 7 10C7 9.20435 7.31607 8.44129 7.87868 7.87868C8.44129 7.31607 9.20435 7 10 7C10.7956 7 11.5587 7.31607 12.1213 7.87868C12.6839 8.44129 13 9.20435 13 10C13 10.7956 12.6839 11.5587 12.1213 12.1213C11.5587 12.6839 10.7956 13 10 13ZM10 11.5C10.3978 11.5 10.7794 11.342 11.0607 11.0607C11.342 10.7794 11.5 10.3978 11.5 10C11.5 9.60218 11.342 9.22064 11.0607 8.93934C10.7794 8.65804 10.3978 8.5 10 8.5C9.60218 8.5 9.22064 8.65804 8.93934 8.93934C8.65804 9.22064 8.5 9.60218 8.5 10C8.5 10.3978 8.65804 10.7794 8.93934 11.0607C9.22064 11.342 9.60218 11.5 10 11.5Z" fill="#525866"/>
+                </svg>
+            </div>
         </div>
 
-        <div class="flex text-sm font-medium text-gray-600 border-b">
-            <button id="allTab"
-                class="w-1/2 text-center py-2 border-b-2 border-red-600 text-red-600 font-semibold bg-gray-50">All</button>
-            <button id="unreadTab" class="w-1/2 text-center py-2 hover:bg-gray-100">Unread</button>
+        <!-- Tabs -->
+        <div class="flex items-center justify-between text-sm font-medium text-gray-600 border-b px-4">
+            <div class="flex">
+                <button id="allTab" class="px-4 py-2 border-b-2 border-purple-600 text-black font-semibold bg-gray-50">All</button>
+                <button id="unreadTab" class="px-4 py-2 hover:bg-gray-100 text-gray-500">Unread</button>
+            </div>
+            <div class="p-2 hover:bg-gray-100 rounded cursor-pointer" id="collapseArrow">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+                    xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10.0001 10.879L13.7126 7.1665L14.7731 8.227L10.0001 13L5.22705 8.227L6.28755 7.1665L10.0001 10.879Z" fill="#525866"/>
+                </svg>
+            </div>
         </div>
 
-        <div class="p-6 text-center text-gray-500 text-sm">
+        <!-- Notification Content -->
+        <div id="notificationBody" class="p-6 text-center text-gray-500 text-sm">
             No notifications
         </div>
     </div>
 </div>
 
+<!-- JS -->
 <script>
     const btn = document.getElementById('notificationBtn');
     const panel = document.getElementById('notificationPanel');
     const unreadTab = document.getElementById('unreadTab');
     const allTab = document.getElementById('allTab');
+    const collapseArrow = document.getElementById('collapseArrow');
 
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (event) => {
+        event.stopPropagation();
         panel.classList.toggle('hidden');
     });
 
+    document.addEventListener('click', (event) => {
+        if (!panel.classList.contains('hidden') && !panel.contains(event.target)) {
+            panel.classList.add('hidden');
+        }
+    });
+
     unreadTab.addEventListener('click', () => {
-        unreadTab.classList.add('border-b-2', 'border-red-600', 'text-red-600', 'font-semibold', 'bg-gray-50');
-        allTab.classList.remove('border-b-2', 'border-red-600', 'text-red-600', 'font-semibold', 'bg-gray-50');
+        unreadTab.classList.add('border-b-2', 'border-purple-600', 'text-black', 'font-semibold', 'bg-gray-50');
+        unreadTab.classList.remove('text-gray-500');
+        allTab.classList.add('text-gray-500');
+        allTab.classList.remove('border-b-2', 'border-purple-600', 'text-black', 'font-semibold', 'bg-gray-50');
     });
 
     allTab.addEventListener('click', () => {
-        allTab.classList.add('border-b-2', 'border-red-600', 'text-red-600', 'font-semibold', 'bg-gray-50');
-        unreadTab.classList.remove('border-b-2', 'border-red-600', 'text-red-600', 'font-semibold', 'bg-gray-50');
+        allTab.classList.add('border-b-2', 'border-purple-600', 'text-black', 'font-semibold', 'bg-gray-50');
+        allTab.classList.remove('text-gray-500');
+        unreadTab.classList.add('text-gray-500');
+        unreadTab.classList.remove('border-b-2', 'border-purple-600', 'text-black', 'font-semibold', 'bg-gray-50');
     });
+
+ 
+
+// collapseArrow.addEventListener('click', (event) => {
+//     event.stopPropagation();
+//     panel.classList.add('hidden');
+// });
+
 </script>
