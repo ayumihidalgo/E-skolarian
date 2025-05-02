@@ -65,31 +65,30 @@
                     <input type="hidden" name="role" value="{{ $role }}"> <!-- Add this hidden input -->
 
                     <div class="mt-5 mb-2">
-                        <label class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 outline bg-white flex focus-within:outline-3 focus-within:outline-[var(--secondary-color)]">
+                        <label id="emailLabel" class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
                             <input type="email" id="emailInput" name="email" placeholder="Email Address" required
                                 class="w-0 flex-grow outline-none mr-3 text-[14px]">
                             <button type="button" class="focus:outline-none" tabindex="-1">
                                 <img src="{{ asset('images/email.svg') }}" alt="Email Icon" class="w-4 mr-1" />
                             </button>
                         </label>
-                        <div id="emailLengthWarning" class="text-red-600 text-xs mt-2 text-center hidden">
-                            <strong>Email must not exceed 50 characters.</strong>
+                        <div id="emailLengthWarning" class="w-full max-w-[380px] mx-auto px-4 text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden">
+                            <p></p>
                         </div>
                     </div>
 
                     @if (session('status'))
-                        <div class="status-message text-green-600 text-center text-xs mt-3 w-full max-w-[380px] mx-auto">
-                            {{ session('status') }}
+                        <div class="status-message text-green-600 text-center text-xs mt-3 w-full max-w-[380px] mx-auto font-[Lexend] font-normal">
+                            *{{ session('status') }}
                         </div>
                         <div id="emailSentFlag" data-sent="true" class="hidden"></div>
                     @endif
-
                     {{-- Error Messages --}}
                     @if ($errors->any())
-                        <div class="status-message text-red-600 text-center text-xs mt-3 w-full max-w-[380px] mx-auto">
+                        <div class="status-message text-red-600 text-center text-xs mt-3 w-full max-w-[380px] mx-auto font-[Lexend] font-normal">
                             <ul>
                                 @foreach ($errors->all() as $error)
-                                    <li>{{ $error }}</li>
+                                    <li>*{{ $error }}</li>
                                 @endforeach
                             </ul>
                         </div>
@@ -112,35 +111,122 @@
         </div>
     </div>
     <script>
+        const hasFormErrors = {{ $errors->any() ? 'true' : 'false' }};
+    </script>
+
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             const emailInput = document.getElementById('emailInput');
             const warningText = document.getElementById('emailLengthWarning');
             const sendEmailBtn = document.getElementById('sendEmailBtn');
-            const sentFlag = document.getElementById('emailSentFlag');
+            const emailLabel = document.getElementById('emailLabel');
+            const form = sendEmailBtn.closest('form');
 
-            emailInput.addEventListener('input', function () {
-                warningText.classList.toggle('hidden', emailInput.value.length <= 50);
-            });
+            const COUNTDOWN_SECONDS = 60;
+            const STORAGE_KEY = 'emailResendTimestamp';
 
-            if (sentFlag && sentFlag.dataset.sent === 'true') {
-                let countdown = 60;
+            // Validate email format
+            function validateEmail(email) {
+                const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return pattern.test(email);
+            }
+
+            // Countdown logic
+            function startCountdown(remainingSeconds) {
                 sendEmailBtn.disabled = true;
-                sendEmailBtn.textContent = `Resend Email (${countdown})`;
+                sendEmailBtn.textContent = `Resend Email (${remainingSeconds})`;
 
-                const countdownInterval = setInterval(() => {
-                    countdown--;
-                    sendEmailBtn.textContent = `Resend Email (${countdown})`;
+                const interval = setInterval(() => {
+                    remainingSeconds--;
+                    sendEmailBtn.textContent = `Resend Email (${remainingSeconds})`;
 
-                    if (countdown <= 0) {
-                        clearInterval(countdownInterval);
+                    if (remainingSeconds <= 0) {
+                        clearInterval(interval);
                         sendEmailBtn.disabled = false;
                         sendEmailBtn.textContent = "Resend Email";
+                        localStorage.removeItem(STORAGE_KEY);
                     }
                 }, 1000);
             }
-        });
-    </script>
 
+            // On page load, check if a countdown should resume
+            const lastSent = localStorage.getItem(STORAGE_KEY);
+            if (lastSent) {
+                const elapsed = Math.floor((Date.now() - parseInt(lastSent)) / 1000);
+                const remaining = COUNTDOWN_SECONDS - elapsed;
+                if (remaining > 0) {
+                    startCountdown(remaining);
+                } else {
+                    localStorage.removeItem(STORAGE_KEY);
+                }
+            }
+
+            // Handle email length warning
+            emailInput.addEventListener('input', function () {
+                const email = emailInput.value.trim();
+                const isTooLong = email.length > 50;
+
+                if (isTooLong) {
+                    warningText.textContent = "*Email must not exceed 50 characters.";
+                    warningText.classList.remove('hidden');
+                    sendEmailBtn.disabled = true;
+
+                    emailLabel.classList.add('ring-3', !isTooLong);
+                    emailLabel.classList.add('!ring-red-600', !isTooLong);
+                } else {
+                    warningText.classList.add('hidden');
+
+                    emailLabel.classList.remove('ring-3', !isTooLong);
+                    emailLabel.classList.remove('!ring-red-600', !isTooLong);
+                    // Only enable the button if not in "Resend Email" mode
+                    if (!sendEmailBtn.textContent.includes("Resend Email")) {
+                        sendEmailBtn.disabled = false;
+                    }
+                }
+            });
+
+            emailInput.addEventListener('focus', function() {
+                emailLabel.classList.remove('ring-3', '!ring-red-600');
+            });
+
+            // Handle form submission (validate, but don't start countdown here)
+            form.addEventListener('submit', function (e) {
+                const email = emailInput.value.trim();
+                const invalidFormat = !validateEmail(email);
+
+                if (invalidFormat) {
+                    e.preventDefault();
+                    warningText.classList.remove('hidden');
+
+                    if (invalidFormat) {
+                        warningText.textContent = "*Please enter a valid email address format.";
+                    }
+
+                    emailLabel.classList.add('ring-3', invalidFormat);
+                    emailLabel.classList.add('!ring-red-600', invalidFormat);
+
+                    sendEmailBtn.disabled = false;
+                    return;
+                }
+
+                sendEmailBtn.disabled = true;
+                sendEmailBtn.textContent = "Processing...";
+            });
+
+            // Start countdown ONLY if backend confirms email sent
+            const sentFlag = document.getElementById('emailSentFlag');
+            if (sentFlag && sentFlag.dataset.sent === 'true') {
+                const now = Date.now();
+                localStorage.setItem(STORAGE_KEY, now.toString());
+                startCountdown(COUNTDOWN_SECONDS);
+            }
+
+             // Initial server-side red rings
+            if (hasFormErrors === true || hasFormErrors === 'true') {
+                emailLabel.classList.add('ring-3', '!ring-red-600');
+            }
+        });
+        </script>
 
 </body>
 </html>

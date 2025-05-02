@@ -23,7 +23,8 @@ class CustomResetPassword extends Notification
 
     public function toMail($notifiable)
     {
-        $role = $notifiable->role;
+        $role = $notifiable->role; // raw, lowercase for URL
+        $displayRole = ucwords($role); // capitalized for subject
 
         $url = url(route('password.reset', [
             'token' => $this->token,
@@ -32,7 +33,10 @@ class CustomResetPassword extends Notification
         ], false));
 
         return (new MailMessage)
-            ->subject('Reset Your Password')
-            ->view('emails.custom-reset-password', ['url' => $url]);
+            ->subject("Reset your $displayRole Account Password")
+            ->view('emails.custom-reset-password', [
+                'url' => $url,
+                'displayRole' => $displayRole
+            ]);
     }
 }
