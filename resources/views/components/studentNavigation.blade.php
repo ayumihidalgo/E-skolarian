@@ -20,37 +20,43 @@
             @endforeach
         </nav>
 
+            <!-- Logout Button -->
+            <form method="POST" action="{{ route('logout') }}" class="mt-40">
+                @csrf
+                <button type="submit" class="flex items-center space-x-3 text-white hover:text-yellow-400 transition duration-200">
+                    <img src="{{ asset('images/logout.svg') }}" class="h-6 w-6" alt="Logout Icon">
+                    <span class="sidebar-text font-[Marcellus_SC]">Logout</span>
+                </button>
+            </form>
+        </div>
 
-        <form method="POST" action="{{ route('logout') }}" class="mt-40">
-            @csrf
-            <button type="submit"
-                class="flex items-center space-x-3 text-white hover:text-yellow-400 transition duration-200">
-                <img src="{{ asset('images/logout.svg') }}" class="h-6 w-6" alt="Logout Icon">
-                <span class="sidebar-text font-[Marcellus_SC]">Logout</span>
-            </button>
-        </form>
-    </div>
+        <!-- Fixed Toggle Button -->
+        <button onclick="toggleSidebar()" class="absolute top-11 left-[24%] z-10 transition-all duration-300" id="toggleBtn">
+            <img src="{{ asset('images/toggleSidebar.svg') }}" alt="Toggle Sidebar"
+                 class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
+        </button>
 
-    <!-- Fixed Toggle Button -->
-    <button onclick="toggleSidebar()" class="absolute top-11 left-[24%] z-10 transition-all duration-300"
-        id="toggleBtn">
-        <img src="{{ asset('images/toggleSidebar.svg') }}" alt="Toggle Sidebar"
-            class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
-    </button>
+        <!-- Main Content Area -->
+        <div class="flex-grow flex flex-col h-screen overflow-hidden">
+            <!-- Top Nav -->
+            <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
+                <a href="#" class="hover:text-yellow-400 transition duration-200">
+                    <img src="{{ asset('images/mail.svg') }}" class="h-6 w-6" alt="Mail Icon">
+                </a>
+                <div>
+                    <img src="#" alt="Profile" class="h-10 w-10 rounded-full border-2 border-white">
+                </div>
+                <div>
+                    <a href="#" class="font-semibold">Organization</a>
+                </div>
+            </nav>
 
-
-    <!-- Main Content -->
-    <div class="flex-grow">
-        <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
-            <x-general-components.notification />
-
-            <div>
-                <img src="{{ asset(auth()->user()->profile_pic ?? 'images/profiles/default.png') }}"
-                    alt="Profile"
-                    class="h-10 w-10 rounded-full border-2 border-white object-cover">
+            <!-- Page Content from Child Views -->
+            <div class="p-0">
+                @yield('studentContent')
             </div>
-        
-
+        </div>
+    </div>
 
            <div>
                 <a href="#" class="font-semibold">{{ auth()->user()->username }}</a>

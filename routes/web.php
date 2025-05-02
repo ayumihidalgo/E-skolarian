@@ -6,6 +6,9 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
 
+Route::get('/', function () {
+    return view('admin.documentArchive');
+});
 
 Route::get('/', function () {
     return view('auth/login');
@@ -79,6 +82,13 @@ Route::get('/custom-reset-password', function () {
 
 });
 
+Route::get('/', function () {
+    return view('admin.documentArchive');
+});
 
+// Route for the document preview page (admin)
+Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
 
-
+// Route for the document preview page (student)
+Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
+    ->name('student.documentPreview');
