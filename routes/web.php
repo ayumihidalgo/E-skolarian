@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\SuperAdminController; 
+use App\Http\Controllers\SuperAdminController;
 
 
 Route::get('/', function () {

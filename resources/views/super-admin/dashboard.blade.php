@@ -8,7 +8,7 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
     </div>
-    
+
     <!-- Add User Button -->
     <div class="mb-4 flex justify-between items-center">
         <button id="addUserBtn" class="bg-[#7A1212] hover:bg-red-800 text-white px-4 py-2 rounded-[16px] font-semibold font-[Lexend] inline-flex items-center">
@@ -17,7 +17,7 @@
             </svg>
             ADD USER
         </button>
-        
+
     <!-- Activity Log Button -->
     <button class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white">
         ACTIVITY LOG
@@ -38,13 +38,13 @@
                         <div class="flex items-center">
                             <span>Username</span>
                             <div class="flex flex-col ml-2">
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'username', 'direction' => 'asc']) }}" 
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'username', 'direction' => 'asc']) }}"
                             class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'username' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                         <path d="M6 0L11.1962 9H0.803848L6 0Z" fill="white"/>
                                     </svg>
                             </a>
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'username', 'direction' => 'desc']) }}" 
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'username', 'direction' => 'desc']) }}"
                             class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1 {{ ($sortField === 'username' && $sortDirection === 'desc') ? 'text-yellow-300' : '' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                         <path d="M6 12L0.803848 3L11.1962 3L6 12Z" fill="white"/>
@@ -57,14 +57,14 @@
                         <div class="flex items-center justify-center">
                             <span>Role</span>
                             <div class="flex flex-col ml-2">
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'role', 'direction' => 'asc']) }}" 
-                                class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'role' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'role_name', 'direction' => 'asc']) }}"
+                                class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'role_name' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                         <path d="M6 0L11.1962 9H0.803848L6 0Z" fill="white"/>
                                     </svg>
                                 </a>
-                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'role', 'direction' => 'desc']) }}" 
-                                class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1 {{ ($sortField === 'role' && $sortDirection === 'desc') ? 'text-yellow-300' : '' }}">
+                                <a href="{{ request()->fullUrlWithQuery(['sort' => 'role_name', 'direction' => 'desc']) }}"
+                                class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1 {{ ($sortField === 'role_name' && $sortDirection === 'desc') ? 'text-yellow-300' : '' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                         <path d="M6 12L0.803848 3L11.1962 3L6 12Z" fill="white"/>
                                     </svg>
@@ -76,13 +76,13 @@
                         <div class="flex items-center justify-end">
                             <span>Creation Date</span>
                             <div class="flex flex-col ml-2">
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => 'asc']) }}" 
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => 'asc']) }}"
                                 class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'created_at' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                         <path d="M6 0L11.1962 9H0.803848L6 0Z" fill="white"/>
                                     </svg>
                             </a>
-                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => 'desc']) }}" 
+                            <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => 'desc']) }}"
                             class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 -mt-1 {{ ($sortField === 'created_at' && $sortDirection === 'desc') ? 'text-yellow-300' : '' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none">
                                         <path d="M6 12L0.803848 3L11.1962 3L6 12Z" fill="white"/>
@@ -99,7 +99,7 @@
                 <tr class="border-y-[0.1px] border-[#7A1212] bg-[#d9c698] hover:bg-[#DAA520] transition duration-300">
                         <td class="px-6 py-4 text-left pl-40 text-[Lexend] text-[17px] text-black text-semibold">
                             <!-- Make the username clickable to show user details modal -->
-                            <button 
+                            <button
                                 type="button"
                                 class="user-details-btn hover:underline hover:text-[#7A1212] focus:outline-none cursor-pointer text-left"
                                 data-user="{{ $user->toJson() }}"
@@ -108,7 +108,7 @@
                             </button>
                         </td>
                         <td class="px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
-                            {{ $user->role }}
+                            {{ $user->role_name }}
                         </td>
                         <td class="px-6 py-4 text-right pr-40 text-[Lexend] text-[17px] text-black text-semibold">
                             {{ $user->created_at->format('M-d-Y') }}
@@ -132,7 +132,7 @@
 
 <!-- Pagination Buttons -->
 <div class="flex justify-between items-center px-15" style="width: 100%;">
-    <button 
+    <button
         class="flex items-center bg-[#7A121280] px-4 py-2 rounded-[8px] hover:bg-red-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         {{ $users->onFirstPage() ? 'disabled' : '' }}
         onclick="window.location.href='{{ $users->previousPageUrl() }}'"
@@ -149,7 +149,7 @@
         <span>of</span>
         <span class="border-b-4 rounded-[3px] border-[#7A1212] px-2">{{ $users->lastPage() }}</span>
     </div>
-    <button 
+    <button
         class="flex items-center bg-[#7A121280] px-4 py-2 rounded-[8px] hover:bg-red-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
         {{ !$users->hasMorePages() ? 'disabled' : '' }}
         onclick="window.location.href='{{ $users->nextPageUrl() }}'"
@@ -165,7 +165,7 @@
 <div id="addUserModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
     <!-- Modal Backdrop -->
     <div class="absolute inset-0 bg-black/30 backdrop-blur-sm add-user-backdrop"></div>
-    
+
     <!-- Modal Content -->
     <div class="bg-white rounded-[25px] shadow-xl w-full max-w-lg relative z-50">
         <!-- Include the Add User component -->
@@ -177,7 +177,7 @@
 <div id="userDetailsModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
     <!-- Modal Backdrop -->
     <div class="absolute inset-0 bg-black/30 backdrop-blur-sm user-details-backdrop"></div>
-    
+
     <!-- Modal Content -->
     <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-50 overflow-hidden">
         <!-- Close Button -->
@@ -186,7 +186,6 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
     </button>
-        
         <!-- User Details -->
         <div class="p-8">
         <h3 class="text-xl font-semibold text-[#181D27] text-[Lexend] mb-2">View Account Details</h3>
@@ -225,7 +224,7 @@
 <div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 {{ session()->has('success') ? '' : 'hidden' }}">
     <!-- Modal Backdrop -->
     <div class="absolute inset-0 bg-black/30 backdrop-blur-sm success-modal-backdrop"></div>
-    
+
     <!-- Modal Content -->
     <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-50 p-6">
         <!-- Success Message -->
@@ -233,11 +232,11 @@
             <h3 class="text-lg font-semibold text-gray-900 text-[Inter] mb-2">User Successfully Added!</h3>
             <p class="text-sm text-gray-500">{{ session('success') }}</p>
         </div>
-        
+
         <!-- Okay Button -->
         <div class="flex justify-center">
             <button type="button"
-                id="closeSuccessModalBtn" 
+                id="closeSuccessModalBtn"
                 class="bg-[#7A1212] hover:bg-red-800 text-white px-8 py-2 rounded-[16px] font-semibold font-[Lexend] transition duration-200">
                 Okay
             </button>
@@ -311,57 +310,57 @@ document.addEventListener('DOMContentLoaded', function() {
     const addUserBtn = document.getElementById('addUserBtn');
     const closeAddUserModalBtn = document.getElementById('closeAddUserModalBtn');
     const addUserBackdrop = document.querySelector('.add-user-backdrop');
-    
+
     // User Details Modal
     const userDetailsModal = document.getElementById('userDetailsModal');
     const userDetailsButtons = document.querySelectorAll('.user-details-btn');
     const closeUserDetailsBtn = document.getElementById('closeUserDetailsBtn');
     const closeUserDetailsModalBtn = document.getElementById('closeUserDetailsModalBtn');
     const userDetailsBackdrop = document.querySelector('.user-details-backdrop');
-    
+
     // Success Modal
     const successModal = document.getElementById('successModal');
     const closeSuccessModalBtn = document.getElementById('closeSuccessModalBtn');
     const successModalBackdrop = document.querySelector('.success-modal-backdrop');
-    
+
     // Add User Modal Opening
     if (addUserBtn) {
         addUserBtn.addEventListener('click', function() {
             addUserModal.classList.remove('hidden');
         });
     }
-    
+
     // Add User Modal Closing
     if (closeAddUserModalBtn) {
         closeAddUserModalBtn.addEventListener('click', function() {
             addUserModal.classList.add('hidden');
         });
     }
-    
+
     if (addUserBackdrop) {
         addUserBackdrop.addEventListener('click', function() {
             addUserModal.classList.add('hidden');
         });
     }
-    
+
     // Form Submission Handling
     const addUserForm = document.getElementById('addUserForm');
     if (addUserForm) {
         addUserForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            
+
             // Get form data
             const username = document.getElementById('username').value;
             const email = document.getElementById('email').value;
-            const role = document.getElementById('role').value;
-            
+            const role_name = document.getElementById('role_name').value;
+
             // Create form data object
             const formData = new FormData();
             formData.append('username', username);
             formData.append('email', email);
-            formData.append('role', role);
+            formData.append('role_name', role_name);
             formData.append('_token', '{{ csrf_token() }}');
-            
+
             // Send the form data via fetch API
             fetch('/users', {
                 method: 'POST',
@@ -381,7 +380,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 // Close the add user modal
                 addUserModal.classList.add('hidden');
-                
+
                 // Show success message
                 if (successModal) {
                     // Update success message if needed
@@ -389,10 +388,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (successMessageElement) {
                         successMessageElement.textContent = 'User added successfully!';
                     }
-                    
+
                     // Show success modal
                     successModal.classList.remove('hidden');
-                    
+
                     // Refresh the page after a delay to show the new user
                     setTimeout(() => {
                         window.location.reload();
@@ -406,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } catch (e) {
                     errorData = { message: 'An error occurred while adding the user.' };
                 }
-                
+
                 // Handle validation errors
                 if (errorData.errors) {
                     // Display the first error
@@ -419,54 +418,53 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-    
+
     // User Details Modal
     userDetailsButtons.forEach(button => {
         button.addEventListener('click', function() {
             const userData = JSON.parse(this.getAttribute('data-user'));
-            
+
             // Fill user details in the modal
             document.getElementById('userUsername').textContent = userData.username;
             document.getElementById('userEmail').textContent = userData.email;
             document.getElementById('userRole').textContent = userData.role;
             
-            
             // Show the modal
             userDetailsModal.classList.remove('hidden');
         });
     });
-    
+
     if (closeUserDetailsBtn) {
         closeUserDetailsBtn.addEventListener('click', function() {
             userDetailsModal.classList.add('hidden');
         });
     }
-    
+
     if (closeUserDetailsModalBtn) {
         closeUserDetailsModalBtn.addEventListener('click', function() {
             userDetailsModal.classList.add('hidden');
         });
     }
-    
+
     if (userDetailsBackdrop) {
         userDetailsBackdrop.addEventListener('click', function() {
             userDetailsModal.classList.add('hidden');
         });
     }
-    
+
     // Success Modal
     if (closeSuccessModalBtn) {
         closeSuccessModalBtn.addEventListener('click', function() {
             successModal.classList.add('hidden');
         });
     }
-    
+
     if (successModalBackdrop) {
         successModalBackdrop.addEventListener('click', function() {
             successModal.classList.add('hidden');
         });
     }
-    
+
     // Close the modals when Escape key is pressed
     document.addEventListener('keydown', function(event) {
         if (event.key === 'Escape') {
