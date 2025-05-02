@@ -15,6 +15,7 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/notification', function () {
     return view('components.general-components.notification');
 });
+
 Route::middleware(['auth'])->group(function () {
     Route::get('/student/dashboard', function () {
         return response()
@@ -41,9 +42,11 @@ Route::middleware(['auth'])->group(function () {
     // User routes
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
 });
+
 Route::get('/notifications', function () {
     return view('notifications');
 })->name('notifications');
+
 Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
 Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
 Route::get('reset-password/{token}', [PasswordResetLinkController::class, 'edit'])->name('password.reset');
@@ -51,6 +54,7 @@ Route::post('reset-password', [PasswordResetLinkController::class, 'update'])->n
 Route::get('password-reset-confirmation', function () {
     return view('auth.password-reset-confirmation');
 })->name('password.reset.confirmation');
+
 /* Temporary Route for Email Template */
 Route::get('/custom-reset-password', function () {
     return view('emails.custom-reset-password');
