@@ -8,6 +8,7 @@ use App\Http\Controllers\UserController;
 
 
 
+
 Route::get('/', function () {
     return view('auth/login');
 });
@@ -64,7 +65,9 @@ Route::get('password-reset-confirmation', function () {
 /* Temporary Route for Email Template */
 Route::get('/custom-reset-password', function () {
     return view('emails.custom-reset-password');
+
 });
+
 
 
 
