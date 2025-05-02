@@ -658,6 +658,7 @@
                 if (document.getElementById('eventForm')) {
                     document.getElementById('eventForm').reset();
                 }
+                //random comment for PR//
 
                 // Close modal
                 closeEventModal();
