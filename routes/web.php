@@ -35,16 +35,15 @@ Route::middleware(['auth'])->group(function () {
             ->header('Expires', '0');
     })->name('admin.dashboard');
 
-    // Using SuperAdminController from DEV branch
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     
-    // Calendar routes from calendar-branch
+    // Calendar routes
     Route::get('/calendar', [EventController::class, 'index'])->name('calendar.index');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
     
-    // User routes from DEV branch
+    // User routes
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
 });
 
