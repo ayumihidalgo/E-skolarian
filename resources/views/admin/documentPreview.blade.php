@@ -1,7 +1,8 @@
 {{-- filepath: c:\Users\Ayumi Hidalgo\E-skolarian\resources\views\admin\documentPreview.blade.php --}}
-@extends('components.adminNavigation')
+@extends('base')
+@include('adminNavigation')
 
-@section('adminContent')
+@section('content')
     <div class="w-full min-h-screen bg-[#f2f4f7] px-6 py-8">
         {{-- Header --}}
         <div class="flex justify-between items-center mb-4">
