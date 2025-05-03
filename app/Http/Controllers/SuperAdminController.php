@@ -14,7 +14,7 @@ class SuperAdminController extends Controller
         $sortDirection = $request->query('direction', 'desc');
 
         // Valid sort fields to prevent SQL injection
-        $validSortFields = ['username', 'role', 'created_at'];
+        $validSortFields = ['username', 'role', 'role_name', 'created_at'];
 
         // Ensure sort field is valid
         if (!in_array($sortField, $validSortFields)) {
