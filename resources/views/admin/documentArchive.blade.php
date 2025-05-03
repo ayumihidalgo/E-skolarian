@@ -1,6 +1,7 @@
-@extends('components.adminNavigation')
+@extends('base')
+@include('components.adminNavigation')
 
-@section('adminContent')
+@section('content')
 <div class="w-full min-h-screen bg-[#f2f4f7] px-6 py-8 flex flex-col">
     <h2 class="text-2xl font-extrabold mb-4">Document Archive Table</h2>
 
