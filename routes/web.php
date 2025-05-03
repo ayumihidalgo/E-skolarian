@@ -6,9 +6,10 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
 
-Route::get('/', function () {
-    return view('admin.documentArchive');
-});
+// CHANGE THIS //
+//Route::get('/', function () {
+//    return view('admin.documentArchive');
+//});
 
 Route::get('/', function () {
     return view('auth/login');
@@ -36,13 +37,13 @@ Route::middleware(['auth'])->group(function () {
             ->header('Expires', '0');
     })->name('admin.dashboard');
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
-    
+
     // Calendar routes
     Route::get('/calendar', [EventController::class, 'index'])->name('calendar.index');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
-    
+
     // User routes
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
 
@@ -82,9 +83,10 @@ Route::get('/custom-reset-password', function () {
 
 });
 
-Route::get('/', function () {
-    return view('admin.documentArchive');
-});
+// CHANGE THIS //
+// Route::get('/', function () {
+//     return view('admin.documentArchive');
+// });
 
 // Route for the document preview page (admin)
 Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
