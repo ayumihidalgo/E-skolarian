@@ -15,12 +15,12 @@
         class="hidden absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300">
         
         <!-- Header -->
-        <div class="notif-top-content p-4 border-b flex flex-row justify-between" style="width: 500px; height: 40px;">
+        <div class="notif-top-content p-4 border-b flex flex-row justify-between " style="width: 500px; height: 40px;">
             <h2 class="text-lg font-semibold text-gray-800">Notifications</h2>
             <div class="right-nav flex flex-row space-x-5">
-                <!-- Dots Icon -->
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg" class="cursor-pointer hover:text-gray-700 transition-colors duration-300">
+            <!-- Dots Icon -->
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+                xmlns="http://www.w3.org/2000/svg" class="cursor-pointer hover:text-gray-700 transition-colors duration-300">
                     <path d="M4.75 8.5C3.925 8.5 3.25 9.175 3.25 10C3.25 10.825 3.925 11.5 4.75 11.5C5.575 11.5 6.25 10.825 6.25 10C6.25 9.175 5.575 8.5 4.75 8.5ZM15.25 8.5C14.425 8.5 13.75 9.175 13.75 10C13.75 10.825 14.425 11.5 15.25 11.5C16.075 11.5 16.75 10.825 16.75 10C16.75 9.175 16.075 8.5 15.25 8.5ZM10 8.5C9.175 8.5 8.5 9.175 8.5 10C8.5 10.825 9.175 11.5 10 11.5C10.825 11.5 11.5 10.825 11.5 10C11.5 9.175 10.825 8.5 10 8.5Z" fill="#525866"/>
                 </svg>
 
@@ -33,16 +33,16 @@
         </div>
 
         <!-- Tabs -->
-        <div class="flex items-center justify-between text-sm font-medium text-gray-600 border-b px-4">
+        <div id="tabs-nav" class="flex items-center justify-between text-sm font-medium text-gray-600 border-b px-4 mt-4 ">
             <div class="flex">
-                <button id="allTab" class="px-4 py-2 border-b-2 border-purple-600 text-black font-semibold bg-gray-50">All</button>
-                <button id="unreadTab" class="px-4 py-2 hover:bg-gray-100 text-gray-500">Unread</button>
+            <button id="allTab" class="px-4 py-2 border-b-2 border-purple-600 text-black font-semibold bg-gray-50 cursor-pointer">All</button>
+            <button id="unreadTab" class="px-4 py-2 hover:bg-gray-100 text-gray-500 cursor-pointer">Unread</button>
             </div>
             <div class="p-2 hover:bg-gray-100 rounded cursor-pointer transition-colors duration-300" id="collapseArrow">
-                <svg id="arrowIcon" width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg" class="transform transition-transform duration-300">
-                    <path d="M10.0001 10.879L13.7126 7.1665L14.7731 8.227L10.0001 13L5.22705 8.227L6.28755 7.1665L10.0001 10.879Z" fill="#525866"/>
-                </svg>
+            <svg id="arrowIcon" width="20" height="20" viewBox="0 0 20 20" fill="none"
+                xmlns="http://www.w3.org/2000/svg" class="transform transition-transform duration-300">
+                <path d="M10.0001 10.879L13.7126 7.1665L14.7731 8.227L10.0001 13L5.22705 8.227L6.28755 7.1665L10.0001 10.879Z" fill="#525866"/>
+            </svg>
             </div>
         </div>
 
@@ -63,6 +63,7 @@
         const collapseArrow = document.getElementById('collapseArrow');
         const notificationBody = document.getElementById('notificationBody');
         const arrowIcon = document.getElementById('arrowIcon');
+        const tabs = document.getElementById('tabs-nav');
         
         // Fixed height for notification body
         const NOTIFICATION_HEIGHT = '512px';
@@ -130,9 +131,14 @@
             if (isCollapsed) {
                 arrowIcon.style.transform = 'rotate(180deg)';
                 notificationBody.style.height = '0px';
+                tabs.style.borderBottom = 'none';
+                tabs.style.borderBottom = 'none';
+
+               
             } else {
                 arrowIcon.style.transform = 'rotate(0deg)';
                 notificationBody.style.height = NOTIFICATION_HEIGHT;
+                tabs.style.borderBottom = '1px solid black';
             }
         });
     });

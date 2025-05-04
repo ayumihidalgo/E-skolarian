@@ -7,6 +7,8 @@ use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\StudentDocumentController;
 use App\Http\Controllers\AdminDocumentController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DocumentController;
 
  Route::get('/student/documentArchive', function () {
     return view('student.documentArchive');
@@ -67,6 +69,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
+
+    // Submit Document Route
+    Route::get('/student/submit-documents', function () {
+        return view('student.submit-documents');  // resources/views/home.blade.php
+    });
+
+    Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 });
 
 Route::get('/notifications', function () {
@@ -100,3 +109,12 @@ Route::get('/admin/document/preview/{id}', [AdminDocumentController::class, 'pre
 // Route for the document preview page (student)
 Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
     ->name('student.documentPreview');
+
+// Document viewing 
+Route::get('/test-pdf', function() {
+    return response()->file(public_path('documents/test/sample.pdf'));
+});
+
+// Fetching and displaying and storing comments
+Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
