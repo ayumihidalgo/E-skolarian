@@ -9,19 +9,24 @@ class SuperAdminController extends Controller
 {
     public function showDashboard(Request $request)
     {
-        $sortField = $request->query('sort', 'created_at'); // default sort by created_at
-        $sortDirection = $request->query('direction', 'desc'); // default direction desc
+        // Get sort parameters
+        $sortField = $request->query('sort', 'created_at');
+        $sortDirection = $request->query('direction', 'desc');
 
-        // Fetch all users from the database
+        // Valid sort fields to prevent SQL injection
+        $validSortFields = ['username', 'role', 'role_name', 'created_at'];
+
+        // Ensure sort field is valid
+        if (!in_array($sortField, $validSortFields)) {
+            $sortField = 'created_at';
+        }
+
+        // Fetch users with sorting and pagination
         $users = User::orderBy($sortField, $sortDirection)
-                    ->paginate(6)
-                    ->withQueryString(); // This preserves the query parameters
+                     ->paginate(6); // Adjust number per page as needed
 
-        return view('super-admin.dashboard', [
-            'users' => $users,
-            'sortField' => $sortField,
-            'sortDirection' => $sortDirection
-        ]);
+        // Return the view with the users data and sort parameters
+        return view('super-admin.dashboard', compact('users', 'sortField', 'sortDirection'));
     }
     
 }
