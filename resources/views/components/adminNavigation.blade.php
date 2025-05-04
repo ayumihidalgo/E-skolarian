@@ -52,9 +52,7 @@
     <!-- Main Content -->
     <div class="flex-grow">
         <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
-            <a href="#" class="hover:text-yellow-400 transition duration-200">
-                <img src="{{ asset('images/mail.svg') }}" class="h-5 w-5" alt="Mail Icon">
-            </a>
+            <x-general-components.notification />
             <div>
                 <a href="#" class="font-semibold">Admin</a>
             </div>
