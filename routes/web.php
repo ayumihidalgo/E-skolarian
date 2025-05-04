@@ -6,6 +6,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DocumentController;
 
 // CHANGE THIS //
 //Route::get('/', function () {
@@ -63,6 +64,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
+
+    // Submit Document Route
+    Route::get('/student/submit-documents', function () {
+        return view('student.submit-documents');  // resources/views/home.blade.php
+    });
+
+    Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 });
 
 Route::get('/notifications', function () {
