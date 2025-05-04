@@ -1,57 +1,14 @@
 @extends('base')
 
 @section('content')
-    <div class="flex relative font-[Manrope]">
-        <div id="sidebar" class="w-1/4 h-screen bg-[#7A1212] text-white p-6 transition-all duration-300 flex flex-col">
-            <div class="flex items-center space-x-2">
-                <a href="#">
-                    <img src="{{ asset('images/officialLogo.svg') }}" alt="Logo" class="h-20 w-20">
-                </a>
-                <div class="sidebar-text">
-                    <a href="#">
-                        <h1 class="font-[Marcellus_SC] text-xl leading-none">E-SKOLARI<span
-                                class="text-yellow-400">★</span>N</h1>
-                    </a>
-                    <a href="#">
-                        <p class="text-sm mt-1 tracking-wide font-[Marcellus_SC]">Document Management</p>
-                    </a>
-                </div>
-            </div>
+@include('components.adminNavBarComponent')
+@include('components.adminSidebarComponent')
+<div id="main-content" class="transition-all duration-300 ml-[20%]">
 
-            <nav class="space-y-4 text-lg font-[Marcellus_SC] mt-6">
-                @foreach ([
-                    ['Home', 'account.svg', '#'],
-                    ['Review', 'archive.svg', route('admin.review')],
-                    ['Archive', 'tracker.svg', '#'],
-                    ['Calendar', 'calendar.svg', '#'],
-                    ['Settings', 'settings.svg', '#']
-                ] as [$label, $icon, $route])
-                    <a href="{{ $route }}" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
-                        <img src="{{ asset("images/$icon") }}" class="h-6 w-6" alt="{{ $label }} Icon">
-                        <span class="sidebar-text">{{ $label }}</span>
-                    </a>
-                @endforeach
-
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <button type="submit" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200 mt-60">
-                        <img src="{{ asset('images/logout.svg') }}" class="h-6 w-6" alt="Logout Icon">
-                        <span class="sidebar-text font-[Marcellus_SC] text-lg">Logout</span>
-                    </button>
-                </form>
-
-            </nav>
-        </div>
-
-        <button onclick="toggleSidebar()" class="absolute top-11 left-[24%] z-10 transition-all duration-300"
-            id="toggleBtn">
-            <img src="{{ asset('images/toggleSidebar.svg') }}" alt="Toggle Sidebar"
-                class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
-        </button>
 
 
         <div class="flex-grow bg-gray-100">
-            <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
+<!--            <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
                 <a href="#" class="hover:text-yellow-400 transition duration-200">
                     <img src="{{ asset('images/mail.svg') }}" class="h-5 w-5" alt="Mail Icon">
                 </a>
@@ -59,6 +16,7 @@
                     <a href="#" class="font-semibold">Organization</a>
                 </div>
             </nav>
+        -->
             <!-- Main Content -->
             <div id="mainContentArea" class="p-6 h-[90%]">
                 <!-- Table View -->
@@ -66,7 +24,7 @@
                     <div class="text-black py-4 px-6 font-semibold text-2xl">
                         Admin Approval
                     </div>
-                    
+
                     <div class="p-6 flex flex-col flex-grow">
                         <div class="flex items-center justify-between mb-4">
                             <!-- Search Bar -->
@@ -221,7 +179,7 @@
                             $documents = $paginatedDocuments;
 
                         @endphp
-                        
+
                         <!-- Table Section -->
                         @if ($documents->isNotEmpty())
                             <div class="bg-gray-50 overflow-x-auto rounded-xl flex flex-col min-h-[300px]">
@@ -280,7 +238,7 @@
                                                             // Extract organization acronym from document tag
                                                             $tagParts = preg_split('/-|_/', $document->tag);
                                                             $acronym = strtoupper($tagParts[0]);
-                                                            
+
                                                             // Map to color key
                                                             $colorKey = match($acronym) {
                                                                 'PSY' => 'PSY',
@@ -344,7 +302,7 @@
 
                         <div class="flex justify-between items-center mt-4">
                             <!-- Previous Button -->
-                            <a href="{{ $documents->previousPageUrl() }}" 
+                            <a href="{{ $documents->previousPageUrl() }}"
                             class="bg-[#7A1212] cursor-pointer hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed {{ $documents->onFirstPage() ? 'opacity-50 cursor-not-allowed' : '' }}"
                             {{ $documents->onFirstPage() ? 'disabled' : '' }}>
                                 ← Previous
@@ -361,7 +319,7 @@
                                                 First
                                             </a>
                                         </li>
-                                        
+
                                         @foreach ($documents->getUrlRange(1, $documents->lastPage()) as $page => $url)
                                             <li>
                                                 <a href="{{ $url }}"
@@ -370,7 +328,7 @@
                                                 </a>
                                             </li>
                                         @endforeach
-                                        
+
                                         <li>
                                             <a href="{{ $documents->url($documents->lastPage()) }}"
                                             class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'text-gray-600 cursor-not-allowed' : 'text-black' }}"
@@ -383,7 +341,7 @@
                             </div>
 
                             <!-- Next Button -->
-                            <a href="{{ $documents->nextPageUrl() }}" 
+                            <a href="{{ $documents->nextPageUrl() }}"
                             class="bg-[#7A1212] cursor-pointer hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed {{ !$documents->hasMorePages() ? 'opacity-50 cursor-not-allowed' : '' }}"
                             {{ !$documents->hasMorePages() ? 'disabled' : '' }}>
                                 Next →
@@ -391,7 +349,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Details View (initially hidden) -->
                 <div id="detailsView" class="hidden h-full">
                     <div class="flex items-start justify-between px-6">
@@ -524,9 +482,9 @@
 
                             <!-- Comment Input -->
                             <div class="flex items-center space-x-2 mt-6">
-                                <input type="text" 
-                                    id="commentInput" 
-                                    placeholder="Comment..." 
+                                <input type="text"
+                                    id="commentInput"
+                                    placeholder="Comment..."
                                     class="flex-1 rounded-full py-2 px-4 bg-white text-gray-700 focus:outline-none" />
                                 <button onclick="submitComment()" class="text-white hover:text-gray-300 cursor-pointer">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -539,7 +497,6 @@
                 </div>
             </div>
         </div>
-    </div>   
 
     <div id="documentViewerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
         <div class="bg-white w-11/12 h-5/6 rounded-lg flex flex-col">
@@ -569,7 +526,7 @@
             </div>
         </div>
     </div>
-   
+
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -609,9 +566,9 @@
                     container.innerHTML = comments.map(comment => `
                         <div class="flex items-start gap-2">
                             <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                     stroke="currentColor" class="w-6 h-6 text-gray-600">
-                                    <path stroke-linecap="round" stroke-linejoin="round" 
+                                    <path stroke-linecap="round" stroke-linejoin="round"
                                         d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
                                 </svg>
                             </div>
@@ -632,7 +589,7 @@
         function submitComment() {
             const input = document.getElementById('commentInput');
             const content = input.value.trim();
-            
+
             if (!content || !currentDocumentId) return;
 
             fetch('/comments', {
@@ -678,10 +635,10 @@
                     const title = row.cells[2].textContent.toLowerCase();
                     const type = row.cells[4].textContent.toLowerCase();
 
-                    const matchesSearch = tag.includes(searchTerm) || 
-                                        organization.includes(searchTerm) || 
+                    const matchesSearch = tag.includes(searchTerm) ||
+                                        organization.includes(searchTerm) ||
                                         title.includes(searchTerm);
-                    
+
                     const matchesOrg = selectedOrg === '' || organization.includes(selectedOrg);
                     const matchesType = selectedType === '' || type.includes(selectedType);
 
@@ -725,7 +682,7 @@
             documentTypeFilter.addEventListener('change', filterTable);
         });
 
-        // Sorting Functionality 
+        // Sorting Functionality
         let currentSort = {
             column: -1,
             direction: 'asc'
@@ -749,7 +706,7 @@
             headers.forEach(icon => {
                 icon.className = 'fa-solid fa-sort';
             });
-            
+
             const currentHeader = headers[columnIndex];
             currentHeader.className = `fa-solid fa-sort-${currentSort.direction === 'asc' ? 'up' : 'down'}`;
 
@@ -793,7 +750,7 @@
             tableRows.forEach(row => {
                 row.addEventListener('click', function() {
                     const tag = row.cells[0].textContent.trim();
-                    
+
                     // Remove the red border and bullet
                     row.classList.remove('border-[#7A1212]', 'bg-white');
                     row.classList.add('border-[#D9D9D9]', 'bg-[#D9ACAC33]');
@@ -801,7 +758,7 @@
                     if (bulletPoint) {
                         bulletPoint.remove();
                     }
-                    
+
 
                     // Rest of your code...
                     const organization = row.cells[1].textContent.trim();
@@ -811,7 +768,7 @@
 
                     // Update panel content
                     updatePanelContent(tag, organization, title, date, type);
-                    
+
                     // Load comments for this document
                     loadComments(tag);
 
@@ -831,7 +788,7 @@
             function updatePanelContent(tag, organization, title, date, type) {
                 // Update tag
                 document.querySelector('#detailsView .text-right p').textContent = tag;
-                
+
                 // Update header details
                 const headerDiv = document.querySelector('#detailsView .flex.justify-between.items-start div:first-child');
                 headerDiv.innerHTML = `
@@ -855,13 +812,13 @@
         window.closeDetailsPanel = function() {
             const tableView = document.getElementById('tableView');
             const detailsView = document.getElementById('detailsView');
-            
+
             // Hide details view and show table view
             detailsView.classList.add('hidden');
             tableView.classList.remove('hidden');
         }
 
-        // PDF and Image Viewing 
+        // PDF and Image Viewing
         let pdfDoc = null;
         let pageNum = 1;
         let pageRendering = false;
@@ -927,7 +884,7 @@
                     viewport: viewport
                 }).promise;
                 pageRendering = false;
-                
+
                 if (pageNumPending !== null) {
                     renderPage(pageNumPending);
                     pageNumPending = null;
@@ -950,7 +907,7 @@
 
         function changePage(offset) {
             if (!pdfDoc) return;
-            
+
             const newPageNum = pageNum + offset;
             if (newPageNum >= 1 && newPageNum <= pdfDoc.numPages) {
                 pageNum = newPageNum;
