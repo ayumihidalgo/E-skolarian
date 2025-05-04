@@ -5,11 +5,16 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\StudentDocumentController;
+use App\Http\Controllers\AdminDocumentController;
 
-// CHANGE THIS //
-//Route::get('/', function () {
-//    return view('admin.documentArchive');
-//});
+ Route::get('/student/documentArchive', function () {
+    return view('student.documentArchive');
+})->name('student.documentArchive');
+
+Route::get('/admin/documentArchive', function () {
+    return view('admin.documentArchive');
+})->name('admin.documentArchive');
 
 Route::get('/', function () {
     return view('auth/login');
@@ -89,7 +94,8 @@ Route::get('/custom-reset-password', function () {
 // });
 
 // Route for the document preview page (admin)
-Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
+Route::get('/admin/document/preview/{id}', [AdminDocumentController::class, 'preview'])
+    ->name('admin.documentPreview');
 
 // Route for the document preview page (student)
 Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])

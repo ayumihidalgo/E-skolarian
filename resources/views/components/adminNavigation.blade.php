@@ -1,5 +1,7 @@
 <!--ADMIN NAVIGATION BAR-->
+@extends('base')
 
+@section('body')
 <div class="flex relative">
     <!-- Sidebar -->
     <div id="sidebar" class="w-1/4 h-screen bg-[#7A1212] text-white p-6 transition-all duration-300 flex flex-col">
@@ -8,7 +10,6 @@
                 <img src="{{ asset('images/officialLogo.svg') }}" alt="Logo" class="h-20 w-20">
             </a>
             <div class="sidebar-text">
-
                 <a href="#">
                     <h1 class="font-[Marcellus_SC] text-xl leading-none">E-SKOLARI<span class="text-yellow-400">★</span>N</h1>
                 </a>
@@ -22,7 +23,8 @@
         <!-- Navigation Links -->
         <nav class="space-y-4 text-lg font-[Marcellus_SC] mt-6">
             @foreach ([['Home', 'account.svg'], ['Review', 'archive.svg'], ['Archive', 'tracker.svg'], ['Calendar', 'calendar.svg'], ['Settings', 'settings.svg']] as [$label, $icon])
-                <a href="#" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
+                <a href="{{ $label === 'Archive' ? route('admin.documentArchive') : '#' }}"
+                   class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
                     <img src="{{ asset("images/$icon") }}" class="h-6 w-6" alt="{{ $label }} Icon">
                     <span class="sidebar-text">{{ $label }}</span>
                 </a>
@@ -55,8 +57,8 @@
         </nav>
 
         <!-- Yield for Admin Content -->
-        <div class="p-0">
-            @yield('adminContent')
+        <div class="flex-1 overflow-y-auto bg-[#f2f4f7]">
+            @yield('content')
         </div>
     </div>
 </div>

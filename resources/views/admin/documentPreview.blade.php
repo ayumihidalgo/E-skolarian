@@ -1,6 +1,4 @@
-{{-- filepath: c:\Users\Ayumi Hidalgo\E-skolarian\resources\views\admin\documentPreview.blade.php --}}
-@extends('base')
-@include('adminNavigation')
+@extends('components.adminNavigation')
 
 @section('content')
     <div class="w-full min-h-screen bg-[#f2f4f7] px-6 py-8">
@@ -8,7 +6,7 @@
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-extrabold">Document Archive Preview</h2>
             {{-- Back Button --}}
-            <a href="{{ url('/') }}"
+            <a href="{{ route('admin.documentArchive') }}"
                class="bg-[#7A1212] text-white px-4 py-2 rounded-full hover:bg-[#DAA520] w-[117px] h-[44px] flex items-center justify-center">
                 Back
             </a>
