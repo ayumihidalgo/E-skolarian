@@ -16,23 +16,20 @@ class UserController extends Controller
      */
     public function store(Request $request)
 {
-    // Validate the incoming request
+    // Validate the request data
     $validated = $request->validate([
         'username' => 'required|string|max:255|unique:users,username',
         'email' => 'required|email|max:255|unique:users,email',
-        'role_name' => 'required|string',
+        'role' => 'required|in:admin,student', // Changed from 'admin,organization' to match frontend data-role values
+        'role_name' => 'required|string|max:255', // Add validation for role_name
     ]);
-
-    // Determine role based on role_name
-    $studentRoles = ['Academic Organization', 'Non-Academic Organization'];
-    $role = in_array($validated['role_name'], $studentRoles) ? 'student' : 'admin';
 
     // Create the user
     $user = User::create([
         'username' => $validated['username'],
         'email' => $validated['email'],
-        'role' => $role,
-        'role_name' => $validated['role_name'],
+        'role' => $validated['role'], // This is the actual role (admin or student)
+        'role_name' => $validated['role_name'], // This is the displayed role name
         'password' => Hash::make('defaultpassword'), // Set a default password
     ]);
 
@@ -49,3 +46,4 @@ class UserController extends Controller
     return redirect()->route('super-admin.dashboard')->with('success', 'User added successfully!');
 }
 }
+
