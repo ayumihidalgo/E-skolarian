@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CommentController;
 
 // CHANGE THIS //
 //Route::get('/', function () {
@@ -94,3 +95,12 @@ Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview']
 // Route for the document preview page (student)
 Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
     ->name('student.documentPreview');
+
+// Document viewing 
+Route::get('/test-pdf', function() {
+    return response()->file(public_path('documents/test/sample.pdf'));
+});
+
+// Fetching and displaying and storing comments
+Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');

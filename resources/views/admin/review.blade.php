@@ -1,7 +1,7 @@
 @extends('base')
 
 @section('content')
-    <div class="flex relative">
+    <div class="flex relative font-[Manrope]">
         <div id="sidebar" class="w-1/4 h-screen bg-[#7A1212] text-white p-6 transition-all duration-300 flex flex-col">
             <div class="flex items-center space-x-2">
                 <a href="#">
@@ -78,39 +78,39 @@
                             </div>
                             <!-- Filter Dropdowns -->
                             <div class="flex space-x-2">
-                                <div class="relative">
-                                    <select id="organizationFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-8 rounded-full leading-tight focus:outline-none">
-                                        <option value="" disabled selected>Organization</option>
-                                        <option value="">All</option>
-                                        <option value="OSC">OSC</option>
-                                        <option value="AECES">AECES</option>
-                                        <option value="ACAP">ACAP</option>
-                                        <option value="ELITE">ELITE</option>
-                                        <option value="GIVE">GIVE</option>
-                                        <option value="JEHRA">JEHRA</option>
-                                        <option value="JMAP">JMAP</option>
-                                        <option value="JPIA">JPIA</option>
-                                        <option value="TAPNOTCH">TAPNOTCH</option>
-                                        <option value="SIGMA">SIGMA</option>
-                                        <option value="AGDS">AGDS</option>
-                                        <option value="Chorale">Chorale</option>
+                                <div class="relative w-40">
+                                    <select id="organizationFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-8 rounded-full leading-tight focus:outline-none hover:text-white transition-colors duration-200 truncate">
+                                        <option class="bg-white text-black truncate" value="" disabled selected>Organization</option>
+                                        <option class="bg-white text-black truncate" value="">All</option>
+                                        <option class="bg-white text-black truncate" value="OSC">OSC</option>
+                                        <option class="bg-white text-black truncate" value="AECES">AECES</option>
+                                        <option class="bg-white text-black truncate" value="ACAP">ACAP</option>
+                                        <option class="bg-white text-black truncate" value="ELITE">ELITE</option>
+                                        <option class="bg-white text-black truncate" value="GIVE">GIVE</option>
+                                        <option class="bg-white text-black truncate" value="JEHRA">JEHRA</option>
+                                        <option class="bg-white text-black truncate" value="JMAP">JMAP</option>
+                                        <option class="bg-white text-black truncate" value="JPIA">JPIA</option>
+                                        <option class="bg-white text-black truncate" value="TAPNOTCH">TAPNOTCH</option>
+                                        <option class="bg-white text-black truncate" value="SIGMA">SIGMA</option>
+                                        <option class="bg-white text-black truncate" value="AGDS">AGDS</option>
+                                        <option class="bg-white text-black truncate" value="Chorale">Chorale</option>
                                     </select>
                                     <div class="pointer-events-none absolute top-2 right-0 flex items-center px-3 text-white">
                                         <i class="fa-solid fa-sort-down"></i>
                                     </div>
                                 </div>
-                                <div class="relative">
-                                    <select id="documentTypeFilter" class="block cursor-pointer appearance-none w-48 min-w-[8rem] max-w-[10rem] bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-8 rounded-full leading-tight focus:outline-none">
-                                        <option value="" disabled selected>Document Type</option>
-                                        <option value="">All</option>
-                                        <option value="Event Proposal">Event Proposal</option>
-                                        <option value="General Plan">General Plan of Activities</option>
-                                        <option value="Calendar">Calendar of Activities</option>
-                                        <option value="Accomplishment Report">Accomplishment Report</option>
-                                        <option value="Constitution">Constitution and By-Laws</option>
-                                        <option value="Request Letter">Request Letter</option>
-                                        <option value="Off-Campus">Off-Campus</option>
-                                        <option value="Petition">Petition and Concern</option>
+                                <div class="relative w-40">
+                                    <select id="documentTypeFilter" class="block cursor-pointer appearance-none w-48 min-w-[8rem] max-w-[10rem] bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-2 rounded-full leading-tight hover:text-white transition-colors duration-200 truncate">
+                                        <option class="bg-white text-black truncate" value="" disabled selected>Document Type</option>
+                                        <option class="bg-white text-black truncate" value="">All</option>
+                                        <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
+                                        <option class="bg-white text-black truncate" value="General Plan">General Plan of Activities</option>
+                                        <option class="bg-white text-black truncate" value="Calendar">Calendar of Activities</option>
+                                        <option class="bg-white text-black truncate" value="Accomplishment Report">Accomplishment Report</option>
+                                        <option class="bg-white text-black truncate" value="Constitution">Constitution and By-Laws</option>
+                                        <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
+                                        <option class="bg-white text-black truncate" value="Off-Campus">Off-Campus</option>
+                                        <option class="bg-white text-black truncate" value="Petition">Petition and Concern</option>
                                     </select>
                                     <div class="pointer-events-none absolute top-2 right-0 flex items-center px-3 text-white">
                                         <i class="fa-solid fa-sort-down"></i>
@@ -119,46 +119,86 @@
                             </div>
                         </div>
 
+                        <!-- Organization, Tag, Document Type Array -->
+                        @php
+                            $orgMap = [
+                                'ACAP' => 'Association of Competent and Aspiring Psychologists',
+                                'AECES' => 'Association of Electronics and Communications Engineering Students',
+                                'ELITE' => 'Eligible League of Information Technology Enthusiasts',
+                                'GIVE' => 'Guild of Imporous and Valuable Educators',
+                                'JEHRA' => 'Junior Executive of Human Resource Association',
+                                'JMAP' => 'Junior Marketing Association of the Philippines',
+                                'JPIA' => 'Junior Philippine Institute of Accountants',
+                                'PIIE' => 'Philippine Institute of Industrial Engineers',
+                                'AGDS' => 'Artist Guild Dance Squad',
+                                'Chorale' => 'PUP SRC Chorale',
+                                'SIGMA' => 'Supreme Innovators’ Guild for Mathematics Advancements',
+                                'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
+                                'OSC' => 'Office of the Student Council'
+                            ];
+                            $orgKeys = array_keys($orgMap);
+                            $tagColors = [
+                                'OSC' => 'text-blue-500',
+                                'ECE' => 'text-red-500',
+                                'PSY' => 'text-purple-500',
+                                'IT' => 'text-orange-500',
+                                'HR' => 'text-pink-400',
+                                'ACC' => 'text-pink-400',
+                                'EDU' => 'text-blue-500',
+                                'MAR' => 'text-yellow-500',
+                                'IE' => 'text-green-500',
+                                'TAP' => 'text-green-500',
+                                'SIGMA' => 'text-yellow-900',
+                                'AGDS' => 'text-yellow-900',
+                                'CHO' => 'text-blue-500'
+                            ];
+                            $types = [
+                                'Event Proposal', 'General Plan of Activities', 'Calendar of Activities',
+                                'Accomplishment Report', 'Contribution and By-Laws', 'Request Letter',
+                                'Off-Campus', 'Petition and Concern'
+                            ];
+                        @endphp
+
                         <!-- Document List Table -->
                         @php
                             // Test data for $documents
                             $documents = collect([
                                 (object) [
-                                    'tag' => 'MM-001',
-                                    'organization' => 'JMAP',
-                                    'title' => 'Project Requirement Specification',
+                                    'tag' => 'MAR-001',
+                                    'organization' => 'Junior Marketing Association of the Philippines',
+                                    'title' => 'JMAP_Request_AVR',
                                     'date' => \Carbon\Carbon::parse('2024-01-15'),
                                     'type' => 'Request',
                                     'is_opened' => false,
                                 ],
                                 (object) [
-                                    'tag' => 'ED-002',
-                                    'organization' => 'GIVE',
-                                    'title' => 'System Design Document',
+                                    'tag' => 'EDU-002',
+                                    'organization' => 'Guild of Imporous and Valuable Educators',
+                                    'title' => 'GIVE_Concerns',
                                     'date' => \Carbon\Carbon::parse('2024-02-20'),
                                     'type' => 'Request',
                                     'is_opened' => false,
                                 ],
                                 (object) [
                                     'tag' => 'IT-003',
-                                    'organization' => 'ELITE',
-                                    'title' => 'Implementation Plan',
+                                    'organization' => 'Eligible League of Information Technology Enthusiasts',
+                                    'title' => 'ELITE_IT_Week',
                                     'date' => \Carbon\Carbon::parse('2024-03-10'),
                                     'type' => 'Request',
                                     'is_opened' => false,
                                 ],
                                 (object) [
-                                    'tag' => 'AC-004',
-                                    'organization' => 'JPIA',
-                                    'title' => 'Test Case Specification',
+                                    'tag' => 'ACC-004',
+                                    'organization' => 'Junior Philippine Institute of Accountants',
+                                    'title' => 'JPIA_Seminar',
                                     'date' => \Carbon\Carbon::parse('2024-04-05'),
                                     'type' => 'Request',
                                     'is_opened' => false,
                                  ],
                                 (object) [
-                                    'tag' => 'PS-005',
-                                    'organization' => 'ACAP',
-                                    'title' => 'User Manual',
+                                    'tag' => 'PSY-005',
+                                    'organization' => 'Association of Competent and Aspiring Psychologists',
+                                    'title' => 'ACAP_Seminar',
                                     'date' => \Carbon\Carbon::parse('2024-05-12'),
                                     'type' => 'Request',
                                     'is_opened' => false,
@@ -236,16 +276,31 @@
                                                 <!-- Tag -->
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="flex items-center">
-                                                        <span class="font-bold"
-                                                            style="color: 
-                                                                @if(Str::startsWith($document->tag, 'MM')) #DFCC00 
-                                                                @elseif(Str::startsWith($document->tag, 'ED')) #2900E0 
-                                                                @elseif(Str::startsWith($document->tag, 'IT')) #E28400
-                                                                @elseif(Str::startsWith($document->tag, 'AC')) #E20093CF 
-                                                                @elseif(Str::startsWith($document->tag, 'PS')) #A833DA 
-                                                                @else #000 
-                                                                @endif
-                                                            ">
+                                                        @php
+                                                            // Extract organization acronym from document tag
+                                                            $tagParts = preg_split('/-|_/', $document->tag);
+                                                            $acronym = strtoupper($tagParts[0]);
+                                                            
+                                                            // Map to color key
+                                                            $colorKey = match($acronym) {
+                                                                'PSY' => 'PSY',
+                                                                'ECE' => 'ECE',
+                                                                'IT' => 'IT',
+                                                                'EDU' => 'EDU',
+                                                                'HR' => 'HR',
+                                                                'MAR' => 'MAR',
+                                                                'ACC' => 'ACC',
+                                                                'IE' => 'IE',
+                                                                'AGDS' => 'AGDS',
+                                                                'CHO' => 'CHO',
+                                                                'SIGMA' => 'SIGMA',
+                                                                'TAP' => 'TAP',
+                                                                'OSC' => 'OSC',
+                                                                default => 'text-gray-500'
+                                                            };
+                                                            $tagColor = $tagColors[$colorKey] ?? 'text-gray-500';
+                                                        @endphp
+                                                        <span class="font-bold {{ $tagColor }}">
                                                             {{ $document->tag }}
                                                         </span>
                                                     </div>
@@ -253,7 +308,7 @@
 
                                                 <!-- Organization -->
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="truncate w-48">{{ $document->organization }}</div>
+                                                    <div class="truncate w-48" title="{{ $document->organization }}">{{ $document->organization }}</div>
                                                 </td>
 
                                                 <!-- Title -->
@@ -296,20 +351,35 @@
                             </a>
 
                             <!-- Pagination Section -->
-                            <div class="flex flex-col items-center">
-                                <div class="flex items-center space-x-4 mb-2">
-                                    @if ($documents->hasPages())
-                                        @foreach ($documents->getUrlRange(1, $documents->lastPage()) as $page => $url)
-                                            <a href="{{ $url }}" 
-                                            class="text-gray-700 text-base font-medium hover:text-[#7A1212] {{ $documents->currentPage() == $page ? 'border-b-2 border-[#7A1212]' : '' }}">
-                                                {{ $page }}
+                            <div class="mt-4 flex justify-center">
+                                <nav>
+                                    <ul class="inline-flex items-center space-x-2">
+                                        <li>
+                                            <a href="{{ $documents->url(1) }}"
+                                            class="pagination-btn-first px-3 py-1 rounded-lg {{ $documents->onFirstPage() ? 'text-gray-600 cursor-not-allowed' : 'text-black' }}"
+                                            {{ $documents->onFirstPage() ? 'disabled' : '' }}>
+                                                First
                                             </a>
+                                        </li>
+                                        
+                                        @foreach ($documents->getUrlRange(1, $documents->lastPage()) as $page => $url)
+                                            <li>
+                                                <a href="{{ $url }}"
+                                                class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $page ? 'bg-[#4D0F0F] text-white' : 'bg-gray-200 hover:bg-gray-300' }}">
+                                                    {{ $page }}
+                                                </a>
+                                            </li>
                                         @endforeach
-                                    @endif
-                                </div>
-                                <div class="text-gray-500 text-xs">
-                                    Showing {{ $documents->firstItem() }} to {{ $documents->lastItem() }} of {{ $documents->total() }} Entries
-                                </div>
+                                        
+                                        <li>
+                                            <a href="{{ $documents->url($documents->lastPage()) }}"
+                                            class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'text-gray-600 cursor-not-allowed' : 'text-black' }}"
+                                            {{ $documents->currentPage() == $documents->lastPage() ? 'disabled' : '' }}>
+                                                Last
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
                             </div>
 
                             <!-- Next Button -->
