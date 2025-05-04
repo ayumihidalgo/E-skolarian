@@ -30,7 +30,7 @@
     </div>
 
     <!-- Table Header and Container -->
-    <div class="overflow-hidden rounded-[25px] shadow bg-[#D9D9D9]"  style="width: 100%; height: 408px; flex-shrink:0;">
+    <div class="overflow-hidden rounded-[25px] shadow bg-[#D9D9D9]"  style="width: 100%; height: 384px; flex-shrink:0;">
         <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
                     <thead>
                 <tr>
@@ -96,23 +96,18 @@
             <!-- For fetching table contents from database -->
             <tbody class="divide-y divide-[#7A1212]/70">
                 @forelse ($users as $user)
-                <tr class="border-y-[0.1px] border-[#7A1212] bg-[#d9c698] hover:bg-[#DAA520] transition duration-300">
-                        <td class="px-6 py-4 text-left pl-40 text-[Lexend] text-[17px] text-black text-semibold">
-                            <!-- Make the username clickable to show user details modal -->
-                            <button
-                                type="button"
-                                class="user-details-btn hover:underline hover:text-[#7A1212] focus:outline-none cursor-pointer text-left"
-                                data-user="{{ $user->toJson() }}"
-                            >
-                                {{ $user->username }}
-                            </button>
-                        </td>
-                        <td class="px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
-                            {{ $user->role_name }}
-                        </td>
-                        <td class="px-6 py-4 text-right pr-40 text-[Lexend] text-[17px] text-black text-semibold">
-                            {{ $user->created_at->format('M-d-Y') }}
-                        </td>
+                <tr class="border-y-[0.1px] border-[#7A1212] bg-[#d9c698] hover:bg-[#DAA520] transition duration-300 cursor-pointer user-details-row"
+                    data-user="{{ $user->toJson() }}">
+                    <td class="px-6 py-4 text-left pl-40 text-[Lexend] text-[17px] text-black text-semibold">
+                        {{ $user->username }}
+                    </td>
+                    <td class="px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
+                        {{ $user->role_name }}
+                    </td>
+                    <td class="px-6 py-4 text-right pr-40 text-[Lexend] text-[17px] text-black text-semibold">
+                        {{ $user->created_at->format('M-d-Y') }}
+                    </td>
+
                 </tr>
                 @empty
                 <tr class="h-[68px] border-t-[0.3px] border-[#7A1212] bg-[#DAA52080]">
@@ -163,11 +158,13 @@
 
 <!-- Modal for Add User Button -->
 <div id="addUserModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    
     <!-- Modal Backdrop -->
     <div class="absolute inset-0 bg-black/30 backdrop-blur-sm add-user-backdrop"></div>
-
+    
     <!-- Modal Content -->
     <div class="bg-white rounded-[25px] shadow-xl w-full max-w-lg relative z-50">
+        
         <!-- Include the Add User component -->
         @include('super-admin.super-admin-component.AddUser')
     </div>
@@ -175,53 +172,19 @@
 
 <!-- User Details Modal -->
 <div id="userDetailsModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    
     <!-- Modal Backdrop -->
     <div class="absolute inset-0 bg-black/30 backdrop-blur-sm user-details-backdrop"></div>
 
-    <!-- Modal Content -->
-    <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-50 overflow-hidden">
-        <!-- Close Button -->
-            <button type="button" id="closeUserDetailsBtn" class="absolute top-7 right-5 text-black-500 hover:text-[#7A1212] transition-colors duration-200">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-    </button>
-        <!-- User Details -->
-        <div class="p-8">
-        <h3 class="text-xl font-semibold text-[#181D27] text-[Lexend] mb-2">View Account Details</h3>
-        <p class="text-gray-500 text-sm mb-6">View, edit, or deactivate the account</p>
-        <!-- Edit Button -->
-        <div class="flex justify-center space-x-4">
-                <button 
-                    type="button"
-                    id="editUserBtn"
-                    class="bg-[#7A1212] px-6 py- rounded-[8px] text-white font-[Lexend] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-800 transition duration-200 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Edit
-                </button>
-            </div>
-            <div class="mb-4">
-                <div class="block text-sm font-medium text-gray-700">
-                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Username</h4>
-                    <p id="userUsername" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
-                </div>
-                
-                <div class="block text-sm font-medium mb-2 text-gray-700">
-                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Email</h4>
-                    <p id="userEmail" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
-                </div>
-                
-                <div class="block text-sm font-medium mb-2 text-gray-700">
-                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Role</h4>
-                    <p id="userRole" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
-                </div>
+    <!-- Include the View Account Details component -->
+     @include('super-admin.super-admin-component.viewAccDeets')
+
     </div>
 </div>
 
 <!-- Success Modal -->
 <div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 {{ session()->has('success') ? '' : 'hidden' }}">
+
     <!-- Modal Backdrop -->
     <div class="absolute inset-0 bg-black/30 backdrop-blur-sm success-modal-backdrop"></div>
 
@@ -243,276 +206,17 @@
         </div>
     </div>
 </div>
+
+<!-- Edit User Deatils Modal -->
 <div id="editUserModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    
     <!-- Modal Backdrop -->
     <div class="absolute inset-0 bg-black/30 backdrop-blur-sm edit-user-backdrop"></div>
     
-    <!-- Modal Content -->
-    <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-50 overflow-hidden">
-        <!-- Close Button -->
-        <button type="button" id="closeEditModalBtn" class="absolute top-7 right-5 text-black-500 hover:text-[#7A1212] transition-colors duration-200">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
-
-        <!-- Edit Form -->
-        <div class="p-8">
-            <h3 class="text-xl font-semibold text-[#181D27] text-[Lexend] mb-2">Edit Account Details</h3>
-            <p class="text-gray-500 text-sm mb-6">Update the user's account information</p>
-            
-            <form id="editUserForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Username</label>
-                    <input type="text" id="editUsername" 
-                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] text-center">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Email</label>
-                    <input type="email" id="editEmail" 
-                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] text-center">
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Role</label>
-                    <select id="editRole" 
-                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] text-center">
-                        <option value="Academic Organization">Academic Organization</option>
-                        <option value="Non-Academic Organization">Non-Academic Organization</option>
-                        <option value="Student Services">Student Services</option>
-                        <option value="Academic Services">Academic Services</option>
-                        <option value="Administrative Services">Administrative Services</option>
-                    </select>
-                </div>
-
-                <p class="text-sm text-gray-500 italic">Any changes made will notify the account owner via email.</p>
-
-                <div class="flex justify-center pt-4">
-                    <button type="submit"
-                        class="bg-[#7A1212] px-6 py-2 rounded-[10px] text-white font-[Lexend] hover:bg-red-800 transition duration-200 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        Save Changes
-                    </button>
-                </div>
-            </form>
-        </div>
+    <!-- Include the Edit User Account Details component -->
+    @include('super-admin.super-admin-component.editUserDeets')
     </div>
 </div>
 
-<script>
-// Execute when document is ready
-document.addEventListener('DOMContentLoaded', function() {
-    // Add User Modal
-    const addUserModal = document.getElementById('addUserModal');
-    const addUserBtn = document.getElementById('addUserBtn');
-    const closeAddUserModalBtn = document.getElementById('closeAddUserModalBtn');
-    const addUserBackdrop = document.querySelector('.add-user-backdrop');
-
-    // User Details Modal
-    const userDetailsModal = document.getElementById('userDetailsModal');
-    const userDetailsButtons = document.querySelectorAll('.user-details-btn');
-    const closeUserDetailsBtn = document.getElementById('closeUserDetailsBtn');
-    const closeUserDetailsModalBtn = document.getElementById('closeUserDetailsModalBtn');
-    const userDetailsBackdrop = document.querySelector('.user-details-backdrop');
-
-    // Success Modal
-    const successModal = document.getElementById('successModal');
-    const closeSuccessModalBtn = document.getElementById('closeSuccessModalBtn');
-    const successModalBackdrop = document.querySelector('.success-modal-backdrop');
-
-    // Add User Modal Opening
-    if (addUserBtn) {
-        addUserBtn.addEventListener('click', function() {
-            addUserModal.classList.remove('hidden');
-        });
-    }
-
-    // Add User Modal Closing
-    if (closeAddUserModalBtn) {
-        closeAddUserModalBtn.addEventListener('click', function() {
-            addUserModal.classList.add('hidden');
-        });
-    }
-
-    if (addUserBackdrop) {
-        addUserBackdrop.addEventListener('click', function() {
-            addUserModal.classList.add('hidden');
-        });
-    }
-
-    // Form Submission Handling
-    const addUserForm = document.getElementById('addUserForm');
-    if (addUserForm) {
-        addUserForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            // Get form data
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-            const role_name = document.getElementById('role_name').value;
-
-            // Create form data object
-            const formData = new FormData();
-            formData.append('username', username);
-            formData.append('email', email);
-            formData.append('role_name', role_name);
-            formData.append('_token', '{{ csrf_token() }}');
-
-            // Send the form data via fetch API
-            fetch('/users', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(JSON.stringify(data));
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                // Close the add user modal
-                addUserModal.classList.add('hidden');
-
-                // Show success message
-                if (successModal) {
-                    // Update success message if needed
-                    const successMessageElement = successModal.querySelector('p');
-                    if (successMessageElement) {
-                        successMessageElement.textContent = 'User added successfully!';
-                    }
-
-                    // Show success modal
-                    successModal.classList.remove('hidden');
-
-                    // Refresh the page after a delay to show the new user
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2000);
-                }
-            })
-            .catch(error => {
-                let errorData;
-                try {
-                    errorData = JSON.parse(error.message);
-                } catch (e) {
-                    errorData = { message: 'An error occurred while adding the user.' };
-                }
-
-                // Handle validation errors
-                if (errorData.errors) {
-                    // Display the first error
-                    const firstErrorKey = Object.keys(errorData.errors)[0];
-                    alert(errorData.errors[firstErrorKey][0]);
-                } else {
-                    // Display general error
-                    alert(errorData.message || 'An error occurred while adding the user.');
-                }
-            });
-        });
-    }
-
-    // User Details Modal
-    userDetailsButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const userData = JSON.parse(this.getAttribute('data-user'));
-
-            // Fill user details in the modal
-            document.getElementById('userUsername').textContent = userData.username;
-            document.getElementById('userEmail').textContent = userData.email;
-            document.getElementById('userRole').textContent = userData.role;
-            
-            // Show the modal
-            userDetailsModal.classList.remove('hidden');
-        });
-    });
-
-    if (closeUserDetailsBtn) {
-        closeUserDetailsBtn.addEventListener('click', function() {
-            userDetailsModal.classList.add('hidden');
-        });
-    }
-
-    if (closeUserDetailsModalBtn) {
-        closeUserDetailsModalBtn.addEventListener('click', function() {
-            userDetailsModal.classList.add('hidden');
-        });
-    }
-
-    if (userDetailsBackdrop) {
-        userDetailsBackdrop.addEventListener('click', function() {
-            userDetailsModal.classList.add('hidden');
-        });
-    }
-
-    // Success Modal
-    if (closeSuccessModalBtn) {
-        closeSuccessModalBtn.addEventListener('click', function() {
-            successModal.classList.add('hidden');
-        });
-    }
-
-    if (successModalBackdrop) {
-        successModalBackdrop.addEventListener('click', function() {
-            successModal.classList.add('hidden');
-        });
-    }
-
-    // Close the modals when Escape key is pressed
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            addUserModal.classList.add('hidden');
-            userDetailsModal.classList.add('hidden');
-            successModal.classList.add('hidden');
-        }
-    });
-    if (editUserBtn) {
-    editUserBtn.addEventListener('click', function() {
-        // Get current user data
-        const username = document.getElementById('userUsername').textContent;
-        const email = document.getElementById('userEmail').textContent;
-        const role = document.getElementById('userRole').textContent;
-        
-        // Fill the edit form
-        document.getElementById('editUsername').value = username;
-        document.getElementById('editEmail').value = email;
-        document.getElementById('editRole').value = role;
-        
-        // Hide user details modal first
-        userDetailsModal.classList.add('hidden');
-        
-        // Show edit modal after a small delay to prevent overlap
-        setTimeout(() => {
-            editUserModal.classList.remove('hidden');
-        }, 100);
-    });
-}
-
-// Update the close edit modal handlers
-if (closeEditModalBtn) {
-    closeEditModalBtn.addEventListener('click', function() {
-        editUserModal.classList.add('hidden');
-        setTimeout(() => {
-            userDetailsModal.classList.remove('hidden');
-        }, 100);
-    });
-}
-
-if (editUserBackdrop) {
-    editUserBackdrop.addEventListener('click', function() {
-        editUserModal.classList.add('hidden');
-        setTimeout(() => {
-            userDetailsModal.classList.remove('hidden');
-        }, 100);
-    });
-}
-});
-</script>
+@vite('resources/js/superAdmin.js') <!-- Include the JavaScript file -->
 @endsection

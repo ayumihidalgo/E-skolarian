@@ -5,10 +5,13 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DocumentController;
 
-Route::get('/', function () {
-    return view('admin.documentArchive');
-});
+// CHANGE THIS //
+//Route::get('/', function () {
+//    return view('admin.documentArchive');
+//});
 
 Route::get('/', function () {
     return view('auth/login');
@@ -36,13 +39,13 @@ Route::middleware(['auth'])->group(function () {
             ->header('Expires', '0');
     })->name('admin.dashboard');
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
-    
+
     // Calendar routes
     Route::get('/calendar', [EventController::class, 'index'])->name('calendar.index');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
-    
+
     // User routes
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
 
@@ -61,6 +64,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
+
+    // Submit Document Route
+    Route::get('/student/submit-documents', function () {
+        return view('student.submit-documents');  // resources/views/home.blade.php
+    });
+
+    Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 });
 
 Route::get('/notifications', function () {
@@ -82,9 +92,10 @@ Route::get('/custom-reset-password', function () {
 
 });
 
-Route::get('/', function () {
-    return view('admin.documentArchive');
-});
+// CHANGE THIS //
+// Route::get('/', function () {
+//     return view('admin.documentArchive');
+// });
 
 // Route for the document preview page (admin)
 Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
@@ -92,3 +103,12 @@ Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview']
 // Route for the document preview page (student)
 Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
     ->name('student.documentPreview');
+
+// Document viewing 
+Route::get('/test-pdf', function() {
+    return response()->file(public_path('documents/test/sample.pdf'));
+});
+
+// Fetching and displaying and storing comments
+Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');

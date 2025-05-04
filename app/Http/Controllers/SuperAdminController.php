@@ -14,7 +14,7 @@ class SuperAdminController extends Controller
         $sortDirection = $request->query('direction', 'desc');
 
         // Valid sort fields to prevent SQL injection
-        $validSortFields = ['username', 'role_name', 'created_at'];
+        $validSortFields = ['username', 'role', 'role_name', 'created_at'];
 
         // Ensure sort field is valid
         if (!in_array($sortField, $validSortFields)) {
@@ -26,11 +26,8 @@ class SuperAdminController extends Controller
                      ->paginate(6); // Adjust number per page as needed
 
         // Return the view with the users data and sort parameters
-        return response()
-        ->view('super-admin.dashboard', compact('users', 'sortField', 'sortDirection'))
-        ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-        ->header('Pragma', 'no-cache')
-        ->header('Expires', '0');
+        return view('super-admin.dashboard', compact('users', 'sortField', 'sortDirection'));
     }
+    
 
 }

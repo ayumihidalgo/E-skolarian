@@ -1,7 +1,5 @@
 <!--ADMIN NAVIGATION BAR-->
 
-
-@section('content')
 <div class="flex relative">
     <!-- Sidebar -->
     <div id="sidebar" class="w-1/4 h-screen bg-[#7A1212] text-white p-6 transition-all duration-300 flex flex-col">
@@ -23,8 +21,14 @@
 
         <!-- Navigation Links -->
         <nav class="space-y-4 text-lg font-[Marcellus_SC] mt-6">
-            @foreach ([['Home', 'account.svg'], ['Review', 'archive.svg'], ['Archive', 'tracker.svg'], ['Calendar', 'calendar.svg'], ['Settings', 'settings.svg']] as [$label, $icon])
-                <a href="#" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
+            @foreach ([
+                ['Home', 'account.svg', '#'],
+                ['Review', 'archive.svg', route('admin.review')],
+                ['Archive', 'tracker.svg', '#'],
+                ['Calendar', 'calendar.svg', '#'],
+                ['Settings', 'settings.svg', '#']
+            ] as [$label, $icon, $route])
+                <a href="{{ $route }}" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
                     <img src="{{ asset("images/$icon") }}" class="h-6 w-6" alt="{{ $label }} Icon">
                     <span class="sidebar-text">{{ $label }}</span>
                 </a>
@@ -48,9 +52,7 @@
     <!-- Main Content -->
     <div class="flex-grow">
         <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
-            <a href="#" class="hover:text-yellow-400 transition duration-200">
-                <img src="{{ asset('images/mail.svg') }}" class="h-5 w-5" alt="Mail Icon">
-            </a>
+            <x-general-components.notification />
             <div>
                 <a href="#" class="font-semibold">Admin</a>
             </div>
