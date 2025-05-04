@@ -9,7 +9,8 @@
             </a>
             <div class="sidebar-text">
                 <a href="#">
-                    <h1 class="font-[Marcellus_SC] text-2xl leading-none">E-SKOLARIAN</h1>
+                    <h1 class="font-[Marcellus_SC] text-xl leading-none">E-SKOLARI<span
+                            class="text-yellow-400">★</span>N</h1>
                 </a>
                 <a href="#">
                     <p class="text-sm mt-1 tracking-wide font-[Marcellus_SC]">Document Management</p>
@@ -39,8 +40,7 @@
     </div>
 
     <!-- Fixed Toggle Button -->
-    <button onclick="toggleSidebar()" class="absolute top-11 left-[24%] z-10 transition-all duration-300"
-        id="toggleBtn">
+    <button onclick="toggleSidebar()" class="absolute top-7 left-[24%] z-10 transition-all duration-300" id="toggleBtn">
         <img src="{{ asset('images/toggleSidebar.svg') }}" alt="Toggle Sidebar"
             class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
     </button>
@@ -50,18 +50,14 @@
     <div class="flex-grow">
         <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
             <x-general-components.notification />
-
+            
             <div>
-                <img src="{{ asset(auth()->user()->profile_pic ?? 'images/profiles/default.png') }}"
-                    alt="Profile"
-                    class="h-10 w-10 rounded-full border-2 border-white object-cover">
+                <img src="{{ auth()->user()->profile_pic ? asset(auth()->user()->profile_pic) : asset('images/profiles/default.png') }}"
+                    alt="Profile" class="h-10 w-10 rounded-full border-2 border-white">
             </div>
-        
-
-
-           <div>
+            <div>
                 <a href="#" class="font-semibold">{{ auth()->user()->username }}</a>
-            </div>  
+            </div>
         </nav>
     </div>
 </div>
@@ -73,6 +69,7 @@
         const texts = sidebar.querySelectorAll('.sidebar-text');
         const toggleBtn = document.getElementById('toggleBtn');
         const toggleIcon = document.getElementById('toggleIcon');
+        const logo = document.querySelector('img[alt="Logo"]');
 
         sidebar.classList.toggle('w-1/4');
         sidebar.classList.toggle('w-20');
@@ -81,9 +78,17 @@
         if (sidebar.classList.contains('w-20')) {
             toggleBtn.classList.add('left-[4rem]');
             toggleBtn.classList.remove('left-[24%]');
+
+            // Increase logo size by 10% when sidebar is collapsed
+            logo.classList.remove('h-20', 'w-20');
+            logo.classList.add('h-22', 'w-22');
         } else {
             toggleBtn.classList.remove('left-[4rem]');
             toggleBtn.classList.add('left-[24%]');
+
+            // Return logo to original size when sidebar is expanded
+            logo.classList.remove('h-22', 'w-22');
+            logo.classList.add('h-20', 'w-20');
         }
 
         // Toggle hidden text

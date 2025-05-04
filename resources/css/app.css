@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 @source "../views";
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -50,7 +53,7 @@
 /* Admin Theme */
 [data-theme="admin"] {
     --primary-color: #4D0F0F;
-    --secondary-color: #7A1212;
+    --secondary-color: #781212;
     --login-bg-color: rgba(77, 15, 15, 0.6);
 
     --login-color-left: #270103;
@@ -87,4 +90,7 @@ input:-webkit-autofill {
     font-style: normal;
 }
 
+body {
+    font-family: 'Manrope', sans-serif;
+}
 

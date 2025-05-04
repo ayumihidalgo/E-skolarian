@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User; 
+use App\Models\User;
 
 class SuperAdminController extends Controller
 {
@@ -29,4 +29,5 @@ class SuperAdminController extends Controller
         return view('super-admin.dashboard', compact('users', 'sortField', 'sortDirection'));
     }
     
+
 }

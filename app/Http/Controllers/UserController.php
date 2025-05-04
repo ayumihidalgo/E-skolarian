@@ -46,3 +46,4 @@ class UserController extends Controller
     return redirect()->route('super-admin.dashboard')->with('success', 'User added successfully!');
 }
 }
+

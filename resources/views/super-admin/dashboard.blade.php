@@ -93,7 +93,6 @@
                     </th>
                 </tr>
             </thead>
-            
             <!-- For fetching table contents from database -->
             <tbody class="divide-y divide-[#7A1212]/70">
                 @forelse ($users as $user)
@@ -108,6 +107,7 @@
                     <td class="px-6 py-4 text-right pr-40 text-[Lexend] text-[17px] text-black text-semibold">
                         {{ $user->created_at->format('M-d-Y') }}
                     </td>
+
                 </tr>
                 @empty
                 <tr class="h-[68px] border-t-[0.3px] border-[#7A1212] bg-[#DAA52080]">
@@ -116,7 +116,6 @@
                 @endforelse
             </tbody>
         </table>
-        
         <!-- This shows when there are no users to be displayed -->
         @if($users->isEmpty())
             <div class="bg-[#D9D9D9] h-[480px] flex-grow flex items-center justify-center text-gray-600 rounded-b-[25px] px-6" style="height: 100%;">
@@ -159,10 +158,14 @@
 
 <!-- Modal for Add User Button -->
 <div id="addUserModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    
     <!-- Modal Backdrop -->
     <div class="absolute inset-0 bg-black/30 backdrop-blur-sm add-user-backdrop"></div>
+    
+    <!-- Modal Content -->
+    <div class="bg-white rounded-[25px] shadow-xl w-full max-w-lg relative z-50">
         
-    <!-- Include the Add User component -->
+        <!-- Include the Add User component -->
         @include('super-admin.super-admin-component.AddUser')
     </div>
 </div>
@@ -175,12 +178,13 @@
 
     <!-- Include the View Account Details component -->
      @include('super-admin.super-admin-component.viewAccDeets')
+
     </div>
 </div>
 
 <!-- Success Modal -->
 <div id="successModal" class="fixed inset-0 flex items-center justify-center z-50 {{ session()->has('success') ? '' : 'hidden' }}">
-    
+
     <!-- Modal Backdrop -->
     <div class="absolute inset-0 bg-black/30 backdrop-blur-sm success-modal-backdrop"></div>
 
@@ -202,6 +206,7 @@
         </div>
     </div>
 </div>
+
 <!-- Edit User Deatils Modal -->
 <div id="editUserModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
     
