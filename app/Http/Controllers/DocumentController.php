@@ -7,6 +7,8 @@ use App\Models\Document;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Models\Event;
+use Illuminate\Support\Facades\Auth;
 
 class DocumentController extends Controller
 {
@@ -23,6 +25,8 @@ class DocumentController extends Controller
                 'summary' => 'required|string|max:255',
                 'eventStartDate' => 'nullable|date|required_if:doc_type,Event Proposal',
                 'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:doc_type,Event Proposal',
+                'event-title' => 'nullable|string|max:255|required_if:doc_type,Event Proposal',
+                'event-desc' => 'nullable|string|max:255|required_if:doc_type,Event Proposal',
                 'file_upload' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
             ]);
 
@@ -46,6 +50,17 @@ class DocumentController extends Controller
 
             // Store the validated data in the database.
             $document->save();
+
+            // If this is an Event Proposal, create a corresponding event
+            if ($validated['doc_type'] === 'Event Proposal') {
+                Event::create([
+                    'title' => $validated['event-title'],
+                    'description' => $validated['event-desc'],
+                    'start_date' => $validated['eventStartDate'],
+                    'end_date' => $validated['eventEndDate'],
+                    'created_by' => Auth::id(),
+                ]);
+            }
 
             return back()->with('success', 'Document submitted successfully!');
         } catch (\Illuminate\Validation\ValidationException $e) {
