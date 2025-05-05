@@ -24,7 +24,7 @@
         <img src="{{ asset('images/toggleSidebar.svg') }}" alt="Toggle Sidebar"
             class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
     </button>
-
+<!-- Navigation Links -->
     <nav class="space-y-4 text-lg font-[Manrope] mt-6">
         @foreach ([
             ['Home', 'account.svg', '#'],
