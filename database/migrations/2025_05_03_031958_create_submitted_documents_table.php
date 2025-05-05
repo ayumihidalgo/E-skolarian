@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('submitted_documents', function (Blueprint $table) {
             $table->id();
+            $table->string('control_tag')->unique()->default('AUTO');
             $table->string('doc_receiver');
             $table->string('subject');
             $table->string('doc_type');
-            $table->string('control_tag')->unique();
             $table->text('summary')->nullable();
             $table->date('eventStartDate')->nullable();
             $table->date('eventEndDate')->nullable();
