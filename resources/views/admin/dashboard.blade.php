@@ -1,10 +1,9 @@
 @extends('base')
 
-@include('components.adminNavigation')
+@include('components.adminNavBarComponent')
 
 @section('content')
-
-    <h1>Welcome to the Admin Dashboard</h1>
-    <p>This is the dashboard for admins.</p>
-
+    <div>
+        @include('components.adminSidebarComponent')
+    </div>
 @endsection

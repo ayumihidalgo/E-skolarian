@@ -1,17 +1,19 @@
 <?php
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\EventController;
-use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\EventController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\AdminDocumentController;
+use App\Http\Controllers\StudentDocumentController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 
-// CHANGE THIS //
-//Route::get('/', function () {
-//    return view('admin.documentArchive');
-//});
+Route::get('/admin/documentArchive', function () {
+    return view('admin.documentArchive');
+})->name('admin.documentArchive');
+
 
 Route::get('/', function () {
     return view('auth/login');
@@ -104,7 +106,7 @@ Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview']
 Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
     ->name('student.documentPreview');
 
-// Document viewing 
+// Document viewing
 Route::get('/test-pdf', function() {
     return response()->file(public_path('documents/test/sample.pdf'));
 });
