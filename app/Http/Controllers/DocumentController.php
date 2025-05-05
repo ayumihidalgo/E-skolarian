@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Document;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class DocumentController extends Controller
 {
@@ -34,8 +35,14 @@ class DocumentController extends Controller
                 }
             }
 
-            // Store the validated data in the database
-            Document::create($validated);
+            // Save first to get the auto-increment ID
+            $document = Document::create($validated);
+
+            // Format: DOC-0001 ("DOC" IS USED FOR A MOMENT, ORGANIZATION NAME OF USER IS NOT YET INCLUDED IN THE FORMAT)
+            $document->control_tag = 'DOC-' . str_pad($document->id, 4, '0', STR_PAD_LEFT);
+
+            // Store the validated data in the database.
+            $document->save();
 
             return back()->with('success', 'Document submitted successfully!');
         } catch (\Illuminate\Validation\ValidationException $e) {

@@ -2,7 +2,7 @@
 <div class="bg-white rounded-[25px] shadow-xl w-full max-w-lg relative z-50">
     <!-- Close button -->
     <button id="closeAddUserModalBtn" 
-                class="absolute top-7 right-5 text-gray-500 hover:text-[#7A1212] transition-colors duration-200">
+                class="absolute top-7 right-5 text-gray-500 hover:text-[#7A1212] transition-colors duration-200 cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -35,7 +35,7 @@
                 <label for="role_name" class="block text-sm font-medium mb-2 text-gray-700">Role</label>
                 <select name="role_name" 
                         id="role_name" 
-                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
+                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] cursor-pointer" 
                         required>
                     <option value="" disabled selected>Choose a role for the user</option>
                     <option value="Academic Organization" data-role="student">Academic Organization</option>
@@ -49,7 +49,7 @@
             </div>
             <p class="text-sm text-gray-500 mb-6 text-center">The reset password link will be sent to the user via email.</p>
             <button type="submit"
-                    class="w-full px-3 py-2 bg-[#7A1212] text-white rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
+                    class="w-full px-3 py-2 bg-[#7A1212] text-white rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-[#7A1212] cursor-pointer">
                 Add User
             </button>
         </form>
