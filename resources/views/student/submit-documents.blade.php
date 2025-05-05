@@ -136,7 +136,7 @@
                         name="summary"
                         class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none"
                         maxlength="255"
-                        oninput="updateCounter()"
+                        oninput="summaryUpdateCounter()"
                         placeholder="Write a short description or overview..."></textarea>
 
                     <div class="text-sm text-gray-500 text-right border-b-2 border-gray-500">
@@ -145,7 +145,7 @@
                 </div>
 
                 <!-- Date Range (Only shows for Event Proposals) -->
-                <div id="date-container" class="flex flex-col gap-2 md:flex-col hidden w-full">
+                <div id="date-container" class="flex flex-col gap-2 md:flex-col w-full hidden">
                     <div class="flex flex-col md:flex-row md:items-center gap-2 w-full">
                         <input
                             type="date"
@@ -158,6 +158,34 @@
                             id="endDate"
                             name="eventEndDate"
                             class="border-b-2 border-gray-500 p-2 w-full focus:outline-none font-semibold text-gray-500">
+                    </div>
+                </div>
+
+                <!-- Event Title (Only shows for Event Proposals) -->
+                <div id="event-title-container" class="flex items-center border-b-2 border-gray-500 py-3 w-full hidden">
+                    <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Event Title:</span>
+                    <input
+                        type="text"
+                        id="event-title"
+                        name="event-title"
+                        autocomplete="off"
+                        class="flex-1 font-semibold focus:outline-none">
+                </div>
+
+                <!-- Event Description (Only shows for Event Proposals) -->
+                <div id="event-desc-container" class="flex flex-col gap-1 hidden">
+                    <label for="event_desc" class="font-semibold text-gray-500">Event Description:</label>
+
+                    <textarea
+                        id="event-desc"
+                        name="event-desc"
+                        class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none"
+                        maxlength="255"
+                        oninput="eventDescUpdateCounter()"
+                        placeholder="Write a short description or overview..."></textarea>
+
+                    <div class="text-sm text-gray-500 text-right border-b-2 border-gray-500">
+                        <span id="event-desc-counter">0</span>/255
                     </div>
                 </div>
 
@@ -275,8 +303,12 @@
     };
 
     const dateContainer = document.getElementById('date-container');
+    const eventTitleContainer = document.getElementById('event-title-container');
+    const eventDescContainer = document.getElementById('event-desc-container');
     const summaryInput = document.getElementById('summary');
     const summaryCounter = document.getElementById('summary-counter');
+    const eventDescInput = document.getElementById('event-desc');
+    const eventDescCounter = document.getElementById('event-desc-counter');
     const fileNameDisplay = document.getElementById('fileName');
     const startDateInput = document.getElementById('startDate');
     const endDateInput = document.getElementById('endDate');
@@ -374,8 +406,16 @@
         docType.input.value = value;
         docType.dropdown.classList.add('hidden');
 
-        docType.icon.style.display = value !== 'Document Type' ? 'none' : 'inline';
-        dateContainer.style.display = value === 'Event Proposal' ? 'block' : 'none';
+        // Show/hide Event-specific fields
+        if (value === 'Event Proposal') {
+            eventTitleContainer.classList.remove('hidden');
+            eventDescContainer.classList.remove('hidden');
+            dateContainer.classList.remove('hidden');
+        } else {
+            eventTitleContainer.classList.add('hidden');
+            eventDescContainer.classList.add('hidden');
+            dateContainer.classList.add('hidden');
+        }
     }
 
     // Close dropdowns when clicking outside
@@ -389,8 +429,13 @@
     });
 
     // Summary character counter
-    window.updateCounter = function() {
+    window.summaryUpdateCounter = function() {
         summaryCounter.textContent = summaryInput.value.length;
+    }
+
+    // Event description character counter
+    window.eventDescUpdateCounter = function() {
+        eventDescCounter.textContent = eventDescInput.value.length;
     }
 
     // Show file name

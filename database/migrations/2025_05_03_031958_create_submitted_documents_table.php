@@ -18,8 +18,6 @@ return new class extends Migration
             $table->string('subject');
             $table->string('doc_type');
             $table->text('summary')->nullable();
-            $table->date('eventStartDate')->nullable();
-            $table->date('eventEndDate')->nullable();
             $table->string('file_path')->nullable();
             $table->timestamps();
         });
