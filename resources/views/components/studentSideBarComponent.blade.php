@@ -1,4 +1,4 @@
-{{-- admin sidebar component --}}
+{{-- Student sidebar component --}}
 <div id="sidebar"
     class="fixed top-0 left-0 w-1/5 h-screen bg-[#7A1212] text-white p-6 z-50 transition-all duration-300 flex flex-col">
 
