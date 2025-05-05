@@ -116,7 +116,7 @@ if ($role === 'super admin') {
 
                     <div class="mt-5 mb-2">
                         <label id="confirmLabel" class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
-                            <input id="password_confirmation" type="password" name="password_confirmation" placeholder="Confirm Password" required
+                            <input id="password_confirmation" type="password" name="password_confirmation" placeholder="Confirm New Password" required
                             class="w-0 flex-grow outline-none mr-3">
                             <button type="button" onclick="togglePasswordConfirm();" class="cursor-pointer">
                                 <img id="showPassConfirm" src="{{ asset('images/show_pass.svg') }}" alt="Show Password" class="w-5 md:w-6" />
