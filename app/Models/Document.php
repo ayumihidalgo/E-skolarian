@@ -12,6 +12,7 @@ class Document extends Model
         'doc_receiver',
         'subject',
         'doc_type',
+        'control_tag',
         'summary',
         'event_start_date',
         'event_end_date',
