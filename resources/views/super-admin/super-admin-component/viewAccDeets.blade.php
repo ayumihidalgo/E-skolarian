@@ -51,6 +51,7 @@
             <div class="flex justify-end">
                 <button 
                     type="button"
+                    id="deactivateBtn"
                     class="group flex items-center bg-white border border-[#A40202] px-4 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#7A1212] hover:bg-red-800 hover:text-white">
                     Deactivate Account
                 </button>
