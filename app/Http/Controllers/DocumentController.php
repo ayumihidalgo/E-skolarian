@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Document;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class DocumentController extends Controller
 {
@@ -33,6 +34,9 @@ class DocumentController extends Controller
                     return back()->withErrors(['file_upload' => 'Failed to upload file. Please try again.']);
                 }
             }
+
+            // Generate a unique document ID (e.g., DOC-20250505-XYZ123) (TENTATIVE, PROPER FORMAT IS NOT FOLLOWED YET)
+            $validated['control_tag'] = 'DOC-' . now()->format('Ymd') . '-' . strtoupper(Str::random(6));
 
             // Store the validated data in the database
             Document::create($validated);

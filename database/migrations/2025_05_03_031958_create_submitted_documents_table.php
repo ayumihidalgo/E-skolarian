@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('doc_receiver');
             $table->string('subject');
             $table->string('doc_type');
+            $table->string('control_tag')->unique();
             $table->text('summary')->nullable();
             $table->date('eventStartDate')->nullable();
             $table->date('eventEndDate')->nullable();
