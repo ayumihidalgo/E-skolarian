@@ -24,10 +24,16 @@
         <img src="{{ asset('images/toggleSidebar.svg') }}" alt="Toggle Sidebar"
             class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
     </button>
-
+<!-- Navigation Links -->
     <nav class="space-y-4 text-lg font-[Manrope] mt-6">
-        @foreach ([['Home', 'account.svg'], ['Review', 'review.svg'], ['Archive', 'archive.svg'], ['Calendar', 'calendar.svg'], ['Settings', 'settings.svg']] as [$label, $icon])
-            <a href="#" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
+        @foreach ([
+            ['Home', 'account.svg', '#'],
+            ['Review', 'review.svg', '#'],
+            ['Archive', 'archive.svg', route('admin.documentArchive')],
+            ['Calendar', 'calendar.svg', '#'],
+            ['Settings', 'settings.svg', '#']
+        ] as [$label, $icon, $route])
+            <a href="{{ $route }}" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
                 <img src="{{ asset("images/$icon") }}" class="h-6 w-6" alt="{{ $label }} Icon">
                 <span class="sidebar-text">{{ $label }}</span>
             </a>
