@@ -217,5 +217,81 @@
     @include('super-admin.super-admin-component.editUserDeets')
     </div>
 </div>
+
+<!-- Deactivate Account Confirmation Modal -->
+<div id="deactivateConfirmModal" class="fixed inset-0 flex items-center justify-center z-[60] hidden">
+    <!-- Modal Backdrop -->
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm deactivate-confirm-backdrop"></div>
+    
+    <!-- Modal Content -->
+    <div class="bg-white rounded-[16px] shadow-xl w-full max-w-md relative z-[70] p-6">
+    <button id="closeDeactivateModalBtn" type="button"
+                class="absolute top-6 right-5 text-gray-500 hover:text-[#7A1212] transition-colors duration-200 cursor-pointer">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+    </button>
+        
+        <!-- Confirmation Message -->
+        <div class="text-left mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 font-[Lexend]">Deactivate Account Confirmation</h3>
+            <p class="text-sm text-gray-700">Are you sure you want to deactivate this account?</p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-3">
+            <button type="button"
+                id="cancelDeactivateBtn"
+                class="px-4 py-2 bg-gray-100 text-gray-800 rounded-[10px] border border-gray-300 font-[Lexend] hover:bg-gray-200 transition duration-200 cursor-pointer">
+                Cancel
+            </button>
+            <button type="button"
+                id="confirmDeactivateBtn"
+                class="bg-[#7A1212] hover:bg-red-800 text-white px-4 py-2 rounded-[10px] font-normal font-[Lexend] inline-flex items-center hover:bg-red-700 transition duration-200 cursor-pointer">
+                Confirm  
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Email Confirmation Modal for Deactivation -->
+<div id="emailConfirmModal" class="fixed inset-0 flex items-center justify-center z-[70] hidden">
+    <!-- Modal Backdrop -->
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm email-confirm-backdrop"></div>
+    
+    <!-- Modal Content -->
+    <div class="bg-white rounded-[16px] shadow-xl w-full max-w-md relative z-[80] p-6">
+        <button id="closeEmailConfirmBtn" type="button"
+            class="absolute top-6 right-5 text-gray-500 hover:text-[#7A1212] transition-colors duration-200 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+        
+        <!-- Email Confirmation Form -->
+        <div class="text-left">
+            <h3 class="text-lg font-semibold text-gray-900 font-[Lexend] mb-2">Deactivate Account Confirmation</h3>
+            <p class="text-sm text-gray-700 mb-4">Type the account email address to confirm</p>
+            
+            <div class="mb-4">
+                <label for="confirmEmail" class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]">Email Address</label>
+                <input type="email" 
+                    id="confirmEmail" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] transition duration-200"
+                    placeholder="Enter email address">
+                <p id="emailError" class="mt-1 text-sm text-red-600 hidden">Email address does not match.</p>
+            </div>
+            
+            <!-- Action Button -->
+            <div class="flex justify-end">
+                <button type="button"
+                    id="finalDeactivateBtn"
+                    class="bg-[#7A1212] hover:bg-red-800 text-white px-4 py-2 rounded-[10px] font-normal font-[Lexend] inline-flex items-center transition duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    Deactivate Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @vite('resources/js/superAdmin.js') <!-- Include the JavaScript file -->
 @endsection

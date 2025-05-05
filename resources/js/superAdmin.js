@@ -32,6 +32,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // Current user data for editing
     let currentUserId = null;
 
+    // Deactivation Confirmation
+    const deactivateBtn = document.getElementById('deactivateBtn');
+    const deactivateConfirmModal = document.getElementById('deactivateConfirmModal');
+    const cancelDeactivateBtn = document.getElementById('cancelDeactivateBtn');
+    const confirmDeactivateBtn = document.getElementById('confirmDeactivateBtn');
+    const deactivateConfirmBackdrop = document.querySelector('.deactivate-confirm-backdrop');
+
+    // Email Confirmation Modal
+    const emailConfirmModal = document.getElementById('emailConfirmModal');
+    const closeEmailConfirmBtn = document.getElementById('closeEmailConfirmBtn');
+    const confirmEmailInput = document.getElementById('confirmEmail');
+    const emailError = document.getElementById('emailError');
+    const finalDeactivateBtn = document.getElementById('finalDeactivateBtn');
+    let userEmailToDeactivate = '';
+
     // Update the hidden role value when role_name changes
     if (roleSelect) {
         roleSelect.addEventListener('change', function() {
@@ -457,4 +472,108 @@ document.addEventListener('DOMContentLoaded', function() {
             if (successModal) successModal.classList.add('hidden');
         }
     });
+
+    // Deactivate User Confirmation Modal
+    if (deactivateBtn) {
+        deactivateBtn.addEventListener('click', function() {
+            deactivateConfirmModal.classList.remove('hidden');
+        });
+    }
+    
+    if (cancelDeactivateBtn) {
+        cancelDeactivateBtn.addEventListener('click', function() {
+            deactivateConfirmModal.classList.add('hidden');
+        });
+    }
+    if (closeDeactivateModalBtn) {
+        closeDeactivateModalBtn.addEventListener('click', function() {
+            deactivateConfirmModal.classList.add('hidden');
+        });
+    }
+    
+    if (deactivateConfirmBackdrop) {
+        deactivateConfirmBackdrop.addEventListener('click', function() {
+            deactivateConfirmModal.classList.add('hidden');
+        });
+    }
+    
+    if (confirmDeactivateBtn) {
+        confirmDeactivateBtn.addEventListener('click', function() {
+            // Add your deactivation logic here
+            console.log('Account deactivated');
+            deactivateConfirmModal.classList.add('hidden');
+            // Optionally close the user details modal and show a success message
+            userDetailsModal.classList.add('hidden');
+            // You might want to reload the page or update the UI
+        });
+    }
+
+    // Email Confirmation Modal
+    if (confirmDeactivateBtn) {
+        confirmDeactivateBtn.addEventListener('click', function() {
+            // Get the email from the user details modal
+            userEmailToDeactivate = document.getElementById('userEmail').textContent;
+            
+            // Hide deactivate confirmation modal
+            deactivateConfirmModal.classList.add('hidden');
+            
+            // Show email confirmation modal
+            emailConfirmModal.classList.remove('hidden');
+            
+            // Reset the email input and error message
+            confirmEmailInput.value = '';
+            confirmEmailInput.classList.remove('border-red-500');
+            emailError.classList.add('hidden');
+        });
+    }
+    
+    // Email input validation
+    if (confirmEmailInput) {
+        confirmEmailInput.addEventListener('input', function() {
+            const isMatch = this.value === userEmailToDeactivate;
+            
+            // Update input styling
+            if (this.value) {
+                if (!isMatch) {
+                    this.classList.add('border-red-500', 'ring-red-500');
+                    emailError.classList.remove('hidden');
+                    finalDeactivateBtn.disabled = true;
+                } else {
+                    this.classList.remove('border-red-500', 'ring-red-500');
+                    emailError.classList.add('hidden');
+                    finalDeactivateBtn.disabled = false;
+                }
+            } else {
+                this.classList.remove('border-red-500', 'ring-red-500');
+                emailError.classList.add('hidden');
+                finalDeactivateBtn.disabled = true;
+            }
+        });
+    }
+    
+    // Close email confirmation modal
+    if (closeEmailConfirmBtn) {
+        closeEmailConfirmBtn.addEventListener('click', function() {
+            emailConfirmModal.classList.add('hidden');
+        });
+    }
+    
+    // Final deactivation handler
+    if (finalDeactivateBtn) {
+        finalDeactivateBtn.addEventListener('click', function() {
+            if (confirmEmailInput.value === userEmailToDeactivate) {
+                // Add your deactivation API call here
+                console.log('Account deactivated:', userEmailToDeactivate);
+                
+                // Hide the email confirmation modal
+                emailConfirmModal.classList.add('hidden');
+                
+                // Hide the user details modal
+                userDetailsModal.classList.add('hidden');
+                
+                // Optionally show a success message or refresh the page
+                // window.location.reload();
+            }
+        });
+    }
 });

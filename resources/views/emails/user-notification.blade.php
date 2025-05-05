@@ -56,10 +56,10 @@
     </div>
 
     <div class="content">
-        <p>Hello {{ $user->username }},</p>
+        <p>Good Day! {{ $user->username }},</p>
 
         @if($isNewUser)
-            <p>Your account has been created successfully.</p>
+            <p>We are pleased to inform you that an account has been successfully created for you in the E-Skolarian: Document Management System of PUP Santa Rosa.</p>
             <p>Here are your account details:</p>
         @else
             <p>Your account information has been updated.</p>
