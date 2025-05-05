@@ -20,7 +20,7 @@
 
     <!-- Toggle Button -->
     <button id="sidebarToggleBtn"
-        class="absolute top-11 -right-5 rounded-r-lg p-1 z-10 transition-all duration-300">
+        class="absolute top-11 -right-5 rounded-r-lg p-1 z-10 transition-all duration-300 cursor-pointer">
         <img src="{{ asset('images/toggleSidebar.svg') }}" alt="Toggle Sidebar"
             class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
     </button>
@@ -33,10 +33,10 @@
             </a>
         @endforeach
 
-        <form method="POST" action="{{ route('logout') }}" class="mt-120">
+        <form method="POST" action="{{ route('logout') }}" class="mt-60">
             @csrf
             <button type="submit"
-                class="flex items-center space-x-3 text-white hover:text-yellow-400 transition duration-200">
+                class="flex items-center space-x-3 text-white hover:text-yellow-400 transition duration-200 cursor-pointer">
                 <img src="{{ asset('images/logout.svg') }}" class="h-6 w-6" alt="Logout Icon">
                 <span class="sidebar-text font-[Manrope]">Logout</span>
             </button>
