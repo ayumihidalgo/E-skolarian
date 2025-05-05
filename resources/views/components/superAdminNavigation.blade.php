@@ -11,7 +11,7 @@
         </div>
 
         <!-- Right side: Super Admin and Logout -->
-        <div class="flex items-center space-x-6 text-white font-[Marcellus_SC]">
+        <div class="flex items-center space-x-6 text-white font-[Manrope]">
             <span> <a href = "#">Super Admin</a></span>
             <form method="POST" action="{{ route('logout') }}" class="mt-0">
                 @csrf
