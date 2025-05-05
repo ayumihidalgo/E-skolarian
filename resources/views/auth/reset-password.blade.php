@@ -102,7 +102,7 @@ if ($role === 'super admin') {
 
                     <div class="mt-5 mb-2">
                         <label id="passwordLabel" class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
-                            <input id="password" type="password" name="password" placeholder="Password" required
+                            <input id="password" type="password" name="password" placeholder="New Password" required
                             class="w-0 flex-grow outline-none mr-3">
                             <button type="button" onclick="togglePassword()" class="cursor-pointer">
                                 <img id="showPass" src="{{ asset('images/show_pass.svg') }}" alt="Show Password" class="w-5 md:w-6" />
