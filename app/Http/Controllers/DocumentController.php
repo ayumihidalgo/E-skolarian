@@ -29,6 +29,9 @@ class DocumentController extends Controller
             // Check for file and store it safely if available
             if ($request->hasFile('file_upload')) {
                 try {
+                    $file = $request->file('file_upload');
+                    $path = $file->store('documents', 'public');
+
                     $validated['file_path'] = $request->file('file_upload')->store('documents', 'public');
                 } catch (\Exception $e) {
                     return back()->withErrors(['file_upload' => 'Failed to upload file. Please try again.']);
