@@ -50,6 +50,8 @@ Route::middleware(['auth'])->group(function () {
 
     // User routes
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
+    Route::post('/users/{id}', [UserController::class, 'update']);
 
 
     Route::get('/super-admin/dashboard', function () {
