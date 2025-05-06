@@ -12,17 +12,26 @@
     @vite('resources/css/app.css')
 
     <script>
-        /* Set Role Type to be shown onload */
-        window.onload = function () {
-            const chosenType = localStorage.getItem('activeLoginRole') || 'student';
+        (function () {
+          const chosenType = localStorage.getItem('activeLoginRole') || 'student';
 
-            saveInputs(chosenType);
-            setRole(chosenType);
-            visibilityRememberMe(chosenType);
-            changeRadiusPanel(chosenType);
+          // Apply theme before CSS loads
+          document.documentElement.setAttribute('data-theme', chosenType);
 
-            slidePanel(chosenType, false);
-        };
+          // Pre-set form role value if needed
+          document.addEventListener('DOMContentLoaded', function () {
+              saveInputs(chosenType);
+              setRole(chosenType);
+              visibilityRememberMe(chosenType);
+              changeRadiusPanel(chosenType);
+              slidePanel(chosenType, false);
+
+              // Unhide form container after everything is ready
+              const form = document.getElementById('formContainer');
+              if (form) form.classList.remove('opacity-0');
+          });
+
+        })();
 
         /* Temporary fix for translate */
         window.addEventListener('resize', function () {
@@ -30,6 +39,7 @@
         });
 
         function changeRole(role) {
+            document.documentElement.setAttribute('data-theme', role);
             saveInputs(role);
             setRole(role);
             visibilityRememberMe(role);
@@ -66,9 +76,6 @@
 
 
         function setRole(role) {
-            // Set Color Theme based on Role Type
-            document.documentElement.setAttribute('data-theme', role);
-
              // Update Forgot Password Links with Role
              document.querySelectorAll('.forgot-password-link').forEach(link => {
                 link.href = `/forgot-password?role=${role}`;  // Update the href with the new URL
@@ -216,7 +223,6 @@
         }
 
         window.addEventListener('load', () => {
-            setLayerBackground(document.getElementById('bgA'), images[currentIndex]);
             setInterval(transitionBackground, 10000); // Change image every 10s
         });
 
@@ -258,12 +264,16 @@
         });
 
     </script>
+    @php
+        $randomIndex = rand(1, 6);
+        $randomImage = asset("images/PUP_Bg$randomIndex.jpg");
+    @endphp
 </head>
-<body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] transition-all duration-500 md:bg-[var(--login-bg-color)] font-['Manrope'] font-bold">
-    <div id="bgA" class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-100"></div>
-    <div id="bgB" class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-0"></div>
+<body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] md:bg-[var(--secondary-color)] font-['Manrope'] font-bold">
+    <div id="bgA" class="absolute inset-0 transition-all duration-1000 ease-in-out opacity-100 max-md:hidden" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: bottom;"></div>
+    <div id="bgB" class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-0 max-md:hidden"></div>
     <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md  md:absolute md:right-0 md:top-0 md:bottom-0">
-        <div id="formContainer" class="flex flex-col items-center justify-center h-full px-6 bg-[#D9D9D9]/70 p-4 rounded-3xl md:w-[50%] md:max-w-[600px] md:rounded-tl-none md:rounded-bl-none md:rounded-tr-[100px] md:rounded-br-[100px] md:backdrop-blur-xs md:bg-white/70 md:transition-all md:duration-1000">
+        <div id="formContainer" class="opacity-0 flex flex-col items-center justify-center h-full px-6 bg-[#D9D9D9]/70 p-4 rounded-3xl md:w-[50%] md:max-w-[600px] md:rounded-tl-none md:rounded-bl-none md:rounded-tr-[100px] md:rounded-br-[100px] md:backdrop-blur-xs md:bg-white/70 md:transition-all md:duration-1000">
             <div class="h-35 flex items-center">
                 <img class="mx-auto h-19 md:h-22" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
             </div>
@@ -359,7 +369,7 @@
                     <!-- Submit -->
                     <div class="pt-4 flex justify-center">
                         <button type="submit" id="signInButton"
-                            class="w-full rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-2 md:py-4  hover:bg-[var(--primary-color)] transition font-semibold">
+                            class="opacity-50 w-full rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-2 md:py-4  hover:bg-[var(--primary-color)] transition font-semibold">
                             Sign In
                         </button>
                     </div>
