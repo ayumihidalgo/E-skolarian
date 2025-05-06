@@ -14,6 +14,9 @@ Route::get('/admin/documentArchive', function () {
     return view('admin.documentArchive');
 })->name('admin.documentArchive');
 
+Route::get('/student/documentArchive', function () {
+    return view('student.documentArchive');
+})->name('student.documentArchive');
 
 Route::get('/', function () {
     return view('auth/login');
