@@ -19,7 +19,7 @@ Route::get('/student/documentArchive', function () {
 })->name('student.documentArchive');
 
 Route::get('/', function () {
-    return view('auth/login');
+    return redirect()->route('login');
 });
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
