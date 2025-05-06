@@ -6,31 +6,6 @@
 <div id="main-content" class="transition-all duration-300 ml-[20%]">
     <!-- Main Content -->
     <div class="flex-grow p-6">
-        <!-- Display success message -->
-        @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-        @endif
-
-        <!-- Display error message -->
-        @if(session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-        @endif
-
-        <!-- Display validation errors -->
-        @if($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
-
         <div class="">
             <h1 class="text-2xl font-['Lexend'] font-semibold mb-6">Document Submission</h1>
 
@@ -174,7 +149,7 @@
 
                 <!-- Event Description (Only shows for Event Proposals) -->
                 <div id="event-desc-container" class="flex flex-col gap-1 hidden">
-                    <label for="event_desc" class="font-semibold text-gray-500">Event Description:</label>
+                    <label for="event-desc" class="font-semibold text-gray-500">Event Description:</label>
 
                     <textarea
                         id="event-desc"
@@ -229,32 +204,24 @@
                     <div class="bg-white rounded-xl p-6 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl shadow-lg text-gray-800">
                         <div class="flex justify-between items-start mb-4">
                             <h2 class="text-lg font-semibold">Document Submission Confirmation</h2>
-                            <button type="button" onclick="closeConfirmPopup()" class="text-gray-500 hover:text-gray-700 text-lg cursor-pointer">&times;</button>
+                            <button type="button" onclick="closeConfirmPopup()" class="text-gray-500 hover:text-gray-700 text-3xl leading-none cursor-pointer self-center">&times;</button>
                         </div>
 
                         <p class="mb-6">Are you sure you want to submit this document? Once submitted, you may not be able to make further changes.</p>
 
                         <div class="flex justify-end space-x-2">
-                            <button onclick="closeConfirmPopup()" class="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer" type="button">Cancel</button>
-                            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer" type="button">Submit</button>
+                            <button onclick="closeConfirmPopup()" class="font-semibold px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer" type="button">Cancel</button>
+                            <button type="submit" class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer" type="button">Submit</button>
                         </div>
                     </div>
                 </div>
             </form>
-
-            @if(session('success'))
-            <script>
-                window.onload = () => {
-                    alert("{{ session('success') }}");
-                };
-            </script>
-            @endif
         </div>
     </div>
 </div>
 
 <!-- Error Toast -->
-<div id="errorToast" class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md bg-white border-l-4 border-red-300 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50">
+<div id="errorToast" class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-300 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50">
     <div>
         <img
             src="{{ asset('images/error.svg') }}"
@@ -266,11 +233,11 @@
         <p class="font-semibold">Error</p>
         <p id="errorToastMsg" class="text-sm">Error message here</p>
     </div>
-    <button type="button" onclick="hideToast()" class="text-gray-500 hover:text-gray-700 text-sm cursor-pointer">&times;</button>
+    <button type="button" onclick="hideToast('error')" class="text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer self-center">&times;</button>
 </div>
 
-<!-- Success Toast -->
-<div id="successToast" class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md bg-white border-l-4 border-green-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50">
+<!-- Document Submission Success Toast -->
+<div id="successToast" class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-green-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50">
     <div>
         <img
             src="{{ asset('images/successful.svg') }}"
@@ -279,11 +246,45 @@
             class="">
     </div>
     <div class="flex-1">
-        <p class="font-semibold text-green-700">Document Successfully Submitted</p>
+        <p class="font-semibold">Document Successfully Submitted</p>
         <p id="successToastMsg" class="text-sm">Your document has been submitted successfully. We'll review it shortly and get back to you if anything else is needed.</p>
     </div>
-    <button type="button" onclick="hideToast()" class="text-gray-500 hover:text-gray-700 text-sm cursor-pointer">&times;</button>
+    <button type="button" onclick="hideToast('success')" class="text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer self-center">&times;</button>
 </div>
+
+<!-- Document Submission Fail Toast -->
+<div id="failToast" class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-300 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50">
+    <div>
+        <img
+            src="{{ asset('images/error.svg') }}"
+            alt="Error Icon"
+            id="docTypeIcon"
+            class="">
+    </div>
+    <div class="flex-1">
+        <p class="font-semibold">Error</p>
+        <p id="failToastMsg" class="text-sm">Failed to submit document. Please try again later.</p>
+    </div>
+    <button type="button" onclick="hideToast('fail')" class="text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer self-center">&times;</button>
+</div>
+
+<!-- Display document submision success message -->
+@if(session('success'))
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        showToast('success');
+    });
+</script>
+@endif
+
+<!-- Display document submission fail message -->
+@if(session('error'))
+<script>
+    window.addEventListener('DOMContentLoaded', () => {
+        showToast('fail');
+    });
+</script>
+@endif
 
 <script>
     // Element references
@@ -352,20 +353,22 @@
 
         const validTypes = ['application/pdf', //PDF
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-            'application/msword'
-        ]; // DOC
+            'application/msword' // DOC
+        ];
 
         const maxSize = 5 * 1024 * 1024;
 
         if (!validTypes.includes(file.type)) {
-            showToast("Invalid file type. Only PDF or DOCX files are allowed.");
+            hideAllToasts();
+            showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
             input.value = "";
             fileNameDisplay.textContent = "No File Chosen";
             return;
         }
 
         if (file.size > maxSize) {
-            showToast("File size must not exceed 5 mb.");
+            hideAllToasts();
+            showToast('error', "File size must not exceed 5 mb.");
             input.value = "";
             fileNameDisplay.textContent = "No File Chosen";
             return;
@@ -374,22 +377,71 @@
         fileNameDisplay.textContent = file.name;
     }
 
-    // Error Toast Message
-    function showToast(message) {
-        const toast = document.getElementById("errorToast");
-        const toastMsg = document.getElementById("errorToastMsg");
-        toastMsg.textContent = message;
+    // Dynamic Toast Message
+    let errorToastTimeout = null;
+    let successToastTimeout = null;
+    let failToastTimeout = null;
+
+    function showToast(type, message = '') {
+        let toast, toastMsg, timeoutVar;
+
+        if (type === 'error') {
+            toast = document.getElementById("errorToast");
+            toastMsg = document.getElementById("errorToastMsg");
+            timeoutVar = errorToastTimeout;
+        } else if (type === 'success') {
+            toast = document.getElementById("successToast");
+            toastMsg = document.getElementById("successToastMsg");
+            timeoutVar = successToastTimeout;
+        } else if (type === 'fail') {
+            toast = document.getElementById("failToast");
+            toastMsg = document.getElementById("failToastMsg");
+            timeoutVar = failToastTimeout;
+        }
+
+        // Avoid overlapping by clearing previous timeout
+        if (toast.classList.contains('hidden') === false && timeoutVar) {
+            clearTimeout(timeoutVar);
+        }
+
+        if (toastMsg && message) {
+            toastMsg.textContent = message;
+        }
+
         toast.classList.remove("hidden");
 
-        setTimeout(() => {
-            hideToast();
-        }, 5000); // Auto-hide after 5 seconds
+        // Auto-hide this specific toast after 5 seconds
+        const timeout = setTimeout(() => {
+            toast.classList.add("hidden");
+        }, 5000);
+
+        // Save timeout reference for future clearing
+        if (type === 'error') errorToastTimeout = timeout;
+        if (type === 'success') successToastTimeout = timeout;
+        if (type === 'fail') failToastTimeout = timeout;
     }
 
-    // Hide Toast
-    function hideToast() {
-        const toast = document.getElementById("errorToast");
-        toast.classList.add("hidden");
+    function hideToast(type = null) {
+        // Hide all if no type is provided
+        if (!type || type === 'error') {
+            document.getElementById("errorToast")?.classList.add("hidden");
+            if (errorToastTimeout) clearTimeout(errorToastTimeout);
+        }
+        if (!type || type === 'success') {
+            document.getElementById("successToast")?.classList.add("hidden");
+            if (successToastTimeout) clearTimeout(successToastTimeout);
+        }
+        if (!type || type === 'fail') {
+            document.getElementById("failToast")?.classList.add("hidden");
+            if (failToastTimeout) clearTimeout(failToastTimeout);
+        }
+    }
+
+    // Hides all toasts
+    function hideAllToasts() {
+        hideToast('error');
+        hideToast('success');
+        hideToast('fail');
     }
 
     // selectReceiver() function
