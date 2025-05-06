@@ -1,8 +1,7 @@
-@include('components.superAdminNavigation') <!-- Include the super admin navigation component -->
 @extends('base')<!-- Extend the base component -->
 @section('content')<!-- Content section -->
 <!-- This is the main content area for the super admin dashboard -->
-
+@include('components.superAdminNavigation') <!-- Include the super admin navigation component -->
 <!-- Super admin word under the nav var -->
 <div class="max-h-9/10 bg-white bg-opacity-30 p-13">
     <div class="flex justify-between items-center mb-6">
@@ -30,7 +29,7 @@
 </div>
 
     <!-- Table Header and Container -->
-    <div class="overflow-hidden rounded-[25px] shadow bg-[#D9D9D9]"  style="width: 100%; height: 384px; flex-shrink:0;">
+    <div class="overflow-hidden rounded-[25px] shadow bg-[#D9D9D9]"  style="width: 100%; height: 400px; flex-shrink:0;">
         <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
                     <thead>
                 <tr>
