@@ -15,7 +15,6 @@
                 <div class="flex justify-between items-center">
                 <p class="text-gray-500 text-sm mb-6">View, edit, or deactivate the account.</p>
                 </div>
-                
             </div>
             
             <!-- User Details -->
