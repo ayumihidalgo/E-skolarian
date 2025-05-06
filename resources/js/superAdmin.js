@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Add User Modal
     const addUserBtn = document.getElementById('addUserBtn');
     const addUserModal = document.getElementById('addUserModal');
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update the hidden role value when role_name changes
     if (roleSelect) {
-        roleSelect.addEventListener('change', function() {
+        roleSelect.addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
             const actualRole = selectedOption.getAttribute('data-role');
             if (actualRoleInput) {
@@ -60,26 +60,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add User Modal Event Listeners
     if (addUserBtn && addUserModal) {
-        addUserBtn.addEventListener('click', function() {
+        addUserBtn.addEventListener('click', function () {
             addUserModal.classList.remove('hidden');
         });
     }
 
     // Add User Modal Closing
     if (closeAddUserBtn && addUserModal) {
-        closeAddUserBtn.addEventListener('click', function() {
+        closeAddUserBtn.addEventListener('click', function () {
             addUserModal.classList.add('hidden');
         });
     }
 
     if (closeAddUserModalBtn && addUserModal) {
-        closeAddUserModalBtn.addEventListener('click', function() {
+        closeAddUserModalBtn.addEventListener('click', function () {
             addUserModal.classList.add('hidden');
         });
     }
 
     if (addUserBackdrop && addUserModal) {
-        addUserBackdrop.addEventListener('click', function() {
+        addUserBackdrop.addEventListener('click', function () {
             addUserModal.classList.add('hidden');
         });
     }
@@ -87,7 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // User Details Modal Event Listeners
     if (userRows && userDetailsModal) {
         userRows.forEach(row => {
-            row.addEventListener('click', function() {
+            row.addEventListener('click', function () {
                 const userData = JSON.parse(this.getAttribute('data-user'));
 
                 // Set the user data in the modal
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (userDetailsRows && userDetailsModal) {
         userDetailsRows.forEach(row => {
-            row.addEventListener('click', function() {
+            row.addEventListener('click', function () {
                 const userData = JSON.parse(this.getAttribute('data-user'));
 
                 // Fill user details in the modal
@@ -123,33 +123,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (closeUserDetailsBtn && userDetailsModal) {
-        closeUserDetailsBtn.addEventListener('click', function() {
+        closeUserDetailsBtn.addEventListener('click', function () {
             userDetailsModal.classList.add('hidden');
         });
     }
 
     if (userDetailsBackdrop && userDetailsModal) {
-        userDetailsBackdrop.addEventListener('click', function() {
+        userDetailsBackdrop.addEventListener('click', function () {
             userDetailsModal.classList.add('hidden');
         });
     }
 
     // Success Modal Event Listeners
     if (closeSuccessModalBtn && successModal) {
-        closeSuccessModalBtn.addEventListener('click', function() {
+        closeSuccessModalBtn.addEventListener('click', function () {
             successModal.classList.add('hidden');
         });
     }
 
     if (successModalBackdrop && successModal) {
-        successModalBackdrop.addEventListener('click', function() {
+        successModalBackdrop.addEventListener('click', function () {
             successModal.classList.add('hidden');
         });
     }
 
     // Edit User Modal Event Listeners
     if (editUserBtn && editUserModal) {
-        editUserBtn.addEventListener('click', function() {
+        editUserBtn.addEventListener('click', function () {
             // Hide the user details modal
             userDetailsModal.classList.add('hidden');
 
@@ -191,14 +191,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add event listener to update the actual role when role_name changes
     const editRoleName = document.getElementById('editRoleName');
     if (editRoleName) {
-        editRoleName.addEventListener('change', function() {
+        editRoleName.addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
             document.getElementById('editActualRole').value = selectedOption.getAttribute('data-role');
         });
     }
 
     if (closeEditModalBtn && editUserModal) {
-        closeEditModalBtn.addEventListener('click', function() {
+        closeEditModalBtn.addEventListener('click', function () {
             editUserModal.classList.add('hidden');
             // Show the user details modal again after a small delay
             setTimeout(() => {
@@ -208,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (editUserBackdrop && editUserModal) {
-        editUserBackdrop.addEventListener('click', function() {
+        editUserBackdrop.addEventListener('click', function () {
             editUserModal.classList.add('hidden');
             // Show the user details modal again after a small delay
             setTimeout(() => {
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Handle Edit User Form Submission - FIXED VERSION
     if (editUserForm) {
-        editUserForm.addEventListener('submit', function(e) {
+        editUserForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
             // Get form data
@@ -263,92 +263,92 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => {
-                // Check response status first
-                if (response.status >= 200 && response.status < 300) {
-                    // Try to parse as JSON, but don't fail if it's not JSON
-                    return response.text().then(text => {
-                        try {
-                            return JSON.parse(text);
-                        } catch (e) {
-                            // If it's not valid JSON, just return success
-                            console.log("Response is not valid JSON, but request was successful");
-                            return { success: true, message: "User updated successfully" };
-                        }
-                    });
-                } else {
-                    // For error responses, try to get error details
-                    return response.text().then(text => {
-                        try {
-                            return Promise.reject(JSON.parse(text));
-                        } catch (e) {
-                            return Promise.reject({ message: `Server error: ${response.status}` });
-                        }
-                    });
-                }
-            })
-            .then(data => {
-                // Hide the edit modal first
-                if (editUserModal) {
-                    editUserModal.classList.add('hidden');
-                }
-
-                // Set success message content if elements exist
-                const successTitle = document.getElementById('successTitle');
-                const successMessage = document.getElementById('successMessage');
-
-                if (successTitle) {
-                    successTitle.textContent = 'User Successfully Updated!';
-                }
-
-                if (successMessage) {
-                    successMessage.textContent = data.message || 'User has been updated successfully.';
-                }
-
-                // Show success message if modal exists
-                if (successModal) {
-                    successModal.classList.remove('hidden');
-                } else {
-                    // If no success modal, show an alert
-                    alert('User updated successfully!');
-                }
-
-                // Refresh page after successful update
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-
-                // Re-enable the submit button
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Save Changes';
-                }
-
-                // Extract error message
-                let errorMessage = 'An error occurred while updating the user.';
-
-                if (error && typeof error === 'object') {
-                    if (error.errors && Object.keys(error.errors).length > 0) {
-                        const firstErrorKey = Object.keys(error.errors)[0];
-                        errorMessage = error.errors[firstErrorKey][0];
-                    } else if (error.message) {
-                        errorMessage = error.message;
+                .then(response => {
+                    // Check response status first
+                    if (response.status >= 200 && response.status < 300) {
+                        // Try to parse as JSON, but don't fail if it's not JSON
+                        return response.text().then(text => {
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                // If it's not valid JSON, just return success
+                                console.log("Response is not valid JSON, but request was successful");
+                                return { success: true, message: "User updated successfully" };
+                            }
+                        });
+                    } else {
+                        // For error responses, try to get error details
+                        return response.text().then(text => {
+                            try {
+                                return Promise.reject(JSON.parse(text));
+                            } catch (e) {
+                                return Promise.reject({ message: `Server error: ${response.status}` });
+                            }
+                        });
                     }
-                }
+                })
+                .then(data => {
+                    // Hide the edit modal first
+                    if (editUserModal) {
+                        editUserModal.classList.add('hidden');
+                    }
 
-                // Display error message to user
-                alert(errorMessage);
-            });
+                    // Set success message content if elements exist
+                    const successTitle = document.getElementById('successTitle');
+                    const successMessage = document.getElementById('successMessage');
+
+                    if (successTitle) {
+                        successTitle.textContent = 'User Successfully Updated!';
+                    }
+
+                    if (successMessage) {
+                        successMessage.textContent = data.message || 'User has been updated successfully.';
+                    }
+
+                    // Show success message if modal exists
+                    if (successModal) {
+                        successModal.classList.remove('hidden');
+                    } else {
+                        // If no success modal, show an alert
+                        alert('User updated successfully!');
+                    }
+
+                    // Refresh page after successful update
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+
+                    // Re-enable the submit button
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Save Changes';
+                    }
+
+                    // Extract error message
+                    let errorMessage = 'An error occurred while updating the user.';
+
+                    if (error && typeof error === 'object') {
+                        if (error.errors && Object.keys(error.errors).length > 0) {
+                            const firstErrorKey = Object.keys(error.errors)[0];
+                            errorMessage = error.errors[firstErrorKey][0];
+                        } else if (error.message) {
+                            errorMessage = error.message;
+                        }
+                    }
+
+                    // Display error message to user
+                    alert(errorMessage);
+                });
         });
     }
 
     // Form Submission Handling for Add User
     const addUserForm = document.getElementById('addUserForm');
     if (addUserForm) {
-        addUserForm.addEventListener('submit', function(e) {
+        addUserForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
             // Get form data
@@ -391,80 +391,80 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => {
-                if (response.status >= 200 && response.status < 300) {
-                    return response.text().then(text => {
-                        try {
-                            return JSON.parse(text);
-                        } catch (e) {
-                            return { success: true, message: "User added successfully" };
-                        }
-                    });
-                } else {
-                    return response.text().then(text => {
-                        try {
-                            return Promise.reject(JSON.parse(text));
-                        } catch (e) {
-                            return Promise.reject({ message: `Server error: ${response.status}` });
-                        }
-                    });
-                }
-            })
-            .then(data => {
-                // Close the add user modal
-                if (addUserModal) {
-                    addUserModal.classList.add('hidden');
-                }
-
-                // Show success message
-                if (successModal) {
-                    // Update success message if needed
-                    const successMessageElement = successModal.querySelector('p');
-                    if (successMessageElement) {
-                        successMessageElement.textContent = 'User added successfully!';
+                .then(response => {
+                    if (response.status >= 200 && response.status < 300) {
+                        return response.text().then(text => {
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                return { success: true, message: "User added successfully" };
+                            }
+                        });
+                    } else {
+                        return response.text().then(text => {
+                            try {
+                                return Promise.reject(JSON.parse(text));
+                            } catch (e) {
+                                return Promise.reject({ message: `Server error: ${response.status}` });
+                            }
+                        });
+                    }
+                })
+                .then(data => {
+                    // Close the add user modal
+                    if (addUserModal) {
+                        addUserModal.classList.add('hidden');
                     }
 
-                    // Show success modal
-                    successModal.classList.remove('hidden');
-                } else {
-                    // Fallback to alert if modal not found
-                    alert('User added successfully!');
-                }
+                    // Show success message
+                    if (successModal) {
+                        // Update success message if needed
+                        const successMessageElement = successModal.querySelector('p');
+                        if (successMessageElement) {
+                            successMessageElement.textContent = 'User added successfully!';
+                        }
 
-                // Refresh the page after a delay to show the new user
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            })
-            .catch(error => {
-                console.error("Error:", error);
-
-                // Re-enable the submit button
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = 'Add User';
-                }
-
-                // Extract error message
-                let errorMessage = 'An error occurred while adding the user.';
-
-                if (error && typeof error === 'object') {
-                    if (error.errors && Object.keys(error.errors).length > 0) {
-                        const firstErrorKey = Object.keys(error.errors)[0];
-                        errorMessage = error.errors[firstErrorKey][0];
-                    } else if (error.message) {
-                        errorMessage = error.message;
+                        // Show success modal
+                        successModal.classList.remove('hidden');
+                    } else {
+                        // Fallback to alert if modal not found
+                        alert('User added successfully!');
                     }
-                }
 
-                // Display error message to user
-                alert(errorMessage);
-            });
+                    // Refresh the page after a delay to show the new user
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+
+                    // Re-enable the submit button
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = 'Add User';
+                    }
+
+                    // Extract error message
+                    let errorMessage = 'An error occurred while adding the user.';
+
+                    if (error && typeof error === 'object') {
+                        if (error.errors && Object.keys(error.errors).length > 0) {
+                            const firstErrorKey = Object.keys(error.errors)[0];
+                            errorMessage = error.errors[firstErrorKey][0];
+                        } else if (error.message) {
+                            errorMessage = error.message;
+                        }
+                    }
+
+                    // Display error message to user
+                    alert(errorMessage);
+                });
         });
     }
 
     // Close all modals when Escape key is pressed
-    document.addEventListener('keydown', function(event) {
+    document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             if (addUserModal) addUserModal.classList.add('hidden');
             if (userDetailsModal) userDetailsModal.classList.add('hidden');
@@ -475,30 +475,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Deactivate User Confirmation Modal
     if (deactivateBtn) {
-        deactivateBtn.addEventListener('click', function() {
+        deactivateBtn.addEventListener('click', function () {
             deactivateConfirmModal.classList.remove('hidden');
         });
     }
-    
+
     if (cancelDeactivateBtn) {
-        cancelDeactivateBtn.addEventListener('click', function() {
+        cancelDeactivateBtn.addEventListener('click', function () {
             deactivateConfirmModal.classList.add('hidden');
         });
     }
     if (closeDeactivateModalBtn) {
-        closeDeactivateModalBtn.addEventListener('click', function() {
+        closeDeactivateModalBtn.addEventListener('click', function () {
             deactivateConfirmModal.classList.add('hidden');
         });
     }
-    
+
     if (deactivateConfirmBackdrop) {
-        deactivateConfirmBackdrop.addEventListener('click', function() {
+        deactivateConfirmBackdrop.addEventListener('click', function () {
             deactivateConfirmModal.classList.add('hidden');
         });
     }
-    
+
     if (confirmDeactivateBtn) {
-        confirmDeactivateBtn.addEventListener('click', function() {
+        confirmDeactivateBtn.addEventListener('click', function () {
             // Add your deactivation logic here
             console.log('Account deactivated');
             deactivateConfirmModal.classList.add('hidden');
@@ -510,28 +510,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Email Confirmation Modal
     if (confirmDeactivateBtn) {
-        confirmDeactivateBtn.addEventListener('click', function() {
+        confirmDeactivateBtn.addEventListener('click', function () {
             // Get the email from the user details modal
             userEmailToDeactivate = document.getElementById('userEmail').textContent;
-            
+
             // Hide deactivate confirmation modal
             deactivateConfirmModal.classList.add('hidden');
-            
+
             // Show email confirmation modal
             emailConfirmModal.classList.remove('hidden');
-            
+
             // Reset the email input and error message
             confirmEmailInput.value = '';
             confirmEmailInput.classList.remove('border-red-500');
             emailError.classList.add('hidden');
         });
     }
-    
+
     // Email input validation
     if (confirmEmailInput) {
-        confirmEmailInput.addEventListener('input', function() {
+        confirmEmailInput.addEventListener('input', function () {
             const isMatch = this.value === userEmailToDeactivate;
-            
+
             // Update input styling
             if (this.value) {
                 if (!isMatch) {
@@ -550,29 +550,108 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // Close email confirmation modal
     if (closeEmailConfirmBtn) {
-        closeEmailConfirmBtn.addEventListener('click', function() {
+        closeEmailConfirmBtn.addEventListener('click', function () {
             emailConfirmModal.classList.add('hidden');
         });
     }
-    
+
     // Final deactivation handler
     if (finalDeactivateBtn) {
-        finalDeactivateBtn.addEventListener('click', function() {
+        finalDeactivateBtn.addEventListener('click', function () {
             if (confirmEmailInput.value === userEmailToDeactivate) {
-                // Add your deactivation API call here
-                console.log('Account deactivated:', userEmailToDeactivate);
-                
-                // Hide the email confirmation modal
-                emailConfirmModal.classList.add('hidden');
-                
-                // Hide the user details modal
-                userDetailsModal.classList.add('hidden');
-                
-                // Optionally show a success message or refresh the page
-                // window.location.reload();
+                // Use the currentUserId variable that's already being tracked
+                // This is set when opening the user details modal
+
+                // Create a form data object
+                const formData = new FormData();
+                formData.append('user_id', currentUserId);
+                formData.append('email', userEmailToDeactivate);
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+
+                // Show loading state
+                finalDeactivateBtn.disabled = true;
+                finalDeactivateBtn.textContent = 'Processing...';
+
+                // Make API call to deactivate the user
+                fetch('/super-admin/deactivate-user', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then(response => {
+                        // First check if the response is OK
+                        if (!response.ok) {
+                            // If not OK, get the response text to help with debugging
+                            return response.text().then(text => {
+                                console.error('Server Error Response:', text);
+                                throw new Error(`Server error: ${response.status}`);
+                            });
+                        }
+
+                        // If OK, try to parse as JSON, but handle non-JSON responses gracefully
+                        return response.text().then(text => {
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                console.error('JSON Parse Error:', e);
+                                console.log('Raw server response:', text);
+                                throw new Error('Invalid JSON response from server');
+                            }
+                        });
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            // Hide the email confirmation modal
+                            emailConfirmModal.classList.add('hidden');
+
+                            // Hide the user details modal
+                            userDetailsModal.classList.add('hidden');
+
+                            // Show success notification
+                            const successTitle = document.getElementById('successTitle');
+                            const successMessage = document.getElementById('successMessage');
+
+                            if (successTitle) {
+                                successTitle.textContent = 'Account Deactivated';
+                            }
+
+                            if (successMessage) {
+                                successMessage.textContent = 'The user account has been successfully deactivated.';
+                            }
+
+                            // Show success modal
+                            if (successModal) {
+                                successModal.classList.remove('hidden');
+                            } else {
+                                // Fallback to alert if modal not found
+                                alert('Account deactivated successfully');
+                            }
+
+                            // Refresh the page after a delay to update the user list
+                            setTimeout(() => {
+                                window.location.reload();
+                            }, 1500);
+                        } else {
+                            // Show error
+                            emailError.textContent = data.message || 'Failed to deactivate account';
+                            emailError.classList.remove('hidden');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        emailError.textContent = 'An error occurred. Please try again.';
+                        emailError.classList.remove('hidden');
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        finalDeactivateBtn.disabled = false;
+                        finalDeactivateBtn.textContent = 'Deactivate Account';
+                    });
             }
         });
     }

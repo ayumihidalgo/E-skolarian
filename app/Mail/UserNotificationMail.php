@@ -17,19 +17,24 @@ class UserNotificationMail extends Mailable
     public $user;
     public $actionType;
     public $isNewUser;
+    public $isDeactivated;
+    public $password;
 
     /**
      * Create a new message instance.
      *
      * @param User $user
-     * @param string $actionType ('created' or 'updated')
+     * @param string $actionType ('created', 'updated', or 'deactivated')
+     * @param string|null $password Generated password for new users
      * @return void
      */
-    public function __construct(User $user, string $actionType)
+    public function __construct(User $user, string $actionType, ?string $password = null)
     {
         $this->user = $user;
         $this->actionType = $actionType;
         $this->isNewUser = ($actionType === 'created');
+        $this->isDeactivated = ($actionType === 'deactivated');
+        $this->password = $password;
     }
 
     /**
@@ -39,9 +44,12 @@ class UserNotificationMail extends Mailable
      */
     public function envelope()
     {
-        $subject = $this->isNewUser
-            ? 'Welcome to Our Platform'
-            : 'Your Account Has Been Updated';
+        $subject = match($this->actionType) {
+            'created' => 'Welcome to E-skolarian - Your Account Has Been Created',
+            'updated' => 'E-skolarian - Your Account Has Been Updated',
+            'deactivated' => 'E-skolarian - Your Account Has Been Deactivated',
+            default => 'E-skolarian - Account Notification'
+        };
 
         return new Envelope(
             subject: $subject,
