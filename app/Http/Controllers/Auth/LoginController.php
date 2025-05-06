@@ -44,6 +44,7 @@ class LoginController extends Controller
             'password' => $credentials['password'],
             // Allow both admin and super admin to log in when admin is selected
             'role' => $credentials['role'] === 'admin' ? ['admin', 'super admin'] : $credentials['role'],
+            'active' => 1,
         ], $request->filled('remember'))) {
             // Regenerate the session if login is successful
             $request->session()->regenerate();
