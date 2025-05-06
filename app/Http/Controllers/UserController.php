@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use App\Mail\UserNotificationMail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -27,21 +29,24 @@ class UserController extends Controller
             'role_name' => 'required|string|max:255',
         ]);
 
+        // Generate a random password
+        $password = Str::random(10); // Creates a 10 character random string
+
         // Create the user
         $user = User::create([
             'username' => $validated['username'],
             'email' => $validated['email'],
             'role' => $validated['role'],
             'role_name' => $validated['role_name'],
-            'password' => Hash::make('defaultpassword'), // Set a default password
+            'password' => Hash::make($password), // Use the generated password
         ]);
 
-        // Send notification email to the user
+        // Send notification email to the user with the generated password
         try {
-            Mail::to($user->email)->send(new UserNotificationMail($user, 'created'));
+            Mail::to($user->email)->send(new UserNotificationMail($user, 'created', $password));
         } catch (\Exception $e) {
             // Log the error but don't stop the process
-            \Log::error('Failed to send email notification: ' . $e->getMessage());
+            Log::error('Failed to send email notification: ' . $e->getMessage());
         }
 
         // Return a JSON response for AJAX requests
@@ -107,7 +112,7 @@ class UserController extends Controller
             }
         } catch (\Exception $e) {
             // Log the error but don't stop the process
-            \Log::error('Failed to send email notification: ' . $e->getMessage());
+            Log::error('Failed to send email notification: ' . $e->getMessage());
         }
 
         // Return a JSON response for AJAX requests

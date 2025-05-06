@@ -17,6 +17,11 @@ class User extends Authenticatable
     {
         $this->notify(new \App\Notifications\CustomResetPassword($token));
     }
+    // A scope to only get active users
+    public function scopeActive($query)
+    {
+        return $query->where('active', true);
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -29,6 +34,7 @@ class User extends Authenticatable
         'role',
         'role_name',
         'password',
+        'active',
     ];
 
     /**

@@ -78,6 +78,8 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
+
+    Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
 });
 
 Route::get('/notifications', function () {

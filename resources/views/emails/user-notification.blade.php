@@ -1,93 +1,190 @@
 {{-- user-notification.blade.php --}}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $isNewUser ? 'Welcome to Our Platform' : 'Your Account Has Been Updated' }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background-color: #4338ca;
-            color: white;
-            padding: 20px;
-            text-align: center;
-            border-radius: 5px 5px 0 0;
-        }
-        .content {
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-top: none;
-            border-radius: 0 0 5px 5px;
-        }
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-            font-size: 12px;
-            color: #777;
-        }
-        .button {
-            display: inline-block;
-            background-color: #4338ca;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-top: 15px;
-        }
-        .info {
-            background-color: #f5f5f5;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>
+    @if($isNewUser)
+      Welcome to E-skolarian - Account Created
+    @elseif($isDeactivated)
+      E-skolarian - Account Deactivated
+    @else
+      E-skolarian - Account Update Notification
+    @endif
+  </title>
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font: 14px / 1.2 "Montserrat", "Helvetica", sans-serif;
+    }
+
+    body {
+        background-color: #7A1212;
+    }
+
+    .card-container  {
+        width: 100%;
+        max-width: 700px;
+        padding: 20px 20px 20px 20px;
+        height: 100%;
+        margin: auto;
+        background-color: #ffffff;
+    }
+
+    .header-card {
+        text-align: center;
+        height: 90px;
+    }
+
+    .logo {
+        width: 240px;
+    }
+
+    .body-card {
+        padding: 30px 0 15px;
+        margin: auto;
+        width: 90%;
+    }
+
+    .body-card h1 {
+        font-size: 18px;
+        font-weight: bold;
+        color: #7A1212;
+    }
+
+    .body-card p{
+        font-weight: 600;
+    }
+
+    .body-card .first-p {
+        padding-top: 20px;
+    }
+
+    .action-button {
+        display: block;
+        white-space: normal;
+        text-decoration: none;
+        text-transform: uppercase;
+        font-weight: bold;
+        font-size: 25px;
+        margin: 40px auto;
+        text-align: center;
+        max-width: 300px;
+        padding: 20px;
+        font-family: 'Verdana', sans-serif;
+        border-radius: 10px;
+        background-color: #F5C518;
+        color: #2C2C2C;
+    }
+
+    .body-card .last-p {
+        color: #AFADAD;
+        font-style: italic;
+    }
+
+    .login-url {
+        display: block;
+        text-align: center;
+        color: #7A1212;
+        font-size: 12px;
+        margin-top: -30px;
+        margin-bottom: 30px;
+        text-decoration: none;
+    }
+
+    .info-box {
+        background-color: #f9f9f9;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+        border: 1px solid #eaeaea;
+    }
+
+    .info-box p {
+        margin: 8px 0;
+    }
+
+    .footer-card {
+        padding: 15px;
+        margin: auto;
+        width: 90%;
+        color: #A6A6A6;
+        text-align: center;
+    }
+
+    .footer-card .first-p {
+        font-weight: 600;
+    }
+
+    hr {
+        margin: 0 auto;
+        width: 90%;
+    }
+
+    .deactivated-notice {
+        color: #7A1212;
+        font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-    <div class="header">
-        <h1>{{ $isNewUser ? 'Welcome to Our Platform!' : 'Account Update Notification' }}</h1>
-    </div>
-
-    <div class="content">
-        <p>Good Day! {{ $user->username }},</p>
-
-        @if($isNewUser)
-            <p>We are pleased to inform you that an account has been successfully created for you in the E-Skolarian: Document Management System of PUP Santa Rosa.</p>
-            <p>Here are your account details:</p>
-        @else
-            <p>Your account information has been updated.</p>
-            <p>Here are your updated account details:</p>
-        @endif
-
-        <div class="info">
-            <p><strong>Username:</strong> {{ $user->username }}</p>
-            <p><strong>Email:</strong> {{ $user->email }}</p>
-            <p><strong>Role:</strong> {{ $user->role_name }}</p>
+    <div class="card-container">
+        <div class="header-card">
+            <img class="logo" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
         </div>
+        <div class="body-card">
+            <h1>Hello {{ $user->username }},</h1>
 
-        @if($isNewUser)
-            <p>A temporary password has been set for your account. For security reasons, we recommend changing your password after your first login.</p>
+            @if($isNewUser)
+                <p class="first-p">
+                    We are pleased to inform you that an account has been successfully created for you in the E-Skolarian: Document Management System of PUP Santa Rosa.
+                </p>
+                <p>Here are your account details:</p>
+            @elseif($isDeactivated)
+                <p class="first-p deactivated-notice">
+                    Your account in the E-Skolarian system has been deactivated.
+                </p>
+                <p>This means you will no longer be able to access the system using these credentials:</p>
+            @else
+                <p class="first-p">
+                    Your account information has been updated in the E-Skolarian system.
+                </p>
+                <p>Here are your updated account details:</p>
+            @endif
 
-            <p style="text-align: center;">
-                <a href="{{ url('/login') }}" class="button">Login to Your Account</a>
+            <div class="info-box">
+                <p><strong>Username:</strong> {{ $user->username }}</p>
+                <p><strong>Email:</strong> {{ $user->email }}</p>
+                <p><strong>Role:</strong> {{ $user->role_name }}</p>
+                @if($isNewUser)
+                <p><strong>Default Password:</strong> {{ $password }}</p>
+                @endif
+            </div>
+
+            @if($isNewUser)
+                <p>A temporary password has been provided above for your initial login. For security reasons, we recommend changing your password immediately after your first login.</p>
+                <a class="action-button" href="{{ url('/login') }}">Login to Account</a>
+                <a href="{{ url('/login') }}" class="login-url">{{ url('/login') }}</a>
+            @elseif($isDeactivated)
+                <p>If you believe this action was taken in error or if you need to reactivate your account, please contact the system administrator.</p>
+            @endif
+
+            <p class="last-p">
+                If you have any questions or need assistance, please don't hesitate to contact our support team.
             </p>
-        @endif
-
-        <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
-
-        <p>Thank you,<br>The Team</p>
-    </div>
-
-    <div class="footer">
-        <p>This is an automated message, please do not reply to this email.</p>
-        <p>&copy; {{ date('Y') }} Your Company. All rights reserved.</p>
+        </div>
+        <hr>
+        <div class="footer-card">
+            <p class="first-p">© E-skolarian - Document Management System</p>
+            <p>This is an automated message, please do not reply to this email.</p>
+            <p class="contact-info">
+                <strong>Contact No:</strong> 0961 802 3780<br>
+                <strong>Email:</strong> starosa@pup.edu.ph
+            </p>
+        </div>
     </div>
 </body>
 </html>
