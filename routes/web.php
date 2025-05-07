@@ -10,14 +10,7 @@ use App\Http\Controllers\AdminDocumentController;
 use App\Http\Controllers\StudentDocumentController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\StudentTrackerController;
-
-Route::get('/admin/documentArchive', function () {
-    return view('admin.documentArchive');
-})->name('admin.documentArchive');
-
-Route::get('/student/documentArchive', function () {
-    return view('student.documentArchive');
-})->name('student.documentArchive');
+use App\Http\Middleware\NoBackHistory;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -29,7 +22,9 @@ Route::get('/notification', function () {
     return view('components.general-components.notification');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', NoBackHistory::class])->group(function () {
+    // Pakilagay lahat ng routes nyo dito sa loob pag kailangan naaaccess lang yung page nyo kapag logged in yung user
+
     Route::get('/student/dashboard', function () {
         return response()
             ->view('student.dashboard')
@@ -81,6 +76,42 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
+
+    // Archive Document Route
+    Route::get('/admin/documentArchive', function () {
+        return response()
+            ->view('admin.documentArchive')
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+    })->name('admin.documentArchive');
+
+    Route::get('/student/documentArchive', function () {
+        return response()
+            ->view('student.documentArchive')
+            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', '0');
+    })->name('student.documentArchive');
+
+    // Route for the student tracker page
+    Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
+
+    // Route for the document preview page (admin)
+    Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
+
+    // Route for the document preview page (student)
+    Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
+        ->name('student.documentPreview');
+
+    // Fetching and displaying and storing comments
+    Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
+
+    // Document viewing
+    Route::get('/test-pdf', function() {
+        return response()->file(public_path('documents/test/sample.pdf'));
+    });
 });
 
 Route::get('/notifications', function () {
@@ -96,35 +127,7 @@ Route::get('password-reset-confirmation', function () {
     return view('auth.password-reset-confirmation');
 })->name('password.reset.confirmation');
 
-/* Temporary Route for Email Template */
-Route::get('/custom-reset-password', function () {
-    return view('emails.custom-reset-password');
-
-});
-
 // CHANGE THIS //
 // Route::get('/', function () {
 //     return view('admin.documentArchive');
-// });
-
-// Route for the document preview page (admin)
-Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
-
-// Route for the document preview page (student)
-Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
-    ->name('student.documentPreview');
-
-// Document viewing
-Route::get('/test-pdf', function() {
-    return response()->file(public_path('documents/test/sample.pdf'));
-});
-
-// Fetching and displaying and storing comments
-Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
-Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
-
-
-
-
-// Route for the student tracker page
-Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
+// })
