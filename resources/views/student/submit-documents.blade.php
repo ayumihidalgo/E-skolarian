@@ -35,7 +35,7 @@
                                 class="hidden absolute z-10 w-full bg-white text-black border border-gray-300 rounded-[11px] shadow-md mt-1">
                                 @foreach ($adminUsers as $admin)
                                 <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectReceiver('{{ $admin->username }}', '{{ $admin->role_name }}')">
+                                    onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->username }}', '{{ $admin->role_name }}')">
                                     {{ $admin->username }}
                                 </li>
                                 @endforeach
@@ -440,10 +440,10 @@
     }
 
     // selectReceiver() function
-    window.selectReceiver = function(name, position) {
-        const displayText = `${name} <span class="text-gray-400">&lsaquo;${position}&rsaquo;</span>`; // ‹ ›
+    window.selectReceiver = function(id, name, role) {
+        const displayText = `${name} <span class="text-gray-400">&lsaquo;${role}&rsaquo;</span>`; // ‹ ›
         receiver.selected.innerHTML = displayText; // Use innerHTML to apply styling
-        receiver.input.value = name;
+        receiver.input.value = id;
         receiver.dropdown.classList.add('hidden');
     }
 

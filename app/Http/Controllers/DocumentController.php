@@ -18,7 +18,7 @@ class DocumentController extends Controller
     {
         // Shows the admin users in the receiver dropdown list in the form
         $adminUsers = \App\Models\User::where('role', 'admin')
-            ->select('username', 'role_name')
+            ->select('id', 'username', 'role_name')
             ->get();
 
         return view('student.submit-documents', compact('adminUsers'));
@@ -27,18 +27,19 @@ class DocumentController extends Controller
     public function store(Request $request)
     {
         try {
+            Log::info('Store method hit', $request->all());
             Log::info('Document submission attempt', ['user_id' => Auth::id()]);
 
             // Validate the incoming request
             $validated = $request->validate([
-                'received_by' => 'required|string',
+                'received_by' => 'required|exists:users,id',
                 'subject' => 'required|string|max:50',
-                'type' => 'required|string',
+                'type' => 'required|in:Event Proposal,General Plan of Activities,Calendar of Activities,Accomplishment Report,Constitution and By-Laws,Request Letter,Off Campus,Petition and Concern',
                 'summary' => 'required|string|max:255',
-                'eventStartDate' => 'nullable|date|required_if:doc_type,Event Proposal',
-                'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:doc_type,Event Proposal',
-                'event-title' => 'nullable|string|max:50|required_if:doc_type,Event Proposal',
-                'event-desc' => 'nullable|string|max:255|required_if:doc_type,Event Proposal',
+                'eventStartDate' => 'nullable|date|required_if:type,Event Proposal',
+                'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:type,Event Proposal',
+                'event-title' => 'nullable|string|max:50|required_if:type,Event Proposal',
+                'event-desc' => 'nullable|string|max:255|required_if:type,Event Proposal',
                 'file_upload' => 'required|file|mimes:pdf,doc,docx|max:5120',
             ]);
 
