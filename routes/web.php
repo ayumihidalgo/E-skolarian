@@ -9,6 +9,7 @@ use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\AdminDocumentController;
 use App\Http\Controllers\StudentDocumentController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\StudentTrackerController;
 
 Route::get('/admin/documentArchive', function () {
     return view('admin.documentArchive');
@@ -121,3 +122,9 @@ Route::get('/test-pdf', function() {
 // Fetching and displaying and storing comments
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
+
+
+
+
+// Route for the student tracker page
+Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
