@@ -85,10 +85,12 @@ input:-webkit-autofill {
 
 @font-face {
     font-family: 'Lexend';
-    src: url('../font/Lexend-VariableFont_wght.ttf') format('truetype');
-    font-weight: 400 700;
+    src: url('/font/Lexend-VariableFont_wght.public\font\Lexend-Medium.ttf') format('truetype');
+    font-weight: 500;
     font-style: normal;
 }
+
+
 
 body {
     font-family: 'Manrope', sans-serif;
