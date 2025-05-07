@@ -25,21 +25,9 @@ Route::get('/notification', function () {
 Route::middleware(['auth', NoBackHistory::class])->group(function () {
     // Pakilagay lahat ng routes nyo dito sa loob pag kailangan naaaccess lang yung page nyo kapag logged in yung user
 
-    Route::get('/student/dashboard', function () {
-        return response()
-            ->view('student.dashboard')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
-    })->name('student.dashboard');
-    Route::get('/admin/dashboard', function () {
-        return response()
-            ->view('admin.dashboard')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
-    })->name('admin.dashboard');
-    Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
+    Route::get('/student/dashboard', fn () => view('student.dashboard')) -> name('student.dashboard');
+    Route::get('/admin/dashboard', fn () => view('admin.dashboard')) -> name('admin.dashboard');
+
 
     // Calendar routes
     Route::get('/calendar', [EventController::class, 'index'])->name('calendar.index');
@@ -52,14 +40,7 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::post('/users/{id}', [UserController::class, 'update']);
 
-
-    Route::get('/super-admin/dashboard', function () {
-        return response()
-            ->view('super-admin.dashboard')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
-    })->name('super-admin.dashboard');
+    Route::get('/super-admin/dashboard', fn() => view('super-admin.dashboard'))->name('super-admin.dashboard');
 
     Route::get('/admin/review', function () {
         return view('admin.review');
@@ -78,21 +59,8 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
 
     // Archive Document Route
-    Route::get('/admin/documentArchive', function () {
-        return response()
-            ->view('admin.documentArchive')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
-    })->name('admin.documentArchive');
-
-    Route::get('/student/documentArchive', function () {
-        return response()
-            ->view('student.documentArchive')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0');
-    })->name('student.documentArchive');
+    Route::get('/admin/documentArchive', fn() => view('admin.documentArchive'))->name('admin.documentArchive');
+    Route::get('/student/documentArchive', fn() => view('student.documentArchive'))->name('student.documentArchive');
 
     // Route for the student tracker page
     Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
