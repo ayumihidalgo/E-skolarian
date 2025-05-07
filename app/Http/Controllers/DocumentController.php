@@ -9,9 +9,21 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\Event;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Role;
 
 class DocumentController extends Controller
 {
+    public function create()
+    {
+        // Shows the admin users in the receiver dropdown list in the form
+        $adminUsers = \App\Models\User::where('role', 'admin')
+            ->select('username', 'role_name')
+            ->get();
+
+        return view('student.submit-documents', compact('adminUsers'));
+    }
+
     public function store(Request $request)
     {
         try {
@@ -36,9 +48,7 @@ class DocumentController extends Controller
             if ($request->hasFile('file_upload')) {
                 try {
                     $file = $request->file('file_upload');
-                    $path = $file->store('documents', 'public');
-
-                    $validated['file_path'] = $request->file('file_upload')->store('documents', 'public');
+                    $validated['file_path'] = $file->store('documents', 'public');
                 } catch (\Exception $e) {
                     return back()->withErrors(['file_upload' => 'Failed to upload file. Please try again.']);
                 }

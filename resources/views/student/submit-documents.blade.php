@@ -20,7 +20,8 @@
                             <button type="button" id="receiverButton" aria-expanded
                                 class="w-full text-left border-b-2 border-gray-500 py-3 relative focus:outline-none flex items-center justify-between gap-2 bg-white cursor-pointer">
                                 <span class="font-semibold text-gray-500">
-                                    To<span class="required-indicator text-red-500"> *</span>: <span id="receiverSelected" class="font-semibold text-black"></span>
+                                    To<span class="required-indicator text-red-500"> *</span>:
+                                    <span id="receiverSelected" class="font-semibold text-black"></span>
                                 </span>
                                 <img
                                     src="{{ asset('images/gray-arrow-down.svg') }}"
@@ -29,25 +30,15 @@
                                     class="w-8 h-3">
                             </button>
 
-                            <!-- Dropdown List (Only names shown) -->
+                            <!-- Dropdown List -->
                             <ul id="receiverDropdown"
                                 class="hidden absolute z-10 w-full bg-white text-black border border-gray-300 rounded-[11px] shadow-md mt-1">
+                                @foreach ($adminUsers as $admin)
                                 <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectReceiver('Dr. Leny Salmingo', 'Campus Director')">
-                                    Dr. Leny Salmingo
+                                    onclick="selectReceiver('{{ $admin->username }}', '{{ $admin->role_name }}')">
+                                    {{ $admin->username }}
                                 </li>
-                                <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectReceiver('Dr. Jonell John Espalto', 'Head of Student Services')">
-                                    Dr. Jonell John Espalto
-                                </li>
-                                <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectReceiver('Dr. Marion Laguerta', 'Head of Academic Programs')">
-                                    Dr. Marion Laguerta
-                                </li>
-                                <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectReceiver('Engr. Emy Lou Alinsod', 'Office of the Academic Services')">
-                                    Engr. Emy Lou Alinsod
-                                </li>
+                                @endforeach
                             </ul>
 
                             <input type="hidden" name="received_by" id="receiverInput">
