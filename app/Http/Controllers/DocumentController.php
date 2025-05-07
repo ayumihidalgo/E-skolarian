@@ -15,7 +15,7 @@ class DocumentController extends Controller
     public function store(Request $request)
     {
         try {
-            Log::info('Document submission attempt', ['user_id' => auth()->id()]);
+            Log::info('Document submission attempt', ['user_id' => Auth::id()]);
 
             // Validate the incoming request
             $validated = $request->validate([
@@ -23,12 +23,14 @@ class DocumentController extends Controller
                 'subject' => 'required|string|max:50',
                 'type' => 'required|string',
                 'summary' => 'required|string|max:255',
-                'eventStartDate' => 'required|date',
-                'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
-                'event-title' => 'required|string|max:50',
-                'event-desc' => 'required|string|max:255',
+                'eventStartDate' => 'nullable|date|required_if:doc_type,Event Proposal',
+                'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:doc_type,Event Proposal',
+                'event-title' => 'nullable|string|max:50|required_if:doc_type,Event Proposal',
+                'event-desc' => 'nullable|string|max:255|required_if:doc_type,Event Proposal',
                 'file_upload' => 'required|file|mimes:pdf,doc,docx|max:5120',
             ]);
+
+            $validated['user_id'] = Auth::id();
 
             // Check for file and store it safely if available
             if ($request->hasFile('file_upload')) {

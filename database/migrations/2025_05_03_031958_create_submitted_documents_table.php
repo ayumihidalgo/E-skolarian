@@ -12,6 +12,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create('submitted_documents', function (Blueprint $table) {
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('received_by');
             $table->id();
             $table->string('subject');
