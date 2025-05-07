@@ -289,34 +289,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .then(data => {
                     // Hide the edit modal first
-                    if (editUserModal) {
-                        editUserModal.classList.add('hidden');
-                    }
+                    editUserModal.classList.add('hidden');
 
                     // Set success message content if elements exist
-                    const successTitle = document.getElementById('successTitle');
-                    const successMessage = document.getElementById('successMessage');
-
-                    if (successTitle) {
-                        successTitle.textContent = 'User Successfully Updated!';
-                    }
-
-                    if (successMessage) {
-                        successMessage.textContent = data.message || 'User has been updated successfully.';
-                    }
+                    document.getElementById('successTitle').textContent = 'Account Successfully Updated!';
+                    document.getElementById('successMessage').textContent = 'The user account has been updated successfully.';
 
                     // Show success message if modal exists
-                    if (successModal) {
-                        successModal.classList.remove('hidden');
-                    } else {
-                        // If no success modal, show an alert
-                        alert('User updated successfully!');
-                    }
+                    successModal.classList.remove('hidden');
 
                     // Refresh page after successful update
                     setTimeout(() => {
                         window.location.reload();
-                    }, 1500);
+                    }, 2500);
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -434,7 +419,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Refresh the page after a delay to show the new user
                     setTimeout(() => {
                         window.location.reload();
-                    }, 1500);
+                    }, 2500);
                 })
                 .catch(error => {
                     console.error("Error:", error);
@@ -608,34 +593,22 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (data.success) {
                             // Hide the email confirmation modal
                             emailConfirmModal.classList.add('hidden');
+                            userDetailsModal.classList.add('hidden');
 
                             // Hide the user details modal
                             userDetailsModal.classList.add('hidden');
 
                             // Show success notification
-                            const successTitle = document.getElementById('successTitle');
-                            const successMessage = document.getElementById('successMessage');
-
-                            if (successTitle) {
-                                successTitle.textContent = 'Account Deactivated';
-                            }
-
-                            if (successMessage) {
-                                successMessage.textContent = 'The user account has been successfully deactivated.';
-                            }
+                            document.getElementById('successTitle').textContent = 'Account Successfully Deactivated';
+                            document.getElementById('successMessage').textContent = 'The user account has been deactivated.';
 
                             // Show success modal
-                            if (successModal) {
-                                successModal.classList.remove('hidden');
-                            } else {
-                                // Fallback to alert if modal not found
-                                alert('Account deactivated successfully');
-                            }
+                            successModal.classList.remove('hidden');
 
                             // Refresh the page after a delay to update the user list
                             setTimeout(() => {
                                 window.location.reload();
-                            }, 1500);
+                            }, 2500);
                         } else {
                             // Show error
                             emailError.textContent = data.message || 'Failed to deactivate account';
