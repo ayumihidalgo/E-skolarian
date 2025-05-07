@@ -31,10 +31,10 @@
                             </button>
 
                             <!-- Dropdown List -->
-                            <ul id="receiverDropdown"
+                            <ul role="listbox" id="receiverDropdown"
                                 class="hidden absolute z-10 w-full bg-white text-black border border-gray-300 rounded-[11px] shadow-md mt-1">
                                 @foreach ($adminUsers as $admin)
-                                <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
                                     onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->username }}', '{{ $admin->role_name }}')">
                                     {{ $admin->username }}
                                 </li>
@@ -78,15 +78,15 @@
                         </button>
 
                         <!-- Dropdown List -->
-                        <ul id="docTypeDropdown" class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Event Proposal')">Event Proposal</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('General Plan of Activities')">General Plan of Activities</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Calendar of Activities')">Calendar of Activities</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Accomplishment Report')">Accomplishment Report</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Constitution and By-Laws')">Constitution and By-Laws</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Request Letter')">Request Letter</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Off Campus')">Off Campus</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Petition and Concern')">Petition and Concern</li>
+                        <ul role="listbox" id="docTypeDropdown" class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Event Proposal')">Event Proposal</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('General Plan of Activities')">General Plan of Activities</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Calendar of Activities')">Calendar of Activities</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Accomplishment Report')">Accomplishment Report</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Constitution and By-Laws')">Constitution and By-Laws</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Request Letter')">Request Letter</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Off Campus')">Off Campus</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Petition and Concern')">Petition and Concern</li>
                         </ul>
 
                         <!-- Hidden input for form submission -->
@@ -161,7 +161,7 @@
                 <div class="space-y-2 w-full md:w-[400px]">
                     <div class="flex items-center w-full overflow-hidden rounded-[12px] bg-white border border-gray-400">
                         <!-- Upload Button (Left side) -->
-                        <label for="fileUpload" class="flex items-center gap-2 bg-[#7A1212] text-white font-semibold rounded-[12px] px-4 py-2 cursor-pointer hover:bg-[#a31515]">
+                        <label tabindex="0" for="fileUpload" class="flex items-center gap-2 bg-[#7A1212] text-white font-semibold rounded-[12px] px-4 py-2 cursor-pointer hover:bg-[#a31515]">
                             <img
                                 src="{{ asset('images/upload-icon.svg') }}"
                                 alt="Upload Icon"
@@ -329,6 +329,44 @@
         }
     });
 
+    // Enable Enter key to select dropdown item, and file upload
+    document.querySelectorAll('#receiverDropdown li').forEach(item => {
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                this.click(); // triggers onclick
+            }
+        });
+    });
+
+    document.querySelectorAll('#docTypeDropdown li').forEach(item => {
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                this.click();
+            }
+        });
+    });
+
+    document.querySelector('label[for="fileUpload"]').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            document.getElementById('fileUpload').click();
+        }
+    });
+
+    // Prevent form submission on Enter keypress except from inside the confirmation popup
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("subject").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // Prevent form submission
+            }
+        });
+        document.getElementById("event-title").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // Prevent form submission
+            }
+        });
+    });
+
     // Toggle dropdown visibility
     docType.button.addEventListener('click', () => toggleDropdown(docType.dropdown));
     receiver.button.addEventListener('click', () => toggleDropdown(receiver.dropdown));
@@ -494,7 +532,30 @@
     // Confirming Submission Toast Message
     function showConfirmPopup(event) {
         event.preventDefault();
-        document.getElementById('confirmPopup').classList.remove('hidden');
+        const popup = document.getElementById('confirmPopup');
+        popup.classList.remove('hidden');
+
+        const focusableElements = popup.querySelectorAll('button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const firstEl = focusableElements[0];
+        const lastEl = focusableElements[focusableElements.length - 1];
+
+        popup.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                if (e.shiftKey) {
+                    if (document.activeElement === firstEl) {
+                        e.preventDefault();
+                        lastEl.focus();
+                    }
+                } else {
+                    if (document.activeElement === lastEl) {
+                        e.preventDefault();
+                        firstEl.focus();
+                    }
+                }
+            }
+        });
+
+        setTimeout(() => firstEl.focus(), 0);
     }
 
     function closeConfirmPopup() {
