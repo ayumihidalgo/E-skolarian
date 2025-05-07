@@ -189,10 +189,16 @@
 
     <!-- Modal Content -->
     <div class="bg-white rounded-[16px] shadow-xl w-full max-w-md relative z-50 p-6">
+        <button id="closeSuccessModalBtn" type="button"
+            class="absolute top-6 right-5 text-gray-500 hover:text-[#7A1212] transition-colors duration-200 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
         <!-- Success Message -->
         <div class="text-center mb-6">
-            <h3 class="text-xl font-semibold text-gray-800">Account Successfully Added!</h3>
-            <p class="text-sm text-gray-500">{{ session('success') }}</p>
+            <h3 id="successTitle" class="text-xl font-semibold text-gray-800">Account Successfully Added!</h3>
+            <p id="successMessage" class="text-sm text-gray-500">{{ session('success') }}</p>
         </div>
 
         <!-- Okay Button -->
