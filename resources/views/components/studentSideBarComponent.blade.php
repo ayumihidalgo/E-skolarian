@@ -29,7 +29,9 @@
         @foreach ([
             ['Home', 'account.svg', '#'],
             ['Submit Documents', 'submitDocument.svg', '#'],
-            ['Tracker', 'tracker.svg', '#'],
+            ['Tracker', 'tracker.svg', route('student.studentTracker')],
+            ['Notifications', 'notification.svg', '#'],
+            ['Messages', 'message.svg', '#'],
             ['Calendar', 'calendar.svg', '#'],
             ['Archive', 'archive.svg', route('student.documentArchive')],
             ['Settings', 'settings.svg', '#']

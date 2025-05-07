@@ -30,6 +30,7 @@ class PasswordResetLinkController extends Controller
 
         // Check if the email exists in the users table and matches the role
         $user = User::where('email', $request->email)
+            ->where('active', 1) // Ensure the user is active
             ->where(function ($query) use ($role) {
                 if ($role === 'student') {
                     $query->where('role', 'student');
