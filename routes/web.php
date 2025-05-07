@@ -10,6 +10,7 @@ use App\Http\Controllers\AdminDocumentController;
 use App\Http\Controllers\StudentDocumentController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\StudentTrackerController;
+use App\Http\Middleware\NoBackHistory;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -21,7 +22,7 @@ Route::get('/notification', function () {
     return view('components.general-components.notification');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', NoBackHistory::class])->group(function () {
     // Pakilagay lahat ng routes nyo dito sa loob pag kailangan naaaccess lang yung page nyo kapag logged in yung user
 
     Route::get('/student/dashboard', function () {
