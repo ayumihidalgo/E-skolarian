@@ -19,15 +19,15 @@ class DocumentController extends Controller
 
             // Validate the incoming request
             $validated = $request->validate([
-                'doc_receiver' => 'required|string',
-                'subject' => 'required|string|max:255',
-                'doc_type' => 'required|string',
+                'received_by' => 'required|string',
+                'subject' => 'required|string|max:50',
+                'type' => 'required|string',
                 'summary' => 'required|string|max:255',
-                'eventStartDate' => 'nullable|date|required_if:doc_type,Event Proposal',
-                'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:doc_type,Event Proposal',
-                'event-title' => 'nullable|string|max:255|required_if:doc_type,Event Proposal',
-                'event-desc' => 'nullable|string|max:255|required_if:doc_type,Event Proposal',
-                'file_upload' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+                'eventStartDate' => 'required|date',
+                'eventEndDate' => 'required|date|after_or_equal:eventStartDate',
+                'event-title' => 'required|string|max:50',
+                'event-desc' => 'required|string|max:255',
+                'file_upload' => 'required|file|mimes:pdf,doc,docx|max:5120',
             ]);
 
             // Check for file and store it safely if available
@@ -52,7 +52,7 @@ class DocumentController extends Controller
             $document->save();
 
             // If this is an Event Proposal, create a corresponding event
-            if ($validated['doc_type'] === 'Event Proposal') {
+            if ($validated['type'] === 'Event Proposal') {
                 Event::create([
                     'title' => $validated['event-title'],
                     'description' => $validated['event-desc'],

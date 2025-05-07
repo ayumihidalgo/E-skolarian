@@ -12,12 +12,13 @@ return new class extends Migration
     public function up()
     {
         Schema::create('submitted_documents', function (Blueprint $table) {
+            $table->string('received_by');
             $table->id();
-            $table->string('control_tag')->unique()->default('AUTO');
-            $table->string('doc_receiver');
             $table->string('subject');
-            $table->string('doc_type');
             $table->text('summary')->nullable();
+            $table->string('type');
+            $table->string('control_tag')->unique()->default('AUTO');
+            $table->enum('status', ['Pending', 'Under Review', 'Approved', 'Rejected', 'Resubmit'])->default('Pending');
             $table->string('file_path')->nullable();
             $table->timestamps();
         });

@@ -50,7 +50,7 @@
                                 </li>
                             </ul>
 
-                            <input type="hidden" name="doc_receiver" id="receiverInput">
+                            <input type="hidden" name="received_by" id="receiverInput">
                         </div>
 
                         <!-- Subject Field -->
@@ -61,7 +61,8 @@
                                 id="subject"
                                 name="subject"
                                 autocomplete="off"
-                                class="flex-1 font-semibold focus:outline-none">
+                                class="flex-1 font-semibold focus:outline-none"
+                                maxlength="50">
                         </div>
                     </div>
 
@@ -98,7 +99,7 @@
                         </ul>
 
                         <!-- Hidden input for form submission -->
-                        <input type="hidden" name="doc_type" id="docTypeInput">
+                        <input type="hidden" name="type" id="docTypeInput">
                     </div>
                 </div>
 
@@ -144,7 +145,8 @@
                         id="event-title"
                         name="event-title"
                         autocomplete="off"
-                        class="flex-1 font-semibold focus:outline-none">
+                        class="flex-1 font-semibold focus:outline-none"
+                        maxlength="50">
                 </div>
 
                 <!-- Event Description (Only shows for Event Proposals) -->

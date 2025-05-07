@@ -9,11 +9,12 @@ class Document extends Model
     protected $table = 'submitted_documents';
 
     protected $fillable = [
-        'doc_receiver',
+        'received_by',
         'subject',
-        'doc_type',
+        'type',
         'control_tag',
         'summary',
+        'status',
         'event_start_date',
         'event_end_date',
         'file_path',
