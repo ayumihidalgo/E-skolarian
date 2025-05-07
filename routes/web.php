@@ -78,6 +78,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
+
+    // Dashboard Route
+    Route::get('/dashboard', function () {
+        return view('student.dashboard');
+    })->name('dashboard');    
 });
 
 Route::get('/notifications', function () {

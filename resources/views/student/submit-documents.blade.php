@@ -191,6 +191,7 @@
 
                     <button
                         type="button"
+                        onclick="window.location.href='{{ route('student.dashboard') }}'"
                         class="order-2 md:order-1 w-full font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] md:w-auto cursor-pointer transition">Back to Home</button>
                 </div>
 
