@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminDocumentController;
 use App\Http\Controllers\StudentDocumentController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\StudentTrackerController;
+use App\Http\Controllers\DocumentReviewController;
 use App\Http\Middleware\NoBackHistory;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\IndexTwoController;
@@ -49,9 +50,7 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
 
     Route::get('/super-admin/dashboard', fn() => view('super-admin.dashboard'))->name('super-admin.dashboard');
 
-    Route::get('/admin/documentReview', function () {
-        return view('admin.documentReview');
-    })->name('admin.documentReview');
+    Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
 
     Route::get('/super-admin/deactivated-accounts', function () {
         return view('super-admin.deactPage');
@@ -94,6 +93,23 @@ Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview']
 // Fetching and displaying and storing comments
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
+
+
+Route::middleware(['auth'])->group(function () {
+    // Fetching and displaying documents for admin
+    Route::get('/admin/documents', [DocumentReviewController::class, 'index'])->name('admin.documents');
+    Route::get('/admin/documents/{id}/details', [DocumentReviewController::class, 'getDetails'])->name('admin.documents.details');
+    Route::post('/admin/documents/{id}/mark-as-opened', [DocumentReviewController::class, 'markAsOpened'])->name('admin.documents.mark-as-opened');
+
+    // Document approval routes
+    Route::post('/admin/documents/{id}/approve', [DocumentReviewController::class, 'approveDocument'])->name('admin.documents.approve');
+    Route::post('/admin/documents/{id}/forward', [DocumentReviewController::class, 'forwardDocument'])->name('admin.documents.forward');
+    Route::get('/admin/get-admins', [DocumentReviewController::class, 'getAdmins'])->name('admin.get-admins');
+
+    // Document rejection routes
+    Route::post('/admin/documents/{id}/reject', [DocumentReviewController::class, 'rejectDocument'])->name('admin.documents.reject');
+    Route::post('/admin/documents/{id}/request-resubmission', [DocumentReviewController::class, 'requestResubmission'])->name('admin.documents.request-resubmission');
+});
 
 // Route for the student tracker page
 Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
