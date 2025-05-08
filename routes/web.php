@@ -1,5 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\CommentController;
@@ -66,10 +68,10 @@ Route::middleware(['auth'])->group(function () {
             ->header('Expires', '0');
     })->name('super-admin.dashboard');
 
-    Route::get('/admin/review', function () {
-        return view('admin.review');
-    })->name('admin.review');
-
+    Route::get('/admin/documentReview', function () {
+        return view('admin.documentReview');
+    })->name('admin.documentReview');
+    
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
 
@@ -115,9 +117,27 @@ Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 
     ->name('student.documentPreview');
 
 // Document viewing
-Route::get('/test-pdf', function() {
-    return response()->file(public_path('documents/test/sample.pdf'));
-});
+Route::get('/documents/{filename}', function ($filename) {
+    $path = public_path('documents/' . $filename);
+    
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    
+    $mimeType = File::mimeType($path);
+    
+    // Force inline display for PDFs
+    if ($mimeType === 'application/pdf') {
+        return Response::make(file_get_contents($path), 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"'
+        ]);
+    }
+    
+    // For images and other files
+    return response()->file($path);
+})->name('document.view')->middleware('auth');
+
 
 // Fetching and displaying and storing comments
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
