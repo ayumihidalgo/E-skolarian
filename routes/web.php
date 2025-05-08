@@ -1,4 +1,5 @@
 <?php
+use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EventController;
@@ -56,6 +57,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::post('/users/{id}', [UserController::class, 'update']);
 
+    // Settings routes
+    Route::get('student/settings', [SettingsController::class, 'viewSettings'])->name('student.settings');
+    Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('student.settings.update-profile-picture');
 
     Route::get('/super-admin/dashboard', function () {
         return response()
@@ -76,6 +80,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/student/submit-documents', function () {
         return view('student.submit-documents');  // resources/views/home.blade.php
     });
+
+
 
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 
@@ -114,7 +120,7 @@ Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 
     ->name('student.documentPreview');
 
 // Document viewing
-Route::get('/test-pdf', function() {
+Route::get('/test-pdf', function () {
     return response()->file(public_path('documents/test/sample.pdf'));
 });
 
