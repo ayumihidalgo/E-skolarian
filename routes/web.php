@@ -40,7 +40,10 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::post('/users/{id}', [UserController::class, 'update']);
 
-
+     // Settings routes
+     Route::get('student/settings', [SettingsController::class, 'viewSettings'])->name('student.settings');
+     Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('student.settings.update-profile-picture');
+ 
     Route::get('/super-admin/dashboard', fn() => view('super-admin.dashboard'))->name('super-admin.dashboard');
 
     Route::get('/admin/documentReview', function () {
