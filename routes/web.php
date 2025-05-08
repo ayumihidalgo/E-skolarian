@@ -14,7 +14,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\StudentTrackerController;
 use App\Http\Middleware\NoBackHistory;
 use App\Http\Controllers\SettingsController;
-
+use App\Http\Controllers\IndexTwoController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -146,6 +146,9 @@ Route::get('/custom-reset-password', function () {
 //     return view('admin.documentArchive');
 // });
 
+
+Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->name('calendar.indexTwo');
+
 // Route for the document preview page (admin)
 Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
 
@@ -162,5 +165,5 @@ Route::get('/test-pdf', function() {
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
 
-// Route for the student tracker page
-Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
+
+
