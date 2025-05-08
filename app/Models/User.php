@@ -59,4 +59,28 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Get the documents submitted by this user
+     */
+    public function submittedDocuments()
+    {
+        return $this->hasMany(SubmittedDocument::class, 'user_id');
+    }
+
+    /**
+     * Get the documents received by this user
+     */
+    public function receivedDocuments()
+    {
+        return $this->hasMany(SubmittedDocument::class, 'received_by');
+    }
+    
+    /**
+     * Get the document reviews done by this user
+     */
+    public function documentReviews()
+    {
+        return $this->hasMany(Review::class, 'reviewed_by');
+    }
 }

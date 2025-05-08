@@ -1,8 +1,8 @@
 @extends('base')
-
 @section('content')
 @include('components.adminNavBarComponent')
 @include('components.adminSidebarComponent')
+
 <div id="main-content" class="transition-all duration-300 ml-[20%]">
     <div class="flex-grow bg-gray-100">
         <!-- <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
@@ -114,69 +114,6 @@
                         ];
                     @endphp
 
-                    <!-- Document List Table -->
-                    @php
-                        // Test data for $documents
-                        $documents = collect([
-                            (object) [
-                                'tag' => 'MAR-001',
-                                'organization' => 'Junior Marketing Association of the Philippines',
-                                'title' => 'JMAP_Request_AVR',
-                                'date' => \Carbon\Carbon::parse('2024-01-15'),
-                                'type' => 'Request',
-                                'is_opened' => false,
-                            ],
-                            (object) [
-                                'tag' => 'EDU-002',
-                                'organization' => 'Guild of Imporous and Valuable Educators',
-                                'title' => 'GIVE_Concerns',
-                                'date' => \Carbon\Carbon::parse('2024-02-20'),
-                                'type' => 'Request',
-                                'is_opened' => false,
-                            ],
-                            (object) [
-                                'tag' => 'IT-003',
-                                'organization' => 'Eligible League of Information Technology Enthusiasts',
-                                'title' => 'ELITE_IT_Week',
-                                'date' => \Carbon\Carbon::parse('2024-03-10'),
-                                'type' => 'Request',
-                                'is_opened' => false,
-                            ],
-                            (object) [
-                                'tag' => 'ACC-004',
-                                'organization' => 'Junior Philippine Institute of Accountants',
-                                'title' => 'JPIA_Seminar',
-                                'date' => \Carbon\Carbon::parse('2024-04-05'),
-                                'type' => 'Request',
-                                'is_opened' => false,
-                                ],
-                            (object) [
-                                'tag' => 'PSY-005',
-                                'organization' => 'Association of Competent and Aspiring Psychologists',
-                                'title' => 'ACAP_Seminar',
-                                'date' => \Carbon\Carbon::parse('2024-05-12'),
-                                'type' => 'Request',
-                                'is_opened' => false,
-                            ],
-                        ]);
-
-                        // Manually paginate the collection for testing
-                        $page = request()->get('page', 1);
-                        $perPage = 4; // Example: 3 items per page
-                        $offset = ($page - 1) * $perPage;
-
-                        $paginatedDocuments = new \Illuminate\Pagination\LengthAwarePaginator(
-                            $documents->slice($offset, $perPage)->values()->all(), // Get the items for the current page
-                            $documents->count(), // Total number of items
-                            $perPage,
-                            $page,
-                            ['path' => request()->url()] // Important for generating correct URLs
-                        );
-
-                        $documents = $paginatedDocuments;
-
-                    @endphp
-
                     <!-- Table Section -->
                     @if ($documents->isNotEmpty())
                         <div class="bg-gray-50 overflow-x-auto rounded-xl flex flex-col min-h-[300px]">
@@ -227,14 +164,14 @@
                                 </thead>
                                 <tbody>
                                     @foreach ($documents as $document)
-                                    <tr class="border-2 {{ !$document->is_opened ? 'border-[#7A1212] bg-white' : 'border-[#D9D9D9] bg-[#D9ACAC33]' }} cursor-pointer transition-all duration-150 hover:bg-[#DAA52080]">
+                                    <tr class="border-2 {{ !$document->is_opened ? 'border-[#7A1212] bg-white' : 'border-[#D9D9D9] bg-[#D9ACAC33]' }} cursor-pointer transition-all duration-150 hover:bg-[#DAA52080]" data-document-id="{{ $document->id }}">
                                             <!-- Tag -->
                                             <td class="px-6 py-4 whitespace-nowrap">
                                                 <div class="flex items-center">
                                                     @php
                                                         // Extract organization acronym from document tag
                                                         $tagParts = preg_split('/-|_/', $document->tag);
-                                                        $acronym = strtoupper($tagParts[0]);
+                                                        $acronym = !empty($tagParts) ? strtoupper($tagParts[0]) : '';
 
                                                         // Map to color key
                                                         $colorKey = match($acronym) {
@@ -251,6 +188,7 @@
                                                             'SIGMA' => 'SIGMA',
                                                             'TAP' => 'TAP',
                                                             'OSC' => 'OSC',
+                                                            'DOC' => 'DOC',
                                                             default => 'text-gray-500'
                                                         };
                                                         $tagColor = $tagColors[$colorKey] ?? 'text-gray-500';
@@ -268,7 +206,7 @@
 
                                             <!-- Title -->
                                             <td class="px-6 py-4 whitespace-nowrap">
-                                                {{ $document->title }}
+                                                <div class="truncate w-64" title="{{ $document->title }}">{{ $document->title }}</div>
                                             </td>
 
                                             <!-- Date -->
@@ -285,7 +223,7 @@
                                             </td>
                                         </tr>
                                     @endforeach
-                                </tbody>
+                                </tbody> 
                             </table>
                         </div>
 
@@ -299,11 +237,11 @@
 
                     <div class="flex justify-between items-center mt-4">
                         <!-- Previous Button -->
-                        <a href="{{ $documents->previousPageUrl() }}"
-                        class="bg-[#7A1212] cursor-pointer hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed {{ $documents->onFirstPage() ? 'opacity-50 cursor-not-allowed' : '' }}"
+                        <button onclick="window.location='{{ $documents->previousPageUrl() }}'"
+                        class="bg-[#7A1212] hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed"
                         {{ $documents->onFirstPage() ? 'disabled' : '' }}>
                             ← Previous
-                        </a>
+                        </button>
 
                         <!-- Pagination Section -->
                         <div class="mt-4 flex justify-center">
@@ -338,11 +276,11 @@
                         </div>
 
                         <!-- Next Button -->
-                        <a href="{{ $documents->nextPageUrl() }}"
-                        class="bg-[#7A1212] cursor-pointer hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed {{ !$documents->hasMorePages() ? 'opacity-50 cursor-not-allowed' : '' }}"
+                        <button onclick="window.location='{{ $documents->nextPageUrl() }}'"
+                        class="bg-[#7A1212] hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed"
                         {{ !$documents->hasMorePages() ? 'disabled' : '' }}>
                             Next →
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -362,13 +300,13 @@
                         <!-- Header -->
                         <div class="flex justify-between items-start">
                             <div class="font-bold">
-                                <p class="text-[#FFFFFF91] text-sm mb-1">April 10, 2025</p>
-                                <p><span class="text-[#FFFFFF91] font-normal">From:</span> Eligible League of Information Technology</p>
-                                <p><span class="text-[#FFFFFF91] font-normal">Title:</span> ELITE_IT_Week</p>
-                                <p><span class="text-[#FFFFFF91]font-normal">Document Type:</span> Proposal</p>
+                                <p class="text-[#FFFFFF91] text-sm mb-1"><!-- Date will be inserted here --></p>
+                                <p><span class="text-[#FFFFFF91] font-normal">From:</span> <!-- Organization will be inserted here --></p>
+                                <p><span class="text-[#FFFFFF91] font-normal">Title:</span> <!-- Subject will be inserted here --></p>
+                                <p><span class="text-[#FFFFFF91] font-normal">Document Type:</span> <!-- Type will be inserted here --></p>
                             </div>
                             <div class="text-right">
-                                <p class="px-3 text-[#FFFFFF91] py-1 text-sm">IT_001</p>
+                                <p class="px-3 text-[#FFFFFF91] py-1 text-sm"><!-- Control Tag will be inserted here --></p>
                             </div>
                         </div>
 
@@ -376,20 +314,19 @@
                         <div>
                             <h2 class="text-lg font-bold mb-2">Summary</h2>
                             <div class="bg-[#EFEFEF] text-gray-800 rounded-lg p-4">
-                                <p>
-                                    The ELITE organization is proposing to hold an inter-departmental IT week celebration featuring seminars, workshops, and competitions aimed at enhancing student skills and promoting collaboration. The event is scheduled for May 6–10, 2025, and will be held at the university auditorium. The proposal includes a detailed program, list of speakers, and budget breakdown.
+                                <p class="text-black" id="documentSummary">
+                                    <!-- Summary will be inserted here -->
                                 </p>
                             </div>
                         </div>
 
-                        <!-- 
-                         -->
+                        <!-- Attachment -->
                         <div>
                             <h2 class="text-lg font-bold mb-2">Attachment</h2>
                             <div class="space-y-4">
                                 <!-- Document preview button -->
-                                <div class="bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-300" onclick="openDocumentViewer('ELITE_Event_Proposal.pdf', 'application/pdf')">
-                                    <span class="mr-2">ELITE_Event_Proposal.pdf</span>
+                                <div class="bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-300">
+                                    <span class="mr-2"><!-- File name will be inserted here --></span>
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
                                     </svg>
@@ -400,22 +337,8 @@
                         <!-- Status -->
                         <div>
                             <h2 class="text-lg font-bold mb-2">Status</h2>
-                            <div class="space-y-3 text-sm">
-                                <div class="flex items-center space-x-2">
-                                    <span class="h-2 w-2 bg-[#7A1212] rounded-full"></span>
-                                    <div>
-                                        <p><strong>Jonell Espalto</strong></p>
-                                        <p>Under Review, April 15 2025, 1:45PM</p>
-                                        <p>Approved, April 18 2025, 8:45PM</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center space-x-2">
-                                    <span class="h-2 w-2 bg-[#7A1212] rounded-full"></span>
-                                    <div>
-                                        <p><strong>Leny Salmingo</strong></p>
-                                        <p>Under Review, April 19 2025, 1:27AM</p>
-                                    </div>
-                                </div>
+                            <div class="space-y-3 text-sm" id="statusHistory">
+                                <!-- Status history will be inserted here -->
                             </div>
                         </div>
 
@@ -426,55 +349,26 @@
                         </div>
                     </div>
 
-                    <!-- Right Side: Chat/Comments -->
+                    <!-- Right Side: Organization Info and Comments -->
                     <div class="w-1/3 bg-[#4D0F0F] text-white rounded-2xl p-6 flex flex-col justify-between">
-
                         <div class="space-y-6">
                             <div class="flex items-center space-x-4">
                                 <!-- Profile Picture Placeholder -->
                                 <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                                    <span class="text-gray-600 text-xl font-bold">E</span>
+                                    <span class="text-gray-600 text-xl font-bold" id="orgInitial"><!-- Organization initial --></span>
                                 </div>
                                 <!-- Organization Details -->
                                 <div>
-                                    <p class="font-bold text-lg">ELITE</p>
+                                    <p class="font-bold text-lg"><!-- Organization name --></p>
                                     <p class="text-sm text-gray-300">Academic Organization</p>
                                 </div>
                             </div>
 
                             <hr></hr>
 
-                            <!-- Messages -->
+                            <!-- Comments section remains the same -->
                             <div class="space-y-4 text-sm overflow-y-auto max-h-[400px]" id="commentsContainer">
-                                <div class="flex items-start gap-2">
-                                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-gray-600">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.125h15.003m-15.003-5.5c-.023-3.423 3.454-6.125 6.911-6.125a6.907 6.907 0 016.91 6.125m-15.003 0h15.003" />
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 flex justify-between items-center rounded-lg px-4 py-2">
-                                        <div class="text-white">
-                                            <p class="font-bold text-sm">Jonell Espalto</p>
-                                            <p class="text-sm mt-1">Okay na 'to?</p>
-                                        </div>
-                                        <p class="text-xs text-gray-300 ml-4 whitespace-nowrap">2 hours ago</p>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-start gap-2">
-                                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-gray-600">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.125h15.003m-15.003-5.5c-.023-3.423 3.454-6.125 6.911-6.125a6.907 6.907 0 016.91 6.125m-15.003 0h15.003" />
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1 flex justify-between items-center rounded-lg px-4 py-2">
-                                        <div class="text-white">
-                                            <p class="font-bold text-sm">E-Skolarian</p>
-                                            <p class="text-sm mt-1">Student Services approved the document and sent to Campus Director</p>
-                                        </div>
-                                        <p class="text-xs text-gray-300 ml-4 whitespace-nowrap">1 hour ago</p>
-                                    </div>
-                                </div>
+                                <!-- Comments will be loaded here -->
                             </div>
                         </div>
 
@@ -501,7 +395,7 @@
         <div class="bg-white w-11/12 h-5/6 rounded-lg flex flex-col">
             <div class="flex justify-between items-center p-4 border-b">
                 <h3 class="text-lg font-semibold" id="documentTitle">Document Viewer</h3>
-                <button onclick="closeDocumentViewer()" class="text-gray-500 hover:text-gray-700">
+                <button onclick="closeDocumentViewer()" class="text-gray-500 hover:text-gray-700 cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -780,31 +674,6 @@
     </div>
 
     <script>
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const texts = sidebar.querySelectorAll('.sidebar-text');
-            const toggleBtn = document.getElementById('toggleBtn');
-            const toggleIcon = document.getElementById('toggleIcon');
-
-            sidebar.classList.toggle('w-1/4');
-            sidebar.classList.toggle('w-20');
-
-            // Move toggle button position
-            if (sidebar.classList.contains('w-20')) {
-                toggleBtn.classList.add('left-[4rem]');
-                toggleBtn.classList.remove('left-[24%]');
-            } else {
-                toggleBtn.classList.remove('left-[4rem]');
-                toggleBtn.classList.add('left-[24%]');
-            }
-
-            // Toggle hidden text
-            texts.forEach(text => text.classList.toggle('hidden'));
-
-            // Rotate toggle icon
-            toggleIcon.classList.toggle('rotate-180');
-        }
-
         // Filtering Function
         document.addEventListener('DOMContentLoaded', function() {
             const searchInput = document.getElementById('searchInput');
@@ -927,7 +796,16 @@
                 row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
             });
         }
-    </script>
 
+        function closeDocumentViewer() {
+            const modal = document.getElementById('documentViewerModal');
+            const pdfViewer = document.getElementById('pdfViewer');
+            
+            // Clear the PDF viewer
+            pdfViewer.innerHTML = '';
+            
+            modal.classList.add('hidden');
+        }
+    </script>
     @vite('resources/js/admin-review.js')
 @endsection

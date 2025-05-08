@@ -1,7 +1,238 @@
 let currentDocumentId = null;
 
+// Function to handle document click
+document.addEventListener('DOMContentLoaded', function() {
+    const documentRows = document.querySelectorAll('tbody tr');
+    const tableView = document.getElementById('tableView');
+    const detailsView = document.getElementById('detailsView');
+    
+    console.log("Found elements:", {
+        rows: documentRows.length,
+        tableView: !!tableView,
+        detailsView: !!detailsView
+    });
+    
+    documentRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Get document ID from the data attribute - this is the actual numeric ID
+            const documentId = this.getAttribute('data-document-id');
+            
+            console.log("Row clicked, document ID:", documentId);
+            
+            if (!documentId) {
+                console.error('Document ID is missing for this row.');
+                return;
+            }
+            
+            // Store the real document ID in the global variable
+            currentDocumentId = documentId;
+            console.log("Set currentDocumentId to:", currentDocumentId);
+            
+            // Mark the document as opened first (server-side update)
+            fetch(`/admin/documents/${documentId}/mark-as-opened`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log("Mark as opened result:", result);
+                if (result.success) {
+                    // Update the visual appearance of this row immediately
+                    this.classList.remove('border-[#7A1212]', 'bg-white');
+                    this.classList.add('border-[#D9D9D9]', 'bg-[#D9ACAC33]');
+                    
+                    // Remove the red dot indicator
+                    const dotIndicator = this.querySelector('td:last-child span[class*="bg-["]');
+                    if (dotIndicator) {
+                        dotIndicator.remove();
+                    }
+                    
+                    // Fetch document details and show them
+                    return fetch(`/admin/documents/${documentId}/details`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    });
+                } else {
+                    throw new Error('Failed to mark document as opened');
+                }
+            })
+            .then(response => response.json())
+            .then(docData => {
+                console.log("Document details received:", docData);
+                // Update the details view with document data
+                updateDocumentDetailsView(docData);
+                
+                // Add this line to load comments for the current document
+                loadComments(documentId);
+                
+                console.log("BEFORE: tableView hidden:", tableView.classList.contains('hidden'));
+                console.log("BEFORE: detailsView hidden:", detailsView.classList.contains('hidden'));
+                
+                // Show details view, hide table view
+                tableView.classList.add('hidden');
+                detailsView.classList.remove('hidden');
+                
+                console.log("AFTER: tableView hidden:", tableView.classList.contains('hidden'));
+                console.log("AFTER: detailsView hidden:", detailsView.classList.contains('hidden'));
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+});
+
+function updateDocumentDetailsView(docData) {
+    console.log("Document data:", docData);
+    
+    // Get all elements in the details view
+    const detailsView = document.getElementById('detailsView');
+    
+    // Format date
+    const formattedDate = new Date(docData.created_at).toLocaleDateString('en-US', {
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric'
+    });
+    
+    try {
+        // Instead of using complex selectors with square brackets, navigate the DOM step by step
+        const leftSideDiv = detailsView.querySelector('.w-2\\/3'); // Use escaped backslashes for fractions
+        if (!leftSideDiv) {
+            console.error('Left side div not found');
+            return;
+        }
+        
+        const contentDiv = leftSideDiv.querySelector('div'); // First div inside left side div
+        if (!contentDiv) {
+            console.error('Content div not found');
+            return;
+        }
+        
+        // Header div which has the "font-bold" class
+        const headerDiv = contentDiv.querySelector('.font-bold');
+        if (headerDiv) {
+            // First paragraph (date)
+            const datePara = headerDiv.querySelector('p:first-child');
+            if (datePara) datePara.textContent = formattedDate;
+            
+            // Organization
+            const fromPara = headerDiv.querySelector('p:nth-child(2)');
+            if (fromPara) fromPara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
+            
+            // Title
+            const titlePara = headerDiv.querySelector('p:nth-child(3)');
+            if (titlePara) titlePara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject}`;
+            
+            // Document Type
+            const typePara = headerDiv.querySelector('p:nth-child(4)');
+            if (typePara) typePara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
+        }
+        
+        // Update tag in the right corner - find the text-right element
+        const rightDiv = contentDiv.querySelector('.text-right');
+        if (rightDiv) {
+            const tagElement = rightDiv.querySelector('p');
+            if (tagElement) tagElement.textContent = docData.control_tag;
+        }
+        
+        // Update summary - find it by navigating through the DOM structure
+        // Look for the second div in the parent container
+        const divs = leftSideDiv.querySelectorAll(':scope > div');
+        if (divs.length >= 2) {
+            const summaryDiv = divs[1]; // The second div contains the summary
+            const summaryElement = summaryDiv.querySelector('p#documentSummary');
+            if (summaryElement) {
+                console.log("Setting summary to:", docData.summary || 'No summary available');
+                summaryElement.textContent = docData.summary || 'No summary available';
+            }
+        }
+        
+        // Update attachment (if available) - third div in the structure
+        if (divs.length >= 3) {
+            const attachmentDiv = divs[2];
+            const attachmentButton = attachmentDiv.querySelector('.bg-gray-200');
+            if (attachmentButton) {
+                const attachmentSpan = attachmentButton.querySelector('span');
+                if (attachmentSpan && docData.file_path) {
+                    const fileName = docData.file_path.split('/').pop();
+                    attachmentSpan.textContent = fileName;
+                    
+                    // Set up the click handler for the attachment
+                    attachmentButton.onclick = function() {
+                        openDocumentViewer(fileName, 'application/pdf');
+                    };
+                }
+            }
+        }
+        
+        // Update organization info in right panel
+        const rightSideDiv = detailsView.querySelector('.w-1\\/3'); // Use escaped backslash for fraction
+        if (rightSideDiv) {
+            const orgNameElement = rightSideDiv.querySelector('.font-bold.text-lg');
+            if (orgNameElement) {
+                orgNameElement.textContent = docData.organization === 'Eligible League of Information Technology Enthusiasts' ? 'ELITE' : (docData.organization || 'Organization Name');
+            }
+            
+            // Set organization initial
+            const orgInitial = rightSideDiv.querySelector('#orgInitial');
+            if (orgInitial && docData.organization) {
+                orgInitial.textContent = docData.organization.charAt(0).toUpperCase();
+            }
+        }
+        
+        // Update status history if available
+        // Look for status div which is the fourth div
+        if (divs.length >= 4) {
+            const statusDiv = divs[3];
+            const statusHistory = statusDiv.querySelector('#statusHistory');
+            if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
+                let statusHTML = '';
+                
+                docData.reviews.forEach(review => {
+                    statusHTML += `
+                        <div class="bg-white text-gray-800 rounded-lg p-3">
+                            <p><strong>Reviewer:</strong> ${review.reviewer_name || 'Unknown'}</p>
+                            <p><strong>Status:</strong> ${review.status || 'Unknown'}</p>
+                            <p><strong>Message:</strong> ${review.message || 'No message'}</p>
+                            <p><strong>Date:</strong> ${new Date(review.created_at).toLocaleDateString()}</p>
+                        </div>
+                    `;
+                });
+                
+                if (statusHTML === '') {
+                    statusHTML = '<p class="text-gray-300">No status updates available</p>';
+                }
+                
+                statusHistory.innerHTML = statusHTML;
+            }
+        }
+    } catch (error) {
+        console.error('Error updating document details:', error);
+    }
+}
+
+// Close button handler
+window.closeDetailsPanel = function() {
+    const tableView = document.getElementById('tableView');
+    const detailsView = document.getElementById('detailsView');
+
+    // Hide details view and show table view
+    detailsView.classList.add('hidden');
+    tableView.classList.remove('hidden');
+}
+
 function loadComments(documentId) {
-    currentDocumentId = documentId;
     fetch(`/comments/${documentId}`)
         .then(response => response.json())
         .then(comments => {
@@ -27,84 +258,6 @@ function loadComments(documentId) {
                 </div>
             `).join('');
         });
-}
-
-// Table row selection functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const tableView = document.getElementById('tableView');
-    const detailsView = document.getElementById('detailsView');
-    const tableRows = document.querySelectorAll('tbody tr');
-
-    // Add click event to all table rows
-    tableRows.forEach(row => {
-        row.addEventListener('click', function() {
-            const tag = row.cells[0].textContent.trim();
-
-            // Remove the red border and bullet
-            row.classList.remove('border-[#7A1212]', 'bg-white');
-            row.classList.add('border-[#D9D9D9]', 'bg-[#D9ACAC33]');
-            const bulletPoint = row.querySelector('span[class*="bg-[#7A1212]"]'); // Use attribute selector
-            if (bulletPoint) {
-                bulletPoint.remove();
-            }
-
-
-            // Rest of your code...
-            const organization = row.cells[1].textContent.trim();
-            const title = row.cells[2].textContent.trim();
-            const date = row.cells[3].textContent.trim();
-            const type = row.cells[4].textContent.trim();
-
-            // Update panel content
-            updatePanelContent(tag, organization, title, date, type);
-
-            // Load comments for this document
-            loadComments(tag);
-
-            // Show details view, hide table view
-            tableView.classList.add('hidden');
-            detailsView.classList.remove('hidden');
-        });
-    });
-
-    // Function to show table view
-    window.showTableView = function() {
-        detailsView.classList.add('hidden');
-        tableView.classList.remove('hidden');
-    }
-
-    // Function to update panel content
-    function updatePanelContent(tag, organization, title, date, type) {
-        // Update tag
-        document.querySelector('#detailsView .text-right p').textContent = tag;
-
-        // Update header details
-        const headerDiv = document.querySelector('#detailsView .flex.justify-between.items-start div:first-child');
-        headerDiv.innerHTML = `
-            <p class="text-sm mb-1 text-[#FFFFFF91]">${date}</p>
-            <p><span class="font-bold text-[#FFFFFF91]">From:</span> ${organization}</p>
-            <p><span class="font-bold text-[#FFFFFF91]">Title:</span> ${title}</p>
-            <p><span class="font-bold text-[#FFFFFF91]">Document Type:</span> ${type}</p>
-        `;
-
-        // Update organization name in chat panel
-        const orgNameElement = document.querySelector('#detailsView .space-y-6 div:first-child p:first-child');
-        orgNameElement.textContent = organization;
-
-        // Update document viewer button
-        const attachmentButton = document.querySelector('#detailsView .bg-gray-200');
-        attachmentButton.onclick = () => openDocumentViewer(`7Cb9Ul5wCge78G1HY387IwPjMwiFoqcm3XkjTPOd.pdf`, 'application/pdf');
-    }
-});
-
-// Close button handler
-window.closeDetailsPanel = function() {
-    const tableView = document.getElementById('tableView');
-    const detailsView = document.getElementById('detailsView');
-
-    // Hide details view and show table view
-    detailsView.classList.add('hidden');
-    tableView.classList.remove('hidden');
 }
 
 function submitComment() {
@@ -171,16 +324,6 @@ function openDocumentViewer(filename, fileType) {
     }
     
     modal.classList.remove('hidden');
-}
-
-function closeDocumentViewer() {
-    const modal = document.getElementById('documentViewerModal');
-    const pdfViewer = document.getElementById('pdfViewer');
-    
-    // Clear the PDF viewer
-    pdfViewer.innerHTML = '';
-    
-    modal.classList.add('hidden');
 }
 
 // Approval Modal function
@@ -300,36 +443,51 @@ document.getElementById('cancelFinalizeBtn').addEventListener('click', function(
     document.getElementById('finalizeConfirmationModal').classList.add('hidden');
 });
 
+// Finalize approval handler
 document.getElementById('confirmFinalizeBtn').addEventListener('click', function() {
+
     // Perform the actual finalization here
-    console.log('Document approval finalized');
+    console.log('Document approval finalized, ID:', currentDocumentId);
     
-    // You can make an AJAX request here to update the document status
-    fetch('/admin/finalize-document', {
+    // Make sure we have a valid ID
+    if (!currentDocumentId) {
+        alert('Error: Document ID is missing. Please try again.');
+        return;
+    }
+    
+    // Make an AJAX request to approve the document with the numeric ID
+    fetch(`/admin/documents/${currentDocumentId}/approve`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         },
         body: JSON.stringify({
-            documentId: currentDocumentId
+            message: 'Document approved and finalized'
         })
     })
-    .then(response => {
-        if (response.ok) {
-            alert('Document has been finalized and approved.');
-            // Maybe redirect or update UI
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            alert('Document has been approved and finalized.');
+            
+            // Close the modal
+            document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+            
+            // Return to table view
+            closeDetailsPanel();
+            
+            // Refresh the page to update the document list
+            window.location.reload();
         } else {
-            alert('Failed to finalize document. Please try again.');
+            alert('Failed to approve document: ' + (data.error || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        alert('An error occurred while approving the document. Please try again.');
     });
-    
-    // Hide the modal
-    document.getElementById('finalizeConfirmationModal').classList.add('hidden');
 });
 
 // Close modal when clicking outside
@@ -415,29 +573,38 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Submit the resubmission request
-        fetch('/admin/request-resubmission', {
+        // Submit the resubmission request with the correct endpoint
+        fetch(`/admin/documents/${currentDocumentId}/request-resubmission`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({
-                documentId: currentDocumentId,
                 message: message
             })
         })
-        .then(response => {
-            if (response.ok) {
-                alert('Resubmission request sent successfully.');
-                resubmissionModal.classList.add('hidden');
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show success message
+                alert('Resubmission request has been sent successfully.');
+                
+                // Close the modal
+                document.getElementById('resubmissionModal').classList.add('hidden');
+                
+                // Return to table view
+                closeDetailsPanel();
+                
+                // Refresh the page to update the document list
+                window.location.reload();
             } else {
-                alert('Failed to send resubmission request. Please try again.');
+                alert('Failed to send resubmission request: ' + (data.error || 'Unknown error'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred. Please try again.');
+            alert('An error occurred while requesting resubmission. Please try again.');
         });
     });
     
@@ -464,49 +631,6 @@ document.getElementById('closeRejectConfirmationModalBtn').addEventListener('cli
     document.getElementById('rejectConfirmationModal').classList.add('hidden');
 });
 
-// Handle final rejection submission
-document.getElementById('confirmFinalRejectBtn').addEventListener('click', function() {
-    const rejectionMessage = document.getElementById('rejectionMessage').value.trim();
-    
-    if (!rejectionMessage) {
-        alert('Please provide a reason for rejection.');
-        return;
-    }
-    
-    // Submit the rejection
-    fetch('/admin/reject-document', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({
-            documentId: currentDocumentId,
-            message: rejectionMessage
-        })
-    })
-    .then(response => {
-        if (response.ok) {
-            alert('Document rejected successfully.');
-            document.getElementById('rejectConfirmationModal').classList.add('hidden');
-        } else {
-            alert('Failed to reject document. Please try again.');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred. Please try again.');
-    });
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const rejectConfirmationModal = document.getElementById('rejectConfirmationModal');
-    if (event.target === rejectConfirmationModal) {
-        rejectConfirmationModal.classList.add('hidden');
-    }
-});
-
 // Handle "Confirm Final Reject" button click
 document.getElementById('confirmFinalRejectBtn').addEventListener('click', function() {
     // Get the rejection message
@@ -525,6 +649,15 @@ document.getElementById('confirmFinalRejectBtn').addEventListener('click', funct
     finalRejectConfirmationModal.classList.remove('hidden');
 });
 
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const rejectConfirmationModal = document.getElementById('rejectConfirmationModal');
+    if (event.target === rejectConfirmationModal) {
+        rejectConfirmationModal.classList.add('hidden');
+    }
+});
+
+
 // Close final reject confirmation modal
 document.getElementById('closeFinalRejectModalBtn').addEventListener('click', function() {
     document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
@@ -540,30 +673,43 @@ document.getElementById('finalizeRejectionBtn').addEventListener('click', functi
     // Get the rejection message from the previous modal
     const rejectionMessage = document.getElementById('rejectionMessage').value.trim();
     
-    // Submit the final rejection
-    fetch('/admin/finalize-reject-document', {
+    if (!rejectionMessage) {
+        alert('Please provide a reason for rejection.');
+        return;
+    }
+    
+    // Submit the final rejection with the correct endpoint
+    fetch(`/admin/documents/${currentDocumentId}/reject`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         },
         body: JSON.stringify({
-            documentId: currentDocumentId,
             message: rejectionMessage
         })
     })
-    .then(response => {
-        if (response.ok) {
-            alert('Document has been rejected.');
-            // Maybe redirect or update UI
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            alert('Document has been rejected successfully.');
+            
+            // Close the modals
             document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
+            
+            // Return to table view
+            closeDetailsPanel();
+            
+            // Refresh the page to update the document list
+            window.location.reload();
         } else {
-            alert('Failed to reject document. Please try again.');
+            alert('Failed to reject document: ' + (data.error || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred. Please try again.');
+        alert('An error occurred while rejecting the document. Please try again.');
     });
 });
 
