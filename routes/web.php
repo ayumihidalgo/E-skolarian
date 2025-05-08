@@ -51,6 +51,16 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
         return view('admin.documentReview');
     })->name('admin.documentReview');
 
+    Route::get('/super-admin/deactivated-accounts', function () {
+        return view('super-admin.deactPage');
+    })->name('deactivated.accounts');
+
+    Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
+    ->name('deactivated.accounts');
+
+    Route::get('/admin/review', function () {
+        return view('admin.review');
+    })->name('admin.review');
 
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
@@ -62,6 +72,7 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
 
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
 
+    Route::post('/super-admin/reactivate-user/{user}', [UserController::class, 'reactivateUser'])->name('reactivate.user');
     // Dashboard Route
     Route::get('/dashboard', function () {
         return view('student.dashboard');
@@ -111,8 +122,6 @@ Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])-
 // Route for the student tracker page
 Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
 
-});
-
 Route::get('/notifications', function () {
     return view('notifications');
 })->name('notifications');
@@ -136,3 +145,22 @@ Route::get('/custom-reset-password', function () {
 // Route::get('/', function () {
 //     return view('admin.documentArchive');
 // });
+
+// Route for the document preview page (admin)
+Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
+
+// Route for the document preview page (student)
+Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
+    ->name('student.documentPreview');
+
+// Document viewing
+Route::get('/test-pdf', function() {
+    return response()->file(public_path('documents/test/sample.pdf'));
+});
+
+// Fetching and displaying and storing comments
+Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
+
+// Route for the student tracker page
+Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
