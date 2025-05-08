@@ -87,7 +87,7 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
     })->name('student.documentArchive');
     // Route for the document preview page (admin)
 Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
-
+});
 // Route for the document preview page (student)
 Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
     ->name('student.documentPreview');
