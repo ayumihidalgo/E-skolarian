@@ -47,6 +47,7 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
         return view('admin.documentReview');
     })->name('admin.documentReview');
 
+
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
 

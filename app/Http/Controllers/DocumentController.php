@@ -9,34 +9,47 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Models\Event;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Role;
 
 class DocumentController extends Controller
 {
+    public function create()
+    {
+        // Shows the admin users in the receiver dropdown list in the form
+        $adminUsers = \App\Models\User::where('role', 'admin')
+            ->select('id', 'username', 'role_name')
+            ->get();
+
+        return view('student.submit-documents', compact('adminUsers'));
+    }
+
     public function store(Request $request)
     {
         try {
-            Log::info('Document submission attempt', ['user_id' => auth()->id()]);
+            Log::info('Store method hit', $request->all());
+            Log::info('Document submission attempt', ['user_id' => Auth::id()]);
 
             // Validate the incoming request
             $validated = $request->validate([
-                'doc_receiver' => 'required|string',
-                'subject' => 'required|string|max:255',
-                'doc_type' => 'required|string',
+                'received_by' => 'required|exists:users,id',
+                'subject' => 'required|string|max:50',
+                'type' => 'required|in:Event Proposal,General Plan of Activities,Calendar of Activities,Accomplishment Report,Constitution and By-Laws,Request Letter,Off Campus,Petition and Concern',
                 'summary' => 'required|string|max:255',
-                'eventStartDate' => 'nullable|date|required_if:doc_type,Event Proposal',
-                'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:doc_type,Event Proposal',
-                'event-title' => 'nullable|string|max:255|required_if:doc_type,Event Proposal',
-                'event-desc' => 'nullable|string|max:255|required_if:doc_type,Event Proposal',
-                'file_upload' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+                'eventStartDate' => 'nullable|date|required_if:type,Event Proposal',
+                'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:type,Event Proposal',
+                'event-title' => 'nullable|string|max:50|required_if:type,Event Proposal',
+                'event-desc' => 'nullable|string|max:255|required_if:type,Event Proposal',
+                'file_upload' => 'required|file|mimes:pdf,doc,docx|max:5120',
             ]);
+
+            $validated['user_id'] = Auth::id();
 
             // Check for file and store it safely if available
             if ($request->hasFile('file_upload')) {
                 try {
                     $file = $request->file('file_upload');
-                    $path = $file->store('documents', 'public');
-
-                    $validated['file_path'] = $request->file('file_upload')->store('documents', 'public');
+                    $validated['file_path'] = $file->store('documents', 'public');
                 } catch (\Exception $e) {
                     return back()->withErrors(['file_upload' => 'Failed to upload file. Please try again.']);
                 }
@@ -52,7 +65,7 @@ class DocumentController extends Controller
             $document->save();
 
             // If this is an Event Proposal, create a corresponding event
-            if ($validated['doc_type'] === 'Event Proposal') {
+            if ($validated['type'] === 'Event Proposal') {
                 Event::create([
                     'title' => $validated['event-title'],
                     'description' => $validated['event-desc'],

@@ -20,7 +20,8 @@
                             <button type="button" id="receiverButton" aria-expanded
                                 class="w-full text-left border-b-2 border-gray-500 py-3 relative focus:outline-none flex items-center justify-between gap-2 bg-white cursor-pointer">
                                 <span class="font-semibold text-gray-500">
-                                    To: <span id="receiverSelected" class="font-semibold text-black"></span>
+                                    To<span class="required-indicator text-red-500"> *</span>:
+                                    <span id="receiverSelected" class="font-semibold text-black"></span>
                                 </span>
                                 <img
                                     src="{{ asset('images/gray-arrow-down.svg') }}"
@@ -29,39 +30,30 @@
                                     class="w-8 h-3">
                             </button>
 
-                            <!-- Dropdown List (Only names shown) -->
-                            <ul id="receiverDropdown"
+                            <!-- Dropdown List -->
+                            <ul role="listbox" id="receiverDropdown"
                                 class="hidden absolute z-10 w-full bg-white text-black border border-gray-300 rounded-[11px] shadow-md mt-1">
-                                <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectReceiver('Dr. Leny Salmingo', 'Campus Director')">
-                                    Dr. Leny Salmingo
+                                @foreach ($adminUsers as $admin)
+                                <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                    onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->username }}', '{{ $admin->role_name }}')">
+                                    {{ $admin->username }}
                                 </li>
-                                <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectReceiver('Dr. Jonell John Espalto', 'Head of Student Services')">
-                                    Dr. Jonell John Espalto
-                                </li>
-                                <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectReceiver('Dr. Marion Laguerta', 'Head of Academic Programs')">
-                                    Dr. Marion Laguerta
-                                </li>
-                                <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectReceiver('Engr. Emy Lou Alinsod', 'Office of the Academic Services')">
-                                    Engr. Emy Lou Alinsod
-                                </li>
+                                @endforeach
                             </ul>
 
-                            <input type="hidden" name="doc_receiver" id="receiverInput">
+                            <input type="hidden" name="received_by" id="receiverInput">
                         </div>
 
                         <!-- Subject Field -->
                         <div class="flex items-center border-b-2 border-gray-500 py-3 w-full">
-                            <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject:</span>
+                            <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span class="required-indicator text-red-500"> *</span>:</span>
                             <input
                                 type="text"
                                 id="subject"
                                 name="subject"
                                 autocomplete="off"
-                                class="flex-1 font-semibold focus:outline-none">
+                                class="flex-1 font-semibold focus:outline-none"
+                                maxlength="50">
                         </div>
                     </div>
 
@@ -86,25 +78,25 @@
                         </button>
 
                         <!-- Dropdown List -->
-                        <ul id="docTypeDropdown" class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Event Proposal')">Event Proposal</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('General Plan of Activities')">General Plan of Activities</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Calendar of Activities')">Calendar of Activities</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Accomplishment Report')">Accomplishment Report</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Constitution and By-Laws')">Constitution and By-Laws</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Request Letter')">Request Letter</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Off Campus')">Off Campus</li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Petition and Concern')">Petition and Concern</li>
+                        <ul role="listbox" id="docTypeDropdown" class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Event Proposal')">Event Proposal</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('General Plan of Activities')">General Plan of Activities</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Calendar of Activities')">Calendar of Activities</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Accomplishment Report')">Accomplishment Report</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Constitution and By-Laws')">Constitution and By-Laws</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Request Letter')">Request Letter</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Off Campus')">Off Campus</li>
+                            <li tabindex="0" role="option" class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold" onclick="selectDocType('Petition and Concern')">Petition and Concern</li>
                         </ul>
 
                         <!-- Hidden input for form submission -->
-                        <input type="hidden" name="doc_type" id="docTypeInput">
+                        <input type="hidden" name="type" id="docTypeInput">
                     </div>
                 </div>
 
                 <!-- Summary -->
                 <div class="flex flex-col gap-1">
-                    <label for="summary" class="font-semibold text-gray-500">Summary:</label>
+                    <label for="summary" class="font-semibold text-gray-500">Summary<span class="required-indicator text-red-500"> *</span>:</label>
 
                     <textarea
                         id="summary"
@@ -138,18 +130,19 @@
 
                 <!-- Event Title (Only shows for Event Proposals) -->
                 <div id="event-title-container" class="flex items-center border-b-2 border-gray-500 py-3 w-full hidden">
-                    <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Event Title:</span>
+                    <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Event Title<span class="required-indicator text-red-500"> *</span>:</span>
                     <input
                         type="text"
                         id="event-title"
                         name="event-title"
                         autocomplete="off"
-                        class="flex-1 font-semibold focus:outline-none">
+                        class="flex-1 font-semibold focus:outline-none"
+                        maxlength="50">
                 </div>
 
                 <!-- Event Description (Only shows for Event Proposals) -->
                 <div id="event-desc-container" class="flex flex-col gap-1 hidden">
-                    <label for="event-desc" class="font-semibold text-gray-500">Event Description:</label>
+                    <label for="event-desc" class="font-semibold text-gray-500">Event Description<span class="required-indicator text-red-500"> *</span>:</label>
 
                     <textarea
                         id="event-desc"
@@ -168,7 +161,7 @@
                 <div class="space-y-2 w-full md:w-[400px]">
                     <div class="flex items-center w-full overflow-hidden rounded-[12px] bg-white border border-gray-400">
                         <!-- Upload Button (Left side) -->
-                        <label for="fileUpload" class="flex items-center gap-2 bg-[#7A1212] text-white font-semibold rounded-[12px] px-4 py-2 cursor-pointer hover:bg-[#a31515]">
+                        <label tabindex="0" for="fileUpload" class="flex items-center gap-2 bg-[#7A1212] text-white font-semibold rounded-[12px] px-4 py-2 cursor-pointer hover:bg-[#a31515]">
                             <img
                                 src="{{ asset('images/upload-icon.svg') }}"
                                 alt="Upload Icon"
@@ -190,12 +183,15 @@
                 <!-- Buttons -->
                 <div class="flex flex-col md:flex-row gap-4 justify-end">
                     <button
+                        id="mainSubmitButton"
                         type="button"
                         onclick="showConfirmPopup(event)"
-                        class="order-1 md:order-2 w-full font-semibold bg-[#7A1212] hover:bg-[#a31515] text-white px-6 py-2 rounded-[12px] md:w-auto cursor-pointer transition">Submit</button>
+                        class="order-1 md:order-2 w-full font-semibold bg-gray-500 text-white px-6 py-2 rounded-[12px] md:w-auto cursor-not-allowed transition"
+                        disabled>Submit</button>
 
                     <button
                         type="button"
+                        onclick="window.location.href='{{ route('student.dashboard') }}'"
                         class="order-2 md:order-1 w-full font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] md:w-auto cursor-pointer transition">Back to Home</button>
                 </div>
 
@@ -211,7 +207,7 @@
 
                         <div class="flex justify-end space-x-2">
                             <button onclick="closeConfirmPopup()" class="font-semibold px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer" type="button">Cancel</button>
-                            <button type="submit" class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer" type="button">Submit</button>
+                            <button type="submit" class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">Submit</button>
                         </div>
                     </div>
                 </div>
@@ -333,6 +329,44 @@
         }
     });
 
+    // Enable Enter key to select dropdown item, and file upload
+    document.querySelectorAll('#receiverDropdown li').forEach(item => {
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                this.click(); // triggers onclick
+            }
+        });
+    });
+
+    document.querySelectorAll('#docTypeDropdown li').forEach(item => {
+        item.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                this.click();
+            }
+        });
+    });
+
+    document.querySelector('label[for="fileUpload"]').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            document.getElementById('fileUpload').click();
+        }
+    });
+
+    // Prevent form submission on Enter keypress except from inside the confirmation popup
+    document.addEventListener("DOMContentLoaded", function () {
+        document.getElementById("subject").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // Prevent form submission
+            }
+        });
+        document.getElementById("event-title").addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); // Prevent form submission
+            }
+        });
+    });
+
     // Toggle dropdown visibility
     docType.button.addEventListener('click', () => toggleDropdown(docType.dropdown));
     receiver.button.addEventListener('click', () => toggleDropdown(receiver.dropdown));
@@ -445,10 +479,10 @@
     }
 
     // selectReceiver() function
-    window.selectReceiver = function(name, position) {
-        const displayText = `${name} <span class="text-gray-400">&lsaquo;${position}&rsaquo;</span>`; // ‹ ›
+    window.selectReceiver = function(id, name, role) {
+        const displayText = `${name} <span class="text-gray-400">&lsaquo;${role}&rsaquo;</span>`; // ‹ ›
         receiver.selected.innerHTML = displayText; // Use innerHTML to apply styling
-        receiver.input.value = name;
+        receiver.input.value = id;
         receiver.dropdown.classList.add('hidden');
     }
 
@@ -498,12 +532,97 @@
     // Confirming Submission Toast Message
     function showConfirmPopup(event) {
         event.preventDefault();
-        document.getElementById('confirmPopup').classList.remove('hidden');
+        const popup = document.getElementById('confirmPopup');
+        popup.classList.remove('hidden');
+
+        const focusableElements = popup.querySelectorAll('button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        const firstEl = focusableElements[0];
+        const lastEl = focusableElements[focusableElements.length - 1];
+
+        popup.addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                if (e.shiftKey) {
+                    if (document.activeElement === firstEl) {
+                        e.preventDefault();
+                        lastEl.focus();
+                    }
+                } else {
+                    if (document.activeElement === lastEl) {
+                        e.preventDefault();
+                        firstEl.focus();
+                    }
+                }
+            }
+        });
+
+        setTimeout(() => firstEl.focus(), 0);
     }
 
     function closeConfirmPopup() {
         document.getElementById('confirmPopup').classList.add('hidden');
     }
+
+    // Checks if all input fields are filled before enabling the submit button
+    document.addEventListener('DOMContentLoaded', () => {
+        const requiredFields = {
+            receiver: () => document.getElementById('receiverInput').value.trim() !== '',
+            subject: () => document.getElementById('subject').value.trim() !== '',
+            docType: () => document.getElementById('docTypeInput').value.trim() !== '',
+            summary: () => document.getElementById('summary').value.trim() !== '',
+            file: () => document.getElementById('fileUpload').files.length > 0,
+            eventTitle: () => document.getElementById('event-title').value.trim() !== '',
+            eventDesc: () => document.getElementById('event-desc').value.trim() !== '',
+            startDate: () => document.getElementById('startDate').value.trim() !== '',
+            endDate: () => document.getElementById('endDate').value.trim() !== '',
+        };
+
+        const submitButton = document.getElementById('mainSubmitButton');
+        const docTypeInput = document.getElementById('docTypeInput');
+
+        function validateForm() {
+            const isEventProposal = docTypeInput.value === 'Event Proposal';
+            const baseValid = requiredFields.receiver() && requiredFields.subject() &&
+                requiredFields.docType() && requiredFields.summary() && requiredFields.file();
+            const eventValid = !isEventProposal || (
+                requiredFields.eventTitle() && requiredFields.eventDesc() &&
+                requiredFields.startDate() && requiredFields.endDate()
+            );
+
+            const allValid = baseValid && eventValid;
+
+            submitButton.disabled = !allValid;
+
+            // Toggle button styles
+            submitButton.classList.toggle('bg-gray-500', !allValid);
+            submitButton.classList.toggle('cursor-not-allowed', !allValid);
+            submitButton.classList.toggle('bg-[#7A1212]', allValid);
+            submitButton.classList.toggle('hover:bg-[#a31515]', allValid);
+            submitButton.classList.toggle('cursor-pointer', allValid);
+        }
+
+        const inputsToWatch = [
+            'receiverInput', 'subject', 'docTypeInput', 'summary',
+            'event-title', 'event-desc', 'startDate', 'endDate', 'fileUpload'
+        ];
+
+        inputsToWatch.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('input', validateForm);
+                element.addEventListener('change', validateForm);
+            }
+        });
+
+        // Re-validate when document type is changed via your selectDocType function
+        const originalSelectDocType = window.selectDocType;
+        window.selectDocType = function(value) {
+            originalSelectDocType(value);
+            setTimeout(validateForm, 50); // slight delay to allow DOM changes
+        };
+
+        // Called on page load just in case
+        validateForm();
+    });
 </script>
 
 @endsection
