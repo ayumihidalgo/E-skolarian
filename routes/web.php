@@ -13,6 +13,7 @@ use App\Http\Controllers\StudentDocumentController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\StudentTrackerController;
 use App\Http\Middleware\NoBackHistory;
+use App\Http\Controllers\SettingsController;
 
 
 Route::get('/', function () {
@@ -43,7 +44,7 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
      // Settings routes
      Route::get('student/settings', [SettingsController::class, 'viewSettings'])->name('student.settings');
      Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('student.settings.update-profile-picture');
- 
+
     Route::get('/super-admin/dashboard', fn() => view('super-admin.dashboard'))->name('super-admin.dashboard');
 
     Route::get('/admin/documentReview', function () {
@@ -55,7 +56,7 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
 
     // Submit Document Route
-    Route::get('/student/submit-documents', [DocumentController::class, 'create']);
+    Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
 
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 
