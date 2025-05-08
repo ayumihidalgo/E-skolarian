@@ -79,9 +79,13 @@ class PasswordResetLinkController extends Controller
             ->where('email', $request->email)
             ->first();
 
-        if (!$tokenRecord || !Hash::check($request->token, $tokenRecord->token)) {
-            return back()->withErrors(['token' => 'Invalid or expired token.']);
-        }
+            if (
+                !$tokenRecord ||
+                !Hash::check($request->token, $tokenRecord->token) ||
+                Carbon::parse($tokenRecord->created_at)->addMinutes(15)->isPast()
+            ) {
+                return back()->withErrors(['token' => 'Invalid or expired token.']);
+            }
 
         $user = User::where('email', $request->email)->first();
 
