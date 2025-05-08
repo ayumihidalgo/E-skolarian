@@ -1,5 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\CommentController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\StudentTrackerController;
 use App\Http\Middleware\NoBackHistory;
 
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -23,11 +26,8 @@ Route::get('/notification', function () {
 });
 
 Route::middleware(['auth', NoBackHistory::class])->group(function () {
-    // Pakilagay lahat ng routes nyo dito sa loob pag kailangan naaaccess lang yung page nyo kapag logged in yung user
-
     Route::get('/student/dashboard', fn () => view('student.dashboard')) -> name('student.dashboard');
     Route::get('/admin/dashboard', fn () => view('admin.dashboard')) -> name('admin.dashboard');
-
 
     // Calendar routes
     Route::get('/calendar', [EventController::class, 'index'])->name('calendar.index');
@@ -40,46 +40,72 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
     Route::post('/users/{id}', [UserController::class, 'update']);
 
+
     Route::get('/super-admin/dashboard', fn() => view('super-admin.dashboard'))->name('super-admin.dashboard');
 
-    Route::get('/admin/review', function () {
-        return view('admin.review');
-    })->name('admin.review');
+    Route::get('/admin/documentReview', function () {
+        return view('admin.documentReview');
+    })->name('admin.documentReview');
 
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
 
     // Submit Document Route
-    Route::get('/student/submit-documents', function () {
-        return view('student.submit-documents');  // resources/views/home.blade.php
-    });
+    Route::get('/student/submit-documents', [DocumentController::class, 'create']);
 
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
 
-    // Archive Document Route
-    Route::get('/admin/documentArchive', fn() => view('admin.documentArchive'))->name('admin.documentArchive');
-    Route::get('/student/documentArchive', fn() => view('student.documentArchive'))->name('student.documentArchive');
+    // Dashboard Route
+    Route::get('/dashboard', function () {
+        return view('student.dashboard');
+    })->name('dashboard');
 
-    // Route for the student tracker page
-    Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
+    Route::get('/admin/documentArchive', function () {
+        return view('admin.documentArchive');
+    })->name('admin.documentArchive');
 
+    Route::get('/student/documentArchive', function () {
+        return view('student.documentArchive');
+    })->name('student.documentArchive');
     // Route for the document preview page (admin)
-    Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
+Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
 
-    // Route for the document preview page (student)
-    Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
-        ->name('student.documentPreview');
+// Route for the document preview page (student)
+Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
+    ->name('student.documentPreview');
 
-    // Fetching and displaying and storing comments
-    Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
-    Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
+// Document viewing
+Route::get('/documents/{filename}', function ($filename) {
+    $path = public_path('documents/' . $filename);
 
-    // Document viewing
-    Route::get('/test-pdf', function() {
-        return response()->file(public_path('documents/test/sample.pdf'));
-    });
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    $mimeType = File::mimeType($path);
+
+    // Force inline display for PDFs
+    if ($mimeType === 'application/pdf') {
+        return Response::make(file_get_contents($path), 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"'
+        ]);
+    }
+
+    // For images and other files
+    return response()->file($path);
+})->name('document.view')->middleware('auth');
+
+
+// Fetching and displaying and storing comments
+Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
+
+// Route for the student tracker page
+Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
+
 });
 
 Route::get('/notifications', function () {
@@ -95,7 +121,13 @@ Route::get('password-reset-confirmation', function () {
     return view('auth.password-reset-confirmation');
 })->name('password.reset.confirmation');
 
+/* Temporary Route for Email Template */
+Route::get('/custom-reset-password', function () {
+    return view('emails.custom-reset-password');
+
+});
+
 // CHANGE THIS //
 // Route::get('/', function () {
 //     return view('admin.documentArchive');
-// })
+// });
