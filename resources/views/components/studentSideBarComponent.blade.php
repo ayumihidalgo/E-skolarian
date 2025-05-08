@@ -30,7 +30,7 @@
             ['Home', 'account.svg', route('student.dashboard')],
             ['Submit Documents', 'submitDocument.svg', route('student.submit-documents')],
             ['Tracker', 'tracker.svg', route('student.studentTracker')],
-            ['Calendar', 'calendar.svg', '#'],
+            ['Calendar', 'calendar.svg', route('calendar.index')],
             ['Archive', 'archive.svg', route('student.documentArchive')],
             ['Settings', 'settings.svg', route('student.settings')]
         ] as [$label, $icon, $route])
