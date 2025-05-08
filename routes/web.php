@@ -26,6 +26,8 @@ Route::get('/notification', function () {
     return view('components.general-components.notification');
 });
 
+
+
 Route::middleware(['auth', NoBackHistory::class])->group(function () {
     Route::get('/student/dashboard', fn () => view('student.dashboard')) -> name('student.dashboard');
     Route::get('/admin/dashboard', fn () => view('admin.dashboard')) -> name('admin.dashboard');
@@ -88,32 +90,6 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
     // Route for the document preview page (admin)
 Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
 });
-// Route for the document preview page (student)
-Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
-    ->name('student.documentPreview');
-
-// Document viewing
-Route::get('/documents/{filename}', function ($filename) {
-    $path = public_path('documents/' . $filename);
-
-    if (!file_exists($path)) {
-        abort(404);
-    }
-
-    $mimeType = File::mimeType($path);
-
-    // Force inline display for PDFs
-    if ($mimeType === 'application/pdf') {
-        return Response::make(file_get_contents($path), 200, [
-            'Content-Type' => $mimeType,
-            'Content-Disposition' => 'inline; filename="' . $filename . '"'
-        ]);
-    }
-
-    // For images and other files
-    return response()->file($path);
-})->name('document.view')->middleware('auth');
-
 
 // Fetching and displaying and storing comments
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
@@ -164,6 +140,35 @@ Route::get('/test-pdf', function() {
 // Fetching and displaying and storing comments
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
+
+// Route for the document preview page (student)
+Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])
+    ->name('student.documentPreview');
+
+// Document viewing
+Route::get('/documents/{filename}', function ($filename) {
+    $path = public_path('documents/' . $filename);
+
+    if (!file_exists($path)) {
+        abort(404);
+    }
+
+    $mimeType = File::mimeType($path);
+
+    // Force inline display for PDFs
+    if ($mimeType === 'application/pdf') {
+        return Response::make(file_get_contents($path), 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"'
+        ]);
+    }
+
+    // For images and other files
+    return response()->file($path);
+})->name('document.view')->middleware('auth');
+
+
+
 
 
 
