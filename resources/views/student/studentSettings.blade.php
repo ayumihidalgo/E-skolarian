@@ -12,9 +12,9 @@
             <!-- Profile Card -->
             <div class="flex items-center gap-8 mb-8">
                 <div class="relative  w-36 h-36 rounded-full ">
-                    @if ($user->profile_image)
+                    @if ($user->profile_pic)
                         <!-- Show uploaded profile image -->
-                        <img src="{{ asset('storage/' . $user->profile_image) }}" alt="Profile"
+                        <img src="{{ asset('storage/' . $user->profile_pic) }}" alt="Profile"
                             class="w-24 h-24 rounded-full object-cover">
                     @else
                         <!-- Default profile with initials -->
