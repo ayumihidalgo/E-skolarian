@@ -30,7 +30,7 @@
             ['Home', 'account.svg', '#'],
             ['Review', 'review.svg', route('admin.documentReview')],
             ['Archive', 'archive.svg', route('admin.documentArchive')],
-            ['Calendar', 'calendar.svg', '#'],
+            ['Calendar', 'calendar.svg', route('calendar.indexTwo')],
             ['Settings', 'settings.svg', '#']
         ] as [$label, $icon, $route])
             <a href="{{ $route }}" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">

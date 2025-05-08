@@ -14,7 +14,7 @@ use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\StudentTrackerController;
 use App\Http\Middleware\NoBackHistory;
 use App\Http\Controllers\SettingsController;
-
+use App\Http\Controllers\IndexTwoController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -136,3 +136,5 @@ Route::get('/custom-reset-password', function () {
 // Route::get('/', function () {
 //     return view('admin.documentArchive');
 // });
+
+Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->name('calendar.indexTwo');
