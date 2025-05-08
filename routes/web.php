@@ -76,13 +76,16 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
 
     // Submit Document Route
-    Route::get('/student/submit-documents', function () {
-        return view('student.submit-documents');  // resources/views/home.blade.php
-    });
+    Route::get('/student/submit-documents', [DocumentController::class, 'create']);
 
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
+
+    // Dashboard Route
+    Route::get('/dashboard', function () {
+        return view('student.dashboard');
+    })->name('dashboard');    
 });
 
 Route::get('/notifications', function () {

@@ -12,12 +12,14 @@ return new class extends Migration
     public function up()
     {
         Schema::create('submitted_documents', function (Blueprint $table) {
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('received_by')->constrained('users')->onDelete('cascade');
             $table->id();
-            $table->string('control_tag')->unique()->default('AUTO');
-            $table->string('doc_receiver');
             $table->string('subject');
-            $table->string('doc_type');
             $table->text('summary')->nullable();
+            $table->enum('type', ['Event Proposal','General Plan of Activities','Calendar of Activities','Accomplishment Report','Constitution and By-Laws','Request Letter','Off Campus','Petition and Concern']);
+            $table->string('control_tag')->unique()->default('AUTO');
+            $table->enum('status', ['Pending', 'Under Review', 'Approved', 'Rejected', 'Resubmit'])->default('Pending');
             $table->string('file_path')->nullable();
             $table->timestamps();
         });
