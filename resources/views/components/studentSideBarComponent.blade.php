@@ -27,14 +27,12 @@
 
     <nav class="space-y-4 text-lg font-[Manrope] mt-6">
         @foreach ([
-            ['Home', 'account.svg', '#'],
-            ['Submit Documents', 'submitDocument.svg', '#'],
+            ['Home', 'account.svg', route('student.dashboard')],
+            ['Submit Documents', 'submitDocument.svg', route('student.submit-documents')],
             ['Tracker', 'tracker.svg', route('student.studentTracker')],
-            ['Notifications', 'notification.svg', '#'],
-            ['Messages', 'message.svg', '#'],
             ['Calendar', 'calendar.svg', '#'],
             ['Archive', 'archive.svg', route('student.documentArchive')],
-            ['Settings', 'settings.svg', '#']
+            ['Settings', 'settings.svg', route('student.settings')]
         ] as [$label, $icon, $route])
             <a href="{{ $route }}" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
                 <img src="{{ asset("images/$icon") }}" class="h-6 w-6" alt="{{ $label }} Icon">

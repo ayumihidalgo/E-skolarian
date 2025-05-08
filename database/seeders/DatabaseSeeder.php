@@ -17,27 +17,11 @@ class DatabaseSeeder extends Seeder
     {
         User::create([
             'username' => 'SuperAdmintUser',
-            'email' => 'superadmin@example.com',
-            'password' => Hash::make('superadminpass'),
+            'email' => 'superadmin@gmail.com',
+            'password' => Hash::make('@Eskolarian12345'),
             'role' => 'super admin',
             'profile_pic' => 'images/profiles/student.png', // Example value
 
-        ]);
-
-        User::create([
-            'username' => 'AdminUser',
-            'email' => 'admin@example.com',
-            'password' => Hash::make('adminpass'),
-            'role' => 'admin',
-            'profile_pic' => 'images/profiles/student.png', // Example value
-        ]);
-
-        User::create([
-            'username' => 'StudentUser',
-            'email' => 'student@example.com',
-            'password' => Hash::make('studentpass'),
-            'role' => 'student',
-            'profile_pic' => 'images/profiles/student.png', // Example value
         ]);
     }
 
