@@ -84,7 +84,7 @@ class PasswordResetLinkController extends Controller
                 !Hash::check($request->token, $tokenRecord->token) ||
                 Carbon::parse($tokenRecord->created_at)->addMinutes(15)->isPast()
             ) {
-                return back()->withErrors(['token' => 'Invalid or expired token.']);
+                return back()->withErrors(['token' => 'Invalid or expired token. Try to request a new password reset link.']);
             }
 
         $user = User::where('email', $request->email)->first();
