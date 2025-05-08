@@ -66,6 +66,13 @@ Route::middleware(['auth'])->group(function () {
             ->header('Expires', '0');
     })->name('super-admin.dashboard');
 
+    Route::get('/super-admin/deactivated-accounts', function () {
+        return view('super-admin.deactPage');
+    })->name('deactivated.accounts');
+
+    Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
+    ->name('deactivated.accounts');
+
     Route::get('/admin/review', function () {
         return view('admin.review');
     })->name('admin.review');
@@ -81,6 +88,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
+
+    Route::post('/super-admin/reactivate-user/{user}', [UserController::class, 'reactivateUser'])->name('reactivate.user');
 });
 
 Route::get('/notifications', function () {
@@ -123,8 +132,6 @@ Route::get('/test-pdf', function() {
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
 
-
-
-
 // Route for the student tracker page
 Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
+

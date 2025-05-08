@@ -127,4 +127,35 @@ class UserController extends Controller
         // For normal form submissions, redirect with a success message
         return redirect()->route('super-admin.dashboard')->with('success', 'User updated successfully!');
     }
+    public function deactivatedUsers(Request $request)
+{
+    $sortField = $request->query('sort', 'created_at');
+    $sortDirection = $request->query('direction', 'desc');
+    
+    $deactivatedUsers = User::where('active', false)
+        ->orderBy($sortField, $sortDirection)
+        ->paginate(6);
+        
+    return view('super-admin.deactPage', [
+        'users' => $deactivatedUsers,
+        'sortField' => $sortField,
+        'sortDirection' => $sortDirection
+    ]);
+}
+public function reactivateUser(User $user)
+{
+    try {
+        $user->update(['is_active' => true]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User has been successfully reactivated.'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to reactivate user.'
+        ], 500);
+    }
+}
 }

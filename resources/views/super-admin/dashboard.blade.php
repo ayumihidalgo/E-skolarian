@@ -17,6 +17,11 @@
             ADD USER
         </button>
 
+        <a href="{{ route('deactivated.accounts') }}" 
+        class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white cursor-pointer">
+            DEACTIVATED ACCOUNTS
+        </a>
+
     <!-- Activity Log Button -->
     <!-- <button class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white cursor-pointer">
         ACTIVITY LOG
