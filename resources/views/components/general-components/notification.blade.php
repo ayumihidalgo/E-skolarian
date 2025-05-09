@@ -1,6 +1,12 @@
+@php
+    use App\Models\Notification;
+
+    $notifications = Auth::check() ? Notification::where('user_id', Auth::id())->orderBy('created_at', 'desc')->get() : [];
+    $unreadNotifications = Auth::check() ? Notification::where('user_id', Auth::id())->where('is_read', false)->orderBy('created_at', 'desc')->get() : [];
+@endphp
 <div class="relative">
     <!-- Notification Button -->
-    <button id="notificationBtn" class="p-2 rounded-full cursor-pointer transition-all duration-300">
+    <button id="notificationBtn" class="relative p-2 rounded-full cursor-pointer transition-all duration-300">
         <svg class="text-gray-500 hover:text-gray-700 transition-colors duration-300" width="24" height="24" viewBox="0 0 24 24" fill="none"
             xmlns="http://www.w3.org/2000/svg">
             <path d="M20 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18V6C22 4.89543 21.1046 4 20 4Z"
@@ -8,6 +14,12 @@
             <path d="M22 7L13.03 12.7C12.7213 12.8934 12.3643 12.996 12 12.996C11.6357 12.996 11.2787 12.8934 10.97 12.7L2 7"
                 stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
+        @php
+            $unreadCount = Auth::user()->notifications()->where('is_read', false)->count();
+        @endphp
+        @if($unreadCount > 0)
+            <span class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1">{{ $unreadCount }}</span>
+        @endif
     </button>
 
     <!-- Notification Panel -->
@@ -23,12 +35,6 @@
                 xmlns="http://www.w3.org/2000/svg" class="cursor-pointer hover:text-gray-700 transition-colors duration-300">
                     <path d="M4.75 8.5C3.925 8.5 3.25 9.175 3.25 10C3.25 10.825 3.925 11.5 4.75 11.5C5.575 11.5 6.25 10.825 6.25 10C6.25 9.175 5.575 8.5 4.75 8.5ZM15.25 8.5C14.425 8.5 13.75 9.175 13.75 10C13.75 10.825 14.425 11.5 15.25 11.5C16.075 11.5 16.75 10.825 16.75 10C16.75 9.175 16.075 8.5 15.25 8.5ZM10 8.5C9.175 8.5 8.5 9.175 8.5 10C8.5 10.825 9.175 11.5 10 11.5C10.825 11.5 11.5 10.825 11.5 10C11.5 9.175 10.825 8.5 10 8.5Z" fill="#525866"/>
                 </svg>
-
-                <!-- Settings Icon -->
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg" class="cursor-pointer hover:text-gray-700 transition-colors duration-300">
-                    <path d="M10 1.75L17.125 5.875V14.125L10 18.25L2.875 14.125V5.875L10 1.75ZM10 3.48325L4.375 6.73975V13.2603L10 16.5167L15.625 13.2603V6.73975L10 3.48325ZM10 13C9.20435 13 8.44129 12.6839 7.87868 12.1213C7.31607 11.5587 7 10.7956 7 10C7 9.20435 7.31607 8.44129 7.87868 7.87868C8.44129 7.31607 9.20435 7 10 7C10.7956 7 11.5587 7.31607 12.1213 7.87868C12.6839 8.44129 13 9.20435 13 10C13 10.7956 12.6839 11.5587 12.1213 12.1213C11.5587 12.6839 10.7956 13 10 13ZM10 11.5C10.3978 11.5 10.7794 11.342 11.0607 11.0607C11.342 10.7794 11.5 10.3978 11.5 10C11.5 9.60218 11.342 9.22064 11.0607 8.93934C10.7794 8.65804 10.3978 8.5 10 8.5C9.60218 8.5 9.22064 8.65804 8.93934 9.22064C8.65804 9.60218 8.5 10 8.5 10.3978 8.65804 10.7794 8.93934 11.0607C9.22064 11.342 9.60218 11.5 10 11.5Z" fill="#525866"/>
-                </svg>
             </div>
         </div>
 
@@ -38,7 +44,7 @@
             <button id="allTab" class="px-4 py-2 border-b-2 border-purple-600 text-black font-semibold bg-gray-50 cursor-pointer">All</button>
             <button id="unreadTab" class="px-4 py-2 hover:bg-gray-100 text-gray-500 cursor-pointer">Unread</button>
             </div>
-            <div class="p-2 hover:bg-gray-100 rounded cursor-pointer transition-colors duration-300" id="collapseArrow">
+            <div class=" hover:bg-gray-100 rounded cursor-pointer transition-colors duration-300" id="collapseArrow">
             <svg id="arrowIcon" width="20" height="20" viewBox="0 0 20 20" fill="none"
                 xmlns="http://www.w3.org/2000/svg" class="transform transition-transform duration-300">
                 <path d="M10.0001 10.879L13.7126 7.1665L14.7731 8.227L10.0001 13L5.22705 8.227L6.28755 7.1665L10.0001 10.879Z" fill="#525866"/>
@@ -47,8 +53,47 @@
         </div>
 
         <!-- Notification Content -->
-        <div id="notificationBody" class="flex items-center justify-center overflow-hidden transition-all duration-300" style="width: 500px; height: 512px; max-height: 512px;">
-            <div class="text-gray-500 text-sm">No notifications</div>
+        <div id="notificationBody" class="overflow-y-auto transition-all duration-300" style="width: 500px; height: 512px; max-height: 512px;">
+            @if(Auth::check() && Auth::user()->notifications->count() > 0)
+                <!-- All Notifications Tab Content -->
+                <div id="allNotifications" class="block">
+                    @foreach(Auth::user()->notifications as $notification)
+                        <div class="p-4 border-b hover:bg-gray-50 transition-colors duration-200">
+                            <p class="font-semibold">{{ $notification->title }}</p>
+                            <p class="text-sm text-gray-500">{{ $notification->message }}</p>
+                            <p class="text-xs text-gray-400">{{ $notification->created_at->diffForHumans() }}</p>
+                        </div>
+                    @endforeach
+                </div>
+                
+                <!-- Unread Notifications Tab Content -->
+                <div id="unreadNotifications" class="hidden">
+                    @foreach(Auth::user()->notifications->where('is_read', false) as $notification)
+                        <div class="p-4 border-b hover:bg-gray-50 transition-colors duration-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="text-gray-400" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
+                                    </svg>
+                                    <p class="font-strong text-black">{{ $notification->title }}</p>
+                                </div>
+                                <p class="text-xs text-gray-400">{{ $notification->created_at->diffForHumans() }}</p>
+                            </div>
+                            <p class="text-sm text-gray-500">{{ $notification->message }}</p>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <div class="flex items-center justify-center h-full text-center">
+                    <div class="text-gray-500 text-sm">
+                        @if(Auth::check())
+                            Hello, {{ Auth::user()->username }}! <br> You have no notifications.
+                        @else
+                            Hello, Guest! Please log in to see your notifications.
+                        @endif
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>
@@ -64,6 +109,8 @@
         const notificationBody = document.getElementById('notificationBody');
         const arrowIcon = document.getElementById('arrowIcon');
         const tabs = document.getElementById('tabs-nav');
+        const allNotifications = document.getElementById('allNotifications');
+        const unreadNotifications = document.getElementById('unreadNotifications');
         
         // Fixed height for notification body
         const NOTIFICATION_HEIGHT = '512px';
@@ -114,6 +161,14 @@
             unreadTab.classList.remove('text-gray-500');
             allTab.classList.add('text-gray-500');
             allTab.classList.remove('border-b-2', 'border-purple-600', 'text-black', 'font-semibold', 'bg-gray-50');
+            
+            // Show unread notifications, hide all notifications
+            if (allNotifications && unreadNotifications) {
+                allNotifications.classList.add('hidden');
+                allNotifications.classList.remove('block');
+                unreadNotifications.classList.add('block');
+                unreadNotifications.classList.remove('hidden');
+            }
         });
         
         allTab.addEventListener('click', () => {
@@ -121,6 +176,14 @@
             allTab.classList.remove('text-gray-500');
             unreadTab.classList.add('text-gray-500');
             unreadTab.classList.remove('border-b-2', 'border-purple-600', 'text-black', 'font-semibold', 'bg-gray-50');
+            
+            // Show all notifications, hide unread notifications
+            if (allNotifications && unreadNotifications) {
+                allNotifications.classList.add('block');
+                allNotifications.classList.remove('hidden');
+                unreadNotifications.classList.add('hidden');
+                unreadNotifications.classList.remove('block');
+            }
         });
         
         // Toggle content collapse with arrow rotation
@@ -132,9 +195,6 @@
                 arrowIcon.style.transform = 'rotate(180deg)';
                 notificationBody.style.height = '0px';
                 tabs.style.borderBottom = 'none';
-                tabs.style.borderBottom = 'none';
-
-               
             } else {
                 arrowIcon.style.transform = 'rotate(0deg)';
                 notificationBody.style.height = NOTIFICATION_HEIGHT;
