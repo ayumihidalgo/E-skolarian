@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Storage;
 
 
@@ -18,6 +19,11 @@ class SettingsController extends Controller
         $user = Auth::user();
         return view('student.studentSettings', compact('user'));
     }
+    public function viewAdminSettings()
+    {
+        $user = Auth::user();
+        return view('admin.adminSettings', compact('user'));
+    }
 
     /**
      * Update the profile picture.
@@ -25,23 +31,33 @@ class SettingsController extends Controller
     public function updateProfilePicture(Request $request)
     {
         $request->validate([
-            'profile_pic' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'profile_image_base64' => 'required|string',
         ]);
 
-        $user = Auth::user();
+        $user = auth()->user();
+        $imageData = $request->input('profile_image_base64');
 
-        if ($request->hasFile('profile_pic')) {
-            $profilePath = $request->file('profile_pic')->store('avatar', 'public');
-
-            if ($user->profile_pic) {
-                // Delete the old profile picture if it exists
-                Storage::disk('public')->delete($user->profile_pic);
-            }
-            $user->profile_pic = $profilePath;
+        // Ensure it's a valid base64 image
+        if (!preg_match('/^data:image\/(\w+);base64,/', $imageData, $type)) {
+            return back()->with('error', 'Invalid image format.');
         }
-        // Save the user with the new profile picture
+
+        $extension = strtolower($type[1]);
+        $imageData = base64_decode(substr($imageData, strpos($imageData, ',') + 1));
+        $filename = Str::random(20) . '.' . $extension;
+        $path = 'images/profiles/' . $filename;
+
+        // Delete the old image if it exists
+        if ($user->profile_pic && Storage::disk('public')->exists($user->profile_pic)) {
+            Storage::disk('public')->delete($user->profile_pic);
+        }
+
+        Storage::disk('public')->put($path, $imageData);
+
+        $user->profile_pic = $path;
         $user->save();
-        return redirect()->back()->with('success', 'Profile picture updated successfully.');
+
+        return back()->with('success', 'Profile picture updated.');
     }
 
     /**

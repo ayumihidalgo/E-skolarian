@@ -187,3 +187,5 @@ Route::get('/documents/{filename}', function ($filename) {
     // For images and other files
     return response()->file($path);
 })->name('document.view')->middleware('auth');
+
+

@@ -1,7 +1,7 @@
 @extends('base')
 @section('content')
-@include('components.studentNavBarComponent')
-@include('components.studentSideBarComponent')
+@include('components.adminNavBarComponent')
+@include('components.adminSideBarComponent')
 
 <div id="main-content" class="transition-all duration-300 ml-[20%]">
         <!-- Calendar content section -->
