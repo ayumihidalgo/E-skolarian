@@ -303,5 +303,13 @@
         </div>
     </div>
 </div>
-@vite('resources/js/superAdmin.js') <!-- Include the JavaScript file -->
+@vite([
+    'resources/js/super-admin/modal-base.js',
+    'resources/js/super-admin/main.js',
+    'resources/js/super-admin/add-user.js',
+    'resources/js/super-admin/user-details.js',
+    'resources/js/super-admin/edit-user.js',
+    'resources/js/super-admin/deactivate-user.js',
+    'resources/js/super-admin/success-modal.js'
+])
 @endsection
