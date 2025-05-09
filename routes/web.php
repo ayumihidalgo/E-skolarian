@@ -189,7 +189,3 @@ Route::get('/documents/{filename}', function ($filename) {
 })->name('document.view')->middleware('auth');
 
 
-
-
-
-
