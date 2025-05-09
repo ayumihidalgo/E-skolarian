@@ -46,8 +46,13 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
 
      // Settings routes
      Route::get('student/settings', [SettingsController::class, 'viewSettings'])->name('student.settings');
-     Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('student.settings.update-profile-picture');
-
+     Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('settings.update-profile-picture');
+     Route::post('/settings/change-password', [SettingsController::class, 'changePassword'])->name('student.settings.change-password');
+ 
+     Route::get('admin/settings', [SettingsController::class, 'viewAdminSettings'])->name('admin.settings');
+     Route::post('admin/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('settings.update-profile-picture');
+     Route::post('/settings/change-password', [SettingsController::class, 'changePassword'])->name('settings.change-password');
+ 
     Route::get('/super-admin/dashboard', fn() => view('super-admin.dashboard'))->name('super-admin.dashboard');
 
     Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
