@@ -5,20 +5,26 @@ document.addEventListener('DOMContentLoaded', function () {
     const addUserModal = document.getElementById('addUserModal');
     const closeAddUserBtn = document.getElementById('closeAddUserBtn');
     const closeAddUserModalBtn = document.getElementById('closeAddUserModalBtn');
-    const addUserBackdrop = document.querySelector('.add-user-backdrop');
     const successModal = document.getElementById('successModal');
+    const submitButton = document.getElementById('addUserSubmitBtn');
+    const closeConfirmModal = document.getElementById('closeConfirmModal');
+    const cancelCloseBtn = document.getElementById('cancelCloseBtn');
+    const confirmCloseBtn = document.getElementById('confirmCloseBtn');
 
     // Form input elements
     const usernameInput = document.getElementById('username');
     const emailInput = document.getElementById('email');
     const roleSelect = document.getElementById('role_name');
     const actualRoleInput = document.getElementById('actual_role');
+    const addUserForm = document.getElementById('addUserForm');
 
     // Validation feedback elements
     const usernameError = document.createElement('p');
     usernameError.className = 'text-red-600 text-xs mt-1 hidden';
     const emailError = document.createElement('p');
     emailError.className = 'text-red-600 text-xs mt-1 hidden';
+    const roleError = document.createElement('p');
+    roleError.className = 'text-red-600 text-xs mt-1 hidden';
 
     // Insert error elements after inputs
     if (usernameInput) {
@@ -27,16 +33,31 @@ document.addEventListener('DOMContentLoaded', function () {
     if (emailInput) {
         emailInput.parentNode.insertBefore(emailError, emailInput.nextSibling);
     }
+    if (roleSelect) {
+        roleSelect.parentNode.insertBefore(roleError, roleSelect.nextSibling);
+    }
+
+    // Function to check if form has unsaved changes
+    function hasUnsavedChanges() {
+        const username = usernameInput?.value.trim() || '';
+        const email = emailInput?.value.trim() || '';
+        const role = roleSelect?.value || '';
+        
+        return username !== '' || email !== '' || role !== '';
+    }
+
+    // Function to handle close attempt
+    function handleCloseAttempt() {
+        if (hasUnsavedChanges()) {
+            closeConfirmModal.classList.remove('hidden');
+        } else {
+            addUserModal.classList.add('hidden');
+        }
+    }
 
     // Set up modal functionality
     if (window.setupModalClose) {
-        window.setupModalClose(addUserModal, '#closeAddUserBtn', '.add-user-backdrop');
-
-        if (closeAddUserModalBtn) {
-            closeAddUserModalBtn.addEventListener('click', function () {
-                addUserModal.classList.add('hidden');
-            });
-        }
+        window.setupModalClose(addUserModal, '#closeAddUserBtn');
     }
 
     // Open Add User Modal
@@ -46,16 +67,86 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Close modal handlers
+    if (closeAddUserModalBtn) {
+        closeAddUserModalBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            handleCloseAttempt();
+        });
+    }
+
+    // Add confirmation modal button handlers
+    if (cancelCloseBtn) {
+        cancelCloseBtn.addEventListener('click', function() {
+            closeConfirmModal.classList.add('hidden');
+        });
+    }
+
+    if (confirmCloseBtn) {
+        confirmCloseBtn.addEventListener('click', function() {
+            closeConfirmModal.classList.add('hidden');
+            addUserModal.classList.add('hidden');
+            
+            // Reset form
+            if (addUserForm) {
+                addUserForm.reset();
+                usernameError.classList.add('hidden');
+                emailError.classList.add('hidden');
+                roleError.classList.add('hidden');
+                usernameInput.classList.remove('border-red-500');
+                emailInput.classList.remove('border-red-500');
+                roleSelect.classList.remove('border-red-500');
+            }
+        });
+    }
+
+    // Add escape key handler for both modals
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (!closeConfirmModal.classList.contains('hidden')) {
+                closeConfirmModal.classList.add('hidden');
+            } else if (!addUserModal.classList.contains('hidden')) {
+                handleCloseAttempt();
+            }
+        }
+    });
+
+    // Add click outside modal handler
+    closeConfirmModal.addEventListener('click', function(e) {
+        if (e.target === closeConfirmModal) {
+            closeConfirmModal.classList.add('hidden');
+        }
+    });
+
+    // Form validation functions
+    function validateForm() {
+        const isUsernameValid = validateUsername();
+        const isEmailValid = validateEmail();
+        const isRoleValid = validateRole();
+
+        // Enable/disable submit button based on validation
+        if (submitButton) {
+            submitButton.disabled = !(isUsernameValid && isEmailValid && isRoleValid);
+            submitButton.classList.toggle('opacity-50', !isUsernameValid || !isEmailValid || !isRoleValid);
+            submitButton.classList.toggle('cursor-not-allowed', !isUsernameValid || !isEmailValid || !isRoleValid);
+        }
+        
+        return isUsernameValid && isEmailValid && isRoleValid;
+    }
+
     // Username validation and space removal
     if (usernameInput) {
         usernameInput.addEventListener('input', function(e) {
             // Remove spaces automatically
             this.value = this.value.replace(/\s+/g, ' ');
-
             validateUsername();
+            validateForm();
         });
 
-        usernameInput.addEventListener('blur', validateUsername);
+        usernameInput.addEventListener('blur', function() {
+            validateUsername();
+            validateForm();
+        });
     }
 
     function validateUsername() {
@@ -67,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Validation checks
         if (username === '') {
-            showUsernameError('Username cannot be empty');
+            showUsernameError('Name cannot be empty');
             return false;
         }
 
@@ -82,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (!/^[a-zA-Z0-9\s\-_.]+$/.test(username)) {
-            showUsernameError('Username can only contain letters, numbers, spaces, hyphens, underscores, and periods');
+            showUsernameError('Name can only contain letters, numbers, spaces, hyphens, underscores, and periods');
             return false;
         }
 
@@ -102,9 +193,13 @@ document.addEventListener('DOMContentLoaded', function () {
             this.value = this.value.replace(/\s+/g, '');
 
             validateEmail();
+            validateForm();
         });
 
-        emailInput.addEventListener('blur', validateEmail);
+        emailInput.addEventListener('blur', function() {
+            validateEmail();
+            validateForm();
+        });
     }
 
     function validateEmail() {
@@ -116,7 +211,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Validation checks
         if (email === '') {
-            showEmailError('Email cannot contain spaces');
+            showEmailError('Email cannot be empty');
             return false;
         }
 
@@ -147,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
         emailInput.classList.add('border-red-500');
     }
 
-    // Update the hidden role value when role_name changes
+    // Role validation and handling
     if (roleSelect) {
         roleSelect.addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
@@ -155,27 +250,50 @@ document.addEventListener('DOMContentLoaded', function () {
             if (actualRoleInput) {
                 actualRoleInput.value = actualRole;
             }
+            validateRole();
+            validateForm();
+        });
+
+        // Add blur event for consistent validation behavior
+        roleSelect.addEventListener('blur', function() {
+            validateRole();
+            validateForm();
         });
     }
 
+    function validateRole() {
+        // Reset error state
+        roleError.classList.add('hidden');
+        roleSelect.classList.remove('border-red-500');
+
+        // Validation check
+        if (roleSelect.value === '') {
+            showRoleError('Please select a role');
+            return false;
+        }
+
+        return true;
+    }
+
+    function showRoleError(message) {
+        roleError.textContent = message;
+        roleError.classList.remove('hidden');
+        roleSelect.classList.add('border-red-500');
+    }
+
     // Form Submission Handling for Add User
-    const addUserForm = document.getElementById('addUserForm');
     if (addUserForm) {
         addUserForm.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            // Validate both fields before submission
-            const isUsernameValid = validateUsername();
-            const isEmailValid = validateEmail();
-
-            // Stop submission if validation fails
-            if (!isUsernameValid || !isEmailValid) {
+            // Validate all fields before submission
+            if (!validateForm()) {
                 return;
             }
 
             // Get form data
             const username = usernameInput.value.trim();
-            const email = emailInput.value.trim();
+            const email = emailInput.value.trim().toLowerCase();
             const role_name = roleSelect.value;
 
             // Get the actual role value (admin/student)
@@ -236,8 +354,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     addUserForm.reset();
                     usernameError.classList.add('hidden');
                     emailError.classList.add('hidden');
+                    roleError.classList.add('hidden');
                     usernameInput.classList.remove('border-red-500');
                     emailInput.classList.remove('border-red-500');
+                    roleSelect.classList.remove('border-red-500');
 
                     // Close the add user modal
                     if (addUserModal) {
@@ -252,15 +372,28 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         // Show success modal
                         successModal.classList.remove('hidden');
+
+                        // Add click event listeners for both the okay button and close button
+                        const okayButton = document.querySelector('#successModal button[type="button"]');
+                        const closeSuccessBtn = document.querySelector('#successModal #closeSuccessModalBtn');
+
+                        if (okayButton) {
+                            okayButton.addEventListener('click', () => {
+                                successModal.classList.add('hidden');
+                                window.location.reload();
+                            });
+                        }
+                        if (closeSuccessBtn) {
+                            closeSuccessBtn.addEventListener('click', () => {
+                                successModal.classList.add('hidden');
+                                window.location.reload();
+                            });
+                        }
                     } else {
                         // Fallback to alert if modal not found
                         alert('User added successfully!');
+                        window.location.reload();
                     }
-
-                    // Refresh the page after a delay to show the new user
-                    // setTimeout(() => {
-                    //     window.location.reload();
-                    // }, 2500);
                 })
                 .catch(error => {
                     console.error("Error:", error);
