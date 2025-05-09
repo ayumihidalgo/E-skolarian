@@ -1,17 +1,19 @@
-{{-- filepath: c:\Users\Ayumi Hidalgo\E-skolarian\resources\views\admin\documentPreview.blade.php --}}
-@extends('components.studentNavigation')
+@extends('base')
 
-@section('studentContent')
-    <div class="w-full min-h-screen bg-[#f2f4f7] px-6 py-8">
-        {{-- Header --}}
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-extrabold">Document Archive Preview</h2>
-            {{-- Back Button --}}
-            <a href="{{ url('/') }}"
-            class="bg-[#7A1212] text-white px-4 py-2 rounded-full hover:bg-[#DAA520] w-[117px] h-[44px] flex items-center justify-center">
-                Back
-            </a>
-        </div>
+@section('content')
+    @include('components.studentNavBarComponent')
+    @include('components.studentSidebarComponent')
+
+    <div id="main-content" class="transition-all duration-300 ml-[20%]">
+        <div class="w-full min-h-screen bg-[#f2f4f7] px-6 py-8 flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-extrabold">Document Archive Preview</h2>
+                <a href="{{ route('student.documentArchive') }}"
+                   class="bg-[#7A1212] text-white px-4 py-2 rounded-full hover:bg-[#DAA520] w-[117px] h-[44px] flex items-center justify-center">
+                    Back
+                </a>
+            </div>
+
 
         {{-- Document Details --}}
         <div class="p-6 bg-[#4D0F0F] text-white rounded-[2rem] shadow-md space-y-6 w-full max-w-[1055px] mx-auto min-h-[450px]">
