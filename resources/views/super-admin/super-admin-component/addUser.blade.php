@@ -16,6 +16,7 @@
                 <input type="text" 
                     name="username" 
                     id="username" 
+                    maxlength="150"
                     class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
                     required 
                     placeholder="Complete Organization Name or Admin Name">
@@ -26,6 +27,7 @@
                 <input type="email" 
                     name="email" 
                     id="email" 
+                    maxlength="50"
                     class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
                     required 
                     placeholder="Enter user's email">
@@ -43,6 +45,7 @@
                     <option value="Student Services" data-role="admin">Student Services</option>
                     <option value="Academic Services" data-role="admin">Academic Services</option>
                     <option value="Administrative Services" data-role="admin">Administrative Services</option>
+                    <option value="Campus Director" data-role="admin">Campus Director</option>
                 </select>
                 <!-- Hidden field to store the actual role value (admin/student) -->
                 <input type="hidden" id="actual_role" name="role" value="">

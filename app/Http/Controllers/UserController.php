@@ -158,4 +158,20 @@ public function reactivateUser(User $user)
         ], 500);
     }
 }
+public function checkEmail(Request $request)
+{
+    $exists = User::where('email', strtolower($request->email))->exists();
+    return response()->json(['exists' => $exists]);
+}
+public function checkRoles()
+{
+    $restrictedRoles = ['Student Services', 'Academic Services', 'Administrative Services', 'Campus Director'];
+    $existingRoles = User::whereIn('role_name', $restrictedRoles)
+                        ->pluck('role_name')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+    
+    return response()->json(['existingRoles' => $existingRoles]);
+}
 }
