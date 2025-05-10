@@ -62,7 +62,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Open Add User Modal
     if (addUserBtn && addUserModal) {
-        addUserBtn.addEventListener('click', function () {
+        addUserBtn.addEventListener('click', async function () {
+            // Fetch existing roles before showing the modal
+            const existingRoles = await fetchExistingRoles();
+            updateRoleOptions(existingRoles);
             addUserModal.classList.remove('hidden');
         });
     }
@@ -118,10 +121,65 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
+    // Email existence check function
+    async function checkEmailExists(email) {
+        const response = await fetch('/check-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ email: email.toLowerCase() })
+        });
+        const data = await response.json();
+        return data.exists;
+    }
+
+    // Function to fetch existing administrative roles
+async function fetchExistingRoles() {
+    try {
+        const response = await fetch('/check-roles', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        const data = await response.json();
+        return data.existingRoles;
+    } catch (error) {
+        console.error('Error fetching existing roles:', error);
+        return [];
+    }
+}
+
+// Function to update role options based on existing roles
+        function updateRoleOptions(existingRoles) {
+            if (!roleSelect) return;
+
+            const restrictedRoles = [
+                'Student Services',
+                'Academic Services',
+                'Administrative Services',
+                'Campus Director'
+            ];
+
+    // Hide restricted roles that already exist
+            Array.from(roleSelect.options).forEach(option => {
+                const roleName = option.value;
+                if (restrictedRoles.includes(roleName) && existingRoles.includes(roleName)) {
+                    option.disabled = true;
+                    option.style.display = 'none';
+                }
+            });
+        }
+
     // Form validation functions
-    function validateForm() {
+    async function validateForm() {
         const isUsernameValid = validateUsername();
-        const isEmailValid = validateEmail();
+        const isEmailValid = await validateEmail();
         const isRoleValid = validateRole();
 
         // Enable/disable submit button based on validation
@@ -151,6 +209,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function validateUsername() {
         const username = usernameInput.value.trim();
+        const MAX_USERNAME_LENGTH = 150;
 
         // Reset error state
         usernameError.classList.add('hidden');
@@ -163,12 +222,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (username.length < 3) {
-            showUsernameError('Username must be at least 3 characters');
+            showUsernameError('Name must be at least 3 characters');
             return false;
         }
 
         if (username.length > 100) {
-            showUsernameError('Username must be less than 100 characters');
+            showUsernameError('Name must be less than 150 characters');
             return false;
         }
 
@@ -188,52 +247,74 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Email validation and space removal
     if (emailInput) {
+
+        let emailCheckTimeout;
         emailInput.addEventListener('input', function(e) {
             // Remove all spaces automatically
             this.value = this.value.replace(/\s+/g, '');
 
-            validateEmail();
-            validateForm();
+            // Clear previous timeout
+            clearTimeout(emailCheckTimeout);
+
+            // Set new timeout to avoid too many requests
+            emailCheckTimeout = setTimeout(() => {
+                validateEmail().then(() => validateForm());
+            }, 300);
         });
 
         emailInput.addEventListener('blur', function() {
-            validateEmail();
-            validateForm();
+            validateEmail().then(() => validateForm());
         });
     }
 
-    function validateEmail() {
+    async function validateEmail() {
         const email = emailInput.value.trim();
+        const MAX_EMAIL_LENGTH = 50;
 
-        // Reset error state
+         // Reset error state
         emailError.classList.add('hidden');
         emailInput.classList.remove('border-red-500');
 
         // Validation checks
         if (email === '') {
             showEmailError('Email cannot be empty');
-            return false;
+            return Promise.resolve(false);
         }
+
+        if (email.length > MAX_EMAIL_LENGTH) {
+        showEmailError(`Email must be less than ${MAX_EMAIL_LENGTH} characters`);
+        return Promise.resolve(false);
+    }
 
         // Check for valid email format
         if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
             showEmailError('Please enter a valid email address');
-            return false;
+            return Promise.resolve(false);
         }
 
         // Specifically check for gmail.com
         if (!email.toLowerCase().endsWith('@gmail.com')) {
             showEmailError('Only @gmail.com email addresses are accepted');
-            return false;
+            return Promise.resolve(false);
         }
 
         // Check for number instead of letter in domain (.c0m instead of .com)
         if (/\.c0m$|\.c0m@/.test(email.toLowerCase())) {
             showEmailError('Invalid domain (.c0m is not valid)');
-            return false;
+            return Promise.resolve(false);
         }
 
-        return true;
+        // Check if email already exists
+        return checkEmailExists(email).then(exists => {
+            if (exists) {
+                showEmailError('This email already exists');
+                return false;
+            }
+            return true;
+        }).catch(() => {
+            showEmailError('Error checking email availability');
+            return false;
+        });
     }
 
     function showEmailError(message) {
@@ -261,7 +342,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function validateRole() {
+    async function validateRole() {
         // Reset error state
         roleError.classList.add('hidden');
         roleSelect.classList.remove('border-red-500');
@@ -270,6 +351,23 @@ document.addEventListener('DOMContentLoaded', function () {
         if (roleSelect.value === '') {
             showRoleError('Please select a role');
             return false;
+        }
+
+        const restrictedRoles = [
+            'Student Services',
+            'Academic Services',
+            'Administrative Services',
+            'Campus Director'
+        ];
+
+        // Check if selected role is restricted
+        if (restrictedRoles.includes(roleSelect.value)) {
+            // Verify against server
+            const existingRoles = await fetchExistingRoles();
+            if (existingRoles.includes(roleSelect.value)) {
+                showRoleError('This role already exists in the system');
+                return false;
+            }
         }
 
         return true;
@@ -283,11 +381,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Form Submission Handling for Add User
     if (addUserForm) {
-        addUserForm.addEventListener('submit', function (e) {
+        addUserForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
             // Validate all fields before submission
-            if (!validateForm()) {
+            if (!await validateForm()) {
                 return;
             }
 
@@ -330,7 +428,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-                .then(response => {
+                .then(async response => {
                     if (response.status >= 200 && response.status < 300) {
                         return response.text().then(text => {
                             try {

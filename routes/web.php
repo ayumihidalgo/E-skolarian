@@ -54,6 +54,8 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
     Route::post('/settings/change-password', [SettingsController::class, 'changePassword'])->name('settings.change-password');
 
     Route::get('/super-admin/dashboard', fn() => view('super-admin.dashboard'))->name('super-admin.dashboard');
+    Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check.email');
+    Route::get('/check-roles', [UserController::class, 'checkRoles'])->name('check.roles');
 
     Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
 
