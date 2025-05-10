@@ -12,7 +12,7 @@
         <p class="text-gray-500 text-sm mb-6">Create new user by adding their email and role</p>
         <form id="addUserForm">
             <div class="mb-4">
-                <label for="username" class="block text-sm font-medium mb-2 text-gray-700">Username</label>
+                <label for="username" class="block text-sm font-medium mb-2 text-gray-700">Name</label>
                 <input type="text" 
                     name="username" 
                     id="username" 
@@ -49,9 +49,31 @@
             </div>
             <p class="text-sm text-gray-500 mb-6 text-center">The reset password link will be sent to the user via email.</p>
             <button type="submit"
-                    class="w-full px-3 py-2 bg-[#7A1212] text-white rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-[#7A1212] cursor-pointer">
+                    id="addUserSubmitBtn"
+                    class="w-full px-3 py-2 bg-[#7A1212] text-white rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-[#7A1212] opacity-50 disabled:opacity-50 cursor-pointer"
+                    disabled>
                 Add User
             </button>
         </form>
     </div>
+    <!-- Close Confirmation Modal -->
+<div id="closeConfirmModal" class="fixed inset-0 flex items-center justify-center z-[60] hidden">
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+    <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-[70] p-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">Confirm Leave Page</h3>
+        <p class="text-gray-600 mb-6">Are you sure you want to leave this page? Unsaved changes may be lost.</p>
+        <div class="flex justify-end space-x-4">
+            <button type="button" 
+                    id="cancelCloseBtn"
+                    class="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+                Cancel
+            </button>
+            <button type="button" 
+                    id="confirmCloseBtn"
+                    class="px-4 py-2 bg-[#7A1212] text-white rounded-md hover:bg-red-800">
+                Leave Page
+            </button>
+        </div>
+    </div>
+</div>
 </div>
