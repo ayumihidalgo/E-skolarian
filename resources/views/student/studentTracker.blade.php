@@ -1,7 +1,6 @@
 @extends('base')
 
 @section('content')
-
     @include('components.studentNavBarComponent')
     @include('components.studentSideBarComponent')
 
@@ -11,21 +10,18 @@
 
             @include('student.components.viewSearch')
 
-                <!-- Filters -->
-                <div class="flex flex-wrap items-center gap-4">
-                    <!-- Document Type Dropdown -->
-                    @include('student.components.viewDocumentTypeDropdown')
+            <!-- Filters -->
+            <div class="flex flex-wrap items-center gap-4">
+                <!-- Document Type Dropdown -->
+                @include('student.components.viewDocumentTypeDropdown')
 
-                    <!-- Status Dropdown -->
-                    @include('student.components.viewStatusDropdownComponent')
-                </div>
+                <!-- Status Dropdown -->
+                @include('student.components.viewStatusDropdownComponent')
             </div>
-
-            <!-- No Records Found -->
-            @include('student.components.viewNoRecordsFoundComponent')
         </div>
+
+        @include('student.components.viewSubmissionTrackerTable')
+
     </div>
-
+    </div>
 @endsection
-
-
