@@ -1,5 +1,6 @@
 <div class="relative" style="position: relative; top: -5px;">
-    <select class="appearance-none border border-gray-300 rounded-full px-4 py-2 bg-[#DAA512] text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#7A1212] cursor-pointer hover:bg-white hover:text-[#DAA512] transition ease-in duration-200">
+    <select
+        class="appearance-none border border-gray-300 rounded-full px-4 py-2 bg-[#7A1212] text-white font-bold focus:outline-none focus:ring-2 focus:ring-[#DAA512] cursor-pointer hover:bg-white hover:text-[#DAA512] transition ease-in duration-200">
         <option value="" disabled selected class="bg-white text-black">Status</option>
         <option value="Approved" class="bg-white text-black">Approved</option>
         <option value="Rejected" class="bg-white text-black">Resubmit</option>
