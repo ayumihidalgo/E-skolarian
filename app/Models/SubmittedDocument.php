@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+
 class SubmittedDocument extends Model
 {
     use HasFactory;
@@ -19,7 +20,9 @@ class SubmittedDocument extends Model
         'type',
         'control_tag',
         'status',
-        'file_path'
+        'file_path',
+        'created_at',
+        'updated_at',
     ];
 
     /**
