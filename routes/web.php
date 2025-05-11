@@ -190,3 +190,7 @@ Route::get('/documents/{filename}', function ($filename) {
     return response()->file($path);
 })->name('document.view')->middleware('auth');
 
+
+
+Route::post('/notifications/{notification}/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->middleware('auth');
+
