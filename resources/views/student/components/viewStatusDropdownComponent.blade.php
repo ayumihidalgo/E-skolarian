@@ -5,7 +5,8 @@
         <option value="Approved" class="bg-white text-black">Approved</option>
         <option value="Rejected" class="bg-white text-black">Resubmit</option>
         <option value="Under Review" class="bg-white text-black">Under Review</option>
-        <option value="Pending" class="bg-white text-black">Rejected</option>
+        <option value="Pending" class = "bg-white text-black">Pending</option>
+        <option value="Rejected" class="bg-white text-black">Rejected</option>
     </select>
     <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
         class="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none">
