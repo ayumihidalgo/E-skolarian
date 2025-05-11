@@ -9,20 +9,21 @@
         </tr>
     </thead>
     <tbody>
-        <tr class="border-b">
-            @forelse($records as $record)
-        <tr>
+        @forelse($records as $record)
+        <tr
+            onclick="window.location='{{ url('/records/' . $record->id) }}'"
+            class="border-b hover:bg-gray-100 cursor-pointer"
+        >
             <td class="py-2 px-4">{{ $record->control_tag }}</td>
             <td class="py-2 px-4">{{ $record->subject }}</td>
             <td class="py-2 px-4">{{ $record->created_at->format('m/d/Y') }}</td>
             <td class="py-2 px-4">{{ $record->type }}</td>
             <td class="py-2 px-4 text-green-600 font-semibold">{{ $record->status }}</td>
         </tr>
-    @empty
+        @empty
         <tr>
             <td colspan="5" class="py-2 px-4">No records found.</td>
         </tr>
         @endforelse
-
     </tbody>
 </table>
