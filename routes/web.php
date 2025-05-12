@@ -17,6 +17,7 @@ use App\Http\Middleware\NoBackHistory;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\IndexTwoController;
 
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -190,7 +191,5 @@ Route::get('/documents/{filename}', function ($filename) {
     return response()->file($path);
 })->name('document.view')->middleware('auth');
 
-
-
+Route::get('/records/{id}', [StudentTrackerController::class, 'show'])->name('records.show');
 Route::post('/notifications/{notification}/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->middleware('auth');
-
