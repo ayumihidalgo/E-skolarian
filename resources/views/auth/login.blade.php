@@ -8,6 +8,11 @@
     <link rel="icon" href="{{ asset('images/officialLogo.svg') }}" type="image/svg+xml">
 
     <title>E-skolarian</title>
+    <style>
+        input[type="password"]::-ms-reveal {
+            display: none;
+        }
+    </style>
 
     @vite('resources/css/app.css')
 
