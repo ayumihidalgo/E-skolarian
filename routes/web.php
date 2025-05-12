@@ -192,3 +192,4 @@ Route::get('/documents/{filename}', function ($filename) {
 })->name('document.view')->middleware('auth');
 
 Route::get('/records/{id}', [StudentTrackerController::class, 'show'])->name('records.show');
+Route::post('/notifications/{notification}/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->middleware('auth');

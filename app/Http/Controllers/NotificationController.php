@@ -48,16 +48,31 @@ class NotificationController extends Controller
     }
 
     // Mark Notification as Read
-    public function markAsRead($id)
+    public function markAsRead(Notification $notification)
     {
-        $notification = Notification::where('id', $id)->where('user_id', auth()->id())->firstOrFail();
+        if ($notification->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
         $notification->is_read = true;
         $notification->save();
 
-        return response()->json(['message' => 'Notification marked as read']);
+        return response()->json(['success' => true]);
     }
-    
 
- 
+    // Toggle Read Status of a Notification
+    public function toggleRead(Notification $notification)
+    {
+        if ($notification->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
 
+        $notification->update([
+            'is_read' => !$notification->is_read
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'is_read' => $notification->is_read
+        ]);
+    }
 }
