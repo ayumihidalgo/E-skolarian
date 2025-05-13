@@ -21,9 +21,27 @@ use App\Http\Controllers\IndexTwoController;
 Route::get('/', function () {
     return redirect()->route('login');
 });
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+
+    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
+    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
+    Route::get('reset-password/{token}', [PasswordResetLinkController::class, 'edit'])->name('password.reset');
+    Route::post('reset-password', [PasswordResetLinkController::class, 'update'])->name('password.update');
+
+    Route::get('password-reset-confirmation', function () {
+        return view('auth.password-reset-confirmation');
+    })->name('password.reset.confirmation');
+
+    /* Temporary Route for Email Template */
+    Route::get('/custom-reset-password', function () {
+        return view('emails.custom-reset-password');
+
+    });
+});
+
 Route::get('/notification', function () {
     return view('components.general-components.notification');
 });
@@ -95,7 +113,9 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
         return view('student.documentArchive');
     })->name('student.documentArchive');
     // Route for the document preview page (admin)
-Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
+    Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
+
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });
 
 // Fetching and displaying and storing comments
@@ -126,20 +146,6 @@ Route::get('/notifications', function () {
     return view('notifications');
 })->name('notifications');
 
-Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
-Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
-Route::get('reset-password/{token}', [PasswordResetLinkController::class, 'edit'])->name('password.reset');
-Route::post('reset-password', [PasswordResetLinkController::class, 'update'])->name('password.update');
-
-Route::get('password-reset-confirmation', function () {
-    return view('auth.password-reset-confirmation');
-})->name('password.reset.confirmation');
-
-/* Temporary Route for Email Template */
-Route::get('/custom-reset-password', function () {
-    return view('emails.custom-reset-password');
-
-});
 
 // CHANGE THIS //
 // Route::get('/', function () {
