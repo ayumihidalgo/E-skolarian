@@ -266,12 +266,11 @@
                 </div>
 
                 <div class="pt-2">
-                    <button type="submit"
-                        class="w-full rounded-lg bg-red-900 px-4 py-2 text-white font-medium text-[14px] font-[Lexend] hover:bg-red-800 transition cursor-pointer">
+                    <button type="submit" id="changePasswordButton" disabled
+                        class="w-full rounded-lg bg-red-900 px-4 py-2 text-white font-medium text-[14px] font-[Lexend] hover:bg-red-800 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                         Change Password
                     </button>
                 </div>
-
             </form>
         </div>
     </div>
@@ -297,7 +296,7 @@
         </div>
     </div>
     <!-- Success Modal -->
-    <div id="successModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-100">
+    <div id="successModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-100">
         <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl relative p-6">
             <h2 class="text-lg font-semibold font-['Lexend'] mb-4">Password Changed Successfully</h2>
             <p class="text-sm text-gray-600 mb-6">Your password has been updated. Please log in again to continue.</p>
@@ -313,6 +312,23 @@
 
     <!-- Change Password Script -->
     <script>
+        const changePasswordButton = document.getElementById('changePasswordButton');
+        const currentPasswordInput = document.getElementById('current_password');
+        const newPasswordInput = document.getElementById('new_password');
+        const confirmPasswordInput = document.getElementById('new_password_confirmation');
+
+        function toggleButtonState() {
+            if (currentPasswordInput.value.trim() && newPasswordInput.value.trim() && confirmPasswordInput.value.trim()) {
+                changePasswordButton.disabled = false;
+            } else {
+                changePasswordButton.disabled = true;
+            }
+        }
+
+        currentPasswordInput.addEventListener('input', toggleButtonState);
+        newPasswordInput.addEventListener('input', toggleButtonState);
+        confirmPasswordInput.addEventListener('input', toggleButtonState);
+        // Initialize the change password modal
         const changePasswordModal = document.getElementById('changePasswordModal');
         const leaveWithoutSavingModal = document.getElementById('leaveWithoutSavingModal');
         document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
@@ -320,6 +336,10 @@
 
             const form = e.target;
             const formData = new FormData(form);
+
+            // Set button to loading state
+            changePasswordButton.disabled = true;
+            changePasswordButton.textContent = 'Changing...';
 
             // Clear previous error messages and remove error borders
             document.getElementById('currentPasswordError').textContent = '';
@@ -336,6 +356,7 @@
                 document.getElementById('newPasswordError').textContent =
                     'The new password cannot be the same as the current password.';
                 document.getElementById('new_password').classList.add('border-red-500');
+                resetButtonState();
                 return;
             }
 
@@ -343,6 +364,7 @@
                 document.getElementById('newPasswordError').textContent =
                     'The new password cannot contain leading or trailing spaces or be all spaces.';
                 document.getElementById('new_password').classList.add('border-red-500');
+                resetButtonState();
                 return;
             }
 
@@ -386,13 +408,25 @@
                 .then(data => {
                     // Show success modal
                     const successModal = document.getElementById('successModal');
+                    const changePasswordModal = document.getElementById('changePasswordModal');
+                    changePasswordModal.classList.add('hidden');
+                    changePasswordModal.style.display = 'none';
                     successModal.classList.remove('hidden');
                     successModal.style.display = 'flex';
+
                 })
                 .catch(error => {
                     console.error(error);
+                })
+                .finally(() => {
+                    resetButtonState();
                 });
         });
+
+        function resetButtonState() {
+            changePasswordButton.disabled = false;
+            changePasswordButton.textContent = 'Change Password';
+        }
 
         // Automatically remove error messages and red borders on input
         document.getElementById('current_password').addEventListener('input', function() {
@@ -637,12 +671,14 @@
             removeProfileModal.classList.add('hidden');
             removeProfileModal.style.display = 'none';
         }
+
         function submitRemoveProfileForm() {
             const form = document.querySelector('#profilePreviewModal form');
             if (form) {
                 form.submit();
             }
         }
+
         function closeModal() {
             const cancelEditImageModal = document.getElementById('cancelEditImageModal');
             cancelEditImageModal.classList.remove('hidden');
