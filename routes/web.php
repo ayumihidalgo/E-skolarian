@@ -31,8 +31,8 @@ Route::get('/notification', function () {
 
 
 Route::middleware(['auth', NoBackHistory::class])->group(function () {
-    Route::get('/student/dashboard', fn () => view('student.dashboard')) -> name('student.dashboard');
-    Route::get('/admin/dashboard', fn () => view('admin.dashboard')) -> name('admin.dashboard');
+    Route::get('/student/dashboard', fn() => view('student.dashboard'))->name('student.dashboard');
+    Route::get('/admin/dashboard', fn() => view('admin.dashboard'))->name('admin.dashboard');
 
     // Calendar routes
     Route::get('/calendar', [EventController::class, 'index'])->name('calendar.index');
@@ -47,12 +47,13 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
 
     // Settings routes
     Route::get('student/settings', [SettingsController::class, 'viewSettings'])->name('student.settings');
-    Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('settings.update-profile-picture');
-    Route::post('/settings/change-password', [SettingsController::class, 'changePassword'])->name('settings.change-password');
+    Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('student.settings.update-profile-picture');
+    Route::post('student/settings/change-password', [SettingsController::class, 'changePassword'])->name('student.settings.change-password');
+    Route::post('student/settings/remove-profile', [SettingsController::class, 'removeProfilePicture'])->name('student.settings.remove-profile-picture');
 
     Route::get('admin/settings', [SettingsController::class, 'viewAdminSettings'])->name('admin.settings');
-    Route::post('admin/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('settings.update-profile-picture');
-    Route::post('/settings/change-password', [SettingsController::class, 'changePassword'])->name('settings.change-password');
+    Route::post('admin/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('admin.settings.update-profile-picture');
+    Route::post('admin/settings/change-password', [SettingsController::class, 'changePassword'])->name('admin.settings.change-password');
 
     Route::get('/super-admin/dashboard', fn() => view('super-admin.dashboard'))->name('super-admin.dashboard');
     Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check.email');
@@ -65,7 +66,7 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
     })->name('deactivated.accounts');
 
     Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
-    ->name('deactivated.accounts');
+        ->name('deactivated.accounts');
 
     Route::get('/admin/review', function () {
         return view('admin.review');
@@ -95,7 +96,7 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
         return view('student.documentArchive');
     })->name('student.documentArchive');
     // Route for the document preview page (admin)
-Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
+    Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
 });
 
 // Fetching and displaying and storing comments
@@ -157,7 +158,7 @@ Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 
     ->name('student.documentPreview');
 
 // Document viewing
-Route::get('/test-pdf', function() {
+Route::get('/test-pdf', function () {
     return response()->file(public_path('documents/test/sample.pdf'));
 });
 
