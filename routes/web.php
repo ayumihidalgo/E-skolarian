@@ -67,11 +67,13 @@ Route::get('/notification', function () {
     Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
         // ---------------- Admin ----------------
         Route::get('/admin/dashboard', fn () => view('admin.dashboard'))->name('admin.dashboard');
-        Route::get('/admin/settings', [SettingsController::class, 'viewAdminSettings'])->name('admin.settings');
         Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
         Route::get('/admin/review', fn () => view('admin.review'))->name('admin.review');
         Route::get('/admin/documentArchive', fn () => view('admin.documentArchive'))->name('admin.documentArchive');
         Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
+        Route::get('admin/settings', [SettingsController::class, 'viewAdminSettings'])->name('admin.settings');
+        Route::post('admin/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('admin.settings.update-profile-picture');
+        Route::post('admin/settings/change-password', [SettingsController::class, 'changePassword'])->name('admin.settings.change-password');
 
         // Document processing
         Route::get('/admin/documents', [DocumentReviewController::class, 'index'])->name('admin.documents');
@@ -86,19 +88,18 @@ Route::get('/notification', function () {
     // ---------------- Student ----------------
     Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(function () {
         Route::get('/student/dashboard', fn () => view('student.dashboard'))->name('student.dashboard');
-        Route::get('/student/settings', [SettingsController::class, 'viewSettings'])->name('student.settings');
-        Route::post('/student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('settings.update-profile-picture');
         Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
         Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
         Route::get('/student/documentArchive', fn () => view('student.documentArchive'))->name('student.documentArchive');
         Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
         Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])->name('student.documentPreview');
+        Route::get('student/settings', [SettingsController::class, 'viewSettings'])->name('student.settings');
+        Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('student.settings.update-profile-picture');
+        Route::post('student/settings/change-password', [SettingsController::class, 'changePassword'])->name('student.settings.change-password');
+        Route::post('student/settings/remove-profile', [SettingsController::class, 'removeProfilePicture'])->name('student.settings.remove-profile-picture');
 });
 
 Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(function () {
-
-    // ---------------- Shared Settings ----------------
-    Route::post('/settings/change-password', [SettingsController::class, 'changePassword'])->name('settings.change-password');
 
     // ---------------- Shared Routes ----------------
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
