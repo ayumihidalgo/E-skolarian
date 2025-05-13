@@ -65,6 +65,7 @@ Route::get('/notification', function () {
 
     });
     Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
+        // ---------------- Admin ----------------
         Route::get('/admin/dashboard', fn () => view('admin.dashboard'))->name('admin.dashboard');
         Route::get('/admin/settings', [SettingsController::class, 'viewAdminSettings'])->name('admin.settings');
         Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
