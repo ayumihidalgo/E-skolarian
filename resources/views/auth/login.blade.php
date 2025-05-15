@@ -44,12 +44,80 @@
         });
 
         function changeRole(role) {
+            resetErrorStates(role);
+
             document.documentElement.setAttribute('data-theme', role);
             saveInputs(role);
             setRole(role);
             visibilityRememberMe(role);
             changeRadiusPanel(role);
             slidePanel(role, true);
+        }
+
+        // Store error state per role
+        let errorStates = {
+            student: { email: false, password: false, message: null },
+            admin: { email: false, password: false, message: null }
+        };
+
+        let errorFadeTimeout = null;
+
+        function resetErrorStates(role) {
+            // Save current error state for the role being switched away from
+            const emailLabel = document.getElementById('emailLabel');
+            const passwordLabel = document.getElementById('passwordLabel');
+            const statusMsg = document.querySelector('.status-message');
+
+            // Save remaining fade time for the current role
+            if (errorStates[role].fadeTimeoutId) {
+                clearTimeout(errorStates[role].fadeTimeoutId);
+                errorStates[role].remainingFadeTime = Math.max(0, errorStates[role].fadeEndTime - Date.now());
+            } else {
+                errorStates[role].remainingFadeTime = 3000;
+            }
+
+            errorStates[role] = {
+                ...errorStates[role],
+                email: emailLabel.classList.contains('!ring-red-600'),
+                password: passwordLabel.classList.contains('!ring-red-600'),
+                message: statusMsg ? statusMsg.outerHTML : null
+            };
+
+            // Remove error rings and messages for current role
+            emailLabel.classList.remove('ring-3', '!ring-red-600');
+            passwordLabel.classList.remove('ring-3', '!ring-red-600');
+            document.querySelectorAll('.status-message').forEach((msg) => {
+                msg.remove();
+            });
+
+            // Restore error state for the new role
+            const newRole = role === 'admin' ? 'student' : 'admin';
+            if (errorStates[newRole].email) {
+            emailLabel.classList.add('ring-3', '!ring-red-600');
+            }
+            if (errorStates[newRole].password) {
+            passwordLabel.classList.add('ring-3', '!ring-red-600');
+            }
+            if (errorStates[newRole].message) {
+            // Insert error message after password field
+            const passwordDiv = passwordLabel.parentElement;
+            passwordDiv.insertAdjacentHTML('afterend', errorStates[newRole].message);
+
+            // Fade out message after remaining time
+            if (errorFadeTimeout) clearTimeout(errorFadeTimeout);
+
+            let fadeTime = errorStates[newRole].remainingFadeTime ?? 3000;
+            errorStates[newRole].fadeEndTime = Date.now() + fadeTime;
+
+            errorStates[newRole].fadeTimeoutId = setTimeout(function () {
+                const msg = document.querySelector('.status-message');
+                    if (msg) {
+                        msg.classList.add('opacity-0', 'transition-opacity');
+                        setTimeout(() => msg.remove(), 500);
+                    }
+                    errorStates[newRole].fadeTimeoutId = null;
+                }, fadeTime);
+            }
         }
 
        let emailInputs = {
