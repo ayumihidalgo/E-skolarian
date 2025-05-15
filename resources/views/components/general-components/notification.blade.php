@@ -7,29 +7,39 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <div id="notificationComponent" class="relative">
     <!-- Notification Button -->
-    <button id="notificationBtn" class="relative p-2 rounded-full cursor-pointer transition-all duration-300">
-        <svg class="text-gray-500 hover:text-gray-700 transition-colors duration-300" width="24" height="24" viewBox="0 0 24 24" fill="none"
+    <button id="notificationBtn" class="relative p-2 rounded-full cursor-pointer  transition-all duration-300">
+        <svg class="text-w hover:translate-y-[-2px] rounded-full transition-transform duration-300 w-[24px] h-[24px]" viewBox="0 0 24 24" fill="none"
             xmlns="http://www.w3.org/2000/svg">
             <path d="M20 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18V6C22 4.89543 21.1046 4 20 4Z"
-                stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             <path d="M22 7L13.03 12.7C12.7213 12.8934 12.3643 12.996 12 12.996C11.6357 12.996 11.2787 12.8934 10.97 12.7L2 7"
-                stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
+        
+        <!-- Notification Badge -->
         @php
             $unreadCount = Auth::user()->notifications()->where('is_read', false)->count();
         @endphp
         @if($unreadCount > 0)
-            <span class="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1">{{ $unreadCount }}</span>
+        <span class="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full"></span>
         @endif
     </button>
 
     <!-- Notification Panel -->
-    <div id="notificationPanel"
-        class="hidden absolute right-0 mt-2 z-500 bg-white rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300 w-[90vw] sm:w-[31.25rem]">
+   <div id="notificationPanel"
+        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-[31.25rem] sm:h-auto">
         
         <!-- Header -->
-        <div class="notif-top-content p-4 border-b flex flex-row justify-between w-full h-[40px]">
-            <h2 class="text-lg font-semibold text-gray-800">Notifications</h2>
+      <div class="notif-top-content p-4 border-b flex flex-row justify-between w-full h-[40px]">
+            <div class="flex items-center">
+                <!-- Back Icon (visible only on mobile) -->
+                <button id="backBtn" class="mr-2 sm:hidden text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-300">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <h2 class="text-lg font-semibold text-gray-800">Notifications</h2>
+            </div>
             <div class="right-nav flex flex-row space-x-5">
                 <!-- Dots Icon -->
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
@@ -38,6 +48,7 @@
                 </svg>
             </div>
         </div>
+
 
         <!-- Tabs -->
         <div id="tabs-nav" class="flex items-center justify-between text-sm font-medium text-gray-600 border-b mt-4">
@@ -73,7 +84,17 @@
                             <div class="flex flex-col">
                                 <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
                                 <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
-                                <p class="text-xs text-gray-400">{{ $notification->created_at->diffForHumans() }}</p>
+                                <p class="text-xs text-gray-400 mt-2">
+                        @if($notification->created_at->isToday())
+                            Today at {{ $notification->created_at->format('h:i A') }}
+                        @elseif($notification->created_at->isYesterday())
+                            Yesterday at {{ $notification->created_at->format('h:i A') }}
+                        @elseif($notification->created_at->isCurrentYear())
+                            {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
+                        @else
+                            {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
+                        @endif
+                    </p>
                             </div>
                         </div>
                         {{-- <div class="flex items-center">
@@ -90,28 +111,48 @@
             
             <!-- Unread Notifications Tab Content -->
             <div id="unreadNotifications" class="hidden">
-                @foreach($unreadNotifications as $notification)
-                <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-start space-x-2">
-                            <svg class="text-gray-400 flex-shrink-0 mt-1" width="1rem" height="1rem" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
-                            </svg>
-                            <div class="flex flex-col">
-                                <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
-                                <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
-                                <p class="text-xs text-gray-400">{{ $notification->created_at->diffForHumans() }}</p>
+                @if($unreadNotifications->isEmpty())
+                    <div class="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                         <svg class="w-16 h-16 text-gray-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+
+                        <p class="text-sm sm:text-base">You have no unread notifications.</p>
+                    </div>
+                @else
+                    @foreach($unreadNotifications as $notification)
+                    <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-2">
+                                <svg class="text-gray-400 flex-shrink-0 mt-1" width="1rem" height="1rem" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
+                                </svg>
+                                <div class="flex flex-col">
+                                    <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
+                                    <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
+                                    <p class="text-xs text-gray-400 mt-2">
+                        @if($notification->created_at->isToday())
+                            Today at {{ $notification->created_at->format('h:i A') }}
+                        @elseif($notification->created_at->isYesterday())
+                            Yesterday at {{ $notification->created_at->format('h:i A') }}
+                        @elseif($notification->created_at->isCurrentYear())
+                            {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
+                        @else
+                            {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
+                        @endif
+                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" 
+                                    class="mark-as-read-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+                                    data-notification-id="{{ $notification->id }}"
+                                >
                             </div>
                         </div>
-                        <div class="flex items-center">
-                            <input type="checkbox" 
-                                class="mark-as-read-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
-                                data-notification-id="{{ $notification->id }}"
-                            >
-                        </div>
                     </div>
-                </div>
-                @endforeach
+                    @endforeach
+                @endif
             </div>
             @else
             <div class="flex items-center justify-center h-full text-center">
@@ -156,6 +197,7 @@
         const modal = document.getElementById('markAsReadModal');
         const confirmBtn = document.getElementById('confirmMarkAsRead');
         const cancelBtn = document.getElementById('cancelMarkAsRead');
+        const backBtn = document.getElementById('backBtn');
         
         // Fixed height for notification body
         const NOTIFICATION_HEIGHT = '24rem'; // Adjust as needed
@@ -252,6 +294,7 @@
         // Handle mark as read functionality
         document.querySelectorAll('.mark-as-read-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
+            
                 // If checked, show modal for confirmation
                 if (this.checked) {
                     pendingCheckbox = this;
@@ -264,16 +307,19 @@
             });
         });
 
-        cancelBtn.addEventListener('click', () => {
+        cancelBtn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent the event from propagating to the document click listener
             if (pendingCheckbox) {
                 pendingCheckbox.checked = false;
             }
             modal.classList.add('hidden');
             pendingCheckbox = null;
             pendingNotificationId = null;
+            
         });
 
         confirmBtn.addEventListener('click', async () => {
+        event.stopPropagation();
             if (!pendingCheckbox || !pendingNotificationId) return;
             
             try {
@@ -335,5 +381,15 @@
             pendingCheckbox = null;
             pendingNotificationId = null;
         });
+        // Back button functionality
+        backBtn.addEventListener('click', () => {
+            if (isPanelVisible) {
+                togglePanel();
+            }
+        });
+
+
+
+
     });
 </script>
