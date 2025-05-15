@@ -50,10 +50,10 @@
                 <!-- Hidden field to store the actual role value (admin/student) -->
                 <input type="hidden" id="actual_role" name="role" value="">
             </div>
-            <p class="text-sm text-gray-500 mb-6 text-center">The reset password link will be sent to the user via email.</p>
+            <p class="text-sm text-gray-500 mb-6 text-center">A temporary password will be sent to the user via email.</p>
             <button type="submit"
                     id="addUserSubmitBtn"
-                    class="w-full px-3 py-2 bg-[#7A1212] text-white rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-[#7A1212] opacity-50 disabled:opacity-50 cursor-pointer"
+                    class="w-full px-3 py-2 bg-[#7A1212] text-white rounded-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-[#7A1212] opacity-50 disabled:opacity-50 cursor-not-allowed"
                     disabled>
                 Add User
             </button>

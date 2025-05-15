@@ -195,15 +195,20 @@ async function fetchExistingRoles() {
     // Username validation and space removal
     if (usernameInput) {
         usernameInput.addEventListener('input', function(e) {
-            // Remove spaces automatically
-            this.value = this.value.replace(/\s+/g, ' ');
+            // Remove extra spaces and non-letter characters
+            this.value = this.value
+                .replace(/^\s+/, '') // Remove spaces from the start
+                .replace(/[^a-zA-Z\s]/g, '') // Remove non-letter characters except spaces
+                .replace(/\s+/g, ' '); // Replace multiple spaces with single space
             validateUsername();
             validateForm();
         });
 
         usernameInput.addEventListener('blur', function() {
-            validateUsername();
-            validateForm();
+        // Trim spaces on blur
+        this.value = this.value.trim();
+        validateUsername();
+        validateForm();
         });
     }
 
@@ -221,6 +226,11 @@ async function fetchExistingRoles() {
             return false;
         }
 
+        if (username.startsWith(' ')) {
+        showUsernameError('Name cannot start with a space');
+        return false;
+        }
+
         if (username.length < 3) {
             showUsernameError('Name must be at least 3 characters');
             return false;
@@ -231,8 +241,8 @@ async function fetchExistingRoles() {
             return false;
         }
 
-        if (!/^[a-zA-Z0-9\s\-_.]+$/.test(username)) {
-            showUsernameError('Name can only contain letters, numbers, spaces, hyphens, underscores, and periods');
+        if (!/^[a-zA-Z\s]+$/.test(username)) {
+            showUsernameError('Name can only contain letters and spaces');
             return false;
         }
 
