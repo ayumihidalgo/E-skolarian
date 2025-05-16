@@ -207,7 +207,9 @@
 
                         <div class="flex justify-end space-x-2">
                             <button onclick="closeConfirmPopup()" class="font-semibold px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer" type="button">Cancel</button>
-                            <button type="submit" class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">Submit</button>
+                            <button id="confirmSubmitBtn" type="submit" onclick="handleConfirmSubmit(this)" class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
+                                Submit
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -354,13 +356,13 @@
     });
 
     // Prevent form submission on Enter keypress except from inside the confirmation popup
-    document.addEventListener("DOMContentLoaded", function () {
-        document.getElementById("subject").addEventListener("keydown", function (e) {
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("subject").addEventListener("keydown", function(e) {
             if (e.key === "Enter") {
                 e.preventDefault(); // Prevent form submission
             }
         });
-        document.getElementById("event-title").addEventListener("keydown", function (e) {
+        document.getElementById("event-title").addEventListener("keydown", function(e) {
             if (e.key === "Enter") {
                 e.preventDefault(); // Prevent form submission
             }
@@ -560,6 +562,18 @@
 
     function closeConfirmPopup() {
         document.getElementById('confirmPopup').classList.add('hidden');
+    }
+
+    function handleConfirmSubmit(button) {
+        // Disable the button to prevent multiple submissions
+        button.disabled = true;
+        button.classList.add('opacity-50', 'cursor-not-allowed');
+
+        // Optionally change the text to indicate processing
+        button.textContent = "Submitting...";
+
+        // Submit the form manually if needed
+        button.closest('form').submit();
     }
 
     // Checks if all input fields are filled before enabling the submit button
