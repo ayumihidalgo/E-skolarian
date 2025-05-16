@@ -163,6 +163,10 @@
 
             // Handle email length warning
             emailInput.addEventListener('input', function () {
+                // Prevent spaces in email
+                emailInput.addEventListener('keydown', function (e) {
+                    if (e.key === ' ') e.preventDefault();
+                });
                 const email = emailInput.value.trim();
                 const isTooLong = email.length > 50;
 
