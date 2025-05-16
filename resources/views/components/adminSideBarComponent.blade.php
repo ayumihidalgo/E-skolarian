@@ -27,7 +27,7 @@
 <!-- Navigation Links -->
     <nav class="space-y-4 text-lg font-[Manrope] mt-6">
         @foreach ([
-            ['Home', 'account.svg', route('admin.dashboard')],
+            ['Dashboard', 'newDashboard.svg', route('admin.dashboard')],
             ['Review', 'review.svg', route('admin.documentReview')],
             ['Archive', 'archive.svg', route('admin.documentArchive')],
             ['Calendar', 'calendar.svg', route('calendar.indexTwo')],

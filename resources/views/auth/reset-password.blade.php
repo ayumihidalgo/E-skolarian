@@ -14,6 +14,11 @@ if ($role === 'super admin') {
     <link rel="icon" href="{{ asset('images/officialLogo.svg') }}" type="image/svg+xml">
 
     <title>Reset Password</title>
+    <style>
+        input[type="password"]::-ms-reveal {
+            display: none;
+        }
+    </style>
     @vite('resources/css/app.css')
 
     <script>

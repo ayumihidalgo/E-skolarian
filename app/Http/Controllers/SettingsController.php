@@ -57,28 +57,53 @@ class SettingsController extends Controller
         $user->profile_pic = $path;
         $user->save();
 
-        return back()->with('success', 'Profile picture updated.');
+        return back()->with('success', 'Your profile picture has been updated successfully.');
     }
+    public function removeProfilePicture(Request $request)
+    {
 
+        $user = auth()->user();
+
+        // Delete the old image if it exists
+        if ($user->profile_pic && Storage::disk('public')->exists($user->profile_pic)) {
+            Storage::disk('public')->delete($user->profile_pic);
+            $user->profile_pic = null;
+            $user->save();
+        }
+
+        return back()->with('success', 'Your profile picture has been removed successfully.');
+    }
     /**
      * Change the password.
      */
     public function changePassword(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'current_password' => 'required',
-            'new_password' => 'required|min:8|confirmed',
+            'new_password' => [
+                'required',
+                'min:8',
+                'max:40',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/',
+                'different:current_password', // Ensure new password is different from current password
+                function ($attribute, $value, $fail) {
+                    if (trim($value) !== $value || preg_match('/^\s*$/', $value)) {
+                        $fail('The new password cannot contain leading or trailing spaces or be all spaces.');
+                    }
+                },
+            ],
         ]);
 
         $user = Auth::user();
 
         if (!Hash::check($request->current_password, $user->password)) {
-            return redirect()->back()->withErrors(['current_password' => 'Current password is incorrect.']);
+            return response()->json(['errors' => ['current_password' => ['Current password is incorrect.']]], 422);
         }
 
         $user->password = Hash::make($request->new_password);
         $user->save();
 
-        return redirect()->back()->with('success', 'Password changed successfully.');
+        return response()->json(['message' => 'Password changed successfully.']);
     }
 }

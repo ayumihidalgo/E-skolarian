@@ -5,16 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Notification extends Model
+class Announcement extends Model
 {
     use HasFactory;
 
-    protected $table = 'notifications'; // Explicitly define the table name
+    // these fields for mass assignment
     protected $fillable = [
         'user_id',
         'title',
-        'message',
-        'is_read'
+        'content',
     ];
 }
-
