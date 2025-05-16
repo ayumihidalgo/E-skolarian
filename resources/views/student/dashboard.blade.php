@@ -22,7 +22,18 @@
                 <!-- Announcements -->
                 <div class="md:col-span-2 bg-white rounded-xl shadow-md p-4">
                     <h2 class="text-lg font-semibold mb-2">📢 Announcements</h2>
-                    <div class="text-gray-500 text-center py-8">No announcement at the moment</div>
+                    @if ($latestAnnouncement)
+                        <div class="space-y-2">
+                            <h3 class="text-xl font-semibold">{{ $latestAnnouncement->title }}</h3>
+                            <p class="text-sm text-gray-500">
+                                Posted by {{ $latestAnnouncement->user->username }} on 
+                                {{ $latestAnnouncement->created_at->format('F j, Y') }}
+                            </p>
+                            <p class="text-gray-700">{{ $latestAnnouncement->content }}</p>
+                         </div>
+                    @else
+                        <div class="text-gray-500 text-center py-8">No announcement at the moment</div>
+                    @endif
                 </div>
                 <!-- Previous Announcements -->
                 <div class="bg-white rounded-xl shadow-md p-4 md:row-span-2">

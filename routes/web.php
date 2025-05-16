@@ -21,6 +21,8 @@ use App\Http\Middleware\IsSuperAdmin;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\IsStudent;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\StudentDashboardController;
 
 
 
@@ -68,7 +70,7 @@ Route::get('/notification', function () {
     });
     Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
         // ---------------- Admin ----------------
-        Route::get('/admin/dashboard', fn () => view('admin.dashboard'))->name('admin.dashboard');
+        Route::get('/admin/dashboard', [AdminDashboardController::class, 'showDashboard'])->name('admin.dashboard');
         Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
         Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
         Route::get('/admin/review', fn () => view('admin.review'))->name('admin.review');
@@ -90,7 +92,7 @@ Route::get('/notification', function () {
     });
     // ---------------- Student ----------------
     Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(function () {
-        Route::get('/student/dashboard', fn () => view('student.dashboard'))->name('student.dashboard');
+        Route::get('/student/dashboard', [StudentDashboardController::class, 'showStudentDashboard'])->name('student.dashboard');
         Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
         Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
         Route::get('/student/documentArchive', fn () => view('student.documentArchive'))->name('student.documentArchive');

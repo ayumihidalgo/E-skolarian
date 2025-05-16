@@ -9,10 +9,14 @@ class Announcement extends Model
 {
     use HasFactory;
 
-    // these fields for mass assignment
     protected $fillable = [
         'user_id',
         'title',
         'content',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
