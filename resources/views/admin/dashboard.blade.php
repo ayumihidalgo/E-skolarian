@@ -51,8 +51,8 @@
                 <!-- Post New Announcements -->
                 <div class="bg-white p-6 rounded-xl shadow">
                     <h2 class="text-lg font-semibold border-b pb-2 mb-4">Post New Announcements</h2>
-                    <form {{-- action="{{ route('announcements.store') }}" --}} method="POST" class="space-y-4">
-                        {{-- @csrf --}}
+                    <form action="{{ route('announcements.store') }}" method="POST" class="space-y-4">
+                        @csrf
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
                             <input type="text" name="title"
