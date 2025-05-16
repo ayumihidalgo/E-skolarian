@@ -20,6 +20,8 @@ use App\Http\Controllers\IndexTwoController;
 use App\Http\Middleware\IsSuperAdmin;
 use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\IsStudent;
+use App\Http\Controllers\AnnouncementController;
+
 
 
 
@@ -67,6 +69,7 @@ Route::get('/notification', function () {
     Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
         // ---------------- Admin ----------------
         Route::get('/admin/dashboard', fn () => view('admin.dashboard'))->name('admin.dashboard');
+        Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
         Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
         Route::get('/admin/review', fn () => view('admin.review'))->name('admin.review');
         Route::get('/admin/documentArchive', fn () => view('admin.documentArchive'))->name('admin.documentArchive');
