@@ -280,6 +280,11 @@ if ($role === 'super admin') {
             confirmPasswordLabel.classList.add('ring-3', '!ring-red-600');
         }
 
+        document.querySelector('form').addEventListener('submit', function (e) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Please wait...';
+    });
+
     </script>
 </body>
 </html>

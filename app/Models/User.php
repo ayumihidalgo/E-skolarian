@@ -6,18 +6,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-
+    use HasFactory, Notifiable;
 
     public function notifications()
     {
         return $this->hasMany(\App\Models\Notification::class, 'user_id');
     }
-   
+
 
     public function sendPasswordResetNotification($token)
     {
@@ -81,7 +81,7 @@ class User extends Authenticatable
     {
         return $this->hasMany(SubmittedDocument::class, 'received_by');
     }
-    
+
     /**
      * Get the document reviews done by this user
      */
