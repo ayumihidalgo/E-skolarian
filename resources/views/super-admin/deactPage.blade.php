@@ -310,5 +310,5 @@
         </div>
     </div>
 </div>
-@vite('resources/js/reactivation.js')
+@vite('resources/js/super-admin/reactivate.js')
 @endsection

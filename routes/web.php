@@ -59,10 +59,6 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
 
     Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
 
-    Route::get('/super-admin/deactivated-accounts', function () {
-        return view('super-admin.deactPage');
-    })->name('deactivated.accounts');
-
     Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
     ->name('deactivated.accounts');
 
@@ -80,7 +76,9 @@ Route::middleware(['auth', NoBackHistory::class])->group(function () {
 
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
 
-    Route::post('/super-admin/reactivate-user/{user}', [UserController::class, 'reactivateUser'])->name('reactivate.user');
+    Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
+    ->name('super-admin.reactivate-user')
+    ->middleware('auth');
     // Dashboard Route
     Route::get('/dashboard', function () {
         return view('student.dashboard');

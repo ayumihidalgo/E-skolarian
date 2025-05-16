@@ -135,47 +135,55 @@
         <div class="header-card">
             <img class="logo" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
         </div>
-        <div class="body-card">
-            <h1>Hello {{ $user->username }},</h1>
+            <div class="body-card">
+        <h1>Hello {{ $user->username }},</h1>
 
-            @if($isNewUser)
-                <p class="first-p">
-                    We are pleased to inform you that an account has been successfully created for you in the E-Skolarian: Document Management System of PUP Santa Rosa.
-                </p>
-                <p>Here are your account details:</p>
-            @elseif($isDeactivated)
-                <p class="first-p deactivated-notice">
-                    Your account in the E-Skolarian system has been deactivated.
-                </p>
-                <p>This means you will no longer be able to access the system using these credentials:</p>
-            @else
-                <p class="first-p">
-                    Your account information has been updated in the E-Skolarian system.
-                </p>
-                <p>Here are your updated account details:</p>
-            @endif
+        @if($isNewUser)
+            <p class="first-p">
+                We are pleased to inform you that an account has been successfully created for you in the E-Skolarian: Document Management System of PUP Santa Rosa.
+            </p>
+            <p>Here are your account details:</p>
+        @elseif($isDeactivated)
+            <p class="first-p deactivated-notice">
+                Your account in the E-Skolarian system has been deactivated.
+            </p>
+            <p>This means you will no longer be able to access the system using these credentials:</p>
+        @elseif($isReactivated)
+            <p class="first-p">
+                Your account in the E-Skolarian system has been reactivated. You can now access the system again using your existing credentials.
+            </p>
+            <p>Here are your account details:</p>
+        @else
+            <p class="first-p">
+                Your account information has been updated in the E-Skolarian system.
+            </p>
+            <p>Here are your updated account details:</p>
+        @endif
 
-            <div class="info-box">
-                <p><strong>Username:</strong> {{ $user->username }}</p>
-                <p><strong>Email:</strong> {{ $user->email }}</p>
-                <p><strong>Role:</strong> {{ $user->role_name }}</p>
-                @if($isNewUser)
+        <div class="info-box">
+            <p><strong>Username:</strong> {{ $user->username }}</p>
+            <p><strong>Email:</strong> {{ $user->email }}</p>
+            <p><strong>Role:</strong> {{ $user->role_name }}</p>
+            @if($isNewUser || $isReactivated)
                 <p><strong>Default Password:</strong> {{ $password }}</p>
-                @endif
-            </div>
-
-            @if($isNewUser)
-                <p>A temporary password has been provided above for your initial login. For security reasons, we recommend changing your password immediately after your first login.</p>
-                <a class="action-button" href="{{ url('/login') }}">Login to Account</a>
-                <a href="{{ url('/login') }}" class="login-url">{{ url('/login') }}</a>
-            @elseif($isDeactivated)
-                <p>If you believe this action was taken in error or if you need to reactivate your account, please contact the system administrator.</p>
             @endif
+        </div>
 
+        @if($isNewUser || $isReactivated)
+            <a class="action-button" href="{{ url('/login') }}">Login to Account</a>
+            <a href="{{ url('/login') }}" class="login-url">{{ url('/login') }}</a>
+        @endif
+
+        @if($isNewUser || $isReactivated)
+            <p>A temporary password has been provided above for your initial login. For security purposes, we recommend changing your password immediately after your first login.</p>
+        @elseif($isDeactivated)
+            <p>If you believe this action was taken in error or if you need to reactivate your account, please contact the system administrator.</p>
+        @elseif($isReactivated)
             <p class="last-p">
                 If you have any questions or need assistance, please don't hesitate to contact our support team.
             </p>
-        </div>
+        @endif
+    </div>
         <hr>
         <div class="footer-card">
             <p class="first-p">© E-skolarian - Document Management System</p>
