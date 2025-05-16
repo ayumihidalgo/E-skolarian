@@ -15,9 +15,10 @@ class UserNotificationMail extends Mailable
     use Queueable, SerializesModels;
 
     public $user;
-    public $actionType;
     public $isNewUser;
     public $isDeactivated;
+    public $isReactivated;
+    public $actionType;
     public $password;
 
     /**
@@ -34,6 +35,7 @@ class UserNotificationMail extends Mailable
         $this->actionType = $actionType;
         $this->isNewUser = ($actionType === 'created');
         $this->isDeactivated = ($actionType === 'deactivated');
+        $this->isReactivated = ($actionType === 'reactivated');
         $this->password = $password;
     }
 
@@ -48,6 +50,7 @@ class UserNotificationMail extends Mailable
             'created' => 'Welcome to E-skolarian - Your Account Has Been Created',
             'updated' => 'E-skolarian - Your Account Has Been Updated',
             'deactivated' => 'E-skolarian - Your Account Has Been Deactivated',
+            'reactivated' => 'E-skolarian - Your Account Has Been Reactivated',
             default => 'E-skolarian - Account Notification'
         };
 

@@ -120,6 +120,43 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::post('/users/{id}', [UserController::class, 'update']);
     Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check.email');
     Route::get('/check-roles', [UserController::class, 'checkRoles'])->name('check.roles');
+
+    Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
+
+    Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
+    ->name('deactivated.accounts');
+
+    Route::get('/admin/review', function () {
+        return view('admin.review');
+    })->name('admin.review');
+
+    Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
+    Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
+
+    // Submit Document Route
+    Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
+
+    Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
+
+    Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
+
+    Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
+    ->name('super-admin.reactivate-user')
+    ->middleware('auth');
+    // Dashboard Route
+    Route::get('/dashboard', function () {
+        return view('student.dashboard');
+    })->name('dashboard');
+
+    Route::get('/admin/documentArchive', function () {
+        return view('admin.documentArchive');
+    })->name('admin.documentArchive');
+
+    Route::get('/student/documentArchive', function () {
+        return view('student.documentArchive');
+    })->name('student.documentArchive');
+    // Route for the document preview page (admin)
+Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
 });
 
 // ----------------------------------------

@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
 
 class SuperAdminController extends Controller
 {
@@ -91,5 +93,82 @@ class SuperAdminController extends Controller
         }
     }
 
+    public function reactivateUser(Request $request)
+{
+    try {
+        // Log the incoming request data
+        \Log::info('Reactivation request received:', $request->all());
+
+        // Validate request data
+        $validated = $request->validate([
+            'user_id' => 'required',
+            'email' => 'required|email'
+        ]);
+
+        // Find the user
+        $user = User::where('id', $validated['user_id'])
+                    ->where('email', $validated['email'])
+                    ->first();
+
+        if (!$user) {
+            \Log::warning('User not found:', $validated);
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found'
+            ], 404);
+        }
+
+        if ($user->active) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User is already active'
+            ], 400);
+        }
+
+        // Store email before reactivation for notification purposes
+        $userEmail = $user->email;
+
+        // Reactivate the user
+        $user->active = true;
+        $user->save();
+
+         // Generate new random password
+        $newPassword = Str::random(10);
+        
+        // Update user with new password and active status
+        $user->password = Hash::make($newPassword);
+        $user->active = true;
+        $user->save();
+
+        // Send reactivation notification email
+        try {
+            Mail::to($user->email)->send(new UserNotificationMail($user, 'reactivated', $newPassword));
+            \Log::info('Reactivation email sent to: ' . $user->email);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send reactivation email: ' . $e->getMessage());
+        }
+
+        \Log::info('User reactivated successfully:', [
+            'user_id' => $user->id,
+            'email' => $user->email
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User successfully reactivated and notification sent'
+        ]);
+
+    } catch (\Exception $e) {
+        \Log::error('Reactivation error:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while reactivating the user: ' . $e->getMessage()
+        ], 500);
+    }
+}
 
 }

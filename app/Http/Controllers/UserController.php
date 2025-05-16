@@ -142,22 +142,6 @@ class UserController extends Controller
         'sortDirection' => $sortDirection
     ]);
 }
-public function reactivateUser(User $user)
-{
-    try {
-        $user->update(['is_active' => true]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'User has been successfully reactivated.'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to reactivate user.'
-        ], 500);
-    }
-}
 public function checkEmail(Request $request)
 {
     $exists = User::where('email', strtolower($request->email))->exists();
