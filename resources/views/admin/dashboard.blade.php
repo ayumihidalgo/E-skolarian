@@ -40,34 +40,53 @@
 
             <!-- Announcement and Documents Section -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <!-- Announcements -->
-                <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-4">
-                    <h2 class="text-lg font-semibold mb-2">📢 Announcements</h2>
-                    @if ($latestAnnouncement)
-                        <div>
-                            <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $latestAnnouncement->title }}</h3>
-                            <p class="text-sm text-gray-500 mb-4">
-                                Posted by {{ $latestAnnouncement->user->username }} on {{ $latestAnnouncement->created_at->format('F j, Y g:i A') }}
-                            </p>
-                            <div class="text-gray-700 whitespace-pre-line">
-                                 {{ $latestAnnouncement->content }}
+         <!-- Latest Announcements -->
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-4">
+                <h2 class="text-lg font-semibold mb-2">📢 Announcements</h2>
+                <div class="max-h-[350px] overflow-y-auto pr-1">
+                    @if ($latestAnnouncements->count())
+                        @foreach ($latestAnnouncements as $announcement)
+                            <div class="mb-4 pb-4 border-b border-gray-300">
+                                <h3 class="text-xl font-bold text-gray-800 mb-1">{{ $announcement->title }}</h3>
+                                <p class="text-sm text-gray-500 mb-1">
+                                    Posted by {{ $announcement->user->username }} on {{ $announcement->created_at->format('F j, Y g:i A') }}
+                                </p>
+                                <div class="text-gray-700 whitespace-pre-line">
+                                    {{ $announcement->content }}
+                                </div>
                             </div>
-                        </div>
+                        @endforeach
                     @else
                         <div class="text-gray-500 text-center py-8">No announcement at the moment</div>
                     @endif
-
                 </div>
+            </div>
 
-                <!-- Previous Announcements -->
-                <div class="bg-white rounded-xl shadow-md p-4">
-                    <h2 class="text-lg font-semibold mb-2">Previous Announcements</h2>
-                    <div class="text-center text-gray-500 py-8">
-                        <img src="{{ asset('images/Illustrations.svg') }}" alt="No previous post"
-                            class="w-24 h-24 mx-auto mb-2 opacity-80">
-                        <p>No previous post</p>
-                    </div>
+            <!-- Previous Announcements -->
+            <div class="bg-white rounded-xl shadow-md p-4">
+                <h2 class="text-lg font-semibold mb-2">Previous Announcements</h2>
+                <div class="max-h-[350px] overflow-y-auto pr-1">
+                    @if ($previousAnnouncements->count())
+                        @foreach ($previousAnnouncements as $announcement)
+                            <div class="mb-4 pb-4 border-b border-gray-300">
+                                <h3 class="text-md font-bold text-gray-800 mb-1">{{ $announcement->title }}</h3>
+                                <p class="text-sm text-gray-500 mb-2">
+                                    Posted by {{ $announcement->user->username }} on {{ $announcement->created_at->format('F j, Y g:i A') }}
+                                </p>
+                                <div class="text-gray-700 whitespace-pre-line">
+                                    {{ $announcement->content }}
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div class="text-center text-gray-500 py-8">
+                            <img src="{{ asset('images/Illustrations.svg') }}" alt="No previous post"
+                                class="w-24 h-24 mx-auto mb-2 opacity-80">
+                            <p>No previous post</p>
+                        </div>
+                    @endif
                 </div>
+            </div>
 
                 <!-- Recent Documents -->
                 <div class="lg:col-span-2 space-y-2">
