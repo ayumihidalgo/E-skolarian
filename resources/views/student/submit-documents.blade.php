@@ -331,22 +331,43 @@
         }
     });
 
-    // Enable Enter key to select dropdown item, and file upload
-    document.querySelectorAll('#receiverDropdown li').forEach(item => {
-        item.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                this.click(); // triggers onclick
-            }
-        });
-    });
+    function setupAccessibleDropdown(button, dropdown, onSelect) {
+        const items = dropdown.querySelectorAll('li');
 
-    document.querySelectorAll('#docTypeDropdown li').forEach(item => {
-        item.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                this.click();
+        // Button opens dropdown and focuses first item
+        button.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                dropdown.classList.remove('hidden');
+                setTimeout(() => {
+                    items[0].focus();
+                }, 0);
             }
         });
-    });
+
+        items.forEach((item, index) => {
+            item.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = items[index + 1] || items[0];
+                    next.focus();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prev = items[index - 1] || items[items.length - 1];
+                    prev.focus();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    item.click();
+                    dropdown.classList.add('hidden');
+                    button.focus();
+                } else if (e.key === 'Escape' || e.key === 'Tab') {
+                    dropdown.classList.add('hidden');
+                    button.focus();
+                }
+            });
+        });
+    }
+
 
     document.querySelector('label[for="fileUpload"]').addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -367,6 +388,9 @@
                 e.preventDefault(); // Prevent form submission
             }
         });
+
+        setupAccessibleDropdown(docType.button, docType.dropdown, selectDocType);
+        setupAccessibleDropdown(receiver.button, receiver.dropdown, selectReceiver);
     });
 
     // Toggle dropdown visibility
@@ -375,6 +399,12 @@
 
     function toggleDropdown(dropdown) {
         dropdown.classList.toggle('hidden');
+        if (!dropdown.classList.contains('hidden')) {
+            const firstItem = dropdown.querySelector('li');
+            if (firstItem) {
+                setTimeout(() => firstItem.focus(), 0);
+            }
+        }
     }
 
     // File Upload Validation
