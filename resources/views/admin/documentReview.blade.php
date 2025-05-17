@@ -248,9 +248,9 @@
                             <nav>
                                 <ul class="inline-flex items-center space-x-2">
                                     <li>
-                                        <a href="{{ $documents->url(1) }}"
-                                        class="pagination-btn-first px-3 py-1 rounded-lg {{ $documents->onFirstPage() ? 'text-gray-600 cursor-not-allowed' : 'text-black' }}"
-                                        {{ $documents->onFirstPage() ? 'disabled' : '' }}>
+                                        <a href="{{ $documents->onFirstPage() ? '#' : $documents->url(1) }}"
+                                        class="pagination-btn-first px-3 py-1 rounded-lg {{ $documents->onFirstPage() ? 'text-gray-600 cursor-not-allowed bg-gray-200' : 'text-black hover:bg-gray-300' }}"
+                                        @if($documents->onFirstPage()) onclick="return false;" @endif>
                                             First
                                         </a>
                                     </li>
@@ -265,9 +265,9 @@
                                     @endforeach
 
                                     <li>
-                                        <a href="{{ $documents->url($documents->lastPage()) }}"
-                                        class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'text-gray-600 cursor-not-allowed' : 'text-black' }}"
-                                        {{ $documents->currentPage() == $documents->lastPage() ? 'disabled' : '' }}>
+                                        <a href="{{ $documents->onLastPage() ? '#' : $documents->url($documents->lastPage()) }}"
+                                        class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->onLastPage() ? 'text-gray-600 cursor-not-allowed bg-gray-200' : 'text-black hover:bg-gray-300' }}"
+                                        @if($documents->onLastPage()) onclick="return false;" @endif>
                                             Last
                                         </a>
                                     </li>
@@ -373,16 +373,25 @@
                         </div>
 
                         <!-- Comment Input -->
-                        <div class="flex items-center space-x-2 mt-6">
-                            <input type="text"
-                                id="commentInput"
-                                placeholder="Comment..."
-                                class="flex-1 rounded-full py-2 px-4 bg-white text-gray-700 focus:outline-none" />
-                            <button onclick="submitComment()" class="text-white hover:text-gray-300 cursor-pointer">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </button>
+                        <div class="mt-6">
+                            <div class="flex items-center bg-[#FFFFFFD6] rounded-full px-4 py-1">
+                                <input type="text"
+                                    id="commentInput"
+                                    placeholder="Comment..."
+                                    class="flex-1 rounded-full py-2 px-4 bg-transparent text-black placeholder-gray-300 focus:outline-none placeholder-gray-700" />
+                                <div class="flex items-center">
+                                    <button class="text-[#4D0F0F] hover:tex-[#5d0c0c] cursor-pointer mr-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                        </svg>
+                                    </button>
+                                    <button id="submitCommentBtn" class="text-[#4D0F0F] hover:text-[#5d0c0c] cursor-pointer">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -681,10 +690,36 @@
             const documentTypeFilter = document.getElementById('documentTypeFilter');
             const tableRows = document.querySelectorAll('tbody tr');
 
+            // Create a mapping between acronyms and full organization names
+            const orgMap = {
+                'ACAP': 'Association of Competent and Aspiring Psychologists',
+                'AECES': 'Association of Electronics and Communications Engineering Students',
+                'ELITE': 'Eligible League of Information Technology Enthusiasts',
+                'GIVE': 'Guild of Imporous and Valuable Educators',
+                'JEHRA': 'Junior Executive of Human Resource Association',
+                'JMAP': 'Junior Marketing Association of the Philippines',
+                'JPIA': 'Junior Philippine Institute of Accountants',
+                'PIIE': 'Philippine Institute of Industrial Engineers',
+                'AGDS': 'Artist Guild Dance Squad',
+                'Chorale': 'PUP SRC Chorale',
+                'SIGMA': 'Supreme Innovators\' Guild for Mathematics Advancements',
+                'TAPNOTCH': 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
+                'OSC': 'Office of the Student Council'
+            };
+
+            // Also create a reverse mapping from full names to acronyms for search flexibility
+            const reverseOrgMap = {};
+            for (const acronym in orgMap) {
+                reverseOrgMap[orgMap[acronym].toLowerCase()] = acronym.toLowerCase();
+            }
+
             function filterTable() {
                 const searchTerm = searchInput.value.toLowerCase();
-                const selectedOrg = organizationFilter.value.toLowerCase();
+                const selectedOrg = organizationFilter.value;
                 const selectedType = documentTypeFilter.value.toLowerCase();
+
+                // Get the full organization name if an acronym is selected
+                const selectedFullOrgName = selectedOrg ? orgMap[selectedOrg].toLowerCase() : '';
 
                 tableRows.forEach(row => {
                     const tag = row.cells[0].textContent.toLowerCase();
@@ -692,12 +727,26 @@
                     const title = row.cells[2].textContent.toLowerCase();
                     const type = row.cells[4].textContent.toLowerCase();
 
-                    const matchesSearch = tag.includes(searchTerm) ||
-                                        organization.includes(searchTerm) ||
-                                        title.includes(searchTerm);
+                    // Check if the search term matches acronym or full name
+                    let matchesSearch = tag.includes(searchTerm) ||
+                                    title.includes(searchTerm) ||
+                                    organization.includes(searchTerm);
+                                    
+                    // Add additional matching for acronyms in the search
+                    for (const fullName in reverseOrgMap) {
+                        if (fullName.includes(searchTerm) && organization.includes(fullName)) {
+                            matchesSearch = true;
+                            break;
+                        }
+                    }
+                    
+                    // For organization filter, check if the row contains either the selected acronym or its full name
+                    let matchesOrg = true;
+                    if (selectedOrg !== '' && selectedOrg !== 'All') {
+                        matchesOrg = organization.includes(selectedFullOrgName);
+                    }
 
-                    const matchesOrg = selectedOrg === '' || organization.includes(selectedOrg);
-                    const matchesType = selectedType === '' || type.includes(selectedType);
+                    const matchesType = selectedType === '' || selectedType === 'all' || type.includes(selectedType);
 
                     if (matchesSearch && matchesOrg && matchesType) {
                         row.style.display = '';
@@ -712,10 +761,10 @@
             function updateNoResultsMessage() {
                 const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
                 const tableContainer = document.querySelector('.overflow-x-auto');
-                const noResultsDiv = document.querySelector('.no-results');
+                const existingNoResultsDiv = document.querySelector('.no-results');
 
                 if (visibleRows.length === 0) {
-                    if (!noResultsDiv) {
+                    if (!existingNoResultsDiv) {
                         const noResults = `
                             <div class="bg-gray-50 rounded-md p-8 flex flex-col items-center justify-center flex-grow no-results">
                                 <img src="{{ asset('images/no_entry.svg') }}" alt="No Data" class="mb-4 opacity-50 w-40 h-40">
@@ -727,8 +776,8 @@
                     }
                 } else {
                     tableContainer.style.display = '';
-                    if (noResultsDiv) {
-                        noResultsDiv.remove();
+                    if (existingNoResultsDiv) {
+                        existingNoResultsDiv.remove();
                     }
                 }
             }
@@ -737,6 +786,12 @@
             searchInput.addEventListener('input', filterTable);
             organizationFilter.addEventListener('change', filterTable);
             documentTypeFilter.addEventListener('change', filterTable);
+
+            // Fix the "All" option in the organization filter
+            const allOption = organizationFilter.querySelector('option[value=""]');
+            if (allOption) {
+                allOption.value = "All";
+            }
         });
 
         // Sorting Functionality
@@ -792,8 +847,17 @@
             rows.forEach(row => tbody.appendChild(row));
 
             // Update zebra striping
-            rows.forEach((row, index) => {
-                row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+            rows.forEach((row) => {
+                // Remove just the background classes
+                row.classList.remove('bg-white', 'bg-gray-50', 'bg-[#D9ACAC33]');
+                
+                // Add proper background class based on opened status
+                const isOpened = row.classList.contains('border-[#D9D9D9]');
+                if (isOpened) {
+                    row.classList.add('bg-[#D9ACAC33]');
+                } else {
+                    row.classList.add('bg-white');
+                }
             });
         }
 

@@ -19,6 +19,7 @@ class DocumentController extends Controller
     {
         // Shows the admin users in the receiver dropdown list in the form
         $adminUsers = \App\Models\User::where('role', 'admin')
+            ->where('active', 1)
             ->select('id', 'username', 'role_name')
             ->get();
 

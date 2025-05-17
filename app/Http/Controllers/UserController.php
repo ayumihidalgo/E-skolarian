@@ -30,7 +30,7 @@ class UserController extends Controller
         ]);
 
         // Generate a random password
-        $password = Str::random(10); // Creates a 10 character random string
+        $password = Str::random(10); 
 
         // Create the user
         $user = User::create([
@@ -142,20 +142,20 @@ class UserController extends Controller
         'sortDirection' => $sortDirection
     ]);
 }
-public function reactivateUser(User $user)
+public function checkEmail(Request $request)
 {
-    try {
-        $user->update(['is_active' => true]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'User has been successfully reactivated.'
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to reactivate user.'
-        ], 500);
-    }
+    $exists = User::where('email', strtolower($request->email))->exists();
+    return response()->json(['exists' => $exists]);
+}
+public function checkRoles()
+{
+    $restrictedRoles = ['Student Services', 'Academic Services', 'Administrative Services', 'Campus Director'];
+    $existingRoles = User::whereIn('role_name', $restrictedRoles)
+                        ->pluck('role_name')
+                        ->unique()
+                        ->values()
+                        ->toArray();
+    
+    return response()->json(['existingRoles' => $existingRoles]);
 }
 }

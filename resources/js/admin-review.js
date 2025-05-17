@@ -105,6 +105,28 @@ function updateDocumentDetailsView(docData) {
         year: 'numeric'
     });
     
+    // Organization name to acronym mapping
+    const orgMap = {
+        'Association of Competent and Aspiring Psychologists': 'ACAP',
+        'Association of Electronics and Communications Engineering Students': 'AECES',
+        'Eligible League of Information Technology Enthusiasts': 'ELITE',
+        'Guild of Imporous and Valuable Educators': 'GIVE',
+        'Junior Executive of Human Resource Association': 'JEHRA',
+        'Junior Marketing Association of the Philippines': 'JMAP',
+        'Junior Philippine Institute of Accountants': 'JPIA',
+        'Philippine Institute of Industrial Engineers': 'PIIE',
+        'Artist Guild Dance Squad': 'AGDS',
+        'PUP SRC Chorale': 'Chorale',
+        'Supreme Innovators\' Guild for Mathematics Advancements': 'SIGMA',
+        'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism': 'TAPNOTCH',
+        'Office of the Student Council': 'OSC'
+    };
+    
+    // Get organization acronym if available, otherwise use full name
+    function getOrgAcronym(fullName) {
+        return orgMap[fullName] || fullName;
+    }
+    
     try {
         // Instead of using complex selectors with square brackets, navigate the DOM step by step
         const leftSideDiv = detailsView.querySelector('.w-2\\/3'); // Use escaped backslashes for fractions
@@ -181,13 +203,16 @@ function updateDocumentDetailsView(docData) {
         if (rightSideDiv) {
             const orgNameElement = rightSideDiv.querySelector('.font-bold.text-lg');
             if (orgNameElement) {
-                orgNameElement.textContent = docData.organization === 'Eligible League of Information Technology Enthusiasts' ? 'ELITE' : (docData.organization || 'Organization Name');
+                // Use the mapping to convert full organization name to acronym
+                orgNameElement.textContent = getOrgAcronym(docData.organization) || 'Organization Name';
             }
             
             // Set organization initial
             const orgInitial = rightSideDiv.querySelector('#orgInitial');
             if (orgInitial && docData.organization) {
-                orgInitial.textContent = docData.organization.charAt(0).toUpperCase();
+                // If we have an acronym, use its first letter, otherwise use the first letter of the full name
+                const acronym = getOrgAcronym(docData.organization);
+                orgInitial.textContent = acronym.charAt(0).toUpperCase();
             }
         }
         
@@ -237,6 +262,16 @@ function loadComments(documentId) {
         .then(response => response.json())
         .then(comments => {
             const container = document.getElementById('commentsContainer');
+            if (!container) {
+                console.error('Comments container not found');
+                return;
+            }
+            
+            if (!Array.isArray(comments) || comments.length === 0) {
+                container.innerHTML = '<p class="text-gray-400">No comments yet</p>';
+                return;
+            }
+            
             container.innerHTML = comments.map(comment => `
                 <div class="flex items-start gap-2">
                     <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
@@ -248,8 +283,8 @@ function loadComments(documentId) {
                     </div>
                     <div class="flex-1 flex justify-between items-center rounded-lg px-4 py-2">
                         <div class="text-white">
-                            <p class="font-bold text-sm">${comment.user_name}</p>
-                            <p class="text-sm mt-1">${comment.content}</p>
+                            <p class="font-bold text-sm">${comment.sender ? comment.sender.username : 'Unknown User'}</p>
+                            <p class="text-sm mt-1">${comment.comment}</p>
                         </div>
                         <p class="text-xs text-gray-300 ml-4 whitespace-nowrap">
                             ${new Date(comment.created_at).toLocaleString()}
@@ -257,14 +292,25 @@ function loadComments(documentId) {
                     </div>
                 </div>
             `).join('');
+        })
+        .catch(error => {
+            console.error('Error loading comments:', error);
         });
 }
 
 function submitComment() {
     const input = document.getElementById('commentInput');
-    const content = input.value.trim();
+    if (!input) {
+        console.error('Comment input field not found');
+        return;
+    }
+    
+    const comment = input.value.trim();
 
-    if (!content || !currentDocumentId) return;
+    if (!comment || !currentDocumentId) {
+        console.error('Missing comment or document ID');
+        return;
+    }
 
     fetch('/comments', {
         method: 'POST',
@@ -274,13 +320,21 @@ function submitComment() {
         },
         body: JSON.stringify({
             document_id: currentDocumentId,
-            content: content
+            comment: comment 
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Server error: ' + response.status);
+        }
+        return response.json();
+    })
     .then(comment => {
         input.value = '';
         loadComments(currentDocumentId);
+    })
+    .catch(error => {
+        console.error('Error submitting comment:', error);
     });
 }
 
@@ -288,6 +342,16 @@ function submitComment() {
 document.getElementById('commentInput').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         submitComment();
+    }
+});
+
+// Event listener for comment submit button
+document.addEventListener('DOMContentLoaded', function() {
+    const submitCommentBtn = document.getElementById('submitCommentBtn');
+    if (submitCommentBtn) {
+        submitCommentBtn.addEventListener('click', function() {
+            submitComment();
+        });
     }
 });
 

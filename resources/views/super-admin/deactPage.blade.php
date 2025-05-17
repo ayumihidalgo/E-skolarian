@@ -118,9 +118,6 @@
                 </td>
             </tr>
             @empty
-            <tr class="h-[68px] border-t-[0.3px] border-[#7A1212] bg-[#FFFFFFA6]">
-                <td colspan="3" class="px-6 py-4 text-center font-['Manrope'] text-[17px] text-[#625B5BB2]">No deactivated users found</td>
-            </tr>
             @endforelse
         </tbody>
         </table>
@@ -313,5 +310,5 @@
         </div>
     </div>
 </div>
-@vite('resources/js/reactivation.js')
+@vite('resources/js/super-admin/reactivate.js')
 @endsection

@@ -14,6 +14,11 @@ if ($role === 'super admin') {
     <link rel="icon" href="{{ asset('images/officialLogo.svg') }}" type="image/svg+xml">
 
     <title>Reset Password</title>
+    <style>
+        input[type="password"]::-ms-reveal {
+            display: none;
+        }
+    </style>
     @vite('resources/css/app.css')
 
     <script>
@@ -274,6 +279,11 @@ if ($role === 'super admin') {
             passwordLabel.classList.add('ring-3', '!ring-red-600');
             confirmPasswordLabel.classList.add('ring-3', '!ring-red-600');
         }
+
+        document.querySelector('form').addEventListener('submit', function (e) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Please wait...';
+    });
 
     </script>
 </body>

@@ -207,7 +207,9 @@
 
                         <div class="flex justify-end space-x-2">
                             <button onclick="closeConfirmPopup()" class="font-semibold px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer" type="button">Cancel</button>
-                            <button type="submit" class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">Submit</button>
+                            <button id="confirmSubmitBtn" type="submit" onclick="handleConfirmSubmit(this)" class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
+                                Submit
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -329,23 +331,50 @@
         }
     });
 
-    // Enable Enter key to select dropdown item, and file upload
-    document.querySelectorAll('#receiverDropdown li').forEach(item => {
-        item.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                this.click(); // triggers onclick
+    // Arrow keys navigation for dropdowns
+    function setupAccessibleDropdown(button, dropdown, onSelect) {
+        const items = dropdown.querySelectorAll('li');
+
+        // Button opens dropdown and focuses first item
+        button.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                dropdown.classList.remove('hidden');
+                setTimeout(() => {
+                    items[0].focus();
+                }, 0);
             }
         });
-    });
 
-    document.querySelectorAll('#docTypeDropdown li').forEach(item => {
-        item.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                this.click();
-            }
+        items.forEach((item, index) => {
+            item.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = items[index + 1] || items[0];
+                    next.focus();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prev = items[index - 1] || items[items.length - 1];
+                    prev.focus();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    item.click();
+                    dropdown.classList.add('hidden');
+                    button.focus();
+                } else if (e.key === 'Escape' || e.key === 'Tab') {
+                    dropdown.classList.add('hidden');
+                    button.focus();
+                }
+            });
         });
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        setupAccessibleDropdown(docType.button, docType.dropdown, selectDocType);
+        setupAccessibleDropdown(receiver.button, receiver.dropdown, selectReceiver);
     });
 
+    // Prevent form submission on Enter keypress except from inside the confirmation popup
     document.querySelector('label[for="fileUpload"]').addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -353,14 +382,13 @@
         }
     });
 
-    // Prevent form submission on Enter keypress except from inside the confirmation popup
-    document.addEventListener("DOMContentLoaded", function () {
-        document.getElementById("subject").addEventListener("keydown", function (e) {
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("subject").addEventListener("keydown", function(e) {
             if (e.key === "Enter") {
                 e.preventDefault(); // Prevent form submission
             }
         });
-        document.getElementById("event-title").addEventListener("keydown", function (e) {
+        document.getElementById("event-title").addEventListener("keydown", function(e) {
             if (e.key === "Enter") {
                 e.preventDefault(); // Prevent form submission
             }
@@ -373,6 +401,12 @@
 
     function toggleDropdown(dropdown) {
         dropdown.classList.toggle('hidden');
+        if (!dropdown.classList.contains('hidden')) {
+            const firstItem = dropdown.querySelector('li');
+            if (firstItem) {
+                setTimeout(() => firstItem.focus(), 0);
+            }
+        }
     }
 
     // File Upload Validation
@@ -560,6 +594,18 @@
 
     function closeConfirmPopup() {
         document.getElementById('confirmPopup').classList.add('hidden');
+    }
+
+    function handleConfirmSubmit(button) {
+        // Disable the button to prevent multiple submissions
+        button.disabled = true;
+        button.classList.add('opacity-50', 'cursor-not-allowed');
+
+        // Optionally change the text to indicate processing
+        button.textContent = "Submitting...";
+
+        // Submit the form manually if needed
+        button.closest('form').submit();
     }
 
     // Checks if all input fields are filled before enabling the submit button
