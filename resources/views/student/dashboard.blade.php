@@ -19,32 +19,53 @@
             </div>
             <!-- Announcement and Documents Section -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Announcements -->
+               <!-- Announcements -->
                 <div class="md:col-span-2 bg-white rounded-xl shadow-md p-4">
                     <h2 class="text-lg font-semibold mb-2">📢 Announcements</h2>
-                    @if ($latestAnnouncement)
-                        <div class="space-y-2">
-                            <h3 class="text-xl font-semibold">{{ $latestAnnouncement->title }}</h3>
-                            <p class="text-sm text-gray-500">
-                                Posted by {{ $latestAnnouncement->user->username }} on 
-                                {{ $latestAnnouncement->created_at->format('F j, Y') }}
-                            </p>
-                            <p class="text-gray-700">{{ $latestAnnouncement->content }}</p>
-                         </div>
+
+                    @if ($latestAnnouncements->count())
+                        <div class="space-y-4 h-64 overflow-y-auto pr-2"> {{-- Fixed height and scroll --}}
+                            @foreach ($latestAnnouncements as $announcement)
+                                <div class="border-b pb-2">
+                                    <h3 class="text-xl font-semibold">{{ $announcement->title }}</h3>
+                                    <p class="text-sm text-gray-500">
+                                        Posted by {{ $announcement->user->username }} on 
+                                        {{ $announcement->created_at->format('F j, Y') }}
+                                    </p>
+                                    <p class="text-gray-700">{{ $announcement->content }}</p>
+                                </div>
+                            @endforeach
+                        </div>
                     @else
-                        <div class="text-gray-500 text-center py-8">No announcement at the moment</div>
+                        <div class="text-gray-500 text-center py-8">No announcements at the moment</div>
                     @endif
                 </div>
-                <!-- Previous Announcements -->
+
+               <!-- Previous Announcements -->
                 <div class="bg-white rounded-xl shadow-md p-4 md:row-span-2">
                     <h2 class="text-lg font-semibold mb-2">Previous Announcements</h2>
-                    <div class="text-center text-gray-500 py-8">
-                        <img src="{{ asset('images/Illustrations.svg') }}" alt="No previous post"
-                            class="w-24 h-24 mx-auto mb-2 opacity-80">
-                        <p>No previous post</p>
-                    </div>
-                </div>
 
+                    @if ($previousAnnouncements->count())
+                        <div class="space-y-4 h-[32rem] overflow-y-auto pr-2"> {{-- Scrollable content --}}
+                            @foreach ($previousAnnouncements as $announcement)
+                                <div class="border-b pb-2">
+                                    <h3 class="text-base font-semibold">{{ $announcement->title }}</h3>
+                                    <p class="text-sm text-gray-500">
+                                        Posted by {{ $announcement->user->username }} on 
+                                        {{ $announcement->created_at->format('F j, Y') }}
+                                    </p>
+                                    <p class="text-gray-700">{{ $announcement->content }}</p>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center text-gray-500 py-8">
+                            <img src="{{ asset('images/Illustrations.svg') }}" alt="No previous post"
+                                class="w-24 h-24 mx-auto mb-2 opacity-80">
+                            <p>No previous post</p>
+                        </div>
+                    @endif
+                </div>
                 <!-- Recent Documents -->
                 <div class="md:col-span-2 space-y-2">
                     <h2 class="text-lg font-semibold">Recent Documents</h2>
