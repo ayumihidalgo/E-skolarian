@@ -331,6 +331,7 @@
         }
     });
 
+    // Arrow keys navigation for dropdowns
     function setupAccessibleDropdown(button, dropdown, onSelect) {
         const items = dropdown.querySelectorAll('li');
 
@@ -368,7 +369,12 @@
         });
     }
 
+    document.addEventListener("DOMContentLoaded", function() {
+        setupAccessibleDropdown(docType.button, docType.dropdown, selectDocType);
+        setupAccessibleDropdown(receiver.button, receiver.dropdown, selectReceiver);
+    });
 
+    // Prevent form submission on Enter keypress except from inside the confirmation popup
     document.querySelector('label[for="fileUpload"]').addEventListener('keydown', function(e) {
         if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
@@ -376,7 +382,6 @@
         }
     });
 
-    // Prevent form submission on Enter keypress except from inside the confirmation popup
     document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("subject").addEventListener("keydown", function(e) {
             if (e.key === "Enter") {
@@ -388,9 +393,6 @@
                 e.preventDefault(); // Prevent form submission
             }
         });
-
-        setupAccessibleDropdown(docType.button, docType.dropdown, selectDocType);
-        setupAccessibleDropdown(receiver.button, receiver.dropdown, selectReceiver);
     });
 
     // Toggle dropdown visibility
