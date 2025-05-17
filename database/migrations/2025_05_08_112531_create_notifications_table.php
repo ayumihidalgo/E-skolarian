@@ -18,6 +18,7 @@ return new class extends Migration
             $table->text('message'); // Notification message
             $table->boolean('is_read')->default(false); // Read status
             $table->timestamps(); // Created and updated timestamps
+            $table->string('url')->nullable(); // Optional URL related to the notification
         });
     }
 

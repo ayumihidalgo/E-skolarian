@@ -25,13 +25,20 @@ class submitDocumentListener
             Log::info('Found ' . $admins->count() . ' admin users to notify');
 
             foreach ($admins as $admin) {
+
+                //  $url = route('admin.documentReview', ['document' => $event->document->id]);
+                $url = route('admin.documentReview');
+                // Create a notification for each admin
                 Notification::create([
                     'user_id' => $admin->id,
                     'title' => 'New Document Submission',
                     'message' => 'A new document "' . $event->document->subject . '" has been submitted.',
                     'is_read' => false,
+                    'url' => $url
                 ]);
-                
+           
+            
+                Log::info('Creating notification URL for admin ID: ' . $admin->id . ' - URL: ' . $url);
                 Log::info('Created notification for admin ID: ' . $admin->id);
             }
         } catch (\Exception $e) {

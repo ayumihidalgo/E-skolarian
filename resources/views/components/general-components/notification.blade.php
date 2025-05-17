@@ -75,37 +75,35 @@
             <!-- All Notifications Tab Content -->
             <div id="allNotifications" class="block  cursor-default">
                 @foreach($notifications as $notification)
-                <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-start space-x-2">
-                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
-                            </svg>
-                            <div class="flex flex-col">
-                                <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
-                                <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
-                                <p class="text-xs text-gray-400 mt-2">
-                        @if($notification->created_at->isToday())
-                            Today at {{ $notification->created_at->format('h:i A') }}
-                        @elseif($notification->created_at->isYesterday())
-                            Yesterday at {{ $notification->created_at->format('h:i A') }}
-                        @elseif($notification->created_at->isCurrentYear())
-                            {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
-                        @else
-                            {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
-                        @endif
-                    </p>
+                    @php
+                        $link = $notification->url ?? '#';
+                    @endphp
+                    <a href="{{ $link }}" class="block">
+                        <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-2">
+                                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
+                                    </svg>
+                                    <div class="flex flex-col">
+                                        <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
+                                        <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
+                                        <p class="text-xs text-gray-400 mt-2">
+                                            @if($notification->created_at->isToday())
+                                                Today at {{ $notification->created_at->format('h:i A') }}
+                                            @elseif($notification->created_at->isYesterday())
+                                                Yesterday at {{ $notification->created_at->format('h:i A') }}
+                                            @elseif($notification->created_at->isCurrentYear())
+                                                {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
+                                            @else
+                                                {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        {{-- <div class="flex items-center">
-                            <input type="checkbox" 
-                                class="mark-as-read-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
-                                data-notification-id="{{ $notification->id }}"
-                                @if($notification->is_read) checked @endif
-                            >
-                        </div> --}}
-                    </div>
-                </div>
+                    </a>
                 @endforeach
             </div>
             
@@ -121,36 +119,35 @@
                     </div>
                 @else
                     @foreach($unreadNotifications as $notification)
-                    <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-start space-x-2">
-                                <svg class="text-gray-400 flex-shrink-0 mt-1" width="1rem" height="1rem" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
-                                </svg>
-                                <div class="flex flex-col">
-                                    <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
-                                    <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
-                                    <p class="text-xs text-gray-400 mt-2">
-                        @if($notification->created_at->isToday())
-                            Today at {{ $notification->created_at->format('h:i A') }}
-                        @elseif($notification->created_at->isYesterday())
-                            Yesterday at {{ $notification->created_at->format('h:i A') }}
-                        @elseif($notification->created_at->isCurrentYear())
-                            {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
-                        @else
-                            {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
-                        @endif
-                    </p>
+                    @php
+                        $link = $notification->url ?? '#';
+                    @endphp
+                    <a href="{{ $link }}" class="block">
+                        <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
+                            <div class="flex items-start justify-between">
+                                <div class="flex items-start space-x-2">
+                                    <svg class="text-gray-400 flex-shrink-0 mt-1" width="1rem" height="1rem" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
+                                    </svg>
+                                    <div class="flex flex-col">
+                                        <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
+                                        <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
+                                        <p class="text-xs text-gray-400 mt-2">
+                                            @if($notification->created_at->isToday())
+                                                Today at {{ $notification->created_at->format('h:i A') }}
+                                            @elseif($notification->created_at->isYesterday())
+                                                Yesterday at {{ $notification->created_at->format('h:i A') }}
+                                            @elseif($notification->created_at->isCurrentYear())
+                                                {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
+                                            @else
+                                                {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
+                                            @endif
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" 
-                                    class="mark-as-read-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
-                                    data-notification-id="{{ $notification->id }}"
-                                >
-                            </div>
                         </div>
-                    </div>
+                    </a>
                     @endforeach
                 @endif
             </div>
