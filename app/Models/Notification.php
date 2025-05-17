@@ -10,12 +10,17 @@ class Notification extends Model
     use HasFactory;
 
     protected $table = 'notifications'; // Explicitly define the table name
+
     protected $fillable = [
         'user_id',
         'title',
         'message',
         'is_read',
-        'url'
+        'url',
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 }
-
