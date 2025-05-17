@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Events\DocumentStatusUpdated;
 
 class DocumentReviewController extends Controller
 {
@@ -169,6 +170,10 @@ class DocumentReviewController extends Controller
             $document->status = 'Approved';
             $document->save();
             
+            // Dispatch event for notification
+            // Make sure the event is constructed with the correct parameters as defined in your event class
+            event(new DocumentStatusUpdated($document));
+           
             // Find the existing review and update it
             $existingReview = DB::table('reviews')
                 ->where('document_id', $id)
@@ -257,6 +262,8 @@ class DocumentReviewController extends Controller
             // Update document status
             $document->status = 'Rejected';
             $document->save();
+
+            event(new \App\Events\DocumentStatusUpdated($document));
             
             // Find the existing review and update it
             $existingReview = DB::table('reviews')
@@ -313,6 +320,9 @@ class DocumentReviewController extends Controller
             // Update document status
             $document->status = 'Resubmission Requested';
             $document->save();
+
+
+            event(new \App\Events\DocumentStatusUpdated($document));
             
             // Find the existing review and update it
             $existingReview = DB::table('reviews')

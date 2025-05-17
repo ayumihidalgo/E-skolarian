@@ -173,6 +173,10 @@ Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])-
 Route::get('/notification', fn () => view('components.general-components.notification'));
 Route::get('/notifications', fn () => view('notifications'))->name('notifications');
 Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->middleware('auth');
+Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+Route::middleware(['auth', 'role:student'])->group(function () {
+    Route::get('/notifications', [StudentNotificationController::class, 'index'])->name('student.notifications.index');
+});
 
 // ----------------------------------------
 // Calendar IndexTwo (Shared)
