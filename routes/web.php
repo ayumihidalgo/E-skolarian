@@ -120,6 +120,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::post('/users/{id}', [UserController::class, 'update']);
     Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check.email');
     Route::get('/check-roles', [UserController::class, 'checkRoles'])->name('check.roles');
+    Route::post('/check-username', [UserController::class, 'checkUsername'])->name('check-username');
 
     Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
 
