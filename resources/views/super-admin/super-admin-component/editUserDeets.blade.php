@@ -3,7 +3,7 @@
 <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-50 overflow-hidden">
 
     <!-- Close Button -->
-    <button type="button" id="closeEditModalBtn" class="absolute top-7 right-5 text-black-500 hover:text-[#7A1212] transition-colors duration-200">
+    <button type="button" id="closeEditModalBtn" class="absolute top-7 right-5 text-black-500 hover:text-[#7A1212] transition-colors duration-200 cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -49,7 +49,7 @@
 
             <div class="flex justify-center">
                 <button type="submit"
-                    class="group flex items-center bg-white border border-[#A40202] px-4 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#7A1212] hover:bg-red-800 hover:text-white">
+                    class="group flex items-center bg-white border border-[#A40202] px-4 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#7A1212] hover:bg-red-800 hover:text-white cursor-not-allowed">
                     Save Changes
                 </button>
             </div>
