@@ -208,3 +208,8 @@ Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->n
 // Records (Shared)
 // ----------------------------------------
 Route::get('/records/{id}', [StudentTrackerController::class, 'show'])->name('records.show');
+
+
+Route::get('/loading', function () {
+    return view('loading');
+});
