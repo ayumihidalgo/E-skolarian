@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\SubmittedDocument;
+use App\Models\Review;
+use App\Models\DocumentForward;
+use App\Models\Document;
+use App\Notifications\DocumentResubmissionRequested;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -100,7 +104,7 @@ class DocumentReviewController extends Controller
             'organization' => $document->user ? $document->user->username : 'Unknown',
             'reviews' => $document->reviews->map(function($review) {
                 return [
-                    'reviewer_name' => $review->reviewer ? $review->reviewer->name : 'Unknown',
+                    'reviewer_name' => $review->reviewer ? $review->reviewer->username : 'Unknown',
                     'status' => $review->status,
                     'message' => $review->message,
                     'created_at' => $review->created_at
@@ -240,7 +244,7 @@ class DocumentReviewController extends Controller
         $admins = User::where('role', 'admin')
             ->where('id', '!=', Auth::id()) // Exclude current user
             ->where('active', true) // Only active users
-            ->select('id', 'name', 'username')
+            ->select('id', 'username', 'email')
             ->get();
         
         return response()->json($admins);
@@ -318,7 +322,7 @@ class DocumentReviewController extends Controller
                 ->findOrFail($id);
             
             // Update document status
-            $document->status = 'Resubmission Requested';
+            $document->status = 'Resubmit';
             $document->save();
 
 
@@ -335,7 +339,7 @@ class DocumentReviewController extends Controller
                 DB::table('reviews')
                     ->where('id', $existingReview->id)
                     ->update([
-                        'status' => 'Resubmission Requested',
+                        'status' => 'Resubmit',
                         'message' => $request->input('message', 'Please resubmit with changes'),
                         'updated_at' => now()
                     ]);
@@ -344,11 +348,28 @@ class DocumentReviewController extends Controller
                 DB::table('reviews')->insert([
                     'document_id' => $id,
                     'reviewed_by' => Auth::id(),
-                    'status' => 'Resubmission Requested',
+                    'status' => 'Resubmit',
                     'message' => $request->input('message', 'Please resubmit with changes'),
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
+            }
+            
+            // Send notification to student if user exists
+            if ($document->user_id) {
+                $student = User::find($document->user_id);
+                if ($student) {
+                    try {
+                        $student->notify(new \App\Notifications\DocumentResubmissionRequested([
+                            'document_id' => $document->id,
+                            'document_title' => $document->subject,
+                            'message' => $request->input('message', 'Please resubmit with changes')
+                        ]));
+                    } catch (\Exception $e) {
+                        // Log the error but don't stop the process
+                        \Log::error('Failed to send notification: ' . $e->getMessage());
+                    }
+                }
             }
             
             return response()->json([
@@ -356,6 +377,73 @@ class DocumentReviewController extends Controller
                 'message' => 'Resubmission requested successfully'
             ]);
         } catch (\Exception $e) {
+            \Log::error('Document resubmission error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Forward a document to another admin
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function forwardDocument(Request $request, $id)
+    {
+        try {
+            // Validate request data
+            $request->validate([
+                'forward_to' => 'required|exists:users,id',
+                'message' => 'required|string|max:500',
+            ]);
+
+            $document = SubmittedDocument::where('received_by', Auth::id())
+                ->findOrFail($id);
+            
+            // Get the target admin name for notification purposes
+            $targetAdmin = User::find($request->input('forward_to'));
+            if (!$targetAdmin) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Target administrator not found'
+                ], 404);
+            }
+
+            // Create a review record
+            $review = new Review([
+                'document_id' => $id,
+                'reviewed_by' => Auth::id(),
+                'status' => 'Forwarded',
+                'message' => 'Document forwarded to ' . $targetAdmin->username . ': ' . $request->input('message'),
+            ]);
+            $review->save();
+
+            // Record the forwarding action
+            $forward = new DocumentForward([
+                'document_id' => $id,
+                'forwarded_by' => Auth::id(),
+                'forwarded_to' => $request->input('forward_to'),
+                'message' => $request->input('message'),
+            ]);
+            $forward->save();
+
+            // Update the document's received_by field
+            $document->received_by = $request->input('forward_to');
+            $document->save();
+
+            // Trigger notification for the target admin
+            event(new DocumentStatusUpdated($document));
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Document successfully forwarded to ' . $targetAdmin->username
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Document forwarding error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage()

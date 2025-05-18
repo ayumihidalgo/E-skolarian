@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('reviewed_by')->constrained('users')->onDelete('cascade');
             $table->foreignId('document_id')->constrained('submitted_documents')->onDelete('cascade');
             $table->text('message')->nullable();
-            $table->enum('status', ['Pending', 'Under Review', 'Approved', 'Rejected', 'Resubmit'])->default('Under Review');
+            $table->enum('status', ['Pending', 'Under Review', 'Approved', 'Rejected', 'Resubmit', 'Forwarded'])->default('Under Review');
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();
         });
