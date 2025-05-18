@@ -5,15 +5,6 @@
 
 <div id="main-content" class="transition-all duration-300 ml-[20%]">
     <div class="flex-grow bg-gray-100">
-        <!-- <nav class="w-full bg-[#4d0F0F] h-[10%] p-4 text-white flex justify-end items-center space-x-6">
-            <a href="#" class="hover:text-yellow-400 transition duration-200">
-                <img src="{{ asset('images/mail.svg') }}" class="h-5 w-5" alt="Mail Icon">
-            </a>
-            <div>
-                <a href="#" class="font-semibold">Organization</a>
-            </div>
-        </nav> -->
-        
         <!-- Main Content -->
         <div id="mainContentArea" class="p-6 min-h-screen">
             <!-- Table View -->
