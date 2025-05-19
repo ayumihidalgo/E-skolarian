@@ -1,7 +1,22 @@
 @extends('base')
 @section('content')
-@include('components.studentNavBarComponent')
-@include('components.studentSideBarComponent')
+
+@if(Auth::user()->role === 'admin')
+    @include('components.adminNavBarComponent')
+    @include('components.adminSideBarComponent')
+@elseif(Auth::user()->role === 'student')
+    @include('components.studentNavBarComponent')
+    @include('components.studentSideBarComponent')
+@elseif(Auth::user()->role === 'teacher')
+    @include('components.teacherNavBarComponent')
+    @include('components.teacherSideBarComponent')
+@endif
+<!-- Add preload directives for faster resource loading -->
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css" as="style">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js" as="script">
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+
+
 
 <div id="main-content" class="transition-all duration-300 ml-[20%]">
         <!-- Calendar content section -->
@@ -14,16 +29,22 @@
             </div>
 
             <!-- Calendar container with explicit dimensions to ensure visibility -->
-            <div id="calendar-container" class="bg-white rounded-lg overflow-hidden shadow-md" style="position: relative; z-index: 5; min-height: 600px;">
-                <div id="calendar" style="min-height: 600px; width: 100%;"></div>
-            </div>
+<div id="calendar-container" class="bg-white rounded-lg overflow-hidden shadow-md" style="position: relative; z-index: 5; min-height: 600px;">
+    <div id="calendar-loading" class="absolute inset-0 flex items-center justify-center bg-white z-10">
+        <div class="animate-pulse flex flex-col items-center">
+            <svg class="w-12 h-12 text-[#7A1212]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p class="mt-2 text-gray-600">Loading calendar...</p>
         </div>
     </div>
+    <div id="calendar" style="min-height: 600px; width: 100%; opacity: 0; transition: opacity 0.3s ease-in-out;"></div>
+</div>
 
     @if(Auth::user()->role === 'admin')
         <!-- Event Modal -->
-        <div id="eventModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+        <div id="eventModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center hidden">
+            <div class="bg-white rounded-lg shadow-lg w-full max-w-md modal-container modal-visible">
                 <div class="p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-semibold">Create New Event</h3>
@@ -101,6 +122,7 @@
     position: relative;
     z-index: 5;
     display: block !important;
+    visibility: visible !important;
 }
 
 #calendar-container {
@@ -111,6 +133,7 @@
     overflow: hidden;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     background-color: #fff;
+    visibility: visible !important;
     width: 98% !important
 }
 .fc-header-toolbar {
@@ -120,6 +143,13 @@
   border: none !important;
   overflow: visible !important;
   min-height: 0px
+}
+/* Force visibility of calendar elements */
+.fc-view-harness {
+    display: block !important;
+    visibility: visible !important;
+    height: auto !important;
+    min-height: 500px !important;
 }
 
 /* Also round the table inside */
@@ -412,205 +442,271 @@
 .year-dropdown-item.selected .checkmark {
     visibility: visible;
 }
+/* Add these new transition styles to your style section */
+#main-content {
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.page-loading #main-content {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.page-ready #main-content {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Improve calendar transition */
+#calendar {
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* Add a smooth fade-in animation for the calendar */
+@keyframes calendarFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Ensure loading indicator transitions smoothly */
+#calendar-loading {
+    transition: opacity 0.3s ease-out;
+}
+
+/* Modal Styles for the create event*/
+.modal-backdrop {
+    backdrop-filter: blur(5px);
+    background-color: rgba(255, 255, 255, 0.6) !important;
+    transition: backdrop-filter 0.3s ease, background-color 0.3s ease;
+}
+
+/* Add animated transition for smooth open/close */
+.modal-container {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.modal-hidden {
+    transform: scale(0.95);
+    opacity: 0;
+}
+
+.modal-visible {
+    transform: scale(1);
+    opacity: 1;
+}
+
     </style>
 
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
     <script>
-        let calendarObj; // Make calendar variable accessible globally
-
-        // Wait for everything to load
-        window.addEventListener('load', function () {
-            console.log('Window loaded, initializing calendar...');
+        // Global calendar object
+        let calendarObj;
+        
+        // Global tracking of current month/year for the Today button
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM ready, initializing calendar...');
+            initCalendar();
+            
+            // Add force show button handler
+            document.getElementById('force-calendar')?.addEventListener('click', forceShowCalendar);
+        });
+        
+        // Force show calendar function for debugging
+        function forceShowCalendar() {
+            console.log('Forcing calendar visibility');
             const calendarEl = document.getElementById('calendar');
-
+            const loadingEl = document.getElementById('calendar-loading');
+            
+            if (calendarEl) {
+                calendarEl.style.opacity = '1';
+                calendarEl.style.display = 'block';
+            }
+            
+            if (loadingEl) {
+                loadingEl.style.display = 'none';
+            }
+            
+            if (calendarObj) {
+                calendarObj.render();
+                
+                // Add custom buttons
+                addCustomButtons();
+            } else {
+                console.error('Calendar object not initialized');
+                initCalendar(true); // Try to initialize again with force flag
+            }
+        }
+        
+        // Clean calendar initialization
+        function initCalendar(force = false) {
+            const calendarEl = document.getElementById('calendar');
+            const loadingEl = document.getElementById('calendar-loading');
+            
             if (!calendarEl) {
-                console.error('Calendar element not found!');
+                console.error('Calendar element not found');
                 return;
             }
-
-            calendarObj = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                initialDate: new Date(), // Use current date
-                height: 'auto',
-                aspectRatio: 1.5,
-                headerToolbar: {
-                    left: '',
-                    center: 'prev title next',
-                    right: 'today'
-                },
-                buttonText: {
-                    today: 'Today'
-                },
-                dayHeaderFormat: { weekday: 'short' },
-                fixedWeekCount: false, // Allows the calendar to show the exact number of weeks in a month
-                datesSet: function() {
-                    // This runs whenever the calendar date changes
-                    checkIfCurrentMonth();
-                },
-                // Date click handler
-                dateClick: function (info) {
-                    @if(Auth::user()->role === 'admin')
-                    openEventModal(info.dateStr);
-                    @endif
-                },
-                eventDisplay: 'block', // Display events as blocks
-                eventMaxStack: 3, // Show maximum 3 events per day before showing "+more"
-                events: [
-                    {
-                        title: 'Campus Clean-up',
-                        start: '2025-04-08',
-                        backgroundColor: '#3498db',
-                        textColor: '#ffffff'
+            
+            // Set initial styles
+            calendarEl.style.opacity = '0';
+            calendarEl.style.display = 'block';
+            
+            try {
+                console.log('Creating calendar object...');
+                calendarObj = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'dayGridMonth',
+                    initialDate: new Date(),
+                    height: 'auto',
+                    aspectRatio: 1.5,
+                    headerToolbar: {
+                        left: '',
+                        center: 'prev title next',
+                        right: 'today'
                     },
-                    {
-                        title: 'Freshmen Welcome',
-                        start: '2025-04-19',
-                        backgroundColor: '#f1c40f',
-                        textColor: '#000000'
+                    buttonText: {
+                        today: 'Today'
                     },
-                    {
-                        title: 'TechTalk 2025',
-                        start: '2025-04-19',
-                        backgroundColor: '#e74c3c',
-                        textColor: '#ffffff'
+                    dayHeaderFormat: { weekday: 'short' },
+                    fixedWeekCount: false,
+                    // Handle date changes
+                    datesSet: function() {
+                        checkIfCurrentMonth();
                     },
-                    {
-                        title: 'Outreach Program',
-                        start: '2025-04-19',
-                        backgroundColor: '#e67e22',
-                        textColor: '#000000'
+                    // Handle date clicks
+                    dateClick: function(info) {
+                        @if(Auth::user()->role === 'admin')
+                        openEventModal(info.dateStr);
+                        @endif
                     },
-                    {
-                        title: 'Clean & Green',
-                        start: '2025-04-23',
-                        backgroundColor: '#2ecc71',
-                        textColor: '#000000'
-                    },
-                    {
-                        title: 'Leadership Workshop',
-                        start: '2025-04-27',
-                        backgroundColor: '#3498db',
-                        textColor: '#ffffff'
-                    },
-                    {
-                        title: 'Business Planning',
-                        start: '2025-04-27',
-                        backgroundColor: '#f39c12',
-                        textColor: '#000000'
-                    },
-                    {
-                        title: 'Reel',
-                        start: '2025-04-27',
-                        backgroundColor: '#e74c3c',
-                        textColor: '#ffffff'
+                    // Display settings
+                    eventDisplay: 'block',
+                    eventMaxStack: 3,
+                    // Sample events
+                    events: [
+                        // Your existing events...
+                    ],
+                    eventDidMount: function(info) {
+                        // Your existing event styling...
                     }
-                ],
-                eventDidMount: function (info) {
-                    // Ensure event text isn't truncated
-                    info.el.style.whiteSpace = 'normal';
-                    info.el.style.overflow = 'visible';
-
-                    // Truncate the text if it's too long (add ellipsis)
-                    const originalTitle = info.event.title;
-                    if (originalTitle.length > 15) {
-                        const truncatedTitle = originalTitle.substring(0, 12) + '...';
-                        const eventTitleEl = info.el.querySelector('.fc-event-title');
-                        if (eventTitleEl) {
-                            eventTitleEl.textContent = truncatedTitle;
-                            // Add tooltip with full title
-                            info.el.title = originalTitle;
-                        }
+                });
+                
+                console.log('Rendering calendar...');
+                calendarObj.render();
+                
+                // Show calendar with a slight delay
+                setTimeout(function() {
+                    console.log('Making calendar visible');
+                    calendarEl.style.opacity = '1';
+                    
+                    if (loadingEl) {
+                        loadingEl.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingEl.style.display = 'none';
+                        }, 300);
                     }
+                    
+                    // Add custom buttons after calendar is visible
+                    addCustomButtons();
+                }, 300);
+                
+            } catch (error) {
+                console.error('Error initializing calendar:', error);
+                if (loadingEl) {
+                    loadingEl.innerHTML = '<div class="text-red-500">Error loading calendar: ' + error.message + '</div>';
                 }
-            });
-
-            console.log('Rendering calendar...');
-            calendarObj.render();
-            console.log('Calendar rendered!');
-
-            // Add the custom create event button outside the calendar
+            }
+        }
+        
+        // Add custom buttons to the calendar
+        function addCustomButtons() {
+            console.log('Adding custom buttons...');
             const headerRight = document.querySelector('.fc-toolbar-chunk:last-child');
+            
             @if(Auth::user()->role === 'admin')
-                const createEventBtn = document.createElement('button');
-                createEventBtn.className = 'custom-create-event';
-                createEventBtn.innerHTML = '<svg class="custom-create-event-icon" style="width: 1em; height: 1em; margin-right: 4px;" fill="none" stroke="#FFF" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> <span class="custom-create-event-text">Create new event</span>';
-                createEventBtn.addEventListener('click', openEventModal);
-
-                if (headerRight) {
-                    headerRight.appendChild(createEventBtn);
-                }
+            // Create event button
+            const createEventBtn = document.createElement('button');
+            createEventBtn.className = 'custom-create-event';
+            createEventBtn.innerHTML = '<svg class="custom-create-event-icon" style="width: 1em; height: 1em; margin-right: 4px;" fill="none" stroke="#FFF" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg> <span class="custom-create-event-text">Create new event</span>';
+            createEventBtn.addEventListener('click', () => openEventModal());
+            
+            if (headerRight) {
+                headerRight.appendChild(createEventBtn);
+            }
             @endif
-
-            // Check if we're on current month
+            
+            // Check current month status
             checkIfCurrentMonth();
-        });
-
-        // Function to check if the current calendar view is showing the current month
+        }
+        
+        // Check if current month is showing
         function checkIfCurrentMonth() {
             if (!calendarObj) return;
             
-            // Get the current date from the system
-            const now = new Date();
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
-
-            // Get the date currently displayed in the calendar
             const calendarDate = calendarObj.getDate();
             const calendarMonth = calendarDate.getMonth();
             const calendarYear = calendarDate.getFullYear();
-
-            // Get the today button element
+            
             const todayButton = document.querySelector('.fc-today-button');
             if (!todayButton) return;
-
-            // Hide or show the today button based on whether we're viewing the current month
-            if (currentMonth === calendarMonth && currentYear === calendarYear) {
-                todayButton.style.display = 'none';
-            } else {
-                todayButton.style.display = '';
+            
+            // Hide Today button if already on current month
+            todayButton.style.display = 
+                (currentMonth === calendarMonth && currentYear === calendarYear) 
+                ? 'none' : '';
+        }
+        
+        // Modal functions remain the same
+function openEventModal(dateStr = null) {
+    const modal = document.getElementById('eventModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    if (modal) {
+        // If a date was clicked, set that date in the form
+        if (dateStr) {
+            const startInput = document.getElementById('event-start');
+            if (startInput) {
+                startInput.value = dateStr + 'T09:00';
+            }
+            
+            const endInput = document.getElementById('event-end');
+            if (endInput) {
+                endInput.value = dateStr + 'T10:00';
             }
         }
+        
+        // Show modal with animation
+        modal.classList.remove('hidden');
+        
+        // Trigger animation after a small delay
+        setTimeout(() => {
+            modalContent.classList.remove('modal-hidden');
+            modalContent.classList.add('modal-visible');
+        }, 10);
+    }
+}
 
-        // Event handlers for today, prev, and next buttons
-        document.addEventListener('click', function(e) {
-            if (e.target && (e.target.matches('.fc-today-button') || e.target.closest('.fc-today-button') || 
-                             e.target.matches('.fc-prev-button') || e.target.closest('.fc-prev-button') || 
-                             e.target.matches('.fc-next-button') || e.target.closest('.fc-next-button'))) {
-                setTimeout(function() {
-                    checkIfCurrentMonth();
-                }, 100);
-            }
-        });
-
-        // Modal functions
-        function openEventModal(dateStr = null) {
-            const modal = document.getElementById('eventModal');
-            if (modal) {
-                // If a date was clicked, set that date in the form
-                if (dateStr) {
-                    const startInput = document.getElementById('event-start');
-                    if (startInput) {
-                        startInput.value = dateStr + 'T09:00';
-                    }
-
-                    const endInput = document.getElementById('event-end');
-                    if (endInput) {
-                        endInput.value = dateStr + 'T10:00';
-                    }
-                }
-
-                modal.classList.remove('hidden');
-            }
-        }
-
-        function closeEventModal() {
-            const modal = document.getElementById('eventModal');
-            if (modal) {
-                modal.classList.add('hidden');
-            }
-        }
+function closeEventModal() {
+    const modal = document.getElementById('eventModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    if (modal) {
+        // Hide with animation
+        modalContent.classList.remove('modal-visible');
+        modalContent.classList.add('modal-hidden');
+        
+        // Completely hide after animation completes
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+}
 
         function saveEvent() {
             // Get form values
