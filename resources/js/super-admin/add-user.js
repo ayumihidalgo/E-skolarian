@@ -11,6 +11,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const cancelCloseBtn = document.getElementById('cancelCloseBtn');
     const confirmCloseBtn = document.getElementById('confirmCloseBtn');
 
+    // Processing flag to track form submission state
+    let isProcessing = false;
+
     // Form input elements
     const usernameInput = document.getElementById('username');
     const emailInput = document.getElementById('email');
@@ -74,7 +77,9 @@ document.addEventListener('DOMContentLoaded', function () {
     if (closeAddUserModalBtn) {
         closeAddUserModalBtn.addEventListener('click', function (e) {
             e.preventDefault();
-            handleCloseAttempt();
+            if (!isProcessing) {
+                handleCloseAttempt();
+            }
         });
     }
 
@@ -93,19 +98,14 @@ document.addEventListener('DOMContentLoaded', function () {
             // Reset form
             if (addUserForm) {
                 addUserForm.reset();
-                usernameError.classList.add('hidden');
-                emailError.classList.add('hidden');
-                roleError.classList.add('hidden');
-                usernameInput.classList.remove('border-red-500');
-                emailInput.classList.remove('border-red-500');
-                roleSelect.classList.remove('border-red-500');
+                resetValidationState();
             }
         });
     }
 
     // Add escape key handler for both modals
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
+        if (e.key === 'Escape' && !isProcessing) {
             if (!closeConfirmModal.classList.contains('hidden')) {
                 closeConfirmModal.classList.add('hidden');
             } else if (!addUserModal.classList.contains('hidden')) {
@@ -120,6 +120,40 @@ document.addEventListener('DOMContentLoaded', function () {
             closeConfirmModal.classList.add('hidden');
         }
     });
+
+    // Helper functions for processing state and validation reset
+    function resetProcessingState() {
+        isProcessing = false;
+        
+        // Re-enable close button
+        if (closeAddUserModalBtn) {
+            closeAddUserModalBtn.disabled = false;
+            closeAddUserModalBtn.style.opacity = '1';
+            closeAddUserModalBtn.style.cursor = 'pointer';
+        }
+
+        // Re-enable backdrop click
+        const modalBackdrop = document.querySelector('.add-user-backdrop');
+        if (modalBackdrop) {
+            modalBackdrop.style.pointerEvents = 'auto';
+        }
+
+        // Reset submit button
+        const submitBtn = addUserForm.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Add User';
+        }
+    }
+
+    function resetValidationState() {
+        usernameError.classList.add('hidden');
+        emailError.classList.add('hidden');
+        roleError.classList.add('hidden');
+        usernameInput.classList.remove('border-red-500');
+        emailInput.classList.remove('border-red-500');
+        roleSelect.classList.remove('border-red-500');
+    }
 
     // Email existence check function
     async function checkEmailExists(email) {
@@ -136,49 +170,63 @@ document.addEventListener('DOMContentLoaded', function () {
         return data.exists;
     }
 
-    // Function to fetch existing administrative roles
-async function fetchExistingRoles() {
-    try {
-        const response = await fetch('/check-roles', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-        const data = await response.json();
-        return data.existingRoles;
-    } catch (error) {
-        console.error('Error fetching existing roles:', error);
-        return [];
-    }
+    async function checkUsernameExists(username) {
+    const response = await fetch('/check-username', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ username: username.toLowerCase() })
+    });
+    const data = await response.json();
+    return data.exists;
 }
 
-// Function to update role options based on existing roles
-        function updateRoleOptions(existingRoles) {
-            if (!roleSelect) return;
-
-            const restrictedRoles = [
-                'Student Services',
-                'Academic Services',
-                'Administrative Services',
-                'Campus Director'
-            ];
-
-    // Hide restricted roles that already exist
-            Array.from(roleSelect.options).forEach(option => {
-                const roleName = option.value;
-                if (restrictedRoles.includes(roleName) && existingRoles.includes(roleName)) {
-                    option.disabled = true;
-                    option.style.display = 'none';
+    // Function to fetch existing administrative roles
+    async function fetchExistingRoles() {
+        try {
+            const response = await fetch('/check-roles', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
             });
+            const data = await response.json();
+            return data.existingRoles;
+        } catch (error) {
+            console.error('Error fetching existing roles:', error);
+            return [];
         }
+    }
+
+    // Function to update role options based on existing roles
+    function updateRoleOptions(existingRoles) {
+        if (!roleSelect) return;
+
+        const restrictedRoles = [
+            'Student Services',
+            'Academic Services',
+            'Administrative Services',
+            'Campus Director'
+        ];
+
+        // Hide restricted roles that already exist
+        Array.from(roleSelect.options).forEach(option => {
+            const roleName = option.value;
+            if (restrictedRoles.includes(roleName) && existingRoles.includes(roleName)) {
+                option.disabled = true;
+                option.style.display = 'none';
+            }
+        });
+    }
 
     // Form validation functions
     async function validateForm() {
-        const isUsernameValid = validateUsername();
+        const isUsernameValid = await validateUsername();
         const isEmailValid = await validateEmail();
         const isRoleValid = validateRole();
 
@@ -188,65 +236,62 @@ async function fetchExistingRoles() {
             submitButton.classList.toggle('opacity-50', !isUsernameValid || !isEmailValid || !isRoleValid);
             submitButton.classList.toggle('cursor-not-allowed', !isUsernameValid || !isEmailValid || !isRoleValid);
         }
-        
+
         return isUsernameValid && isEmailValid && isRoleValid;
     }
 
     // Username validation and space removal
     if (usernameInput) {
-        usernameInput.addEventListener('input', function(e) {
-            // Remove extra spaces and non-letter characters
-            this.value = this.value
-                .replace(/^\s+/, '') // Remove spaces from the start
-                .replace(/[^a-zA-Z\s]/g, '') // Remove non-letter characters except spaces
-                .replace(/\s+/g, ' '); // Replace multiple spaces with single space
-            validateUsername();
-            validateForm();
-        });
+    let usernameCheckTimeout;
+    usernameInput.addEventListener('input', function(e) {
+        // Remove extra spaces and non-letter characters
+        this.value = this.value
+            .replace(/^\s+/, '')
+            .replace(/[^a-zA-Z\s]/g, '')
+            .replace(/\s+/g, ' ');
 
-        usernameInput.addEventListener('blur', function() {
-        // Trim spaces on blur
+        // Clear previous timeout
+        clearTimeout(usernameCheckTimeout);
+
+        // Set new timeout to avoid too many requests
+        usernameCheckTimeout = setTimeout(() => {
+            validateUsername().then(() => validateForm());
+        }, 300);
+    });
+
+    usernameInput.addEventListener('blur', function() {
         this.value = this.value.trim();
-        validateUsername();
-        validateForm();
-        });
+        validateUsername().then(() => validateForm());
+    });
+}
+
+    async function validateUsername() {
+    const username = usernameInput.value.trim();
+    const MAX_USERNAME_LENGTH = 150;
+
+    // Reset error state
+    usernameError.classList.add('hidden');
+    usernameInput.classList.remove('border-red-500');
+
+    // Validation checks
+    if (username === '') {
+        showUsernameError('Name cannot be empty');
+        return false;
     }
 
-    function validateUsername() {
-        const username = usernameInput.value.trim();
-        const MAX_USERNAME_LENGTH = 150;
-
-        // Reset error state
-        usernameError.classList.add('hidden');
-        usernameInput.classList.remove('border-red-500');
-
-        // Validation checks
-        if (username === '') {
-            showUsernameError('Name cannot be empty');
-            return false;
-        }
-
-        if (username.startsWith(' ')) {
+    if (username.startsWith(' ')) {
         showUsernameError('Name cannot start with a space');
         return false;
-        }
+    }
 
-        if (username.length < 3) {
-            showUsernameError('Name must be at least 3 characters');
-            return false;
-        }
+    if (username.length < 3) {
+        showUsernameError('Name must be at least 3 characters');
+        return false;
+    }
 
-        if (username.length > 100) {
-            showUsernameError('Name must be less than 150 characters');
-            return false;
-        }
-
-        if (!/^[a-zA-Z\s]+$/.test(username)) {
-            showUsernameError('Name can only contain letters and spaces');
-            return false;
-        }
-
-        return true;
+    if (username.length > MAX_USERNAME_LENGTH) {
+        showUsernameError(`Name must be less than ${MAX_USERNAME_LENGTH} characters`);
+        return false;
     }
 
     function showUsernameError(message) {
@@ -255,9 +300,29 @@ async function fetchExistingRoles() {
         usernameInput.classList.add('border-red-500');
     }
 
+    if (!/^[a-zA-Z\s]+$/.test(username)) {
+        showUsernameError('Name can only contain letters and spaces');
+        return false;
+    }
+
+    // Check for duplicate username
+    try {
+        const exists = await checkUsernameExists(username);
+        if (exists) {
+            showUsernameError('This name already exists');
+            return false;
+        }
+    } catch (error) {
+        console.error('Error checking username:', error);
+        showUsernameError('Error checking username availability');
+        return false;
+    }
+
+    return true;
+}
+
     // Email validation and space removal
     if (emailInput) {
-
         let emailCheckTimeout;
         emailInput.addEventListener('input', function(e) {
             // Remove all spaces automatically
@@ -281,7 +346,7 @@ async function fetchExistingRoles() {
         const email = emailInput.value.trim();
         const MAX_EMAIL_LENGTH = 50;
 
-         // Reset error state
+        // Reset error state
         emailError.classList.add('hidden');
         emailInput.classList.remove('border-red-500');
 
@@ -292,9 +357,9 @@ async function fetchExistingRoles() {
         }
 
         if (email.length > MAX_EMAIL_LENGTH) {
-        showEmailError(`Email must be less than ${MAX_EMAIL_LENGTH} characters`);
-        return Promise.resolve(false);
-    }
+            showEmailError(`Email must be less than ${MAX_EMAIL_LENGTH} characters`);
+            return Promise.resolve(false);
+        }
 
         // Check for valid email format
         if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
@@ -394,139 +459,137 @@ async function fetchExistingRoles() {
         addUserForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            // Validate all fields before submission
-            if (!await validateForm()) {
-                return;
+            // Set processing flag
+            isProcessing = true;
+
+            // Disable close buttons and backdrop click
+            if (closeAddUserModalBtn) {
+                closeAddUserModalBtn.disabled = true;
+                closeAddUserModalBtn.style.opacity = '0.5';
+                closeAddUserModalBtn.style.cursor = 'not-allowed';
             }
 
-            // Get form data
-            const username = usernameInput.value.trim();
-            const email = emailInput.value.trim().toLowerCase();
-            const role_name = roleSelect.value;
-
-            // Get the actual role value (admin/student)
-            const selectedOption = roleSelect.options[roleSelect.selectedIndex];
-            const role = selectedOption.getAttribute('data-role');
-
-            // Create form data object
-            const formData = new FormData();
-            formData.append('username', username);
-            formData.append('email', email);
-            formData.append('role_name', role_name);
-            formData.append('role', role); // Send the mapped role value
-
-            // Get CSRF token from meta tag
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            if (csrfToken) {
-                formData.append('_token', csrfToken);
-            } else {
-                console.error("CSRF token not found. Make sure you have a meta tag with name='csrf-token'");
+            // Prevent escape key and backdrop click during processing
+            const modalBackdrop = document.querySelector('.add-user-backdrop');
+            if (modalBackdrop) {
+                modalBackdrop.style.pointerEvents = 'none';
             }
 
-            // Disable submit button to prevent multiple submissions
-            const submitBtn = addUserForm.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Adding...';
-            }
-
-            // Send the form data via fetch API
-            fetch('/users', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+            try {
+                // Validate all fields before submission
+                if (!await validateForm()) {
+                    resetProcessingState();
+                    return;
                 }
-            })
-                .then(async response => {
-                    if (response.status >= 200 && response.status < 300) {
-                        return response.text().then(text => {
-                            try {
-                                return JSON.parse(text);
-                            } catch (e) {
-                                return { success: true, message: "User added successfully" };
-                            }
-                        });
-                    } else {
-                        return response.text().then(text => {
-                            try {
-                                return Promise.reject(JSON.parse(text));
-                            } catch (e) {
-                                return Promise.reject({ message: `Server error: ${response.status}` });
-                            }
-                        });
+
+                // Get form data
+                const username = usernameInput.value.trim();
+                const email = emailInput.value.trim().toLowerCase();
+                const role_name = roleSelect.value;
+
+                // Get the actual role value (admin/student)
+                const selectedOption = roleSelect.options[roleSelect.selectedIndex];
+                const role = selectedOption.getAttribute('data-role');
+
+                // Create form data object
+                const formData = new FormData();
+                formData.append('username', username);
+                formData.append('email', email);
+                formData.append('role_name', role_name);
+                formData.append('role', role); // Send the mapped role value
+
+                // Get CSRF token from meta tag
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                if (csrfToken) {
+                    formData.append('_token', csrfToken);
+                } else {
+                    console.error("CSRF token not found. Make sure you have a meta tag with name='csrf-token'");
+                }
+
+                // Disable submit button to prevent multiple submissions
+                const submitBtn = addUserForm.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = 'Adding...';
+                }
+
+                // Send the form data via fetch API
+                const response = await fetch('/users', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
                     }
-                })
-                .then(data => {
-                    // Reset form fields
-                    addUserForm.reset();
-                    usernameError.classList.add('hidden');
-                    emailError.classList.add('hidden');
-                    roleError.classList.add('hidden');
-                    usernameInput.classList.remove('border-red-500');
-                    emailInput.classList.remove('border-red-500');
-                    roleSelect.classList.remove('border-red-500');
-
-                    // Close the add user modal
-                    if (addUserModal) {
-                        addUserModal.classList.add('hidden');
-                    }
-
-                    // Show success message
-                    if (successModal) {
-                        // Update success message if needed
-                        document.getElementById('successTitle').textContent = 'Account Successfully Created!';
-                        document.getElementById('successMessage').textContent = 'The user account has been added successfully.';
-
-                        // Show success modal
-                        successModal.classList.remove('hidden');
-
-                        // Add click event listeners for both the okay button and close button
-                        const okayButton = document.querySelector('#successModal button[type="button"]');
-                        const closeSuccessBtn = document.querySelector('#successModal #closeSuccessModalBtn');
-
-                        if (okayButton) {
-                            okayButton.addEventListener('click', () => {
-                                successModal.classList.add('hidden');
-                                window.location.reload();
-                            });
-                        }
-                        if (closeSuccessBtn) {
-                            closeSuccessBtn.addEventListener('click', () => {
-                                successModal.classList.add('hidden');
-                                window.location.reload();
-                            });
-                        }
-                    } else {
-                        // Fallback to alert if modal not found
-                        alert('User added successfully!');
-                        window.location.reload();
-                    }
-                })
-                .catch(error => {
-                    console.error("Error:", error);
-
-                    // Re-enable the submit button
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = 'Add User';
-                    }
-
-                    // Extract error message
-                    let errorMessage = 'An error occurred while adding the user.';
-
-                    if (error && typeof error === 'object') {
-                        if (error.errors && Object.keys(error.errors).length > 0) {
-                            const firstErrorKey = Object.keys(error.errors)[0];
-                            errorMessage = error.errors[firstErrorKey][0];
-                        } else if (error.message) {
-                            errorMessage = error.message;
-                        }
-                    }
-
-                    // Display error message to user
-                    alert(errorMessage);
                 });
+
+                const data = await response.text().then(text => {
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        return { success: true, message: "User added successfully" };
+                    }
+                });
+
+                // Reset form fields
+                addUserForm.reset();
+                resetValidationState();
+
+                // Close the add user modal
+                if (addUserModal) {
+                    addUserModal.classList.add('hidden');
+                }
+
+                // Show success message
+                if (successModal) {
+                    // Update success message if needed
+                    document.getElementById('successTitle').textContent = 'Account Successfully Created!';
+                    document.getElementById('successMessage').textContent = 'The user account has been added successfully.';
+
+                    // Show success modal
+                    successModal.classList.remove('hidden');
+
+                    // Add click event listeners for both the okay button and close button
+                    const okayButton = document.querySelector('#successModal button[type="button"]');
+                    const closeSuccessBtn = document.querySelector('#successModal #closeSuccessModalBtn');
+
+                    if (okayButton) {
+                        okayButton.addEventListener('click', () => {
+                            successModal.classList.add('hidden');
+                            window.location.reload();
+                        });
+                    }
+                    if (closeSuccessBtn) {
+                        closeSuccessBtn.addEventListener('click', () => {
+                            successModal.classList.add('hidden');
+                            window.location.reload();
+                        });
+                    }
+                } else {
+                    // Fallback to alert if modal not found
+                    alert('User added successfully!');
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.error("Error:", error);
+
+                // Extract error message
+                let errorMessage = 'An error occurred while adding the user.';
+
+                if (error && typeof error === 'object') {
+                    if (error.errors && Object.keys(error.errors).length > 0) {
+                        const firstErrorKey = Object.keys(error.errors)[0];
+                        errorMessage = error.errors[firstErrorKey][0];
+                    } else if (error.message) {
+                        errorMessage = error.message;
+                    }
+                }
+
+                // Display error message to user
+                alert(errorMessage);
+            } finally {
+                // Reset processing state
+                resetProcessingState();
+            }
         });
     }
 });

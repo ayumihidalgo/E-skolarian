@@ -51,7 +51,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Setup close button functionality
     const closeUserDetailsBtn = document.getElementById('closeUserDetailsBtn');
-    const userDetailsBackdrop = document.querySelector('.user-details-backdrop');
 
     if (closeUserDetailsBtn) {
         closeUserDetailsBtn.addEventListener('click', function() {
@@ -68,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // If setupModalClose is available, use it as a backup method
     if (window.setupModalClose) {
         try {
-            window.setupModalClose(userDetailsModal, '#closeUserDetailsBtn', '.user-details-backdrop');
+            window.setupModalClose(userDetailsModal, '#closeUserDetailsBtn');
         } catch (error) {
             console.warn('Could not setup modal close with window.setupModalClose:', error);
         }

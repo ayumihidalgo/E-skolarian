@@ -257,6 +257,7 @@ window.closeDetailsPanel = function() {
     tableView.classList.remove('hidden');
 }
 
+// Comment rendering
 function loadComments(documentId) {
     fetch(`/comments/${documentId}`)
         .then(response => response.json())
@@ -273,22 +274,24 @@ function loadComments(documentId) {
             }
             
             container.innerHTML = comments.map(comment => `
-                <div class="flex items-start gap-2">
-                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="w-6 h-6 text-gray-600">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
-                        </svg>
-                    </div>
-                    <div class="flex-1 flex justify-between items-center rounded-lg px-4 py-2">
-                        <div class="text-white">
-                            <p class="font-bold text-sm">${comment.sender ? comment.sender.username : 'Unknown User'}</p>
-                            <p class="text-sm mt-1">${comment.comment}</p>
+                <div class="border-b border-[#782626] pb-4 mb-4">
+                    <div class="flex items-start gap-3">
+                        <div class="flex-shrink-0">
+                            <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                    stroke="currentColor" class="w-6 h-6 text-gray-600">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
+                                </svg>
+                            </div>
                         </div>
-                        <p class="text-xs text-gray-300 ml-4 whitespace-nowrap">
-                            ${new Date(comment.created_at).toLocaleString()}
-                        </p>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-center">
+                                <h4 class="font-bold text-white text-lg">${comment.sender ? comment.sender.username : 'Unknown User'}</h4>
+                                <span class="text-gray-300 text-sm">${new Date(comment.created_at).toLocaleString('en-US', {hour: '2-digit', minute: '2-digit'})}</span>
+                            </div>
+                            <p class="text-white mt-1">${comment.comment}</p>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -298,6 +301,7 @@ function loadComments(documentId) {
         });
 }
 
+// Comment submitting
 function submitComment() {
     const input = document.getElementById('commentInput');
     if (!input) {
@@ -427,21 +431,55 @@ document.addEventListener('DOMContentLoaded', function () {
     const adminSelect = document.getElementById('adminSelect');
     const adminMessage = document.getElementById('adminMessage');
 
-    // Open the "Send to Another Admin" modal and close the approval modal
+    // Load admin list when the modal is opened
     sendToAnotherAdminBtn.addEventListener('click', function () {
-        approvalModal.classList.add('hidden'); // Hide the approval modal
-        sendToAdminModal.classList.remove('hidden'); // Show the "Send to Another Admin" modal
+        // Clear previous options except the placeholder
+        while (adminSelect.options.length > 1) {
+            adminSelect.remove(1);
+        }
+        
+        // Clear previous message
+        adminMessage.value = '';
+        
+        // Hide the approval modal
+        document.getElementById('approvalModal').classList.add('hidden');
+        
+        // Fetch available admins
+        fetch('/admin/get-admins', {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(admins => {
+            // Add admins to the select dropdown
+            admins.forEach(admin => {
+                const option = document.createElement('option');
+                option.value = admin.id;
+                option.textContent = admin.username || admin.name;
+                adminSelect.appendChild(option);
+            });
+            
+            // Show the modal
+            sendToAdminModal.classList.remove('hidden');
+        })
+        .catch(error => {
+            console.error('Error loading admins:', error);
+            alert('Failed to load administrators. Please try again.');
+        });
     });
 
     // Close the "Send to Another Admin" modal
     closeSendToAdminModalBtn.addEventListener('click', function () {
-        sendToAdminModal.classList.add('hidden'); // Hide the "Send to Another Admin" modal
+        sendToAdminModal.classList.add('hidden');
     });
 
     // Close the modal when clicking outside the modal
     window.addEventListener('click', function (event) {
         if (event.target === sendToAdminModal) {
-            sendToAdminModal.classList.add('hidden'); // Hide the "Send to Another Admin" modal
+            sendToAdminModal.classList.add('hidden');
         }
     });
 
@@ -459,31 +497,50 @@ document.addEventListener('DOMContentLoaded', function () {
             alert('Please enter a message.');
             return;
         }
+        
+        if (!currentDocumentId) {
+            alert('Error: Document ID is missing. Please try again.');
+            return;
+        }
 
-        // Example: Send the data to the server
-        fetch('/admin/send-to-another-admin', {
+        // Send the data to the server
+        fetch(`/admin/documents/${currentDocumentId}/forward`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify({
-                admin: selectedAdmin,
-                message: message,
-                documentId: currentDocumentId // Replace with the actual document ID
+                forward_to: selectedAdmin,
+                message: message
             })
         })
         .then(response => {
-            if (response.ok) {
-                alert('Document successfully sent to another admin.');
+            if (!response.ok) {
+                return response.json().then(data => {
+                    throw new Error(data.error || 'Failed to forward document');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                alert('Document successfully forwarded to another admin.');
                 sendToAdminModal.classList.add('hidden'); // Close the modal
+                
+                // Return to table view
+                closeDetailsPanel();
+                
+                // Refresh the page to update document list
+                window.location.reload();
             } else {
-                alert('Failed to send the document. Please try again.');
+                alert('Failed to send the document: ' + (data.error || 'Unknown error'));
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred. Please try again.');
+            alert('An error occurred: ' + error.message);
         });
     });
 });
@@ -616,61 +673,77 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitResubmissionBtn = document.getElementById('submitResubmissionBtn');
     
     // Open resubmission modal when Request Resubmission is clicked
-    requestResubmissionBtn.addEventListener('click', function() {
-        // Close the reject modal first
-        document.getElementById('rejectModal').classList.add('hidden');
-        // Show the resubmission modal
-        resubmissionModal.classList.remove('hidden');
-    });
+    if (requestResubmissionBtn) {
+        requestResubmissionBtn.addEventListener('click', function() {
+            // Close the reject modal first
+            document.getElementById('rejectModal').classList.add('hidden');
+            // Show the resubmission modal
+            resubmissionModal.classList.remove('hidden');
+        });
+    }
     
     // Close resubmission modal
-    closeResubmissionModalBtn.addEventListener('click', function() {
-        resubmissionModal.classList.add('hidden');
-    });
+    if (closeResubmissionModalBtn) {
+        closeResubmissionModalBtn.addEventListener('click', function() {
+            resubmissionModal.classList.add('hidden');
+        });
+    }
     
     // Handle submit resubmission
-    submitResubmissionBtn.addEventListener('click', function() {
-        const message = document.getElementById('resubmissionMessage').value.trim();
-        
-        if (!message) {
-            alert('Please provide feedback for resubmission.');
-            return;
-        }
-        
-        // Submit the resubmission request with the correct endpoint
-        fetch(`/admin/documents/${currentDocumentId}/request-resubmission`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                message: message
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Show success message
-                alert('Resubmission request has been sent successfully.');
-                
-                // Close the modal
-                document.getElementById('resubmissionModal').classList.add('hidden');
-                
-                // Return to table view
-                closeDetailsPanel();
-                
-                // Refresh the page to update the document list
-                window.location.reload();
-            } else {
-                alert('Failed to send resubmission request: ' + (data.error || 'Unknown error'));
+    if (submitResubmissionBtn) {
+        submitResubmissionBtn.addEventListener('click', function() {
+            const message = document.getElementById('resubmissionMessage').value.trim();
+            
+            if (!message) {
+                alert('Please provide feedback for resubmission.');
+                return;
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while requesting resubmission. Please try again.');
+            
+            if (!currentDocumentId) {
+                alert('Error: Document ID is missing. Please try again.');
+                return;
+            }
+            
+            // Submit the resubmission request with the correct endpoint
+            fetch(`/admin/documents/${currentDocumentId}/request-resubmission`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    message: message
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Show success message
+                    alert('Resubmission request has been sent successfully.');
+                    
+                    // Close the modal
+                    document.getElementById('resubmissionModal').classList.add('hidden');
+                    
+                    // Return to table view
+                    closeDetailsPanel();
+                    
+                    // Refresh the page to update the document list
+                    window.location.reload();
+                } else {
+                    alert('Failed to send resubmission request: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while requesting resubmission. Please try again.');
+            });
         });
-    });
+    }
     
     // Close modal when clicking outside
     window.addEventListener('click', function(event) {

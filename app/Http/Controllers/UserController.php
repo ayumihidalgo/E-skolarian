@@ -158,4 +158,14 @@ public function checkRoles()
     
     return response()->json(['existingRoles' => $existingRoles]);
 }
+public function checkUsername(Request $request)
+{
+    $username = strtolower($request->username);
+    
+    $exists = User::whereRaw('LOWER(username) = ?', [$username])->exists();
+    
+    return response()->json([
+        'exists' => $exists
+    ]);
+}
 }

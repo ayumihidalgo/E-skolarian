@@ -74,13 +74,15 @@ Route::get('/notification', function () {
         Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
         Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
         Route::get('/admin/review', fn () => view('admin.review'))->name('admin.review');
-        Route::get('/admin/documentArchive', fn () => view('admin.documentArchive'))->name('admin.documentArchive');
+        Route::get('/admin/documentHistory', [AdminDocumentController::class, 'documentHistory'])->name('admin.documentHistory');
         Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
         Route::get('admin/settings', [SettingsController::class, 'viewAdminSettings'])->name('admin.settings');
         Route::post('admin/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('admin.settings.update-profile-picture');
         Route::post('admin/settings/change-password', [SettingsController::class, 'changePassword'])->name('admin.settings.change-password');
+        Route::get('/admin/archivePage', action: [AdminDocumentController::class, 'archivePage'])->name('admin.archivePage');
 
-        // Document processing
+
+       // Document processing
         Route::get('/admin/documents', [DocumentReviewController::class, 'index'])->name('admin.documents');
         Route::get('/admin/documents/{id}/details', [DocumentReviewController::class, 'getDetails'])->name('admin.documents.details');
         Route::post('/admin/documents/{id}/mark-as-opened', [DocumentReviewController::class, 'markAsOpened'])->name('admin.documents.mark-as-opened');
@@ -89,6 +91,8 @@ Route::get('/notification', function () {
         Route::post('/admin/documents/{id}/reject', [DocumentReviewController::class, 'rejectDocument'])->name('admin.documents.reject');
         Route::post('/admin/documents/{id}/request-resubmission', [DocumentReviewController::class, 'requestResubmission'])->name('admin.documents.request-resubmission');
         Route::get('/admin/get-admins', [DocumentReviewController::class, 'getAdmins'])->name('admin.get-admins');
+        Route::post('/admin/restore-documents', [AdminDocumentController::class, 'restoreDocuments'])->name('admin.restoreDocuments');
+        Route::post('/admin/archive-documents', [AdminDocumentController::class, 'archiveDocuments'])->name('admin.archiveDocuments');
     });
     // ---------------- Student ----------------
     Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(function () {
@@ -122,6 +126,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::post('/users/{id}', [UserController::class, 'update']);
     Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check.email');
     Route::get('/check-roles', [UserController::class, 'checkRoles'])->name('check.roles');
+    Route::post('/check-username', [UserController::class, 'checkUsername'])->name('check-username');
 
     Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
 
@@ -207,3 +212,8 @@ Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->n
 // Records (Shared)
 // ----------------------------------------
 Route::get('/records/{id}', [StudentTrackerController::class, 'show'])->name('records.show');
+
+
+Route::get('/loading', function () {
+    return view('loading');
+});
