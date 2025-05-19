@@ -338,6 +338,67 @@
             });
         });
 
+        document.addEventListener('DOMContentLoaded', function () {
+            // Only run if not already showing lockout from server
+            if (!document.getElementById('lockout-message')) {
+                const lockoutEnd = localStorage.getItem('lockoutEnd');
+                const now = Math.floor(Date.now() / 1000);
+
+                if (lockoutEnd && parseInt(lockoutEnd) > now) {
+                    // Find the error message container or where it would be
+                    let errorMsgDiv = document.querySelector('.status-message');
+                    const form = document.querySelector('form');
+
+                    // If no error message, find where it would be (before Remember Me)
+                    if (!errorMsgDiv && form) {
+                        // Find the Remember Me container to insert before it
+                        const rememberMeDiv = form.querySelector('#rememberMeContainer')?.parentElement;
+                        if (rememberMeDiv) {
+                            errorMsgDiv = document.createElement('div');
+                            rememberMeDiv.parentNode.insertBefore(errorMsgDiv, rememberMeDiv);
+                        }
+                    }
+
+                    if (errorMsgDiv) {
+                        // Insert lockout message in the error message area
+                        errorMsgDiv.innerHTML = `
+                            <div class="text-red-600 text-sm mt-1 pb-1.5 font-[Lexend] font-normal">
+                                <p id="lockout-message">Too many login attempts. Please try again in <span id="lockout-timer"></span>.</p>
+                            </div>
+                        `;
+                    }
+
+                    // Disable all form inputs and buttons
+                    if (form) {
+                        const formInputs = form.querySelectorAll('input, button[type="submit"]');
+                        formInputs.forEach(input => input.disabled = true);
+
+                        // Timer logic
+                        function formatTime(seconds) {
+                            const m = Math.floor(seconds / 60);
+                            const s = seconds % 60;
+                            return `${m}:${s.toString().padStart(2, '0')}`;
+                        }
+
+                        const lockoutTimer = document.getElementById('lockout-timer');
+                        let remaining = parseInt(lockoutEnd) - now;
+                        lockoutTimer.innerText = formatTime(remaining);
+
+                        const timerInterval = setInterval(() => {
+                            remaining--;
+                            if (remaining <= 0) {
+                                clearInterval(timerInterval);
+                                document.getElementById('lockout-message').innerText = "You can now try logging in again.";
+                                formInputs.forEach(input => input.disabled = false);
+                                localStorage.removeItem('lockoutEnd');
+                            } else {
+                                lockoutTimer.innerText = formatTime(remaining);
+                            }
+                        }, 1000);
+                    }
+                }
+            }
+        });
     </script>
     @php
         $randomIndex = rand(1, 6);
@@ -407,26 +468,50 @@
                     @endif
                     @if ($errors->has('lockout_time'))
                     <div class="text-red-600 text-sm mt-1 pb-1.5 font-[Lexend] font-normal">
-                        <p id="lockout-message">Too many login attempts. Please try again in <span id="lockout-timer"></span> seconds.</p>
+                        <p id="lockout-message">Too many login attempts. Please try again in <span id="lockout-timer"></span>.</p>
                     </div>
                     <script>
-                        // Countdown Timer
+                        // Countdown Timer with persistence
+                        function formatTime(seconds) {
+                            const m = Math.floor(seconds / 60);
+                            const s = seconds % 60;
+                            return `${m}:${s.toString().padStart(2, '0')}`;
+                        }
+
                         let lockoutTime = {{ $errors->first('lockout_time') }};
                         const lockoutMessage = document.getElementById('lockout-message');
                         const lockoutTimer = document.getElementById('lockout-timer');
                         const formInputs = document.querySelectorAll('input, button[type="submit"]');
+
+                        // Calculate lockout end timestamp
+                        const now = Math.floor(Date.now() / 1000);
+                        let lockoutEnd = now + lockoutTime;
+
+                        // If already stored, use the later one
+                        const storedEnd = localStorage.getItem('lockoutEnd');
+                        if (storedEnd && parseInt(storedEnd) > now) {
+                            lockoutEnd = parseInt(storedEnd);
+                            lockoutTime = lockoutEnd - now;
+                        } else {
+                            localStorage.setItem('lockoutEnd', lockoutEnd);
+                        }
+
                         // Disable inputs
                         formInputs.forEach(input => input.disabled = true);
+
                         // Display initial time
-                        lockoutTimer.innerText = lockoutTime;
+                        lockoutTimer.innerText = formatTime(lockoutTime);
+
                         const timerInterval = setInterval(() => {
-                            lockoutTime--;
-                            if (lockoutTime <= 0) {
+                            const now = Math.floor(Date.now() / 1000);
+                            const remaining = lockoutEnd - now;
+                            if (remaining <= 0) {
                                 clearInterval(timerInterval);
                                 lockoutMessage.innerText = "You can now try logging in again.";
                                 formInputs.forEach(input => input.disabled = false);
+                                localStorage.removeItem('lockoutEnd');
                             } else {
-                                lockoutTimer.innerText = lockoutTime;
+                                lockoutTimer.innerText = formatTime(remaining);
                             }
                         }, 1000);
                     </script>
