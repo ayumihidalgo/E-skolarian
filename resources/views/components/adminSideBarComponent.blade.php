@@ -29,7 +29,7 @@
         @foreach ([
             ['Dashboard', 'newDashboard.svg', route('admin.dashboard')],
             ['Review', 'review.svg', route('admin.documentReview')],
-            ['Archive', 'archive.svg', route('admin.documentArchive')],
+            ['Archive', 'archive.svg', route('admin.documentHistory')],
             ['Calendar', 'calendar.svg', route('calendar.indexTwo')],
             ['Settings', 'settings.svg', route('admin.settings')]
         ] as [$label, $icon, $route])
