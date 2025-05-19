@@ -20,10 +20,10 @@ class CommentController extends Controller
 
             // Get the document to determine the receiver
             $document = SubmittedDocument::findOrFail($validated['document_id']);
-            
+
             // Determine sent_by and received_by based on user role
             $currentUser = Auth::user();
-            
+
             if ($currentUser->role === 'admin') {
                 // If admin is commenting, the receiver is the document submitter
                 $sentBy = $currentUser->id;
