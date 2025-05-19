@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
 {
+    // Lockout parameters
+    protected $maxAttempts = 4;
+    protected $decayMinutes = 5;     
+
     public function showLoginForm()
     {
         return view('auth.login');
@@ -25,9 +28,9 @@ class LoginController extends Controller
 
         // Validation rules
         $credentials = $request->validate([
-            'email' => ['required', 'email', 'max:50'], // Email format validation and trimming
-            'password' => ['required', 'min:6'], // Password should have at least 6 characters
-            'role' => ['required', 'in:student,admin,super admin'], // Role validation for student, admin, or super admin
+            'email' => ['required', 'email', 'max:50'],
+            'password' => ['required', 'max:50'],
+            'role' => ['required', 'in:student,admin,super admin'],
         ]);
 
         // Check if the user has exceeded the allowed number of login attempts
@@ -42,19 +45,17 @@ class LoginController extends Controller
         if (Auth::attempt([
             'email' => $credentials['email'],
             'password' => $credentials['password'],
-            // Allow both admin and super admin to log in when admin is selected
             'role' => $credentials['role'] === 'admin' ? ['admin', 'super admin'] : $credentials['role'],
             'active' => 1,
         ], $request->filled('remember'))) {
-            // Regenerate the session if login is successful
-            $request->session()->regenerate();
+            // Successful login - clear attempts
+            $this->clearLoginAttempts($request);
 
+            $request->session()->regenerate();
             $request->session()->put('user_id', Auth::id());
             $request->session()->put('user_role', Auth::user()->role);
             $request->session()->put('user_email', Auth::user()->email);
 
-
-            // Redirect based on the role
             if (Auth::user()->role === 'student') {
                 return redirect('student/dashboard');
             } elseif (Auth::user()->role === 'admin') {
@@ -62,19 +63,16 @@ class LoginController extends Controller
             } elseif (Auth::user()->role === 'super admin') {
                 return redirect('super-admin/dashboard');
             }
-
         }
 
-        // Increment the login attempts
+        // Increment login attempts with 5 minutes decay time
         $this->incrementLoginAttempts($request);
 
-        // Return back with errors if credentials are invalid
         return back()->withErrors([
             'email' => '*Incorrect email or password.',
         ]);
     }
 
-    // Logout function
     public function logout(Request $request)
     {
         Auth::logout();
@@ -86,22 +84,43 @@ class LoginController extends Controller
     // Check if user has too many login attempts
     protected function hasTooManyLoginAttempts(Request $request)
     {
-        return RateLimiter::tooManyAttempts($this->throttleKey($request), 4);
+        return RateLimiter::tooManyAttempts($this->throttleKey($request), $this->maxAttempts);
     }
 
-    // Increment the login attempts counter
-    protected function incrementLoginAttempts(Request $request)
+    // Increment login attempts and set decay time (lockout duration)
+   protected function incrementLoginAttempts(Request $request)
+{
+    $key = $this->throttleKey($request);
+    $attempts = RateLimiter::attempts($key);
+    $decay = $this->decayMinutes * 60 + 5;
+
+    if ($attempts + 1 >= $this->maxAttempts) {
+        // Extend the decay time to full duration now
+        RateLimiter::clear($key); // Reset attempts to start fresh
+        for ($i = 0; $i < $this->maxAttempts; $i++) {
+            RateLimiter::hit($key, $decay);
+        }
+    } else {
+        // Normal increment
+        RateLimiter::hit($key, $decay);
+    }
+}
+
+
+
+    // Clear login attempts after successful login
+    protected function clearLoginAttempts(Request $request)
     {
-        RateLimiter::hit($this->throttleKey($request), 80); // Increment by 1 per attempt (instead of 80)
+        RateLimiter::clear($this->throttleKey($request));
     }
 
-    // Get the throttle key for the request
+    // Unique key for rate limiting per IP
     protected function throttleKey(Request $request)
     {
         return 'login:' . $request->ip();
     }
 
-    // Get the remaining lockout time (in seconds) for the user
+    // Remaining seconds for lockout
     protected function secondsRemainingForLockout(Request $request)
     {
         return RateLimiter::availableIn($this->throttleKey($request));
