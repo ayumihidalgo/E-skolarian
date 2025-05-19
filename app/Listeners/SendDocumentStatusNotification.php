@@ -29,7 +29,7 @@ class SendDocumentStatusNotification
 
         $status = $doc->status; // 'approved' or 'rejected'
         $title = 'Document ' . ucfirst($status);
-        $message = "Your document \"{$doc->title}\" (ID: {$doc->id}) was {$status}.";
+        $message = "Your document for subject \"{$doc->subject}\" (Type: {$doc->type}, ID: {$doc->id}) was {$status}.";
 
         try {
             Notification::create([
@@ -37,7 +37,7 @@ class SendDocumentStatusNotification
                 'message' => $message,
                 'user_id' => $student->id,
                 'is_read' => false,
-                'url'     => "/student/documents/{$doc->id}",
+                'url'     => route('records.show', ['id' => $doc->id]),
             ]);
             Log::info("Student notification created for user_id={$student->id}");
         } catch (\Exception $ex) {
