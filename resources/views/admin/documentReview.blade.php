@@ -107,47 +107,47 @@
 
                     <!-- Table Section -->
                     @if ($documents->isNotEmpty())
-                        <div class="bg-gray-50 overflow-x-auto rounded-xl flex flex-col min-h-[300px]">
-                            <table class="min-w-full text-sm rounded-xl">
-                                <thead class="bg-[#5C0B0B] text-white">
+                        <div class="bg-gray-50 overflow-hidden rounded-t-xl flex flex-col min-h-[300px]">
+                            <table class="min-w-full text-sm rounded-t-xl">
+                                <thead class="bg-white text-black font-extrabold text-lg">
                                     <tr>
-                                        <th class="px-6 py-3 text-left font-semibold">
+                                        <th class="px-6 py-3 text-left">
                                             <div class="flex items-center cursor-pointer" onclick="sortTable(0, 'text')">
                                                 <span>Tag</span>
                                                 <div class="flex flex-col ml-1">
-                                                    <i class="fa-solid fa-sort"></i>
+                                                    <i class="fa-solid fa-sort text-[#9099A5]"></i>
                                                 </div>
                                             </div>
                                         </th>
-                                        <th class="px-6 py-3 text-left font-semibold">
+                                        <th class="px-6 py-3 text-left">
                                             <div class="flex items-center cursor-pointer" onclick="sortTable(1, 'text')">
                                                 <span>Organization</span>
                                                 <div class="flex flex-col ml-1">
-                                                    <i class="fa-solid fa-sort"></i>
+                                                    <i class="fa-solid fa-sort text-[#9099A5]"></i>
                                                 </div>
                                             </div>
                                         </th>
-                                        <th class="px-6 py-3 text-left font-semibold">
+                                        <th class="px-6 py-3 text-left">
                                             <div class="flex items-center cursor-pointer" onclick="sortTable(2, 'text')">
                                                 <span>Title</span>
                                                 <div class="flex flex-col ml-1">
-                                                    <i class="fa-solid fa-sort"></i>
+                                                    <i class="fa-solid fa-sort text-[#9099A5]"></i>
                                                 </div>
                                             </div>
                                         </th>
-                                        <th class="px-6 py-3 text-left font-semibold">
+                                        <th class="px-6 py-3 text-left">
                                             <div class="flex items-center cursor-pointer" onclick="sortTable(3, 'date')">
                                                 <span>Date</span>
                                                 <div class="flex flex-col ml-1">
-                                                    <i class="fa-solid fa-sort"></i>
+                                                    <i class="fa-solid fa-sort text-[#9099A5]"></i>
                                                 </div>
                                             </div>
                                         </th>
-                                        <th class="px-6 py-3 text-left font-semibold">
+                                        <th class="px-6 py-3 text-left ">
                                             <div class="flex items-center cursor-pointer" onclick="sortTable(4, 'text')">
                                                 <span>Type</span>
                                                 <div class="flex flex-col ml-1">
-                                                    <i class="fa-solid fa-sort"></i>
+                                                    <i class="fa-solid fa-sort text-[#9099A5]"></i>
                                                 </div>
                                             </div>
                                         </th>
@@ -703,21 +703,42 @@
             for (const acronym in orgMap) {
                 reverseOrgMap[orgMap[acronym].toLowerCase()] = acronym.toLowerCase();
             }
+            
+            // Create a mapping between filter options and actual document types
+            const docTypeMap = {
+                'Event Proposal': 'Event Proposal',
+                'General Plan': 'General Plan of Activities',
+                'Calendar': 'Calendar of Activities',
+                'Accomplishment Report': 'Accomplishment Report',
+                'Constitution': 'Constitution and By-Laws',
+                'Request Letter': 'Request Letter',
+                'Off-Campus': 'Off Campus',
+                'Petition': 'Petition and Concern'
+            };
 
             function filterTable() {
                 const searchTerm = searchInput.value.toLowerCase();
                 const selectedOrg = organizationFilter.value;
-                const selectedType = documentTypeFilter.value.toLowerCase();
+                const selectedTypeOption = documentTypeFilter.value;
+                
+                console.log('Filtering with:', { 
+                    searchTerm, 
+                    selectedOrg, 
+                    selectedTypeOption 
+                });
 
                 // Get the full organization name if an acronym is selected
-                const selectedFullOrgName = selectedOrg ? orgMap[selectedOrg].toLowerCase() : '';
-
+                const selectedFullOrgName = selectedOrg && selectedOrg !== 'All' ? orgMap[selectedOrg].toLowerCase() : '';
+                
+                // Get the full document type if a short version is selected
+                const selectedType = selectedTypeOption.toLowerCase();
+                
                 tableRows.forEach(row => {
-                    const tag = row.cells[0].textContent.toLowerCase();
-                    const organization = row.cells[1].textContent.toLowerCase();
-                    const title = row.cells[2].textContent.toLowerCase();
-                    const type = row.cells[4].textContent.toLowerCase();
-
+                    const tag = row.cells[0].textContent.toLowerCase() || '';
+                    const organization = row.cells[1].textContent.toLowerCase() || '';
+                    const title = row.cells[2].textContent.toLowerCase() || '';
+                    const type = row.cells[4].textContent.toLowerCase() || '';
+                    
                     // Check if the search term matches acronym or full name
                     let matchesSearch = tag.includes(searchTerm) ||
                                     title.includes(searchTerm) ||
@@ -737,7 +758,19 @@
                         matchesOrg = organization.includes(selectedFullOrgName);
                     }
 
-                    const matchesType = selectedType === '' || selectedType === 'all' || type.includes(selectedType);
+                    // For document type, check if the type in the table includes the selected type
+                    let matchesType = true;
+                    if (selectedType !== '' && selectedType !== 'all') {
+                        // Look for partial matches in document type
+                        for (const [shortType, fullType] of Object.entries(docTypeMap)) {
+                            if (selectedTypeOption === shortType && type.includes(fullType.toLowerCase())) {
+                                matchesType = true;
+                                break;
+                            } else if (selectedType !== 'all' && !selectedType.includes(type) && !type.includes(selectedType)) {
+                                matchesType = false;
+                            }
+                        }
+                    }
 
                     if (matchesSearch && matchesOrg && matchesType) {
                         row.style.display = '';
@@ -773,16 +806,28 @@
                 }
             }
 
+            // Fix the "All" option in the organization filter
+            const allOrgOption = organizationFilter.querySelector('option[value=""]');
+            if (allOrgOption) {
+                allOrgOption.value = "All";
+            }
+            
+            // Fix the "All" option in the document type filter
+            const allTypeOption = documentTypeFilter.querySelector('option[value=""]');
+            if (allTypeOption) {
+                allTypeOption.value = "All";
+            }
+
             // Add event listeners
             searchInput.addEventListener('input', filterTable);
             organizationFilter.addEventListener('change', filterTable);
             documentTypeFilter.addEventListener('change', filterTable);
-
-            // Fix the "All" option in the organization filter
-            const allOption = organizationFilter.querySelector('option[value=""]');
-            if (allOption) {
-                allOption.value = "All";
-            }
+            
+            // This ensures that the filters are properly applied on initial page load
+            // Add a small delay to ensure the DOM is fully loaded
+            setTimeout(() => {
+                filterTable();
+            }, 100);
         });
 
         // Sorting Functionality
