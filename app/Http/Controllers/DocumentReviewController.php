@@ -43,7 +43,7 @@ class DocumentReviewController extends Controller
             ->orderBy('submitted_documents.created_at', 'desc');
             
         // Paginate the results - this returns a LengthAwarePaginator
-        $documents = $documentsQuery->paginate(10);
+        $documents = $documentsQuery->paginate(6);
         
         // Transform each document in the paginated collection
         $documents->getCollection()->transform(function($document) {

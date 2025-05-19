@@ -305,7 +305,7 @@
                         <div>
                             <h2 class="text-lg font-bold mb-2">Summary</h2>
                             <div class="bg-[#EFEFEF] text-gray-800 rounded-lg p-4">
-                                <p class="text-black" id="documentSummary">
+                                <p class="text-black break-words whitespace-normal overflow-wrap-anywhere" id="documentSummary">
                                     <!-- Summary will be inserted here -->
                                 </p>
                             </div>
