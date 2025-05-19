@@ -65,13 +65,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Open Add User Modal
     if (addUserBtn && addUserModal) {
-        addUserBtn.addEventListener('click', async function () {
-            // Fetch existing roles before showing the modal
-            const existingRoles = await fetchExistingRoles();
+    addUserBtn.addEventListener('click', function () {
+        // Show modal immediately
+        addUserModal.classList.remove('hidden');
+        
+        // Reset form and validation states
+        if (addUserForm) {
+            addUserForm.reset();
+            resetValidationState();
+        }
+        
+        // Fetch roles asynchronously without blocking modal display
+        fetchExistingRoles().then(existingRoles => {
             updateRoleOptions(existingRoles);
-            addUserModal.classList.remove('hidden');
+        }).catch(error => {
+            console.error('Error fetching roles:', error);
         });
-    }
+    });
+}
 
     // Close modal handlers
     if (closeAddUserModalBtn) {
@@ -186,43 +197,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to fetch existing administrative roles
     async function fetchExistingRoles() {
-        try {
-            const response = await fetch('/check-roles', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            const data = await response.json();
-            return data.existingRoles;
-        } catch (error) {
-            console.error('Error fetching existing roles:', error);
-            return [];
-        }
+    try {
+        const response = await fetch('/check-roles', {
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        if (!response.ok) throw new Error('Failed to fetch roles');
+        const data = await response.json();
+        return data.existingRoles || [];
+    } catch (error) {
+        console.error('Error fetching roles:', error);
+        return [];
     }
+}
 
     // Function to update role options based on existing roles
     function updateRoleOptions(existingRoles) {
-        if (!roleSelect) return;
+    if (!roleSelect) return;
 
-        const restrictedRoles = [
-            'Student Services',
-            'Academic Services',
-            'Administrative Services',
-            'Campus Director'
-        ];
+    const restrictedRoles = ['Student Services', 'Academic Services', 'Administrative Services', 'Campus Director'];
+    const options = Array.from(roleSelect.options);
 
-        // Hide restricted roles that already exist
-        Array.from(roleSelect.options).forEach(option => {
-            const roleName = option.value;
-            if (restrictedRoles.includes(roleName) && existingRoles.includes(roleName)) {
-                option.disabled = true;
-                option.style.display = 'none';
-            }
-        });
-    }
+    options.forEach(option => {
+        const roleName = option.value;
+        const isRestricted = restrictedRoles.includes(roleName) && existingRoles.includes(roleName);
+        option.disabled = isRestricted;
+        option.style.display = isRestricted ? 'none' : '';
+    });
+}
 
     // Form validation functions
     async function validateForm() {
