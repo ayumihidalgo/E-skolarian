@@ -99,7 +99,7 @@ Route::get('/notification', function () {
         Route::get('/student/dashboard', [StudentDashboardController::class, 'showStudentDashboard'])->name('student.dashboard');
         Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
         Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
-        Route::get('/student/documentArchive', fn () => view('student.documentArchive'))->name('student.documentArchive');
+        Route::get('/student/documentHistory', [StudentDocumentController::class, 'documentArchive'])->name('student.documentHistory');
         Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
         Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])->name('student.documentPreview');
         Route::get('student/settings', [SettingsController::class, 'viewSettings'])->name('student.settings');
@@ -159,9 +159,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
         return view('admin.documentArchive');
     })->name('admin.documentArchive');
 
-    Route::get('/student/documentArchive', function () {
-        return view('student.documentArchive');
-    })->name('student.documentArchive');
+    
     // Route for the document preview page (admin)
 Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
 });
@@ -192,21 +190,80 @@ Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->n
         // Document Viewing (Shared)
         // ----------------------------------------
         Route::get('/documents/{filename}', function ($filename) {
-            $path = public_path('documents/' . $filename);
-            if (!file_exists($path)) abort(404);
-
-            $mimeType = File::mimeType($path);
-            if ($mimeType === 'application/pdf') {
-                return Response::make(file_get_contents($path), 200, [
-                    'Content-Type' => $mimeType,
-                    'Content-Disposition' => 'inline; filename="' . $filename . '"'
+            // Set headers for WebAssembly threads support
+            header("Cross-Origin-Embedder-Policy: require-corp");
+            header("Cross-Origin-Opener-Policy: same-origin");
+            
+            // Look in the storage/app/public/documents folder
+            $path = storage_path('app/public/documents/' . $filename);
+            
+            if (!file_exists($path)) {
+                // Try public path as fallback
+                $path = public_path('storage/documents/' . $filename);
+                
+                if (!file_exists($path)) {
+                    return response()->json(['error' => 'File not found'], 404);
+                }
+            }
+            
+            // For PDF files, set appropriate headers
+            if (strtolower(pathinfo($filename, PATHINFO_EXTENSION)) === 'pdf') {
+                // Return the file with headers that encourage browsers to display it
+                return response()->file($path, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                    'X-Content-Type-Options' => 'nosniff',
+                    'Accept-Ranges' => 'bytes',
+                    'Pragma' => 'public',
+                    'Cache-Control' => 'public, max-age=86400',
+                    'Cross-Origin-Embedder-Policy' => 'require-corp',
+                    'Cross-Origin-Opener-Policy' => 'same-origin'
                 ]);
             }
-
+            
+            // For other files
             return response()->file($path);
         })->name('document.view')->middleware('auth');
 
-        Route::get('/test-pdf', fn () => response()->file(public_path('documents/test/sample.pdf')));
+        // Debugger
+        Route::get('/debug-documents', function () {
+            $path1 = storage_path('app/public/documents');
+            $path2 = public_path('storage/documents');
+            
+            $files1 = File::exists($path1) ? File::files($path1) : [];
+            $files2 = File::exists($path2) ? File::files($path2) : [];
+            
+            return [
+                'storage_path_exists' => File::exists($path1),
+                'public_path_exists' => File::exists($path2),
+                'storage_files' => collect($files1)->map(fn($file) => $file->getFilename()),
+                'public_files' => collect($files2)->map(fn($file) => $file->getFilename()),
+            ];
+        })->middleware('auth');
+
+        // WebViewer assets
+        Route::get('/webviewer/{path}', function ($path) {
+            $fullPath = public_path('webviewer/' . $path);
+            
+            if (!file_exists($fullPath)) {
+                return response()->json(['error' => 'WebViewer asset not found'], 404);
+            }
+            
+            $mime = match(pathinfo($path, PATHINFO_EXTENSION)) {
+                'wasm' => 'application/wasm',
+                'js' => 'application/javascript',
+                'json' => 'application/json',
+                'css' => 'text/css',
+                'map' => 'application/json',
+                default => mime_content_type($fullPath)
+            };
+            
+            return response()->file($fullPath, [
+                'Content-Type' => $mime,
+                'Cross-Origin-Embedder-Policy' => 'require-corp',
+                'Cross-Origin-Opener-Policy' => 'same-origin'
+            ]);
+        })->where('path', '.*');
 
 // ----------------------------------------
 // Records (Shared)

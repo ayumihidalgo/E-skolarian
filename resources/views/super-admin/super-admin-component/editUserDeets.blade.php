@@ -40,6 +40,7 @@
                     <option value="Student Services" data-role="admin">Student Services</option>
                     <option value="Academic Services" data-role="admin">Academic Services</option>
                     <option value="Administrative Services" data-role="admin">Administrative Services</option>
+                    <option value="Campus Director" data-role="admin">Campus Director</option>
                 </select>
                 <!-- Hidden field to store the actual role value (admin/student) -->
                 <input type="hidden" id="editActualRole" name="role" value="">
@@ -55,4 +56,34 @@
             </div>
         </form>
     </div>
+    <div id="closeEditConfirmModal" class="fixed inset-0 flex items-center justify-center z-[60] hidden">
+    <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+    <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-[70] overflow-hidden">
+        <div class="p-8">
+            <!-- Title -->
+            <h3 class="text-xl font-bold text-[#181D27] mb-2">
+                Confirm Leave Page
+            </h3>
+
+            <!-- Message -->
+            <p class="text-gray-600 text-base mb-8">
+                Are you sure you want to leave this page? Unsaved changes may be lost.
+            </p>
+
+            <!-- Buttons -->
+            <div class="flex justify-end items-center space-x-4">
+                <button type="button" 
+                        id="cancelEditCloseBtn"
+                        class="px-6 py-2.5 border border-gray-300 text-gray-700 font-medium rounded-[10px] hover:bg-gray-50 transition-colors duration-200">
+                    Cancel
+                </button>
+                <button type="button" 
+                        id="confirmEditCloseBtn"
+                        class="px-6 py-2.5 bg-[#A40202] text-white font-medium rounded-[10px] hover:bg-[#7A1212] transition-colors duration-200">
+                    Leave Page
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 </div>

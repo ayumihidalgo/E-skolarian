@@ -11,12 +11,39 @@ document.addEventListener('DOMContentLoaded', function () {
     let initialFormState = {};
     const saveButton = editUserForm.querySelector('button[type="submit"]');
 
+    // Confirmation Modal Elements - positioned right after main modal elements
+    const closeEditConfirmModal = document.getElementById('closeEditConfirmModal');
+    const cancelEditCloseBtn = document.getElementById('cancelEditCloseBtn');
+    const confirmEditCloseBtn = document.getElementById('confirmEditCloseBtn');
+
+    // Position the confirmation modal with proper z-index
+    if (closeEditConfirmModal) {
+        closeEditConfirmModal.style.zIndex = "100"; // Higher than edit modal
+    }
+
     // Add processing flag
     let isProcessing = false;
 
-    // Set up modal functionality
-    if (window.setupModalClose) {
-        window.setupModalClose(editUserModal, '#closeEditModalBtn', null);
+    // We need to intercept the default modal close functionality from setupModalClose
+    // by adding our own backdrop click handler
+    if (editUserBackdrop) {
+        editUserBackdrop.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (!isProcessing) {
+                // Only show confirmation if there are unsaved changes
+                if (checkFormChanged()) {
+                    closeEditConfirmModal.classList.remove('hidden');
+                } else {
+                    // No changes, close without confirmation
+                    editUserModal.classList.add('hidden');
+                    setTimeout(() => {
+                        userDetailsModal.classList.remove('hidden');
+                    }, 100);
+                }
+            }
+        });
     }
 
     // Validation feedback elements
@@ -41,6 +68,33 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (roleSelect) {
         roleSelect.parentNode.insertBefore(roleError, roleSelect.nextSibling);
+    }
+
+    // Function to reset the edit form
+    function resetEditForm() {
+        if (editUserForm) {
+            // Reset form to initial state
+            document.getElementById('editUsername').value = initialFormState.username || '';
+            document.getElementById('editEmail').value = initialFormState.email || '';
+            document.getElementById('editRoleName').value = initialFormState.roleName || '';
+            
+            // Reset validation states
+            resetValidationState();
+            
+            // Reset button state
+            saveButton.disabled = true;
+            saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+    }
+
+    // Function to reset validation state
+    function resetValidationState() {
+        usernameError.classList.add('hidden');
+        emailError.classList.add('hidden');
+        roleError.classList.add('hidden');
+        usernameInput.classList.remove('border-red-500');
+        emailInput.classList.remove('border-red-500');
+        roleSelect.classList.remove('border-red-500');
     }
 
     // Username validation
@@ -81,11 +135,48 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Function to fetch existing administrative roles
+    async function fetchExistingRoles() {
+        try {
+            const response = await fetch('/check-roles', {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            if (!response.ok) throw new Error('Failed to fetch roles');
+            const data = await response.json();
+            return data.existingRoles || [];
+        } catch (error) {
+            console.error('Error fetching roles:', error);
+            return [];
+        }
+    }
+
+    // Function to update role options based on existing roles
+    function updateRoleOptions(existingRoles, currentRole) {
+        if (!roleSelect) return;
+
+        const restrictedRoles = ['Student Services', 'Academic Services', 'Administrative Services', 'Campus Director'];
+        const options = Array.from(roleSelect.options);
+
+        options.forEach(option => {
+            const roleName = option.value;
+            // Only disable if it's a restricted role that exists AND it's not the current user's role
+            const isRestricted = restrictedRoles.includes(roleName) && 
+                                existingRoles.includes(roleName) && 
+                                roleName !== currentRole;
+            
+            option.disabled = isRestricted;
+            option.style.display = isRestricted ? 'none' : '';
+        });
+    }
+
     // Function to capture initial form state
     function captureInitialState() {
         initialFormState = {
-            username: document.getElementById('editUsername').value,
-            email: document.getElementById('editEmail').value,
+            username: document.getElementById('editUsername').value.trim(),
+            email: document.getElementById('editEmail').value.trim(),
             roleName: document.getElementById('editRoleName').value
         };
         // Initially disable the save button
@@ -95,10 +186,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to check if form has changed
     function checkFormChanged() {
+        const currentValues = {
+            username: document.getElementById('editUsername').value.trim(),
+            email: document.getElementById('editEmail').value.trim(),
+            roleName: document.getElementById('editRoleName').value
+        };
+
         const hasChanged = 
-            document.getElementById('editUsername').value !== initialFormState.username ||
-            document.getElementById('editEmail').value !== initialFormState.email ||
-            document.getElementById('editRoleName').value !== initialFormState.roleName;
+            currentValues.username !== initialFormState.username ||
+            currentValues.email !== initialFormState.email ||
+            currentValues.roleName !== initialFormState.roleName;
 
         // Enable/disable save button based on changes
         saveButton.disabled = !hasChanged;
@@ -107,6 +204,8 @@ document.addEventListener('DOMContentLoaded', function () {
         } else {
             saveButton.classList.add('opacity-50', 'cursor-not-allowed');
         }
+
+        return hasChanged;
     }
 
     // Add event listener to update the actual role when role_name changes
@@ -115,21 +214,75 @@ document.addEventListener('DOMContentLoaded', function () {
         editRoleName.addEventListener('change', function () {
             const selectedOption = this.options[this.selectedIndex];
             document.getElementById('editActualRole').value = selectedOption.getAttribute('data-role');
+            validateRole().then(() => validateForm());
         });
     }
 
     // Custom close functionality for edit modal to show user details modal again
     if (closeEditModalBtn && editUserModal) {
-        closeEditModalBtn.addEventListener('click', function () {
+        closeEditModalBtn.addEventListener('click', function (e) {
+            e.preventDefault();
             if (!isProcessing) {
-                editUserModal.classList.add('hidden');
-                // Show the user details modal again after a small delay
-                setTimeout(() => {
-                    userDetailsModal.classList.remove('hidden');
-                }, 100);
+                // Only show confirmation if there are unsaved changes
+                if (checkFormChanged()) {
+                    // Show confirmation modal but don't close edit modal yet
+                    closeEditConfirmModal.classList.remove('hidden');
+                } else {
+                    // No changes, close without confirmation
+                    editUserModal.classList.add('hidden');
+                    setTimeout(() => {
+                        userDetailsModal.classList.remove('hidden');
+                    }, 100);
+                }
             }
         });
     }
+
+    // Confirmation modal button handlers
+    if (cancelEditCloseBtn) {
+        cancelEditCloseBtn.addEventListener('click', function() {
+            closeEditConfirmModal.classList.add('hidden');
+        });
+    }
+
+    if (confirmEditCloseBtn) {
+        confirmEditCloseBtn.addEventListener('click', function() {
+            closeEditConfirmModal.classList.add('hidden');
+            editUserModal.classList.add('hidden');
+            userDetailsModal.classList.remove('hidden');
+            resetEditForm();
+            window.location.reload(); // Reload page to reset everything
+        });
+    }
+
+    // Add escape key handler for both modals
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !isProcessing) {
+            if (!closeEditConfirmModal.classList.contains('hidden')) {
+                // If confirmation modal is showing, just close it
+                closeEditConfirmModal.classList.add('hidden');
+            } else if (!editUserModal.classList.contains('hidden')) {
+                // Only show confirmation if there are unsaved changes
+                if (checkFormChanged()) {
+                    // Show confirmation instead of closing
+                    closeEditConfirmModal.classList.remove('hidden');
+                } else {
+                    // No changes, close without confirmation
+                    editUserModal.classList.add('hidden');
+                    setTimeout(() => {
+                        userDetailsModal.classList.remove('hidden');
+                    }, 100);
+                }
+            }
+        }
+    });
+
+    // Add click outside modal handler
+    closeEditConfirmModal.addEventListener('click', function(e) {
+        if (e.target === closeEditConfirmModal) {
+            closeEditConfirmModal.classList.add('hidden');
+        }
+    });
 
     // Edit User Modal Event Listeners - Open modal when clicking edit button
     if (editUserBtn && editUserModal) {
@@ -158,21 +311,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             }
-            setTimeout(() => {
+            
+            // Fetch available roles and update options
+            fetchExistingRoles().then(existingRoles => {
+                updateRoleOptions(existingRoles, roleName);
                 editUserModal.classList.remove('hidden');
                 captureInitialState(); // Capture initial state after form is populated
-            }, 100);
+            }).catch(error => {
+                console.error('Error fetching roles:', error);
+                editUserModal.classList.remove('hidden');
+                captureInitialState();
+            });
 
             // Alternative for editRole if that's what's in the form
             const editRole = document.getElementById('editRole');
             if (editRole) {
                 editRole.value = roleName;
             }
-
-            // Show the edit modal after a small delay to prevent overlap
-            setTimeout(() => {
-                editUserModal.classList.remove('hidden');
-            }, 100);
         });
     }
 
@@ -182,10 +337,62 @@ document.addEventListener('DOMContentLoaded', function () {
         formInputs.forEach(inputId => {
             const element = document.getElementById(inputId);
             if (element) {
-                element.addEventListener('input', checkFormChanged);
-                element.addEventListener('change', checkFormChanged);
+                // Add input event listener with debounce
+                let timeoutId;
+                element.addEventListener('input', function() {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => {
+                        checkFormChanged();
+                    }, 300);
+                });
+
+                // Add blur event listener to catch paste events
+                element.addEventListener('blur', function() {
+                    checkFormChanged();
+                });
+
+                // Add change event for select elements
+                if (element.tagName === 'SELECT') {
+                    element.addEventListener('change', checkFormChanged);
+                }
             }
         });
+    }
+
+    // Email existence check function
+    async function checkEmailExists(email) {
+        // Add current user's ID to exclude from check
+        const response = await fetch('/check-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ 
+                email: email.toLowerCase(),
+                exclude_id: window.currentUserId  // Exclude current user
+            })
+        });
+        const data = await response.json();
+        return data.exists;
+    }
+
+    async function checkUsernameExists(username) {
+        const response = await fetch('/check-username', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ 
+                username: username.toLowerCase(),
+                exclude_id: window.currentUserId  // Exclude current user
+            })
+        });
+        const data = await response.json();
+        return data.exists;
     }
 
     // Validation functions
@@ -216,6 +423,21 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
 
+        // Only check for duplicate username if it's different from the original
+        if (username.toLowerCase() !== initialFormState.username.toLowerCase()) {
+            try {
+                const exists = await checkUsernameExists(username);
+                if (exists) {
+                    showUsernameError('This name already exists');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error checking username:', error);
+                showUsernameError('Error checking username availability');
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -241,6 +463,55 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
 
+        // Only check for duplicate email if it's different from the original
+        if (email.toLowerCase() !== initialFormState.email.toLowerCase()) {
+            try {
+                const exists = await checkEmailExists(email);
+                if (exists) {
+                    showEmailError('This email already exists');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error checking email:', error);
+                showEmailError('Error checking email availability');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    async function validateRole() {
+        // Reset error state
+        roleError.classList.add('hidden');
+        roleSelect.classList.remove('border-red-500');
+
+        // Validation check
+        if (roleSelect.value === '') {
+            showRoleError('Please select a role');
+            return false;
+        }
+
+        // For edit user, we need to check if the role is being changed to a restricted role
+        if (roleSelect.value !== initialFormState.roleName) {
+            const restrictedRoles = [
+                'Student Services',
+                'Academic Services',
+                'Administrative Services',
+                'Campus Director'
+            ];
+
+            // Check if selected role is restricted
+            if (restrictedRoles.includes(roleSelect.value)) {
+                // Verify against server
+                const existingRoles = await fetchExistingRoles();
+                if (existingRoles.includes(roleSelect.value)) {
+                    showRoleError('This role already exists in the system');
+                    return false;
+                }
+            }
+        }
+
         return true;
     }
 
@@ -257,16 +528,23 @@ document.addEventListener('DOMContentLoaded', function () {
         emailInput.classList.add('border-red-500');
     }
 
+    function showRoleError(message) {
+        roleError.textContent = message;
+        roleError.classList.remove('hidden');
+        roleSelect.classList.add('border-red-500');
+    }
+
     // Form validation
     async function validateForm() {
         const isUsernameValid = await validateUsername();
         const isEmailValid = await validateEmail();
+        const isRoleValid = await validateRole();
         
-        saveButton.disabled = !(isUsernameValid && isEmailValid);
-        saveButton.classList.toggle('opacity-50', !isUsernameValid || !isEmailValid);
-        saveButton.classList.toggle('cursor-not-allowed', !isUsernameValid || !isEmailValid);
+        saveButton.disabled = !(isUsernameValid && isEmailValid && isRoleValid);
+        saveButton.classList.toggle('opacity-50', !isUsernameValid || !isEmailValid || !isRoleValid);
+        saveButton.classList.toggle('cursor-not-allowed', !isUsernameValid || !isEmailValid || !isRoleValid);
 
-        return isUsernameValid && isEmailValid;
+        return isUsernameValid && isEmailValid && isRoleValid;
     }
 
     // Handle Edit User Form Submission

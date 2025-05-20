@@ -39,7 +39,19 @@
                     class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200">
                     <option class="bg-white text-black" value="Organization" disabled selected>Organization</option>
                     <option class="bg-white text-black" value="All">All Organizations</option>
-                    <!-- Organization options will be populated dynamically or from DB -->
+                    <option class="bg-white text-black" value="ACAP">ACAP</option>
+                    <option class="bg-white text-black" value="AECES">AECES</option>
+                    <option class="bg-white text-black" value="ELITE">ELITE</option>
+                    <option class="bg-white text-black" value="GIVE">GIVE</option>
+                    <option class="bg-white text-black" value="JEHRA">JEHRA</option>
+                    <option class="bg-white text-black" value="JMAP">JMAP</option>
+                    <option class="bg-white text-black" value="JPIA">JPIA</option>
+                    <option class="bg-white text-black" value="PIIE">PIIE</option>
+                    <option class="bg-white text-black" value="AGDS">AGDS</option>
+                    <option class="bg-white text-black" value="Chorale">Chorale</option>
+                    <option class="bg-white text-black" value="SIGMA">SIGMA</option>
+                    <option class="bg-white text-black" value="TAPNOTCH">TAPNOTCH</option>
+                    <option class="bg-white text-black" value="OSC">OSC</option>
                 </select>
                 <!-- Custom dropdown arrow icon -->
                 <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -52,7 +64,14 @@
                     class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 truncate">
                     <option class="bg-white text-black truncate" value="Type" disabled selected>Type</option>
                     <option class="bg-white text-black truncate" value="All">All Types</option>
-                    <!-- Document type options will be populated dynamically or from DB -->
+                    <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
+                    <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan of Activities</option>
+                    <option class="bg-white text-black truncate" value="Calendar of Activities">Calendar of Activities</option>
+                    <option class="bg-white text-black truncate" value="Accomplishment Report">Accomplishment Report</option>
+                    <option class="bg-white text-black truncate" value="Constitution and By-Laws">Contribution and By-Laws</option>
+                    <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
+                    <option class="bg-white text-black truncate" value="Off-Campus">Off-Campus</option>
+                    <option class="bg-white text-black truncate" value="Petition and Concern">Petition and Concern</option>
                 </select>
                 <!-- Custom dropdown arrow icon -->
                 <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -92,37 +111,37 @@
                         <tbody>
                             @forelse ($documents as $document)
                             @php
-                                // Extract organization acronym from control tag
-                                $parts = explode('_', $document->control_tag);
-                                $acronym = count($parts) > 0 ? $parts[0] : '';
-                                $orgName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
-                                
-                                // Map the acronym to a color key for consistent color coding
-                                $colorKey = match ($acronym) {
-                                    'ACAP' => 'PSY',
-                                    'AECES' => 'ECE',
-                                    'ELITE' => 'IT',
-                                    'GIVE' => 'EDU',
-                                    'JEHRA' => 'HR',
-                                    'JMAP' => 'MAR',
-                                    'JPIA' => 'ACC',
-                                    'PIIE' => 'IE',
-                                    'AGDS' => 'AGDS',
-                                    'Chorale' => 'CHO',
-                                    'SIGMA' => 'SIGMA',
-                                    'TAPNOTCH' => 'TAP',
-                                    'OSC' => 'OSC',
-                                    default => 'text-gray-500',
-                                };
-                                $tagColor = isset($tagColors[$colorKey]) ? $tagColors[$colorKey] : 'text-gray-500';
-                                
-                                // Format archive date for display
-                                $archivedDate = \Carbon\Carbon::parse($document->archived_at)->format('m/d/Y');
+                            // Extract organization acronym from control tag
+                            $parts = explode('_', $document->control_tag);
+                            $acronym = count($parts) > 0 ? $parts[0] : '';
+                            $orgName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
+
+                            // Map the acronym to a color key for consistent color coding
+                            $colorKey = match ($acronym) {
+                            'ACAP' => 'PSY',
+                            'AECES' => 'ECE',
+                            'ELITE' => 'IT',
+                            'GIVE' => 'EDU',
+                            'JEHRA' => 'HR',
+                            'JMAP' => 'MAR',
+                            'JPIA' => 'ACC',
+                            'PIIE' => 'IE',
+                            'AGDS' => 'AGDS',
+                            'Chorale' => 'CHO',
+                            'SIGMA' => 'SIGMA',
+                            'TAPNOTCH' => 'TAP',
+                            'OSC' => 'OSC',
+                            default => 'text-gray-500',
+                            };
+                            $tagColor = isset($tagColors[$colorKey]) ? $tagColors[$colorKey] : 'text-gray-500';
+
+                            // Format archive date for display
+                            $archivedDate = \Carbon\Carbon::parse($document->archived_at)->format('m/d/Y');
                             @endphp
                             <!-- Document row with data attributes for filtering -->
                             <tr class="border-b border-gray-300 hover:bg-gray-100"
-                                data-org-acronym="{{ $acronym }}" 
-                                data-type="{{ $document->type }}" 
+                                data-org-acronym="{{ $acronym }}"
+                                data-type="{{ $document->type }}"
                                 data-id="{{ $document->id }}">
                                 <!-- Checkbox for row selection -->
                                 <td class="px-4 py-2">
@@ -176,27 +195,27 @@
             <nav>
                 <ul class="inline-flex items-center space-x-2">
                     <li>
-                        <a href="{{ $documents->url(1) }}" 
-                           class="pagination-btn-first px-3 py-1 rounded-lg {{ $documents->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
+                        <a href="{{ $documents->url(1) }}"
+                            class="pagination-btn-first px-3 py-1 rounded-lg {{ $documents->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
                             First
                         </a>
                     </li>
-                    
+
                     @for ($i = 1; $i <= $documents->lastPage(); $i++)
                         <li>
-                            <a href="{{ $documents->url($i) }}" 
-                               class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
+                            <a href="{{ $documents->url($i) }}"
+                                class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
                                 {{ $i }}
                             </a>
                         </li>
-                    @endfor
-                    
-                    <li>
-                        <a href="{{ $documents->url($documents->lastPage()) }}" 
-                           class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
-                            Last
-                        </a>
-                    </li>
+                        @endfor
+
+                        <li>
+                            <a href="{{ $documents->url($documents->lastPage()) }}"
+                                class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
+                                Last
+                            </a>
+                        </li>
                 </ul>
             </nav>
         </div>
@@ -250,21 +269,21 @@
         const searchTerm = document.querySelector('input[placeholder="Search..."]').value.toLowerCase();
         const organizationFilter = document.getElementById("organizationFilter").value;
         const typeFilter = document.getElementById("typeFilter").value;
-        
+
         const rows = document.querySelectorAll("#documentTable tbody tr");
-        
+
         rows.forEach(row => {
             // Skip the "No documents found" row
             if (!row.getAttribute('data-id')) return;
-            
+
             const orgAcronym = row.getAttribute('data-org-acronym');
             const docType = row.getAttribute('data-type');
             const rowText = row.textContent.toLowerCase();
-            
+
             const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
             const matchesOrg = organizationFilter === 'All' || organizationFilter === 'Organization' || orgAcronym === organizationFilter;
             const matchesType = typeFilter === 'All' || typeFilter === 'Type' || docType === typeFilter;
-            
+
             row.style.display = (matchesSearch && matchesOrg && matchesType) ? '' : 'none';
         });
     }
@@ -276,26 +295,26 @@
         const table = document.getElementById("documentTable");
         const tbody = table.querySelector("tbody");
         const rows = Array.from(tbody.querySelectorAll("tr[data-id]"));
-        
+
         // Toggle sort direction for this column
         sortDirection[columnIndex] = !sortDirection[columnIndex];
         const direction = sortDirection[columnIndex] ? 1 : -1;
-        
+
         // Sort the rows
         rows.sort((a, b) => {
             const cellA = a.querySelectorAll("td")[columnIndex].textContent.trim();
             const cellB = b.querySelectorAll("td")[columnIndex].textContent.trim();
-            
+
             if (isNaN(cellA) || isNaN(cellB)) {
                 return direction * cellA.localeCompare(cellB);
             } else {
                 return direction * (parseFloat(cellA) - parseFloat(cellB));
             }
         });
-        
+
         // Remove all rows
         rows.forEach(row => row.remove());
-        
+
         // Add sorted rows back to table
         rows.forEach(row => tbody.appendChild(row));
     }
@@ -312,30 +331,32 @@
      */
     function processRestore() {
         if (selectedItems.size === 0) return;
-        
+
         const documentIds = Array.from(selectedItems);
-        
+
         fetch("{{ route('admin.restoreDocuments') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ document_ids: documentIds })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Reload the page to show updated list
-                window.location.reload();
-            } else {
-                alert(data.message || 'Failed to restore documents.');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while restoring documents.');
-        });
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    document_ids: documentIds
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload the page to show updated list
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Failed to restore documents.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while restoring documents.');
+            });
     }
 
     /**
@@ -367,8 +388,7 @@
                 }
             });
             updateSelectedCount();
-        } 
-        else if (e.target.classList.contains('row-checkbox')) {
+        } else if (e.target.classList.contains('row-checkbox')) {
             const id = e.target.getAttribute('data-id');
             if (e.target.checked) {
                 selectedItems.add(id);
@@ -383,11 +403,11 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Add event listeners for restore button
         document.getElementById('restoreSelectedBtn').addEventListener('click', showRestoreConfirmation);
-        
+
         // Add event listeners for filters
         document.getElementById("organizationFilter").addEventListener("change", applyFilters);
         document.getElementById("typeFilter").addEventListener("change", applyFilters);
-        
+
         // For search, use debouncing to avoid too many requests
         const searchInput = document.querySelector('input[placeholder="Search..."]');
         let searchTimeout;
@@ -395,7 +415,7 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(applyFilters, 500);
         });
-        
+
         // Modal control event listeners
         document.getElementById("closeRestoreModalBtn").addEventListener("click", function() {
             document.getElementById("restoreConfirmationModal").classList.add("hidden");
@@ -410,7 +430,7 @@
             processRestore(); // Call the function that actually does the restoring
             document.getElementById("restoreConfirmationModal").classList.add("hidden");
         });
-        
+
         // Initialize selected count
         updateSelectedCount();
     });
