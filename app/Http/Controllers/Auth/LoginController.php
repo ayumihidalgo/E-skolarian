@@ -11,7 +11,7 @@ class LoginController extends Controller
 {
     // Lockout parameters
     protected $maxAttempts = 4;
-    protected $decayMinutes = 5;     
+    protected $decayMinutes = 5;
 
     public function showLoginForm()
     {
@@ -68,8 +68,13 @@ class LoginController extends Controller
         // Increment login attempts with 5 minutes decay time
         $this->incrementLoginAttempts($request);
 
+        // Calculate remaining attempts
+        $key = $this->throttleKey($request);
+        $attempts = RateLimiter::attempts($key);
+        $remaining = max(0, $this->maxAttempts - $attempts);
+
         return back()->withErrors([
-            'email' => '*Incorrect email or password.',
+            'email' => '*Incorrect email or password. You only have ' . $remaining + 1 . ' remaining attempts before lockout.',
         ]);
     }
 
