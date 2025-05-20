@@ -10,11 +10,13 @@ class AdminDocumentController extends Controller
 {
     public function preview($id)
     {
-        // Fetch the document from database
+        $adminId = auth()->id();
+
         $document = DB::table('submitted_documents')
             ->where('id', $id)
+            ->where('received_by', $adminId) // Only assigned to this admin
             ->first();
-            
+
         if (!$document) {
             abort(404, 'Document not found');
         }
@@ -58,9 +60,12 @@ class AdminDocumentController extends Controller
 
     public function documentHistory(Request $request)
     {
+        $adminId = auth()->id(); // Get current admin's user ID
+
         // Start with base query
         $query = DB::table('submitted_documents')
-            ->whereNull('archived_at');
+            ->whereNull('archived_at')
+            ->where('received_by', $adminId); // Only documents assigned to this admin
         
         // Apply filters from request parameters
         if ($request->has('status') && $request->status !== 'All') {
@@ -158,10 +163,12 @@ class AdminDocumentController extends Controller
 
     public function archivePage(Request $request)
     {
-        // Start with base query
+        $adminId = auth()->id();
+
         $query = DB::table('submitted_documents')
-            ->whereNotNull('archived_at');
-    
+            ->whereNotNull('archived_at')
+            ->where('received_by', $adminId); // Only documents assigned to this admin
+
         // Apply filters from request parameters
         if ($request->has('status') && $request->status !== 'All') {
             $query->where('status', $request->status);
