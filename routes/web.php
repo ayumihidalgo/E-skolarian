@@ -99,7 +99,7 @@ Route::get('/notification', function () {
         Route::get('/student/dashboard', [StudentDashboardController::class, 'showStudentDashboard'])->name('student.dashboard');
         Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
         Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
-        Route::get('/student/documentArchive', fn () => view('student.documentArchive'))->name('student.documentArchive');
+        Route::get('/student/documentHistory', [StudentDocumentController::class, 'documentArchive'])->name('student.documentHistory');
         Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
         Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])->name('student.documentPreview');
         Route::get('student/settings', [SettingsController::class, 'viewSettings'])->name('student.settings');
@@ -159,9 +159,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
         return view('admin.documentArchive');
     })->name('admin.documentArchive');
 
-    Route::get('/student/documentArchive', function () {
-        return view('student.documentArchive');
-    })->name('student.documentArchive');
+    
     // Route for the document preview page (admin)
 Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
 });

@@ -31,7 +31,7 @@
             ['Submit Documents', 'submitDocument.svg', route('student.submit-documents')],
             ['Tracker', 'tracker.svg', route('student.studentTracker')],
             ['Calendar', 'calendar.svg', route('calendar.index')],
-            ['Archive', 'archive.svg', route('student.documentArchive')],
+            ['Archive', 'archive.svg', route('student.documentHistory')],
             ['Settings', 'settings.svg', route('student.settings')]
         ] as [$label, $icon, $route])
             <a href="{{ $route }}" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
