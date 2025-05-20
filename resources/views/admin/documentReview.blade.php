@@ -670,173 +670,24 @@
         </div>
     </div>
 
+    <!-- Document Action Toast -->
+    <div id="documentActionToast" class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-gray-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50">
+        <div>
+            <img
+                src="{{ asset('images/successful.svg') }}"
+                alt="Action Icon"
+                id="actionIcon"
+                class="">
+        </div>
+        <div class="flex-1">
+            <p class="font-semibold" id="actionTitle">Document Action</p>
+            <p id="actionMessage" class="text-sm">Action performed on document.</p>
+        </div>
+        <button type="button" onclick="hideActionToast()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer self-center">&times;</button>
+    </div>
+
     <script>
-        // Filtering Function
-        // document.addEventListener('DOMContentLoaded', function() {
-        //         const searchInput = document.getElementById('searchInput');
-        //         const organizationFilter = document.getElementById('organizationFilter');
-        //         const documentTypeFilter = document.getElementById('documentTypeFilter');
-        //         const tableRows = document.querySelectorAll('tbody tr');
-        //         const paginationSection = document.querySelector('.flex.justify-between.items-center.mt-4');
-        //         const tableContainer = document.querySelector('.bg-gray-50.overflow-hidden.rounded-t-xl');
-
-        //     // Create a mapping between acronyms and full organization names
-        //     const orgMap = {
-        //         'ACAP': 'Association of Competent and Aspiring Psychologists',
-        //         'AECES': 'Association of Electronics and Communications Engineering Students',
-        //         'ELITE': 'Eligible League of Information Technology Enthusiasts',
-        //         'GIVE': 'Guild of Imporous and Valuable Educators',
-        //         'JEHRA': 'Junior Executive of Human Resource Association',
-        //         'JMAP': 'Junior Marketing Association of the Philippines',
-        //         'JPIA': 'Junior Philippine Institute of Accountants',
-        //         'PIIE': 'Philippine Institute of Industrial Engineers',
-        //         'AGDS': 'Artist Guild Dance Squad',
-        //         'Chorale': 'PUP SRC Chorale',
-        //         'SIGMA': 'Supreme Innovators\' Guild for Mathematics Advancements',
-        //         'TAPNOTCH': 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
-        //         'OSC': 'Office of the Student Council'
-        //     };
-
-        //     // Also create a reverse mapping from full names to acronyms for search flexibility
-        //     const reverseOrgMap = {};
-        //     for (const acronym in orgMap) {
-        //         reverseOrgMap[orgMap[acronym].toLowerCase()] = acronym.toLowerCase();
-        //     }
-            
-        //     // Create a mapping between filter options and actual document types
-        //     const docTypeMap = {
-        //         'Event Proposal': 'Event Proposal',
-        //         'General Plan': 'General Plan of Activities',
-        //         'Calendar': 'Calendar of Activities',
-        //         'Accomplishment Report': 'Accomplishment Report',
-        //         'Constitution': 'Constitution and By-Laws',
-        //         'Request Letter': 'Request Letter',
-        //         'Off-Campus': 'Off Campus',
-        //         'Petition': 'Petition and Concern'
-        //     };
-
-        //     function filterTable() {
-        //         const searchTerm = searchInput.value.toLowerCase();
-        //         const selectedOrg = organizationFilter.value;
-        //         const selectedTypeOption = documentTypeFilter.value;
-                
-        //         console.log('Filtering with:', { 
-        //             searchTerm, 
-        //             selectedOrg, 
-        //             selectedTypeOption 
-        //         });
-
-        //         // Get the full organization name if an acronym is selected
-        //         const selectedFullOrgName = selectedOrg && selectedOrg !== 'All' ? orgMap[selectedOrg].toLowerCase() : '';
-                
-        //         // Get the full document type if a short version is selected
-        //         const selectedType = selectedTypeOption.toLowerCase();
-                
-        //         tableRows.forEach(row => {
-        //             const tag = row.cells[0].textContent.toLowerCase() || '';
-        //             const organization = row.cells[1].textContent.toLowerCase() || '';
-        //             const title = row.cells[2].textContent.toLowerCase() || '';
-        //             const type = row.cells[4].textContent.toLowerCase() || '';
-                    
-        //             // Check if the search term matches acronym or full name
-        //             let matchesSearch = tag.includes(searchTerm) ||
-        //                             title.includes(searchTerm) ||
-        //                             organization.includes(searchTerm);
-                                    
-        //             // Add additional matching for acronyms in the search
-        //             for (const fullName in reverseOrgMap) {
-        //                 if (fullName.includes(searchTerm) && organization.includes(fullName)) {
-        //                     matchesSearch = true;
-        //                     break;
-        //                 }
-        //             }
-                    
-        //             // For organization filter, check if the row contains either the selected acronym or its full name
-        //             let matchesOrg = true;
-        //             if (selectedOrg !== '' && selectedOrg !== 'All') {
-        //                 matchesOrg = organization.includes(selectedFullOrgName);
-        //             }
-
-        //             // For document type, check if the type in the table includes the selected type
-        //             let matchesType = true;
-        //             if (selectedType !== '' && selectedType !== 'all') {
-        //                 // Look for partial matches in document type
-        //                 for (const [shortType, fullType] of Object.entries(docTypeMap)) {
-        //                     if (selectedTypeOption === shortType && type.includes(fullType.toLowerCase())) {
-        //                         matchesType = true;
-        //                         break;
-        //                     } else if (selectedType !== 'all' && !selectedType.includes(type) && !type.includes(selectedType)) {
-        //                         matchesType = false;
-        //                     }
-        //                 }
-        //             }
-
-        //             if (matchesSearch && matchesOrg && matchesType) {
-        //                 row.style.display = '';
-        //             } else {
-        //                 row.style.display = 'none';
-        //             }
-        //         });
-
-        //         updateNoResultsMessage();
-        //     }
-
-        //     function updateNoResultsMessage() {
-        //         const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
-        //         // Use a more specific selector that matches your table container
-        //         const tableContainer = document.querySelector('.bg-gray-50.overflow-hidden.rounded-t-xl');
-        //         const existingNoResultsDiv = document.querySelector('.no-results');
-
-        //         if (visibleRows.length === 0) {
-        //             if (!existingNoResultsDiv) {
-        //                 const noResults = `
-        //                     <div class="bg-gray-50 rounded-md p-8 flex flex-col items-center justify-center flex-grow no-results">
-        //                         <img src="{{ asset('images/no_entry.svg') }}" alt="No Data" class="mb-4 opacity-50 w-40 h-40">
-        //                         <p class="text-gray-500 text-sm">No matching records found</p>
-        //                     </div>
-        //                 `;
-                        
-        //                 // Add null check to prevent error
-        //                 if (tableContainer) {
-        //                     tableContainer.style.display = 'none';
-        //                     tableContainer.insertAdjacentHTML('afterend', noResults);
-        //                 } else {
-        //                     // If container not found, append to a parent element that definitely exists
-        //                     document.querySelector('.p-6.flex.flex-col.flex-grow').innerHTML = noResults;
-        //                 }
-        //             }
-        //         } else {
-        //             // Add null check here too
-        //             if (tableContainer) {
-        //                 tableContainer.style.display = '';
-        //             }
-        //             if (existingNoResultsDiv) {
-        //                 existingNoResultsDiv.remove();
-        //             }
-        //         }
-        //     }
-
-        //     // Fix the "All" option in the organization filter
-        //     const allOrgOption = organizationFilter.querySelector('option[value=""]');
-        //     if (allOrgOption) {
-        //         allOrgOption.value = "All";
-        //     }
-            
-        //     // Fix the "All" option in the document type filter
-        //     const allTypeOption = documentTypeFilter.querySelector('option[value=""]');
-        //     if (allTypeOption) {
-        //         allTypeOption.value = "All";
-        //     }
-
-        //     // Attach filterTable to your filter events
-        //     searchInput.addEventListener('input', filterTable);
-        //     organizationFilter.addEventListener('change', filterTable);
-        //     documentTypeFilter.addEventListener('change', filterTable);
-
-        //     // Initial filter
-        //     setTimeout(() => filterTable(), 100);
-        // });
-
+        // Document Viewer Functionality
         document.addEventListener('DOMContentLoaded', function() {
             // Get form elements
             const searchInput = document.getElementById('searchInput');
@@ -981,7 +832,13 @@
             
             modal.classList.add('hidden');
         }
-    </script>
+
+        // Define asset URLs so JavaScript can use them
+        const ASSET_URLS = {
+            successIcon: "{{ asset('images/successful.svg') }}",
+            errorIcon: "{{ asset('images/error.svg') }}"
+        };
+        </script>
     @vite('resources/js/admin-review.js')
     @vite(['resources/js/app.js'])
 @endsection
