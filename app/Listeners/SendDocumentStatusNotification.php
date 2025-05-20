@@ -35,7 +35,7 @@ class SendDocumentStatusNotification
             Notification::create([
                 'title'   => $title,
                 'message' => $message,
-                'user_id' => $student->id,
+                'user_id' => $student->id, // Only this student gets the notification
                 'is_read' => false,
                 'url'     => route('records.show', ['id' => $doc->id]),
             ]);
