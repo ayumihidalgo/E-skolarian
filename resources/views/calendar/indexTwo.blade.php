@@ -106,20 +106,85 @@
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     
-    // Wait for FullCalendar to load
     document.addEventListener('DOMContentLoaded', function() {
-        // Check if FullCalendar is loaded
-        if (typeof FullCalendar === 'undefined') {
-            // If not loaded yet, wait a bit and try loading the calendar
-            const calendarScript = document.createElement('script');
-            calendarScript.src = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js';
-            calendarScript.onload = initializeCalendarWhenReady;
-            document.head.appendChild(calendarScript);
-        } else {
-            // FullCalendar is already loaded
+    // Check if FullCalendar is loaded
+    if (typeof FullCalendar === 'undefined') {
+        // If not loaded yet, wait a bit and try loading the calendar
+        const calendarScript = document.createElement('script');
+        calendarScript.src = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js';
+        calendarScript.onload = function() {
             initializeCalendarWhenReady();
-        }
-    });
+            setupEmojiValidation();
+        };
+        document.head.appendChild(calendarScript);
+    } else {
+        // FullCalendar is already loaded
+        initializeCalendarWhenReady();
+        setupEmojiValidation();
+    }
+});
+
+// Function to set up emoji and special character validation
+function setupEmojiValidation() {
+    const titleInput = document.getElementById('event-title');
+    if (titleInput) {
+        titleInput.addEventListener('input', function(e) {
+            const value = this.value;
+            let hasInvalidChars = false;
+            let warningMessage = '';
+            let cleanedValue = value;
+            
+            // Check for emoji
+            if (containsEmoji(value)) {
+                cleanedValue = cleanedValue.replace(/[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27BF}|\u{2B50}|\u{1F004}|\u{1F0CF}|\u{1F170}-\u{1F251}|\u{1F300}-\u{1F8FF}]/gu, '');
+                hasInvalidChars = true;
+                warningMessage = 'Emoji are not allowed in event titles';
+            }
+            
+            // Check for special characters (allowing only letters, numbers, spaces, commas, periods, and basic punctuation)
+            if (containsSpecialChars(value)) {
+                cleanedValue = cleanedValue.replace(/[^\w\s.,;:()'"-]/g, '');
+                hasInvalidChars = true;
+                warningMessage = warningMessage ? 'Special characters and emoji are not allowed' : 'Special characters are not allowed';
+            }
+            
+            // Apply changes if invalid characters were found
+            if (hasInvalidChars) {
+                // Update the value without invalid characters
+                this.value = cleanedValue;
+                
+                // Show a warning
+                const warningEl = document.getElementById('char-warning') || document.createElement('div');
+                warningEl.id = 'char-warning';
+                warningEl.className = 'text-red-600 text-sm mt-1';
+                warningEl.textContent = warningMessage;
+                
+                if (!document.getElementById('char-warning')) {
+                    this.parentNode.appendChild(warningEl);
+                    
+                    // Remove the warning after 3 seconds
+                    setTimeout(() => {
+                        warningEl.remove();
+                    }, 3000);
+                }
+            }
+        });
+    }
+}
+
+// Function to detect emoji characters
+function containsEmoji(text) {
+    // Regex for common emoji ranges
+    const emojiRegex = /[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27BF}|\u{2B50}|\u{1F004}|\u{1F0CF}|\u{1F170}-\u{1F251}|\u{1F300}-\u{1F8FF}]/u;
+    return emojiRegex.test(text);
+}
+// Function to detect special characters
+function containsSpecialChars(text) {
+    // Allow letters, numbers, spaces, and basic punctuation (periods, commas, semicolons, colons, parentheses, quotes, hyphens)
+    // Block everything else
+    const specialCharsRegex = /[^\w\s.,;:()'"-]/;
+    return specialCharsRegex.test(text);
+}
     
     // Make sure everything is loaded before initializing
     function initializeCalendarWhenReady() {
@@ -159,7 +224,19 @@
                     checkIfCurrentMonth();
                 },
                 // Handle date clicks
+                // function dateClick 
                 dateClick: function(info) {
+                    // Check if the clicked date is in the past
+                    const clickedDate = new Date(info.dateStr);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
+                    
+                    if (clickedDate < today) {
+                        // Show message if past date is clicked
+                        alert("Events cannot be created on past dates");
+                        return; // Don't open the modal
+                    }
+                    
                     @if(Auth::user()->role === 'admin')
                     openEventModal(info.dateStr);
                     @endif
@@ -169,12 +246,24 @@
                 eventMaxStack: 3,
                 // Handle long event titles
                 eventDidMount: function(info) {
-                    // Check if the title is too long
-                    const titleLength = info.event.title.length;
-                    if (titleLength > 20) {
-                        // Add multi-line class for long titles
+                    // Get the title element
+                    const titleEl = info.el.querySelector('.fc-event-title');
+                    if (!titleEl) return;
+                    
+                    // Store full title for tooltip
+                    const fullTitle = info.event.title;
+                    titleEl.setAttribute('data-full-title', fullTitle);
+                    
+                    // Handle different title lengths
+                    const titleLength = fullTitle.length;
+                    
+                    // Very long titles (60+): Use multi-line
+                    if (titleLength > 60) {
                         info.el.classList.add('multi-line');
                     }
+                    
+                    // Add title attribute for native browser tooltip
+                    info.el.setAttribute('title', fullTitle);
                 },
                 // Sample events (replace with your actual events)
                 events: [
@@ -297,6 +386,22 @@
         const startEl = document.getElementById('event-start');
         const endEl = document.getElementById('event-end');
         const colorEl = document.getElementById('event-color');
+        
+                // Check if the event date is in the past
+        const eventDate = new Date(startStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time to start of day
+        
+        if (eventDate < today) {
+            alert("Events cannot be created on past dates");
+            return;
+        }
+        
+        // Rest of your existing validation
+        if (!title || !startStr) {
+            alert('Please fill in required fields');
+            return;
+        }
 
         if (!titleEl || !startEl) {
             console.error('Form elements not found!');
@@ -314,7 +419,31 @@
             alert('Please fill in required fields');
             return;
         }
-
+        // Check for emoji or special characters in title
+        if (containsEmoji(title) || containsSpecialChars(title)) {
+            alert('Your event title contains invalid characters. Please use only letters, numbers, spaces, and basic punctuation.');
+            return;
+        }
+        // Check character limit (60-80 range)
+        const titleLength = title.length;
+        if (titleLength < 3) {
+            alert('Event title is too short. Please use at least 3 characters.');
+            return;
+        }
+        if (titleLength > 80) {
+            alert('Event title is too long. Please keep it under 80 characters.');
+            return; 
+        }
+                    // Check for duplicate event titles
+        const existingEvents = calendarObj.getEvents();
+        const duplicateEvent = existingEvents.find(event => 
+            event.title.toLowerCase() === title.toLowerCase()
+        );
+        
+        if (duplicateEvent) {
+            alert('An event with this title already exists. Please use a different title.');
+            return;
+        }
         // Check if this event should be all-day
         const hasTimeComponent = startStr.includes('T') || (endStr && endStr.includes('T'));
 
@@ -342,6 +471,11 @@
             alert('Error creating event: ' + error.message);
         }
     }
+    function containsEmoji(text) {
+    // Regex for common emoji ranges
+    const emojiRegex = /[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27BF}|\u{2B50}|\u{1F004}|\u{1F0CF}|\u{1F170}-\u{1F251}|\u{1F300}-\u{1F8FF}]/u;
+    return emojiRegex.test(text);
+}
 </script>
 @endpush
 
