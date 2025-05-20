@@ -399,6 +399,26 @@
                 }
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const lockoutMessage = document.getElementById('lockout-message');
+            if (lockoutMessage) {
+                const emailInput = document.getElementById('emailInput');
+                const passwordInput = document.getElementById('password');
+                function removeLockoutMessage() {
+                    const parent = lockoutMessage.closest('div');
+                    if (parent) {
+                        parent.classList.add('opacity-0', 'transition-opacity');
+                        setTimeout(() => parent.remove(), 500);
+                    }
+                    // Optionally re-enable inputs if still disabled
+                    document.querySelectorAll('input, button[type="submit"]').forEach(input => input.disabled = false);
+                    localStorage.removeItem('lockoutEnd');
+                }
+                emailInput.addEventListener('input', removeLockoutMessage, { once: true });
+                passwordInput.addEventListener('input', removeLockoutMessage, { once: true });
+            }
+        });
     </script>
     @php
         $randomIndex = rand(1, 6);

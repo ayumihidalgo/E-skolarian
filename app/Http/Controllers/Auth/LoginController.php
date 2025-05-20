@@ -74,7 +74,7 @@ class LoginController extends Controller
         $remaining = max(0, $this->maxAttempts - $attempts);
 
         return back()->withErrors([
-            'email' => '*Incorrect email or password. You only have ' . $remaining + 1 . ' remaining attempts before lockout.',
+            'email' => '*Incorrect email or password. You only have ' . $remaining+ 1 . ' remaining attempts before lockout.',
         ]);
     }
 
