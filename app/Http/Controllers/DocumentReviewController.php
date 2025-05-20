@@ -18,15 +18,20 @@ class DocumentReviewController extends Controller
     /**
      * Display the document review page with documents that need admin approval
      *
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
         // Get the currently logged in user
         $user = Auth::user();
         
-        // Get documents with their submitters - using paginate() instead of get()
-        // Filter by received_by to only show documents intended for this admin
+        // Get search parameters from the request
+        $searchTerm = $request->input('search');
+        $selectedOrg = $request->input('organization');
+        $selectedType = $request->input('documentType');
+        
+        // Base query - documents with their submitters 
         $documentsQuery = SubmittedDocument::with(['user'])
             ->select('submitted_documents.*')
             ->where('received_by', $user->id)  // Only show documents intended for this admin
@@ -39,11 +44,73 @@ class DocumentReviewController extends Controller
             ->leftJoin('reviews', function($join) {
                 $join->on('submitted_documents.id', '=', 'reviews.document_id')
                     ->where('reviews.reviewed_by', '=', Auth::id());
-            })
-            ->orderBy('submitted_documents.created_at', 'desc');
+            });
+            
+        // Apply search filter if provided
+        if ($searchTerm) {
+            $documentsQuery->where(function($query) use ($searchTerm) {
+                $query->where('control_tag', 'LIKE', "%{$searchTerm}%")
+                      ->orWhere('subject', 'LIKE', "%{$searchTerm}%")
+                      ->orWhere('type', 'LIKE', "%{$searchTerm}%")
+                      ->orWhereHas('user', function($q) use ($searchTerm) {
+                          $q->where('username', 'LIKE', "%{$searchTerm}%");
+                      });
+            });
+        }
+        
+        // Apply organization filter if provided
+        if ($selectedOrg && $selectedOrg !== 'All') {
+            // Create a mapping between acronyms and full organization names
+            $orgMap = [
+                'ACAP' => 'Association of Competent and Aspiring Psychologists',
+                'AECES' => 'Association of Electronics and Communications Engineering Students',
+                'ELITE' => 'Eligible League of Information Technology Enthusiasts',
+                'GIVE' => 'Guild of Imporous and Valuable Educators',
+                'JEHRA' => 'Junior Executive of Human Resource Association',
+                'JMAP' => 'Junior Marketing Association of the Philippines',
+                'JPIA' => 'Junior Philippine Institute of Accountants',
+                'PIIE' => 'Philippine Institute of Industrial Engineers',
+                'AGDS' => 'Artist Guild Dance Squad',
+                'Chorale' => 'PUP SRC Chorale',
+                'SIGMA' => "Supreme Innovators' Guild for Mathematics Advancements",
+                'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
+                'OSC' => 'Office of the Student Council'
+            ];
+            
+            // Get full name of organization if acronym is selected
+            $fullOrgName = $orgMap[$selectedOrg] ?? $selectedOrg;
+            
+            $documentsQuery->whereHas('user', function($query) use ($selectedOrg, $fullOrgName) {
+                $query->where('username', 'LIKE', "%{$selectedOrg}%")
+                      ->orWhere('username', 'LIKE', "%{$fullOrgName}%");
+            });
+        }
+        
+        // Apply document type filter if provided
+        if ($selectedType && $selectedType !== 'All') {
+            // Create a mapping between short types and full document types
+            $docTypeMap = [
+                'Event Proposal' => 'Event Proposal',
+                'General Plan' => 'General Plan of Activities',
+                'Calendar' => 'Calendar of Activities',
+                'Accomplishment Report' => 'Accomplishment Report',
+                'Constitution' => 'Constitution and By-Laws',
+                'Request Letter' => 'Request Letter',
+                'Off-Campus' => 'Off Campus',
+                'Petition' => 'Petition and Concern'
+            ];
+            
+            // Get full document type name
+            $fullTypeName = $docTypeMap[$selectedType] ?? $selectedType;
+            
+            $documentsQuery->where('type', 'LIKE', "%{$fullTypeName}%");
+        }
+        
+        // Order by creation date (newest first)
+        $documentsQuery->orderBy('submitted_documents.created_at', 'desc');
             
         // Paginate the results - this returns a LengthAwarePaginator
-        $documents = $documentsQuery->paginate(6);
+        $documents = $documentsQuery->paginate(6)->withQueryString();
         
         // Transform each document in the paginated collection
         $documents->getCollection()->transform(function($document) {
@@ -73,10 +140,10 @@ class DocumentReviewController extends Controller
             'SIGMA' => 'text-teal-600',
             'TAP' => 'text-rose-600',
             'OSC' => 'text-orange-600',
-            'DOC' => 'text-blue-800',  // Added for DOC prefix seen in your sample data
+            'DOC' => 'text-blue-800',
         ];
 
-        return view('admin.documentReview', compact('documents', 'tagColors'));
+        return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType'));
     }
 
     /**

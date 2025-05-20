@@ -190,9 +190,17 @@ function updateDocumentDetailsView(docData) {
                     const fileName = docData.file_path.split('/').pop();
                     attachmentSpan.textContent = fileName;
                     
+                    // Make button visible and add the filename
+                    attachmentButton.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <span>${fileName}</span>
+                    `;
+                    
                     // Set up the click handler for the attachment
                     attachmentButton.onclick = function() {
-                        openDocumentViewer(fileName, 'application/pdf');
+                        openDocumentViewer(docData.file_path, 'application/pdf');
                     };
                 }
             }
@@ -359,39 +367,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function openDocumentViewer(filename, fileType) {
+// Document Previewing
+function openDocumentViewer(filePath, fileType) {
+    console.log("Opening document viewer for:", filePath);
     const modal = document.getElementById('documentViewerModal');
     const pdfViewer = document.getElementById('pdfViewer');
     const imageViewer = document.getElementById('imageViewer');
     const documentTitle = document.getElementById('documentTitle');
     
+    // Extract just the filename for display
+    const filename = filePath.split('/').pop();
     documentTitle.textContent = filename;
     
-    if (fileType === 'application/pdf') {
-        // For PDF files
+    // Show modal first to ensure container is visible
+    modal.classList.remove('hidden');
+    
+    // For PDF files
+    if (fileType === 'application/pdf' || filename.toLowerCase().endsWith('.pdf')) {
         pdfViewer.classList.remove('hidden');
         imageViewer.classList.add('hidden');
         
         // Clear previous content
         pdfViewer.innerHTML = '';
         
-        // Generate the PDF URL
-        const pdfUrl = `/documents/${filename}`;
+        // Create viewer container
+        const viewerDiv = document.createElement('div');
+        viewerDiv.id = 'pdf-viewer-container';
+        viewerDiv.className = 'h-full';
+        pdfViewer.appendChild(viewerDiv);
         
-        // Use PDFObject to embed the PDF
-        const options = {
-            fallbackLink: `<p>This browser does not support embedded PDFs. <a href="${pdfUrl}" target="_blank">Click here to download the PDF</a>.</p>`
-        };
+        // Generate the full PDF URL based on your file storage structure
+        // Adjust this path according to your actual file storage location
+        const pdfUrl = filePath.startsWith('/') ? filePath : `/${filePath}`;
         
-        PDFObject.embed(pdfUrl, "#pdfViewer", options);
+        // Initialize WebViewer
+        WebViewer({
+            path: '/webviewer',
+            initialDoc: pdfUrl,
+        }, viewerDiv).then(instance => {
+            // Save instance for later cleanup
+            window.currentPdfViewerInstance = instance;
+            
+            // Basic configuration
+            const { docViewer, UI } = instance;
+            
+            // Set fit mode
+            // docViewer.setFitMode(docViewer.FitMode.FIT_WIDTH);
+            
+            // Optional: Simplify toolbar for basic viewing
+            UI.disableElements(['downloadButton', 'printButton']);
+        }).catch(error => {
+            console.error("Failed to load WebViewer:", error);
+            // Fallback to basic PDF viewing or show error message
+            pdfViewer.innerHTML = `<div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>`;
+        });
     } else {
         // For image files
         pdfViewer.classList.add('hidden');
         imageViewer.classList.remove('hidden');
-        document.getElementById('imageCanvas').src = `/documents/${filename}`;
+        imageViewer.innerHTML = `<img src="${filePath}" class="max-h-full max-w-full" alt="Document Preview">`;
     }
+}
+
+
+// Add a function to close the document viewer
+window.closeDocumentViewer = function() {
+    const modal = document.getElementById('documentViewerModal');
+    const pdfViewer = document.getElementById('pdfViewer');
     
-    modal.classList.remove('hidden');
+    // Clear the PDF viewer
+    pdfViewer.innerHTML = '';
+    
+    modal.classList.add('hidden');
 }
 
 // Approval Modal function
