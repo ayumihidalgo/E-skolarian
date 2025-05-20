@@ -67,17 +67,7 @@
                             <input type="datetime-local" id="event-end" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                         </div>
 
-                        <div>
-                            <label for="event-color" class="block text-sm font-medium text-gray-700">Event Color</label>
-                            <select id="event-color" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                <option value="#3498db">Blue</option>
-                                <option value="#2ecc71">Green</option>
-                                <option value="#f1c40f">Yellow</option>
-                                <option value="#e74c3c">Red</option>
-                                <option value="#f39c12">Orange</option>
-                                <option value="#7A1212">Dark Red</option>
-                            </select>
-                        </div>
+
 
                         <div class="flex justify-end gap-2">
                             <button type="button" onclick="closeEventModal()"
@@ -106,20 +96,122 @@
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
     
-    // Wait for FullCalendar to load
     document.addEventListener('DOMContentLoaded', function() {
-        // Check if FullCalendar is loaded
-        if (typeof FullCalendar === 'undefined') {
-            // If not loaded yet, wait a bit and try loading the calendar
-            const calendarScript = document.createElement('script');
-            calendarScript.src = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js';
-            calendarScript.onload = initializeCalendarWhenReady;
-            document.head.appendChild(calendarScript);
-        } else {
-            // FullCalendar is already loaded
+    // Check if FullCalendar is loaded
+    if (typeof FullCalendar === 'undefined') {
+        // If not loaded yet, wait a bit and try loading the calendar
+        const calendarScript = document.createElement('script');
+        calendarScript.src = 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js';
+        calendarScript.onload = function() {
             initializeCalendarWhenReady();
-        }
-    });
+            setupEmojiValidation();
+        };
+        document.head.appendChild(calendarScript);
+    } else {
+        // FullCalendar is already loaded
+        initializeCalendarWhenReady();
+        setupEmojiValidation();
+    }
+});
+
+// Function to set up emoji and special character validation
+// Function to set up emoji and special character validation
+function setupEmojiValidation() {
+    const titleInput = document.getElementById('event-title');
+    if (titleInput) {
+        // Add maxlength attribute to limit input
+        titleInput.setAttribute('maxlength', '80');
+        
+        // Create character counter element
+        const counterEl = document.createElement('div');
+        counterEl.id = 'char-counter';
+        counterEl.className = 'text-sm mt-1';
+        titleInput.parentNode.appendChild(counterEl);
+        
+        titleInput.addEventListener('input', function(e) {
+            const value = this.value;
+            
+            // Enforce 80 character limit
+            if (value.length > 80) {
+                this.value = value.substring(0, 80);
+            }
+            
+            let hasInvalidChars = false;
+            let warningMessage = '';
+            let cleanedValue = this.value;
+            
+            // Check for emoji
+            if (containsEmoji(cleanedValue)) {
+                cleanedValue = cleanedValue.replace(/[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27BF}|\u{2B50}|\u{1F004}|\u{1F0CF}|\u{1F170}-\u{1F251}|\u{1F300}-\u{1F8FF}]/gu, '');
+                hasInvalidChars = true;
+                warningMessage = 'Emoji are not allowed in event titles';
+            }
+            
+            // Check for special characters (allowing only letters, numbers, spaces, commas, periods, and basic punctuation)
+            if (containsSpecialChars(cleanedValue)) {
+                cleanedValue = cleanedValue.replace(/[^\w\s.,;:()'"-]/g, '');
+                hasInvalidChars = true;
+                warningMessage = warningMessage ? 'Special characters and emoji are not allowed' : 'Special characters are not allowed';
+            }
+            
+            // Apply changes if invalid characters were found
+            if (hasInvalidChars) {
+                // Update the value without invalid characters
+                this.value = cleanedValue;
+                
+                // Show a warning
+                const warningEl = document.getElementById('char-warning') || document.createElement('div');
+                warningEl.id = 'char-warning';
+                warningEl.className = 'text-red-600 text-sm mt-1';
+                warningEl.textContent = warningMessage;
+                
+                if (!document.getElementById('char-warning')) {
+                    this.parentNode.appendChild(warningEl);
+                    
+                    // Remove the warning after 3 seconds
+                    setTimeout(() => {
+                        warningEl.remove();
+                    }, 3000);
+                }
+            }
+            
+            // Check character length and update counter
+            const charLength = this.value.length;
+            const counterEl = document.getElementById('char-counter');
+            
+            if (counterEl) {
+                // Set counter message and color based on length
+                if (charLength < 6) {
+                    counterEl.textContent = `${charLength}/80 characters (minimum 6 required)`;
+                    counterEl.className = 'text-red-600 text-sm mt-1';
+                } else if (charLength > 80) {
+                    counterEl.textContent = `${charLength}/80 characters (maximum exceeded)`;
+                    counterEl.className = 'text-red-600 text-sm mt-1';
+                } else {
+                    counterEl.textContent = `${charLength}/80 characters`;
+                    counterEl.className = 'text-gray-600 text-sm mt-1';
+                }
+            }
+        });
+        
+        // Trigger input event to initialize counter on page load
+        titleInput.dispatchEvent(new Event('input'));
+    }
+}
+
+// Function to detect emoji characters
+function containsEmoji(text) {
+    // Regex for common emoji ranges
+    const emojiRegex = /[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27BF}|\u{2B50}|\u{1F004}|\u{1F0CF}|\u{1F170}-\u{1F251}|\u{1F300}-\u{1F8FF}]/u;
+    return emojiRegex.test(text);
+}
+// Function to detect special characters
+function containsSpecialChars(text) {
+    // Allow letters, numbers, spaces, and basic punctuation (periods, commas, semicolons, colons, parentheses, quotes, hyphens)
+    // Block everything else
+    const specialCharsRegex = /[^\w\s.,;:()'"-]/;
+    return specialCharsRegex.test(text);
+}
     
     // Make sure everything is loaded before initializing
     function initializeCalendarWhenReady() {
@@ -159,7 +251,19 @@
                     checkIfCurrentMonth();
                 },
                 // Handle date clicks
+                // function dateClick 
                 dateClick: function(info) {
+                    // Check if the clicked date is in the past
+                    const clickedDate = new Date(info.dateStr);
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
+                    
+                    if (clickedDate < today) {
+                        // Show message if past date is clicked
+                        alert("Events cannot be created on past dates");
+                        return; // Don't open the modal
+                    }
+                    
                     @if(Auth::user()->role === 'admin')
                     openEventModal(info.dateStr);
                     @endif
@@ -169,12 +273,24 @@
                 eventMaxStack: 3,
                 // Handle long event titles
                 eventDidMount: function(info) {
-                    // Check if the title is too long
-                    const titleLength = info.event.title.length;
-                    if (titleLength > 20) {
-                        // Add multi-line class for long titles
+                    // Get the title element
+                    const titleEl = info.el.querySelector('.fc-event-title');
+                    if (!titleEl) return;
+                    
+                    // Store full title for tooltip
+                    const fullTitle = info.event.title;
+                    titleEl.setAttribute('data-full-title', fullTitle);
+                    
+                    // Handle different title lengths
+                    const titleLength = fullTitle.length;
+                    
+                    // Very long titles (60+): Use multi-line
+                    if (titleLength > 60) {
                         info.el.classList.add('multi-line');
                     }
+                    
+                    // Add title attribute for native browser tooltip
+                    info.el.setAttribute('title', fullTitle);
                 },
                 // Sample events (replace with your actual events)
                 events: [
@@ -246,35 +362,68 @@
     }
     
     // Modal functions for event creation
-    function openEventModal(dateStr = null) {
-        const modal = document.getElementById('eventModal');
-        const modalContent = modal.querySelector('.modal-container');
-        
-        if (modal) {
-            // If a date was clicked, set that date in the form
-            if (dateStr) {
-                const startInput = document.getElementById('event-start');
-                if (startInput) {
-                    startInput.value = dateStr + 'T09:00';
-                }
-                
-                const endInput = document.getElementById('event-end');
-                if (endInput) {
-                    endInput.value = dateStr + 'T10:00';
-                }
+// Modal functions for event creation
+function openEventModal(dateStr = null) {
+    const modal = document.getElementById('eventModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    if (modal) {
+        // Reset form fields
+        const eventForm = document.getElementById('eventForm');
+        if (eventForm) {
+            eventForm.reset();
+            
+            // Also clear any validation messages or character counter
+            const charCounter = document.getElementById('char-counter');
+            if (charCounter) {
+                charCounter.textContent = '0/80 characters';
+                charCounter.className = 'text-gray-600 text-sm mt-1';
             }
             
-            // Show modal with animation
-            modal.classList.remove('hidden');
-            
-            // Trigger animation after a small delay
-            setTimeout(() => {
-                modalContent.classList.remove('modal-hidden');
-                modalContent.classList.add('modal-visible');
-            }, 10);
+            const charWarning = document.getElementById('char-warning');
+            if (charWarning) {
+                charWarning.remove();
+            }
         }
+        
+        // If a date was clicked, set that date in the form (without time)
+        if (dateStr) {
+            const startInput = document.getElementById('event-start');
+            if (startInput) {
+                // Change input type to date
+                startInput.setAttribute('type', 'date');
+                startInput.value = dateStr;
+            }
+            
+            const endInput = document.getElementById('event-end');
+            if (endInput) {
+                // Change input type to date
+                endInput.setAttribute('type', 'date');
+                endInput.value = dateStr;
+            }
+        } else {
+            // If no date was clicked, still change the input types
+            const startInput = document.getElementById('event-start');
+            if (startInput) {
+                startInput.setAttribute('type', 'date');
+            }
+            
+            const endInput = document.getElementById('event-end');
+            if (endInput) {
+                endInput.setAttribute('type', 'date');
+            }
+        }
+        
+        // Show modal with animation
+        modal.classList.remove('hidden');
+        
+        // Trigger animation after a small delay
+        setTimeout(() => {
+            modalContent.classList.remove('modal-hidden');
+            modalContent.classList.add('modal-visible');
+        }, 10);
     }
-
+}
     function closeEventModal() {
         const modal = document.getElementById('eventModal');
         const modalContent = modal.querySelector('.modal-container');
@@ -291,57 +440,100 @@
         }
     }
 
-    function saveEvent() {
-        // Get form values
-        const titleEl = document.getElementById('event-title');
-        const startEl = document.getElementById('event-start');
-        const endEl = document.getElementById('event-end');
-        const colorEl = document.getElementById('event-color');
-
-        if (!titleEl || !startEl) {
-            console.error('Form elements not found!');
-            alert('Error: Form elements not found.');
-            return;
-        }
-
-        const title = titleEl.value;
-        const startStr = startEl.value;
-        const endStr = endEl && endEl.value ? endEl.value : null;
-        const color = colorEl && colorEl.value ? colorEl.value : '#7A1212';
-
-        // Validate form
-        if (!title || !startStr) {
-            alert('Please fill in required fields');
-            return;
-        }
-
-        // Check if this event should be all-day
-        const hasTimeComponent = startStr.includes('T') || (endStr && endStr.includes('T'));
-
-        // Add event to calendar with properly formatted dates
-        try {
-            calendarObj.addEvent({
-                title: title,
-                start: startStr,
-                end: endStr,
-                allDay: !hasTimeComponent,
-                backgroundColor: color,
-                textColor: (color === '#f1c40f' || color === '#2ecc71' || color === '#f39c12') ? '#000000' : '#ffffff'
-            });
-            console.log('Event added successfully');
-
-            // Reset form
-            if (document.getElementById('eventForm')) {
-                document.getElementById('eventForm').reset();
-            }
-
-            // Close modal
-            closeEventModal();
-        } catch (error) {
-            console.error('Error adding event to calendar:', error);
-            alert('Error creating event: ' + error.message);
-        }
+function saveEvent() {
+    // Get form values
+    const titleEl = document.getElementById('event-title');
+    const startEl = document.getElementById('event-start');
+    const endEl = document.getElementById('event-end');
+    
+    if (!titleEl || !startEl) {
+        console.error('Form elements not found!');
+        alert('Error: Form elements not found.');
+        return;
     }
+
+    const title = titleEl.value;
+    const startStr = startEl.value;
+    const endStr = endEl && endEl.value ? endEl.value : null;
+    const defaultColor = '#7A1212'; // Default maroon color for all events
+    
+    // Validate form first
+    if (!title || !startStr) {
+        alert('Please fill in required fields');
+        return;
+    }
+    
+    // THEN check if the event date is in the past
+    const eventDate = new Date(startStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    
+    if (eventDate < today) {
+        alert("Events cannot be created on past dates");
+        return;
+    }
+    
+    // Rest of your validations
+    // Check for emoji or special characters in title
+    if (containsEmoji(title) || containsSpecialChars(title)) {
+        alert('Your event title contains invalid characters. Please use only letters, numbers, spaces, and basic punctuation.');
+        return;
+    }
+    
+    // Check character limit (6-80 range)
+    const titleLength = title.length;
+    if (titleLength < 6) {
+        alert('Event title is too short. Please use at least 6 characters.');
+        return;
+    }
+    if (titleLength > 80) {
+        alert('Event title is too long. Please keep it under 80 characters.');
+        return; 
+    }
+
+    // Check for duplicate event titles
+    const existingEvents = calendarObj.getEvents();
+    const duplicateEvent = existingEvents.find(event => 
+        event.title.toLowerCase() === title.toLowerCase()
+    );
+    
+    if (duplicateEvent) {
+        alert('An event with this title already exists. Please use a different title.');
+        return;
+    }
+
+    // Check if this event should be all-day
+    const hasTimeComponent = startStr.includes('T') || (endStr && endStr.includes('T'));
+
+    // Add event to calendar with properly formatted dates
+    try {
+        calendarObj.addEvent({
+            title: title,
+            start: startStr,
+            end: endStr,
+            allDay: !hasTimeComponent,
+            backgroundColor: defaultColor,
+            textColor: '#ffffff'
+        });
+        console.log('Event added successfully');
+
+        // Reset form
+        if (document.getElementById('eventForm')) {
+            document.getElementById('eventForm').reset();
+        }
+
+        // Close modal
+        closeEventModal();
+    } catch (error) {
+        console.error('Error adding event to calendar:', error);
+        alert('Error creating event: ' + error.message);
+    }
+}
+    function containsEmoji(text) {
+    // Regex for common emoji ranges
+    const emojiRegex = /[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27BF}|\u{2B50}|\u{1F004}|\u{1F0CF}|\u{1F170}-\u{1F251}|\u{1F300}-\u{1F8FF}]/u;
+    return emojiRegex.test(text);
+}
 </script>
 @endpush
 

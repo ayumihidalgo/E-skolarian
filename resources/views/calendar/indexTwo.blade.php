@@ -67,17 +67,7 @@
                             <input type="datetime-local" id="event-end" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                         </div>
 
-                        <div>
-                            <label for="event-color" class="block text-sm font-medium text-gray-700">Event Color</label>
-                            <select id="event-color" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                                <option value="#3498db">Blue</option>
-                                <option value="#2ecc71">Green</option>
-                                <option value="#f1c40f">Yellow</option>
-                                <option value="#e74c3c">Red</option>
-                                <option value="#f39c12">Orange</option>
-                                <option value="#7A1212">Dark Red</option>
-                            </select>
-                        </div>
+
 
                         <div class="flex justify-end gap-2">
                             <button type="button" onclick="closeEventModal()"
@@ -125,24 +115,40 @@
 });
 
 // Function to set up emoji and special character validation
+// Function to set up emoji and special character validation
 function setupEmojiValidation() {
     const titleInput = document.getElementById('event-title');
     if (titleInput) {
+        // Add maxlength attribute to limit input
+        titleInput.setAttribute('maxlength', '80');
+        
+        // Create character counter element
+        const counterEl = document.createElement('div');
+        counterEl.id = 'char-counter';
+        counterEl.className = 'text-sm mt-1';
+        titleInput.parentNode.appendChild(counterEl);
+        
         titleInput.addEventListener('input', function(e) {
             const value = this.value;
+            
+            // Enforce 80 character limit
+            if (value.length > 80) {
+                this.value = value.substring(0, 80);
+            }
+            
             let hasInvalidChars = false;
             let warningMessage = '';
-            let cleanedValue = value;
+            let cleanedValue = this.value;
             
             // Check for emoji
-            if (containsEmoji(value)) {
+            if (containsEmoji(cleanedValue)) {
                 cleanedValue = cleanedValue.replace(/[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27BF}|\u{2B50}|\u{1F004}|\u{1F0CF}|\u{1F170}-\u{1F251}|\u{1F300}-\u{1F8FF}]/gu, '');
                 hasInvalidChars = true;
                 warningMessage = 'Emoji are not allowed in event titles';
             }
             
             // Check for special characters (allowing only letters, numbers, spaces, commas, periods, and basic punctuation)
-            if (containsSpecialChars(value)) {
+            if (containsSpecialChars(cleanedValue)) {
                 cleanedValue = cleanedValue.replace(/[^\w\s.,;:()'"-]/g, '');
                 hasInvalidChars = true;
                 warningMessage = warningMessage ? 'Special characters and emoji are not allowed' : 'Special characters are not allowed';
@@ -168,7 +174,28 @@ function setupEmojiValidation() {
                     }, 3000);
                 }
             }
+            
+            // Check character length and update counter
+            const charLength = this.value.length;
+            const counterEl = document.getElementById('char-counter');
+            
+            if (counterEl) {
+                // Set counter message and color based on length
+                if (charLength < 6) {
+                    counterEl.textContent = `${charLength}/80 characters (minimum 6 required)`;
+                    counterEl.className = 'text-red-600 text-sm mt-1';
+                } else if (charLength > 80) {
+                    counterEl.textContent = `${charLength}/80 characters (maximum exceeded)`;
+                    counterEl.className = 'text-red-600 text-sm mt-1';
+                } else {
+                    counterEl.textContent = `${charLength}/80 characters`;
+                    counterEl.className = 'text-gray-600 text-sm mt-1';
+                }
+            }
         });
+        
+        // Trigger input event to initialize counter on page load
+        titleInput.dispatchEvent(new Event('input'));
     }
 }
 
@@ -335,35 +362,68 @@ function containsSpecialChars(text) {
     }
     
     // Modal functions for event creation
-    function openEventModal(dateStr = null) {
-        const modal = document.getElementById('eventModal');
-        const modalContent = modal.querySelector('.modal-container');
-        
-        if (modal) {
-            // If a date was clicked, set that date in the form
-            if (dateStr) {
-                const startInput = document.getElementById('event-start');
-                if (startInput) {
-                    startInput.value = dateStr + 'T09:00';
-                }
-                
-                const endInput = document.getElementById('event-end');
-                if (endInput) {
-                    endInput.value = dateStr + 'T10:00';
-                }
+// Modal functions for event creation
+function openEventModal(dateStr = null) {
+    const modal = document.getElementById('eventModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    if (modal) {
+        // Reset form fields
+        const eventForm = document.getElementById('eventForm');
+        if (eventForm) {
+            eventForm.reset();
+            
+            // Also clear any validation messages or character counter
+            const charCounter = document.getElementById('char-counter');
+            if (charCounter) {
+                charCounter.textContent = '0/80 characters';
+                charCounter.className = 'text-gray-600 text-sm mt-1';
             }
             
-            // Show modal with animation
-            modal.classList.remove('hidden');
-            
-            // Trigger animation after a small delay
-            setTimeout(() => {
-                modalContent.classList.remove('modal-hidden');
-                modalContent.classList.add('modal-visible');
-            }, 10);
+            const charWarning = document.getElementById('char-warning');
+            if (charWarning) {
+                charWarning.remove();
+            }
         }
+        
+        // If a date was clicked, set that date in the form (without time)
+        if (dateStr) {
+            const startInput = document.getElementById('event-start');
+            if (startInput) {
+                // Change input type to date
+                startInput.setAttribute('type', 'date');
+                startInput.value = dateStr;
+            }
+            
+            const endInput = document.getElementById('event-end');
+            if (endInput) {
+                // Change input type to date
+                endInput.setAttribute('type', 'date');
+                endInput.value = dateStr;
+            }
+        } else {
+            // If no date was clicked, still change the input types
+            const startInput = document.getElementById('event-start');
+            if (startInput) {
+                startInput.setAttribute('type', 'date');
+            }
+            
+            const endInput = document.getElementById('event-end');
+            if (endInput) {
+                endInput.setAttribute('type', 'date');
+            }
+        }
+        
+        // Show modal with animation
+        modal.classList.remove('hidden');
+        
+        // Trigger animation after a small delay
+        setTimeout(() => {
+            modalContent.classList.remove('modal-hidden');
+            modalContent.classList.add('modal-visible');
+        }, 10);
     }
-
+}
     function closeEventModal() {
         const modal = document.getElementById('eventModal');
         const modalContent = modal.querySelector('.modal-container');
@@ -380,13 +440,12 @@ function containsSpecialChars(text) {
         }
     }
 
-    function saveEvent() {
+function saveEvent() {
     // Get form values
     const titleEl = document.getElementById('event-title');
     const startEl = document.getElementById('event-start');
     const endEl = document.getElementById('event-end');
-    const colorEl = document.getElementById('event-color');
-
+    
     if (!titleEl || !startEl) {
         console.error('Form elements not found!');
         alert('Error: Form elements not found.');
@@ -396,7 +455,7 @@ function containsSpecialChars(text) {
     const title = titleEl.value;
     const startStr = startEl.value;
     const endStr = endEl && endEl.value ? endEl.value : null;
-    const color = colorEl && colorEl.value ? colorEl.value : '#7A1212';
+    const defaultColor = '#7A1212'; // Default maroon color for all events
     
     // Validate form first
     if (!title || !startStr) {
@@ -421,17 +480,17 @@ function containsSpecialChars(text) {
         return;
     }
     
-    // Check character limit (60-80 range)
+    // Check character limit (6-80 range)
     const titleLength = title.length;
-    if (titleLength < 3) {
-        alert('Event title is too short. Please use at least 3 characters.');
+    if (titleLength < 6) {
+        alert('Event title is too short. Please use at least 6 characters.');
         return;
     }
     if (titleLength > 80) {
         alert('Event title is too long. Please keep it under 80 characters.');
         return; 
     }
-    
+
     // Check for duplicate event titles
     const existingEvents = calendarObj.getEvents();
     const duplicateEvent = existingEvents.find(event => 
@@ -453,8 +512,8 @@ function containsSpecialChars(text) {
             start: startStr,
             end: endStr,
             allDay: !hasTimeComponent,
-            backgroundColor: color,
-            textColor: (color === '#f1c40f' || color === '#2ecc71' || color === '#f39c12') ? '#000000' : '#ffffff'
+            backgroundColor: defaultColor,
+            textColor: '#ffffff'
         });
         console.log('Event added successfully');
 
