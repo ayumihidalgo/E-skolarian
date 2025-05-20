@@ -1,3 +1,7 @@
+@php
+    $hasRecords = count($records) > 0;
+@endphp
+
 <style>
     /* Ensure table cells and headers have consistent font size */
     th, td {
@@ -9,9 +13,18 @@
     th .sort-icon {
         margin-left: 5px;
     }
+
+    /* Make the empty state container taller */
+    .empty-state-cell {
+        min-height: 250px; /* Adjust as needed */
+        height: 500px;
+        width: 100%;
+        vertical-align: middle;
+    }
 </style>
 
 <table class="min-w-full border border-gray-300 rounded-[20px] shadow-md bg-white overflow-hidden" id="recordsTable">
+    @if($hasRecords)
     <thead>
         <tr class="text-gray-800 text-sm text-center bg-white">
             <th class="py-3 px-4 border-b font-extrabold" data-column="0" onclick="sortTable(0)">Tag <i class="sort-icon fas fa-sort"></i></th>
@@ -21,6 +34,7 @@
             <th class="py-3 px-4 border-b font-extrabold" data-column="4" onclick="sortTable(4)">Status <i class="sort-icon fas fa-sort"></i></th>
         </tr>
     </thead>
+    @endif
     <tbody class="text-sm text-gray-700 text-center font-medium bg-white">
         @forelse($records as $record)
         <tr
@@ -43,7 +57,10 @@
         </tr>
         @empty
         <tr>
-            <td colspan="5" class="py-4 px-4 text-center text-gray-500 font-extrabold">No records found.</td>
+            <td colspan="5" class="py-4 px-4 text-center text-gray-500 font-extrabold empty-state-cell">
+                <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No File Found" class="mx-auto mb-10" style="height: 80px;">
+                No records found.
+            </td>
         </tr>
         @endforelse
     </tbody>
