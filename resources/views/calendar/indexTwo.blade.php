@@ -381,96 +381,95 @@ function containsSpecialChars(text) {
     }
 
     function saveEvent() {
-        // Get form values
-        const titleEl = document.getElementById('event-title');
-        const startEl = document.getElementById('event-start');
-        const endEl = document.getElementById('event-end');
-        const colorEl = document.getElementById('event-color');
-        
-                // Check if the event date is in the past
-        const eventDate = new Date(startStr);
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time to start of day
-        
-        if (eventDate < today) {
-            alert("Events cannot be created on past dates");
-            return;
-        }
-        
-        // Rest of your existing validation
-        if (!title || !startStr) {
-            alert('Please fill in required fields');
-            return;
-        }
+    // Get form values
+    const titleEl = document.getElementById('event-title');
+    const startEl = document.getElementById('event-start');
+    const endEl = document.getElementById('event-end');
+    const colorEl = document.getElementById('event-color');
 
-        if (!titleEl || !startEl) {
-            console.error('Form elements not found!');
-            alert('Error: Form elements not found.');
-            return;
-        }
-
-        const title = titleEl.value;
-        const startStr = startEl.value;
-        const endStr = endEl && endEl.value ? endEl.value : null;
-        const color = colorEl && colorEl.value ? colorEl.value : '#7A1212';
-
-        // Validate form
-        if (!title || !startStr) {
-            alert('Please fill in required fields');
-            return;
-        }
-        // Check for emoji or special characters in title
-        if (containsEmoji(title) || containsSpecialChars(title)) {
-            alert('Your event title contains invalid characters. Please use only letters, numbers, spaces, and basic punctuation.');
-            return;
-        }
-        // Check character limit (60-80 range)
-        const titleLength = title.length;
-        if (titleLength < 3) {
-            alert('Event title is too short. Please use at least 3 characters.');
-            return;
-        }
-        if (titleLength > 80) {
-            alert('Event title is too long. Please keep it under 80 characters.');
-            return; 
-        }
-                    // Check for duplicate event titles
-        const existingEvents = calendarObj.getEvents();
-        const duplicateEvent = existingEvents.find(event => 
-            event.title.toLowerCase() === title.toLowerCase()
-        );
-        
-        if (duplicateEvent) {
-            alert('An event with this title already exists. Please use a different title.');
-            return;
-        }
-        // Check if this event should be all-day
-        const hasTimeComponent = startStr.includes('T') || (endStr && endStr.includes('T'));
-
-        // Add event to calendar with properly formatted dates
-        try {
-            calendarObj.addEvent({
-                title: title,
-                start: startStr,
-                end: endStr,
-                allDay: !hasTimeComponent,
-                backgroundColor: color,
-                textColor: (color === '#f1c40f' || color === '#2ecc71' || color === '#f39c12') ? '#000000' : '#ffffff'
-            });
-            console.log('Event added successfully');
-
-            // Reset form
-            if (document.getElementById('eventForm')) {
-                document.getElementById('eventForm').reset();
-            }
-
-            // Close modal
-            closeEventModal();
-        } catch (error) {
-            console.error('Error adding event to calendar:', error);
-            alert('Error creating event: ' + error.message);
-        }
+    if (!titleEl || !startEl) {
+        console.error('Form elements not found!');
+        alert('Error: Form elements not found.');
+        return;
     }
+
+    const title = titleEl.value;
+    const startStr = startEl.value;
+    const endStr = endEl && endEl.value ? endEl.value : null;
+    const color = colorEl && colorEl.value ? colorEl.value : '#7A1212';
+    
+    // Validate form first
+    if (!title || !startStr) {
+        alert('Please fill in required fields');
+        return;
+    }
+    
+    // THEN check if the event date is in the past
+    const eventDate = new Date(startStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    
+    if (eventDate < today) {
+        alert("Events cannot be created on past dates");
+        return;
+    }
+    
+    // Rest of your validations
+    // Check for emoji or special characters in title
+    if (containsEmoji(title) || containsSpecialChars(title)) {
+        alert('Your event title contains invalid characters. Please use only letters, numbers, spaces, and basic punctuation.');
+        return;
+    }
+    
+    // Check character limit (60-80 range)
+    const titleLength = title.length;
+    if (titleLength < 3) {
+        alert('Event title is too short. Please use at least 3 characters.');
+        return;
+    }
+    if (titleLength > 80) {
+        alert('Event title is too long. Please keep it under 80 characters.');
+        return; 
+    }
+    
+    // Check for duplicate event titles
+    const existingEvents = calendarObj.getEvents();
+    const duplicateEvent = existingEvents.find(event => 
+        event.title.toLowerCase() === title.toLowerCase()
+    );
+    
+    if (duplicateEvent) {
+        alert('An event with this title already exists. Please use a different title.');
+        return;
+    }
+
+    // Check if this event should be all-day
+    const hasTimeComponent = startStr.includes('T') || (endStr && endStr.includes('T'));
+
+    // Add event to calendar with properly formatted dates
+    try {
+        calendarObj.addEvent({
+            title: title,
+            start: startStr,
+            end: endStr,
+            allDay: !hasTimeComponent,
+            backgroundColor: color,
+            textColor: (color === '#f1c40f' || color === '#2ecc71' || color === '#f39c12') ? '#000000' : '#ffffff'
+        });
+        console.log('Event added successfully');
+
+        // Reset form
+        if (document.getElementById('eventForm')) {
+            document.getElementById('eventForm').reset();
+        }
+
+        // Close modal
+        closeEventModal();
+    } catch (error) {
+        console.error('Error adding event to calendar:', error);
+        alert('Error creating event: ' + error.message);
+    }
+}
     function containsEmoji(text) {
     // Regex for common emoji ranges
     const emojiRegex = /[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27BF}|\u{2B50}|\u{1F004}|\u{1F0CF}|\u{1F170}-\u{1F251}|\u{1F300}-\u{1F8FF}]/u;
