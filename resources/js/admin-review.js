@@ -190,9 +190,17 @@ function updateDocumentDetailsView(docData) {
                     const fileName = docData.file_path.split('/').pop();
                     attachmentSpan.textContent = fileName;
                     
+                    // Make button visible and add the filename
+                    attachmentButton.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <span>${fileName}</span>
+                    `;
+                    
                     // Set up the click handler for the attachment
                     attachmentButton.onclick = function() {
-                        openDocumentViewer(fileName, 'application/pdf');
+                        openDocumentViewer(docData.file_path, 'application/pdf');
                     };
                 }
             }
@@ -359,39 +367,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function openDocumentViewer(filename, fileType) {
+// Document Previewing
+function openDocumentViewer(filePath, fileType) {
+    console.log("Opening document viewer for:", filePath);
     const modal = document.getElementById('documentViewerModal');
     const pdfViewer = document.getElementById('pdfViewer');
     const imageViewer = document.getElementById('imageViewer');
     const documentTitle = document.getElementById('documentTitle');
     
+    // Extract just the filename for display
+    const filename = filePath.split('/').pop();
     documentTitle.textContent = filename;
     
-    if (fileType === 'application/pdf') {
-        // For PDF files
+    // Show modal first to ensure container is visible
+    modal.classList.remove('hidden');
+    
+    // For PDF files
+    if (fileType === 'application/pdf' || filename.toLowerCase().endsWith('.pdf')) {
         pdfViewer.classList.remove('hidden');
         imageViewer.classList.add('hidden');
         
         // Clear previous content
         pdfViewer.innerHTML = '';
         
-        // Generate the PDF URL
-        const pdfUrl = `/documents/${filename}`;
+        // Create viewer container
+        const viewerDiv = document.createElement('div');
+        viewerDiv.id = 'pdf-viewer-container';
+        viewerDiv.className = 'h-full';
+        pdfViewer.appendChild(viewerDiv);
         
-        // Use PDFObject to embed the PDF
-        const options = {
-            fallbackLink: `<p>This browser does not support embedded PDFs. <a href="${pdfUrl}" target="_blank">Click here to download the PDF</a>.</p>`
-        };
+        // Generate the full PDF URL based on your file storage structure
+        // Adjust this path according to your actual file storage location
+        const pdfUrl = filePath.startsWith('/') ? filePath : `/${filePath}`;
         
-        PDFObject.embed(pdfUrl, "#pdfViewer", options);
+        // Initialize WebViewer
+        WebViewer({
+            path: '/webviewer',
+            initialDoc: pdfUrl,
+        }, viewerDiv).then(instance => {
+            // Save instance for later cleanup
+            window.currentPdfViewerInstance = instance;
+            
+            // Basic configuration
+            const { docViewer, UI } = instance;
+            
+            // Set fit mode
+            // docViewer.setFitMode(docViewer.FitMode.FIT_WIDTH);
+            
+            // Optional: Simplify toolbar for basic viewing
+            UI.disableElements(['downloadButton', 'printButton']);
+        }).catch(error => {
+            console.error("Failed to load WebViewer:", error);
+            // Fallback to basic PDF viewing or show error message
+            pdfViewer.innerHTML = `<div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>`;
+        });
     } else {
         // For image files
         pdfViewer.classList.add('hidden');
         imageViewer.classList.remove('hidden');
-        document.getElementById('imageCanvas').src = `/documents/${filename}`;
+        imageViewer.innerHTML = `<img src="${filePath}" class="max-h-full max-w-full" alt="Document Preview">`;
     }
+}
+
+
+// Add a function to close the document viewer
+window.closeDocumentViewer = function() {
+    const modal = document.getElementById('documentViewerModal');
+    const pdfViewer = document.getElementById('pdfViewer');
     
-    modal.classList.remove('hidden');
+    // Clear the PDF viewer
+    pdfViewer.innerHTML = '';
+    
+    modal.classList.add('hidden');
 }
 
 // Approval Modal function
@@ -485,21 +532,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Handle the "SEND" button click
     sendToAdminSubmitBtn.addEventListener('click', function () {
-        const selectedAdmin = adminSelect.value;
-        const message = adminMessage.value.trim();
+        const selectedAdmin = document.getElementById('adminSelect').value;
+        const message = document.getElementById('adminMessage').value.trim();
 
         if (!selectedAdmin) {
-            alert('Please select an admin to send the document to.');
+            showDocumentActionToast('forward', 'Please select an admin to send the document to.', false);
             return;
         }
 
         if (!message) {
-            alert('Please enter a message.');
+            showDocumentActionToast('forward', 'Please enter a message for the admin.', false);
             return;
         }
         
         if (!currentDocumentId) {
-            alert('Error: Document ID is missing. Please try again.');
+            showDocumentActionToast('forward', 'Error: Document ID is missing.', false);
             return;
         }
 
@@ -526,21 +573,26 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(data => {
             if (data.success) {
-                alert('Document successfully forwarded to another admin.');
-                sendToAdminModal.classList.add('hidden'); // Close the modal
+                // Show success toast
+                showDocumentActionToast('forward');
+                
+                // Close the modal
+                document.getElementById('sendToAdminModal').classList.add('hidden'); 
                 
                 // Return to table view
                 closeDetailsPanel();
                 
-                // Refresh the page to update document list
-                window.location.reload();
+                // Refresh the page
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
             } else {
-                alert('Failed to send the document: ' + (data.error || 'Unknown error'));
+                showDocumentActionToast('forward', data.error || 'Failed to forward the document.', false);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred: ' + error.message);
+            showDocumentActionToast('forward', error.message || 'An error occurred while forwarding the document.', false);
         });
     });
 });
@@ -566,17 +618,13 @@ document.getElementById('cancelFinalizeBtn').addEventListener('click', function(
 
 // Finalize approval handler
 document.getElementById('confirmFinalizeBtn').addEventListener('click', function() {
-
-    // Perform the actual finalization here
-    console.log('Document approval finalized, ID:', currentDocumentId);
-    
     // Make sure we have a valid ID
     if (!currentDocumentId) {
-        alert('Error: Document ID is missing. Please try again.');
+        showDocumentActionToast('approved', "Error: Document ID is missing. Please try again.", false);
         return;
     }
     
-    // Make an AJAX request to approve the document with the numeric ID
+    // Make an AJAX request to approve the document
     fetch(`/admin/documents/${currentDocumentId}/approve`, {
         method: 'POST',
         headers: {
@@ -587,11 +635,18 @@ document.getElementById('confirmFinalizeBtn').addEventListener('click', function
             message: 'Document approved and finalized'
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => { 
+                throw new Error(data.error || 'Failed to approve document');
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            // Show success message
-            alert('Document has been approved and finalized.');
+            // Show success toast
+            showDocumentActionToast('approved');
             
             // Close the modal
             document.getElementById('finalizeConfirmationModal').classList.add('hidden');
@@ -600,14 +655,17 @@ document.getElementById('confirmFinalizeBtn').addEventListener('click', function
             closeDetailsPanel();
             
             // Refresh the page to update the document list
-            window.location.reload();
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
         } else {
-            alert('Failed to approve document: ' + (data.error || 'Unknown error'));
+            // Show failure toast
+            showDocumentActionToast('approved', data.error || "An unknown error occurred during approval.", false);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while approving the document. Please try again.');
+        showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
     });
 });
 
@@ -693,18 +751,18 @@ document.addEventListener('DOMContentLoaded', function() {
     if (submitResubmissionBtn) {
         submitResubmissionBtn.addEventListener('click', function() {
             const message = document.getElementById('resubmissionMessage').value.trim();
-            
+    
             if (!message) {
-                alert('Please provide feedback for resubmission.');
+                showDocumentActionToast('resubmit', 'Please provide feedback for resubmission.', false);
                 return;
             }
             
             if (!currentDocumentId) {
-                alert('Error: Document ID is missing. Please try again.');
+                showDocumentActionToast('resubmit', 'Error: Document ID is missing.', false);
                 return;
             }
             
-            // Submit the resubmission request with the correct endpoint
+            // Submit the resubmission request
             fetch(`/admin/documents/${currentDocumentId}/request-resubmission`, {
                 method: 'POST',
                 headers: {
@@ -717,14 +775,16 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Server error');
+                    });
                 }
                 return response.json();
             })
             .then(data => {
                 if (data.success) {
-                    // Show success message
-                    alert('Resubmission request has been sent successfully.');
+                    // Show success toast
+                    showDocumentActionToast('resubmit');
                     
                     // Close the modal
                     document.getElementById('resubmissionModal').classList.add('hidden');
@@ -732,15 +792,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Return to table view
                     closeDetailsPanel();
                     
-                    // Refresh the page to update the document list
-                    window.location.reload();
+                    // Refresh the page
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
                 } else {
-                    alert('Failed to send resubmission request: ' + (data.error || 'Unknown error'));
+                    showDocumentActionToast('resubmit', data.error || 'Failed to send resubmission request.', false);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('An error occurred while requesting resubmission. Please try again.');
+                showDocumentActionToast('resubmit', error.message || 'An error occurred while requesting resubmission.', false);
             });
         });
     }
@@ -807,15 +869,15 @@ document.getElementById('cancelFinalRejectBtn').addEventListener('click', functi
 
 // Finalize rejection
 document.getElementById('finalizeRejectionBtn').addEventListener('click', function() {
-    // Get the rejection message from the previous modal
+    // Get the rejection message
     const rejectionMessage = document.getElementById('rejectionMessage').value.trim();
     
     if (!rejectionMessage) {
-        alert('Please provide a reason for rejection.');
+        showDocumentActionToast('rejected', 'Please provide a reason for rejection.', false);
         return;
     }
     
-    // Submit the final rejection with the correct endpoint
+    // Submit the rejection
     fetch(`/admin/documents/${currentDocumentId}/reject`, {
         method: 'POST',
         headers: {
@@ -826,11 +888,18 @@ document.getElementById('finalizeRejectionBtn').addEventListener('click', functi
             message: rejectionMessage
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.error || 'Failed to reject document');
+            });
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-            // Show success message
-            alert('Document has been rejected successfully.');
+            // Show success toast
+            showDocumentActionToast('rejected');
             
             // Close the modals
             document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
@@ -838,15 +907,17 @@ document.getElementById('finalizeRejectionBtn').addEventListener('click', functi
             // Return to table view
             closeDetailsPanel();
             
-            // Refresh the page to update the document list
-            window.location.reload();
+            // Refresh the page
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
         } else {
-            alert('Failed to reject document: ' + (data.error || 'Unknown error'));
+            showDocumentActionToast('rejected', data.error || 'Failed to reject document.', false);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('An error occurred while rejecting the document. Please try again.');
+        showDocumentActionToast('rejected', error.message || 'An error occurred while rejecting the document.', false);
     });
 });
 
@@ -857,3 +928,110 @@ window.addEventListener('click', function(event) {
         finalRejectConfirmationModal.classList.add('hidden');
     }
 });
+
+
+// --------------- TOASTS ---------------
+
+// Toast timeout storage
+let documentActionToastTimeout = null;
+
+/**
+ * Shows a toast notification for document actions
+ * @param {string} action - The action type: 'approved', 'rejected', 'resubmit', 'forward'
+ * @param {string} message - Optional custom message
+ * @param {boolean} isSuccess - Whether the action was successful
+ */
+function showDocumentActionToast(action, message = '', isSuccess = true) {
+    const toast = document.getElementById("documentActionToast");
+    const actionIcon = document.getElementById("actionIcon");
+    const actionTitle = document.getElementById("actionTitle");
+    const actionMessage = document.getElementById("actionMessage");
+    
+    // Clear any existing timeout
+    if (documentActionToastTimeout) {
+        clearTimeout(documentActionToastTimeout);
+    }
+    
+    // Set border color based on success/failure
+    if (isSuccess) {
+        toast.classList.remove('border-red-300');
+        toast.classList.add('border-green-400');
+        actionIcon.src = ASSET_URLS.successIcon;
+    } else {
+        toast.classList.remove('border-green-400');
+        toast.classList.add('border-red-300');
+        actionIcon.src = ASSET_URLS.errorIcon;
+    }
+    
+    // Set title based on action
+    let title = '';
+    let defaultMessage = '';
+    
+    switch(action) {
+        case 'approved':
+            title = isSuccess ? 'Document Successfully Approved' : 'Approval Failed';
+            defaultMessage = isSuccess 
+                ? 'The document has been approved successfully and the submitter has been notified.' 
+                : 'Failed to approve document. Please try again later.';
+            break;
+        case 'rejected':
+            title = isSuccess ? 'Document Successfully Rejected' : 'Rejection Failed';
+            defaultMessage = isSuccess 
+                ? 'The document has been rejected and the submitter has been notified.' 
+                : 'Failed to reject document. Please try again later.';
+            break;
+        case 'resubmit':
+            title = isSuccess ? 'Resubmission Successfully Requested' : 'Resubmission Request Failed';
+            defaultMessage = isSuccess 
+                ? 'The resubmission request has been sent to the document submitter.' 
+                : 'Failed to request document resubmission. Please try again later.';
+            break;
+        case 'forward':
+            title = isSuccess ? 'Document Successfully Forwarded' : 'Forward Failed';
+            defaultMessage = isSuccess 
+                ? 'The document has been forwarded to another admin for review.' 
+                : 'Failed to forward document. Please try again later.';
+            break;
+        default:
+            title = isSuccess ? 'Action Successful' : 'Action Failed';
+            defaultMessage = isSuccess 
+                ? 'The action was successfully performed.' 
+                : 'The action failed. Please try again later.';
+    }
+    
+    // Set the toast content
+    actionTitle.textContent = title;
+    actionMessage.textContent = message || defaultMessage;
+    
+    // Show the toast
+    toast.classList.remove("hidden");
+    
+    // Auto-hide after 5 seconds
+    documentActionToastTimeout = setTimeout(() => {
+        toast.classList.add("hidden");
+    }, 5000);
+}
+
+// Hide action toast
+function hideActionToast() {
+    const toast = document.getElementById("documentActionToast");
+    toast.classList.add("hidden");
+    if (documentActionToastTimeout) {
+        clearTimeout(documentActionToastTimeout);
+    }
+}
+
+// Update hideAllToasts function
+function hideAllToasts() {
+    // Hide the new unified toast
+    hideActionToast();
+    
+    // Keep existing toast hiding logic if needed
+    if (typeof hideToast === 'function') {
+        hideToast('error');
+        hideToast('success');
+        hideToast('fail');
+        hideToast('approvalSuccess');
+        hideToast('approvalFail');
+    }
+}

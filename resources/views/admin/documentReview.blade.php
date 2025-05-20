@@ -391,32 +391,29 @@
     </div>
 
     <!-- Document Preview Modal -->
-    <div id="documentViewerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div id="documentViewerModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-11/12 h-5/6 rounded-lg flex flex-col">
             <div class="flex justify-between items-center p-4 border-b">
-                <h3 class="text-lg font-semibold" id="documentTitle">Document Viewer</h3>
-                <button onclick="closeDocumentViewer()" class="text-gray-500 hover:text-gray-700 cursor-pointer">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <h3 id="documentTitle" class="font-semibold text-lg truncate">Document Preview</h3>
+                <button onclick="closeDocumentViewer()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                     </svg>
                 </button>
             </div>
             <div class="flex-1 overflow-hidden">
-                <!-- PDF Viewer using PDFObject -->
-                <div id="pdfViewer" class="w-full h-full bg-gray-100">
-                    <!-- PDF will be embedded here -->
-                </div>
+                <!-- PDF Viewer -->
+                <div id="pdfViewer" class="w-full h-full"></div>
                 
                 <!-- Image Viewer -->
-                <div id="imageViewer" class="hidden h-full flex items-center justify-center">
-                    <img id="imageCanvas" class="max-w-full max-h-full" alt="Document Preview">
+                <div id="imageViewer" class="hidden h-full flex items-center justify-center bg-gray-100">
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Approval Modal -->
-    <div id="approvalModal" class="hidden fixed inset-0 bg-black bg z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+    <div id="approvalModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-[30rem] h-[24rem] rounded-2xl shadow-xl p-6">
             <div class="bg-white rounded-t-lg">
                 <div class="flex items-center justify-between">
@@ -673,161 +670,90 @@
         </div>
     </div>
 
+    <!-- Document Action Toast -->
+    <div id="documentActionToast" class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-gray-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50">
+        <div>
+            <img
+                src="{{ asset('images/successful.svg') }}"
+                alt="Action Icon"
+                id="actionIcon"
+                class="">
+        </div>
+        <div class="flex-1">
+            <p class="font-semibold" id="actionTitle">Document Action</p>
+            <p id="actionMessage" class="text-sm">Action performed on document.</p>
+        </div>
+        <button type="button" onclick="hideActionToast()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer self-center">&times;</button>
+    </div>
+
     <script>
-        // Filtering Function
+        // Document Viewer Functionality
         document.addEventListener('DOMContentLoaded', function() {
+            // Get form elements
             const searchInput = document.getElementById('searchInput');
             const organizationFilter = document.getElementById('organizationFilter');
             const documentTypeFilter = document.getElementById('documentTypeFilter');
-            const tableRows = document.querySelectorAll('tbody tr');
-
-            // Create a mapping between acronyms and full organization names
-            const orgMap = {
-                'ACAP': 'Association of Competent and Aspiring Psychologists',
-                'AECES': 'Association of Electronics and Communications Engineering Students',
-                'ELITE': 'Eligible League of Information Technology Enthusiasts',
-                'GIVE': 'Guild of Imporous and Valuable Educators',
-                'JEHRA': 'Junior Executive of Human Resource Association',
-                'JMAP': 'Junior Marketing Association of the Philippines',
-                'JPIA': 'Junior Philippine Institute of Accountants',
-                'PIIE': 'Philippine Institute of Industrial Engineers',
-                'AGDS': 'Artist Guild Dance Squad',
-                'Chorale': 'PUP SRC Chorale',
-                'SIGMA': 'Supreme Innovators\' Guild for Mathematics Advancements',
-                'TAPNOTCH': 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
-                'OSC': 'Office of the Student Council'
-            };
-
-            // Also create a reverse mapping from full names to acronyms for search flexibility
-            const reverseOrgMap = {};
-            for (const acronym in orgMap) {
-                reverseOrgMap[orgMap[acronym].toLowerCase()] = acronym.toLowerCase();
-            }
             
-            // Create a mapping between filter options and actual document types
-            const docTypeMap = {
-                'Event Proposal': 'Event Proposal',
-                'General Plan': 'General Plan of Activities',
-                'Calendar': 'Calendar of Activities',
-                'Accomplishment Report': 'Accomplishment Report',
-                'Constitution': 'Constitution and By-Laws',
-                'Request Letter': 'Request Letter',
-                'Off-Campus': 'Off Campus',
-                'Petition': 'Petition and Concern'
-            };
-
-            function filterTable() {
-                const searchTerm = searchInput.value.toLowerCase();
-                const selectedOrg = organizationFilter.value;
-                const selectedTypeOption = documentTypeFilter.value;
+            if (searchInput && organizationFilter && documentTypeFilter) {
+                // Create the form dynamically
+                const form = document.createElement('form');
+                form.method = 'GET';
+                form.action = window.location.pathname; // Use the current URL path
+                form.style.display = 'none'; // Hide the form
+                document.body.appendChild(form);
                 
-                console.log('Filtering with:', { 
-                    searchTerm, 
-                    selectedOrg, 
-                    selectedTypeOption 
-                });
-
-                // Get the full organization name if an acronym is selected
-                const selectedFullOrgName = selectedOrg && selectedOrg !== 'All' ? orgMap[selectedOrg].toLowerCase() : '';
+                // Create hidden input fields
+                const searchField = document.createElement('input');
+                searchField.type = 'hidden';
+                searchField.name = 'search';
+                form.appendChild(searchField);
                 
-                // Get the full document type if a short version is selected
-                const selectedType = selectedTypeOption.toLowerCase();
+                const orgField = document.createElement('input');
+                orgField.type = 'hidden';
+                orgField.name = 'organization';
+                form.appendChild(orgField);
                 
-                tableRows.forEach(row => {
-                    const tag = row.cells[0].textContent.toLowerCase() || '';
-                    const organization = row.cells[1].textContent.toLowerCase() || '';
-                    const title = row.cells[2].textContent.toLowerCase() || '';
-                    const type = row.cells[4].textContent.toLowerCase() || '';
-                    
-                    // Check if the search term matches acronym or full name
-                    let matchesSearch = tag.includes(searchTerm) ||
-                                    title.includes(searchTerm) ||
-                                    organization.includes(searchTerm);
-                                    
-                    // Add additional matching for acronyms in the search
-                    for (const fullName in reverseOrgMap) {
-                        if (fullName.includes(searchTerm) && organization.includes(fullName)) {
-                            matchesSearch = true;
-                            break;
-                        }
-                    }
-                    
-                    // For organization filter, check if the row contains either the selected acronym or its full name
-                    let matchesOrg = true;
-                    if (selectedOrg !== '' && selectedOrg !== 'All') {
-                        matchesOrg = organization.includes(selectedFullOrgName);
-                    }
-
-                    // For document type, check if the type in the table includes the selected type
-                    let matchesType = true;
-                    if (selectedType !== '' && selectedType !== 'all') {
-                        // Look for partial matches in document type
-                        for (const [shortType, fullType] of Object.entries(docTypeMap)) {
-                            if (selectedTypeOption === shortType && type.includes(fullType.toLowerCase())) {
-                                matchesType = true;
-                                break;
-                            } else if (selectedType !== 'all' && !selectedType.includes(type) && !type.includes(selectedType)) {
-                                matchesType = false;
-                            }
-                        }
-                    }
-
-                    if (matchesSearch && matchesOrg && matchesType) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-
-                updateNoResultsMessage();
-            }
-
-            function updateNoResultsMessage() {
-                const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
-                const tableContainer = document.querySelector('.overflow-x-auto');
-                const existingNoResultsDiv = document.querySelector('.no-results');
-
-                if (visibleRows.length === 0) {
-                    if (!existingNoResultsDiv) {
-                        const noResults = `
-                            <div class="bg-gray-50 rounded-md p-8 flex flex-col items-center justify-center flex-grow no-results">
-                                <img src="{{ asset('images/no_entry.svg') }}" alt="No Data" class="mb-4 opacity-50 w-40 h-40">
-                                <p class="text-gray-500 text-sm">No matching records found</p>
-                            </div>
-                        `;
-                        tableContainer.style.display = 'none';
-                        tableContainer.insertAdjacentHTML('afterend', noResults);
-                    }
-                } else {
-                    tableContainer.style.display = '';
-                    if (existingNoResultsDiv) {
-                        existingNoResultsDiv.remove();
-                    }
+                const typeField = document.createElement('input');
+                typeField.type = 'hidden';
+                typeField.name = 'documentType';
+                form.appendChild(typeField);
+                
+                // Set initial values from URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                searchInput.value = urlParams.get('search') || '';
+                if (urlParams.has('organization') && urlParams.get('organization') !== 'All') {
+                    organizationFilter.value = urlParams.get('organization');
                 }
+                if (urlParams.has('documentType') && urlParams.get('documentType') !== 'All') {
+                    documentTypeFilter.value = urlParams.get('documentType');
+                }
+                
+                // Add event listeners
+                let searchTimeout;
+                searchInput.addEventListener('input', function() {
+                    clearTimeout(searchTimeout);
+                    searchTimeout = setTimeout(() => {
+                        searchField.value = searchInput.value;
+                        orgField.value = organizationFilter.value || 'All';
+                        typeField.value = documentTypeFilter.value || 'All';
+                        form.submit();
+                    }, 500); // 500ms debounce
+                });
+                
+                organizationFilter.addEventListener('change', function() {
+                    searchField.value = searchInput.value;
+                    orgField.value = organizationFilter.value || 'All'; 
+                    typeField.value = documentTypeFilter.value || 'All';
+                    form.submit();
+                });
+                
+                documentTypeFilter.addEventListener('change', function() {
+                    searchField.value = searchInput.value;
+                    orgField.value = organizationFilter.value || 'All';
+                    typeField.value = documentTypeFilter.value || 'All';
+                    form.submit();
+                });
             }
-
-            // Fix the "All" option in the organization filter
-            const allOrgOption = organizationFilter.querySelector('option[value=""]');
-            if (allOrgOption) {
-                allOrgOption.value = "All";
-            }
-            
-            // Fix the "All" option in the document type filter
-            const allTypeOption = documentTypeFilter.querySelector('option[value=""]');
-            if (allTypeOption) {
-                allTypeOption.value = "All";
-            }
-
-            // Add event listeners
-            searchInput.addEventListener('input', filterTable);
-            organizationFilter.addEventListener('change', filterTable);
-            documentTypeFilter.addEventListener('change', filterTable);
-            
-            // This ensures that the filters are properly applied on initial page load
-            // Add a small delay to ensure the DOM is fully loaded
-            setTimeout(() => {
-                filterTable();
-            }, 100);
         });
 
         // Sorting Functionality
@@ -852,11 +778,11 @@
 
             // Update sort icons
             headers.forEach(icon => {
-                icon.className = 'fa-solid fa-sort';
+                icon.className = 'fa-solid fa-sort text-[#9099A5]';
             });
 
             const currentHeader = headers[columnIndex];
-            currentHeader.className = `fa-solid fa-sort-${currentSort.direction === 'asc' ? 'up' : 'down'}`;
+            currentHeader.className = `fa-solid text-[#9099A5] fa-sort-${currentSort.direction === 'asc' ? 'up' : 'down'}`;
 
             // Sort rows
             rows.sort((a, b) => {
@@ -906,6 +832,13 @@
             
             modal.classList.add('hidden');
         }
-    </script>
+
+        // Define asset URLs so JavaScript can use them
+        const ASSET_URLS = {
+            successIcon: "{{ asset('images/successful.svg') }}",
+            errorIcon: "{{ asset('images/error.svg') }}"
+        };
+        </script>
     @vite('resources/js/admin-review.js')
+    @vite(['resources/js/app.js'])
 @endsection

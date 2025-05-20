@@ -12,10 +12,11 @@
         <div class="flex justify-between items-center mb-6">
             <h2 class="text-2xl font-extrabold">Document Preview</h2>
             <!-- Back button to return to document history page -->
-            <a href="{{ route('admin.documentHistory') }}"
+            <button type="button"
+                onclick="window.history.back();"
                 class="bg-[#7A1212] text-white px-4 py-2 rounded-full hover:bg-[#DAA520] w-[117px] h-[44px] flex items-center justify-center">
                 Back
-            </a>
+            </button>
         </div>
 
         {{-- Document Details Card --}}
