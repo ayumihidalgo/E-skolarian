@@ -122,7 +122,8 @@ class LoginController extends Controller
     // Unique key for rate limiting per IP
     protected function throttleKey(Request $request)
     {
-        return 'login:' . $request->ip();
+        $role = $request->input('role', 'student');
+        return 'login:' . $role . ':' . $request->ip();
     }
 
     // Remaining seconds for lockout
