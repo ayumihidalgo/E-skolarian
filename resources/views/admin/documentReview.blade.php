@@ -293,7 +293,7 @@
 
                         <!-- Summary -->
                         <div>
-                            <h2 class="text-base md:text-lg font-bold mb-1 md:mb-2">Summary</h2>
+                            <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Summary</h2>
                             <div class="bg-[#EFEFEF] text-gray-800 rounded-lg p-3 md:p-4 max-h-[200px] overflow-y-auto">
                                 <p class="text-black break-words whitespace-normal text-sm md:text-base" id="documentSummary">
                                     <!-- Summary will be inserted here -->
@@ -303,7 +303,7 @@
 
                         <!-- Attachment -->
                         <div>
-                            <h2 class="text-base md:text-lg font-bold mb-1 md:mb-2">Attachment</h2>
+                            <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Attachment</h2>
                             <div class="space-y-2 md:space-y-4">
                                 <!-- Document preview button -->
                                 <button id="documentAttachment" class="bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-300 text-sm md:text-base max-w-full">
@@ -315,16 +315,38 @@
                             </div>
                         </div>
 
-                        <!-- Status -->
+                        <!-- Status section -->
                         <div>
-                            <h2 class="text-base md:text-lg font-bold mb-1 md:mb-2">Status</h2>
-                            <div class="space-y-2 md:space-y-3 text-xs md:text-sm overflow-y-auto max-h-[150px]" id="statusHistory">
-                                <!-- Status history will be inserted here -->
+                            <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Status</h2>
+                            
+                            <!-- Status history with timeline style -->
+                            <div class="text-xs md:text-sm overflow-y-auto max-h-[250px] pb-2" id="statusHistory">
+                                <!-- Status history will be inserted here by JavaScript -->
+                                <div class="relative pl-6 border-l-2 border-gray-600">
+                                    <div class="mb-4 relative">
+                                        <!-- Placeholder for empty state -->
+                                        <p class="text-gray-300">Loading status updates...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Processed status indicator - Initially hidden, will be shown by JS -->
+                            <div id="processedStatusIndicator" class="hidden mt-2 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium">This document has already been processed and cannot be modified.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="flex justify-end space-x-2 mt-3 md:mt-4">
+                        <div id="actionButtonsContainer" class="flex justify-end space-x-2 mt-3 md:mt-4">
                             <button id="rejectButton" class="bg-[#C42E2E] hover:bg-red-700 text-white font-bold py-1.5 md:py-2 px-6 md:px-10 text-sm md:text-base rounded-full cursor-pointer">Reject</button>
                             <button id="approveButton" class="bg-[#478642] hover:bg-green-700 text-white font-bold py-1.5 md:py-2 px-5 md:px-8 text-sm md:text-base rounded-full cursor-pointer">Approve</button>
                         </div>
@@ -355,24 +377,36 @@
 
                         <!-- Comment Input -->
                         <div class="mt-4 md:mt-6">
-                            <div class="flex items-center bg-[#FFFFFFD6] rounded-full px-3 md:px-4 py-1">
-                                <input type="text"
-                                    id="commentInput"
-                                    placeholder="Comment..."
-                                    class="flex-1 rounded-full py-1.5 md:py-2 px-3 md:px-4 bg-transparent text-black placeholder-gray-700 text-sm md:text-base focus:outline-none" />
-                                <div class="flex items-center flex-shrink-0">
-                                    <button class="text-[#4D0F0F] hover:tex-[#5d0c0c] cursor-pointer mr-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                        </svg>
-                                    </button>
-                                    <button id="submitCommentBtn" class="text-[#4D0F0F] hover:text-[#5d0c0c] cursor-pointer">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                            <form id="commentForm" class="flex flex-col space-y-2">
+                                <div class="flex items-center bg-[#FFFFFFD6] rounded-full px-3 md:px-4 py-1">
+                                    <input type="text"
+                                        id="commentInput"
+                                        placeholder="Comment..."
+                                        class="flex-1 rounded-full py-1.5 md:py-2 px-3 md:px-4 bg-transparent text-black placeholder-gray-700 text-sm md:text-base focus:outline-none" />
+                                    <div class="flex items-center flex-shrink-0">
+                                        <label for="commentAttachment" class="text-[#4D0F0F] hover:text-[#5d0c0c] cursor-pointer mr-2">
+                                            <input type="file" id="commentAttachment" class="hidden" accept=".jpg,.jpeg,.png,.pdf,.docx,.doc" />
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                        </label>
+                                        <button id="submitCommentBtn" type="button" class="text-[#4D0F0F] hover:text-[#5d0c0c] cursor-pointer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Attachment preview -->
+                                <div id="attachmentPreview" class="hidden flex items-center bg-gray-100 rounded-md p-2 mt-2">
+                                    <span id="attachmentName" class="text-xs text-gray-700 truncate flex-1"></span>
+                                    <button type="button" id="removeAttachment" class="text-gray-500 hover:text-red-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
                                 </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>

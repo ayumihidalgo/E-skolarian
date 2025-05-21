@@ -178,7 +178,8 @@ class DocumentReviewController extends Controller
                     'reviewer_name' => $review->reviewer ? $review->reviewer->username : 'Unknown',
                     'status' => $review->status,
                     'message' => $review->message,
-                    'created_at' => $review->created_at
+                    'created_at' => $review->created_at,
+                    'updated_at' => $review->updated_at
                 ];
             })
         ];
