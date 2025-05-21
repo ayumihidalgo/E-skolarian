@@ -16,6 +16,5 @@ class Document extends Model
         'control_tag',
         'summary',
         'status',
-        'file_path',
     ];
 }
