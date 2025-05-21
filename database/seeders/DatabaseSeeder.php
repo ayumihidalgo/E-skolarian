@@ -11,16 +11,9 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
-     */
-    public function run(): void
-    {
-        User::create([
-            'username' => 'SuperAdminUser',
-            'email' => 'superadmin@gmail.com',
-            'password' => Hash::make('@Eskolarian12345'),
-            'role' => 'super admin',
-            'profile_pic' => 'images/profiles/student.png', // Example value
+     
+Seed the application's database.*/
+  public function run(): void{User::create(['username' => 'SuperAdmintUser','email' => 'superadmin@gmail.com','password' => Hash::make('@Eskolarian12345'),'role' => 'super admin','profile_pic' => 'images/profiles/student.png', // Example value,
 
         ]);
     }

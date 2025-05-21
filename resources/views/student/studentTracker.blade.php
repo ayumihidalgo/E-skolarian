@@ -1,3 +1,5 @@
+<!-- STUDENT TRACKER PAGE -->
+
 @extends('base')
 
 @section('content')

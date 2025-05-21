@@ -17,9 +17,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    @stack('styles')
     
+    <script src="{{ asset('js/calendar-loader.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfobject/2.2.12/pdfobject.min.js"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
 
     @vite('resources/css/app.css')
 </head>
@@ -28,6 +31,7 @@
     <main>
         @yield('content')
     </main>
+    @stack('scripts')
 </body>
 
 </html>
