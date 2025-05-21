@@ -26,8 +26,9 @@ class SuperAdminController extends Controller
             $sortField = 'created_at';
         }
 
-        // Fetch only active users with sorting and pagination
+        // Fetch active users with ID > 1 (excluding super admin) with sorting and pagination
         $users = User::where('active', true)
+            ->where('id', '>', 1) // Exclude super admin
             ->orderBy($sortField, $sortDirection)
             ->paginate(6); // Adjust number per page as needed
 

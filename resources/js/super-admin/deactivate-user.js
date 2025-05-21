@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const deactivateConfirmBackdrop = document.querySelector('.deactivate-confirm-backdrop');
     const userDetailsModal = document.getElementById('userDetailsModal');
     const successModal = document.getElementById('successModal');
+    const closeEmailModalBtn = document.getElementById('closeEmailConfirmBtn');
 
     // Email Confirmation Modal Elements
     const emailConfirmModal = document.getElementById('emailConfirmModal');
@@ -20,8 +21,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Set up modals functionality
     if (window.setupModalClose) {
-        window.setupModalClose(deactivateConfirmModal, '#closeDeactivateModalBtn', '.deactivate-confirm-backdrop');
-        window.setupModalClose(emailConfirmModal, '#closeEmailConfirmBtn', '.email-confirm-backdrop');
+        window.setupModalClose(deactivateConfirmModal, '#closeDeactivateModalBtn');
+        window.setupModalClose(emailConfirmModal, '#closeEmailConfirmBtn');
     }
 
     // Cancel deactivation
@@ -86,6 +87,16 @@ document.addEventListener('DOMContentLoaded', function () {
     if (finalDeactivateBtn) {
         finalDeactivateBtn.addEventListener('click', function () {
             if (confirmEmailInput.value === userEmailToDeactivate) {
+                // Disable close button and show processing state
+                if (closeEmailModalBtn) {
+                    closeEmailModalBtn.disabled = true;
+                    closeEmailModalBtn.style.opacity = '0.5';
+                    closeEmailModalBtn.style.cursor = 'not-allowed';
+                }
+
+                // Show loading state on deactivate button
+                finalDeactivateBtn.disabled = true;
+                finalDeactivateBtn.textContent = 'Processing...';
                 // Use the currentUserId variable that's already being tracked globally
                 const currentUserId = window.currentUserId;
 
@@ -142,9 +153,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         successModal.classList.remove('hidden');
 
                         // Refresh the page after a delay to update the user list
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2500);
+                        const okayButton = document.querySelector('#successModal button');
+                            if (okayButton) {
+                                okayButton.addEventListener('click', function() {
+                                    window.location.reload();
+                                }, { once: true }); // Use once:true to prevent multiple handlers
+                            }
                     } else {
                         // Show error
                         emailError.textContent = data.message || 'Failed to deactivate account';
@@ -155,11 +169,28 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.error('Error:', error);
                     emailError.textContent = 'An error occurred. Please try again.';
                     emailError.classList.remove('hidden');
+
+                // Re-enable close button on error
+                if (closeEmailModalBtn) {
+                    closeEmailModalBtn.disabled = false;
+                    closeEmailModalBtn.style.opacity = '1';
+                    closeEmailModalBtn.style.cursor = 'pointer';
+                }
                 })
                 .finally(() => {
                     // Reset button state
                     finalDeactivateBtn.disabled = false;
                     finalDeactivateBtn.textContent = 'Deactivate Account';
+
+                    // Only re-enable close button if there was an error
+                // Success case will close the modal anyway
+                if (!emailConfirmModal.classList.contains('hidden')) {
+                    if (closeEmailModalBtn) {
+                        closeEmailModalBtn.disabled = false;
+                        closeEmailModalBtn.style.opacity = '1';
+                        closeEmailModalBtn.style.cursor = 'pointer';
+                    }
+                }
                 });
             }
         });

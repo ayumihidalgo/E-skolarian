@@ -22,9 +22,13 @@
         <table class="min-w-full bg-[#625B5B] text-white rounded-t-[24px] table-fixed">
             <thead>
                 <tr>
-                    <th class="px-6 py-3 text-left pl-40 font-['Manrope'] text-[17px] font-bold">
+                    <!-- New Profile Picture Column -->
+                    <th class="w-[10%] px-6 py-3">
+                        <!-- Empty header for profile picture -->
+                    </th>
+                    <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center">
-                            <span>Username</span>
+                            <span class="whitespace-nowrap">Username</span>
                             <div class="flex flex-col ml-2">
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'username', 'direction' => 'asc']) }}"
                                 class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'username' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
@@ -41,9 +45,9 @@
                             </div>
                         </div>
                     </th>
-                    <th class="px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[20%] px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center justify-center">
-                            <span>Role</span>
+                            <span class="whitespace-nowrap">Role</span>
                             <div class="flex flex-col ml-2">
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'role_name', 'direction' => 'asc']) }}"
                                 class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'role_name' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
@@ -60,9 +64,9 @@
                             </div>
                         </div>
                     </th>
-                    <th class="px-6 py-3 text-right pr-40 font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[30%] px-6 py-3 text-right pr-4 font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center justify-end">
-                            <span>Deactivation Date</span>
+                            <span class="whitespace-nowrap">Deactivation Date</span>
                             <div class="flex flex-col ml-2">
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'updated_at', 'direction' => 'asc']) }}"
                                 class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'updated_at' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
@@ -79,6 +83,9 @@
                             </div>
                         </div>
                     </th>
+                    <th class="w-[10%] px-6 py-3">
+                        <!-- Empty header for reactivation button -->
+                    </th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-[#7A1212]/70">
@@ -89,32 +96,58 @@
                         'email' => $user->email,
                         'role_name' => $user->role_name,
                         'updated_at' => $user->updated_at->format('M-d-Y')
-            ]       ) }}">
-                <td class="px-6 py-4 text-left pl-40 text-[Lexend] text-[17px] text-black text-semibold">
-                    {{ $user->username }}
+                    ]) }}">
+                <!-- Profile Picture Cell -->
+                <td class="w-[10%] px-6 py-4 pl-15">
+                    <div class="flex justify-center">
+                        <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
+                            @if ($user->profile_pic)
+                                <img src="{{ asset('storage/' . $user->profile_pic) }}" 
+                                    alt="Profile" 
+                                    class="w-full h-full object-cover">
+                            @else
+                                <img src="{{ asset('images/dprofile.svg') }}" 
+                                    alt="Default Profile"
+                                    class="w-full h-full object-cover">
+                            @endif
+                        </div>
+                    </div>
                 </td>
-                <td class="px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
+                
+                <!-- Username Cell -->
+                <td class="w-[30%] px-6 py-4 text-left pl-4">
+                    <div class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[17px] text-black text-semibold">
+                        {{ $user->username }}
+                    </div>
+                </td>
+                </td>
+                <td class="w-[20%] px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
                     {{ $user->role_name }}
                 </td>
-                <td class="px-6 py-4 text-right pr-40 text-[Lexend] text-[17px] text-black text-semibold flex justify-end items-center space-x-4">
-                    <span>{{ $user->updated_at->format('M-d-Y') }}</span>
-                    <button 
-                        type="button"
-                        class="reactivate-btn hover:scale-110 transition-transform duration-200"
-                        data-user-id="{{ $user->id }}"
-                        data-user-email="{{ $user->email }}"
-                        title="Reactivate Account">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none" class="hover:opacity-75">
-                            <g clip-path="url(#clip0_4491_18334)">
-                                <path d="M28.75 4.99997V12.5M28.75 12.5H21.25M28.75 12.5L22.95 7.04997C21.6066 5.70586 19.9445 4.72398 18.119 4.19594C16.2934 3.6679 14.3639 3.61091 12.5104 4.0303C10.6568 4.44968 8.93975 5.33176 7.51933 6.59425C6.09892 7.85673 5.02146 9.45845 4.3875 11.25M1.25 25V17.5M1.25 17.5H8.75M1.25 17.5L7.05 22.95C8.39343 24.2941 10.0555 25.276 11.881 25.804C13.7066 26.332 15.6361 26.389 17.4896 25.9697C19.3432 25.5503 21.0602 24.6682 22.4807 23.4057C23.9011 22.1432 24.9785 20.5415 25.6125 18.75" stroke="#4D0F0F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-                            </g>
-                            <defs>
-                                <clipPath id="clip0_4491_18334">
-                                    <rect width="30" height="30" fill="white"/>
-                                </clipPath>
-                            </defs>
-                        </svg>
-                    </button>
+                <td class="w-[30%] px-6 py-4 text-right pr-22 text-[Lexend] text-[17px] text-black text-semibold">
+                    {{ $user->updated_at->format('F j, Y') }}
+                </td>
+                <!-- Reactivation Button Cell -->
+                <td class="w-[10%] px-6 py-4">
+                    <div class="flex justify-center">
+                        <button 
+                            type="button"
+                            class="reactivate-btn hover:scale-110 transition-transform duration-200 cursor-pointer"
+                            data-user-id="{{ $user->id }}"
+                            data-user-email="{{ $user->email }}"
+                            title="Reactivate this Account">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none" class="hover:opacity-75">
+                                <g clip-path="url(#clip0_4491_18334)">
+                                    <path d="M28.75 4.99997V12.5M28.75 12.5H21.25M28.75 12.5L22.95 7.04997C21.6066 5.70586 19.9445 4.72398 18.119 4.19594C16.2934 3.6679 14.3639 3.61091 12.5104 4.0303C10.6568 4.44968 8.93975 5.33176 7.51933 6.59425C6.09892 7.85673 5.02146 9.45845 4.3875 11.25M1.25 25V17.5M1.25 17.5H8.75M1.25 17.5L7.05 22.95C8.39343 24.2941 10.0555 25.276 11.881 25.804C13.7066 26.332 15.6361 26.389 17.4896 25.9697C19.3432 25.5503 21.0602 24.6682 22.4807 23.4057C23.9011 22.1432 24.9785 20.5415 25.6125 18.75" stroke="#4D0F0F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0_4491_18334">
+                                        <rect width="30" height="30" fill="white"/>
+                                    </clipPath>
+                                </defs>
+                            </svg>
+                        </button>
+                    </div>
                 </td>
             </tr>
             @empty
@@ -173,7 +206,7 @@
         </button>
         <div class="text-left">
         <h3 class="text-lg font-semibold text-gray-900 mb-2 font-[Lexend]">Reactivate Account Confirmation</h3>
-        <p class="text-sm text-gray-500 mb-4">Are you sure you want to reactivate this account?</p>
+        <p class="text-sm text-gray-500 mb-4">Are you sure you want to reactivate this account? Reactivating this account will notify the user via email.</p>
         
         <!-- Action Buttons -->
         <div class="flex justify-end space-x-4">
@@ -242,12 +275,6 @@
     
     <!-- Modal Content -->
     <div class="bg-white rounded-[16px] shadow-xl w-full max-w-md relative z-[100] p-6">
-        <button id="closeSuccessModalBtn" type="button"
-            class="absolute top-6 right-5 text-gray-500 hover:text-[#7A1212] transition-colors duration-200 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
 
         <!-- Success Message -->
         <div class="text-center mb-6">
@@ -274,7 +301,7 @@
     <div class="bg-white rounded-[25px] shadow-xl w-full max-w-md relative z-50 overflow-hidden">
         <!-- Close Button -->
         <button type="button" id="closeDeactivatedUserDetailsBtn" 
-            class="absolute top-7 right-5 text-black-500 hover:text-[#7A1212] transition-colors duration-200">
+            class="absolute top-7 right-5 text-black-500 hover:text-[#7A1212] transition-colors duration-200 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>

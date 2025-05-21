@@ -30,10 +30,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Set up modals functionality
     if (window.setupModalClose) {
-        window.setupModalClose(reactivateConfirmModal, '#closeReactivateConfirmBtn', '.reactivate-confirm-backdrop');
-        window.setupModalClose(reactivateEmailConfirmModal, '#closeReactivateEmailConfirmBtn', '.reactivate-email-confirm-backdrop');
-        window.setupModalClose(reactivateSuccessModal, '#closeSuccessModalBtn');
-        window.setupModalClose(deactivatedUserDetailsModal, '#closeDeactivatedUserDetailsBtn', '.deactivated-user-details-backdrop');
+        window.setupModalClose(reactivateConfirmModal, '#closeReactivateConfirmBtn');
+        window.setupModalClose(reactivateEmailConfirmModal, '#closeReactivateEmailConfirmBtn');
+        window.setupModalClose(deactivatedUserDetailsModal, '#closeDeactivatedUserDetailsBtn');
     }
 
     // Attach click event to deactivated user rows to show details
@@ -65,12 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    if (deactivatedUserDetailsBackdrop) {
-        deactivatedUserDetailsBackdrop.addEventListener('click', function() {
-            deactivatedUserDetailsModal.classList.add('hidden');
-        });
-    }
-
     // Reactivate Button Click Event
     reactivateButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -85,6 +78,19 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    if (closeReactivateEmailBtn) {
+    closeReactivateEmailBtn.addEventListener('click', function() {
+        // Hide the email confirmation modal
+        reactivateEmailConfirmModal.classList.add('hidden');
+        
+        // Reset form state
+        confirmReactivateEmailInput.value = '';
+        confirmReactivateEmailInput.classList.remove('border-red-500', 'ring-red-500');
+        reactivateEmailError.classList.add('hidden');
+        finalReactivateBtn.disabled = true;
+    });
+}
+
     // Close reactivate confirmation modal
     if (closeReactivateModalBtn) {
         closeReactivateModalBtn.addEventListener('click', function() {
@@ -94,12 +100,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (closeReactivateModalBtn2) {
         closeReactivateModalBtn2.addEventListener('click', function() {
-            reactivateConfirmModal.classList.add('hidden');
-        });
-    }
-
-    if (reactivateConfirmBackdrop) {
-        reactivateConfirmBackdrop.addEventListener('click', function() {
             reactivateConfirmModal.classList.add('hidden');
         });
     }
@@ -156,6 +156,19 @@ document.addEventListener('DOMContentLoaded', function () {
     if (finalReactivateBtn) {
     finalReactivateBtn.addEventListener('click', function() {
         if (confirmReactivateEmailInput.value === userEmailToReactivate) {
+
+            // Disable close and cancel buttons
+            if (closeReactivateEmailBtn) {
+                closeReactivateEmailBtn.disabled = true;
+                closeReactivateEmailBtn.style.opacity = '0.5';
+                closeReactivateEmailBtn.style.cursor = 'not-allowed';
+            }
+            if (cancelReactivateEmailBtn) {
+                cancelReactivateEmailBtn.disabled = true;
+                cancelReactivateEmailBtn.style.opacity = '0.5';
+                cancelReactivateEmailBtn.style.cursor = 'not-allowed';
+            }
+
             // Show loading state
             finalReactivateBtn.disabled = true;
             finalReactivateBtn.textContent = 'Processing...';
@@ -197,11 +210,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 reactivateEmailError.textContent = error.message || 'An error occurred while reactivating the user';
                 reactivateEmailError.classList.remove('hidden');
                 
+                // Re-enable buttons on error
+                if (closeReactivateEmailBtn) {
+                    closeReactivateEmailBtn.disabled = false;
+                    closeReactivateEmailBtn.style.opacity = '1';
+                    closeReactivateEmailBtn.style.cursor = 'pointer';
+                }
+                if (cancelReactivateEmailBtn) {
+                    cancelReactivateEmailBtn.disabled = false;
+                    cancelReactivateEmailBtn.style.opacity = '1';
+                    cancelReactivateEmailBtn.style.cursor = 'pointer';
+                }
+
                 // Log additional details for debugging
                 console.log('User ID:', userIdToReactivate);
                 console.log('Email:', userEmailToReactivate);
             })
             .finally(() => {
+                // Only re-enable buttons if the modal is still visible
+                if (!data.success && !reactivateEmailConfirmModal.classList.contains('hidden')) {
+                    if (closeReactivateEmailBtn) {
+                        closeReactivateEmailBtn.disabled = false;
+                        closeReactivateEmailBtn.style.opacity = '1';
+                        closeReactivateEmailBtn.style.cursor = 'pointer';
+                    }
+                    if (cancelReactivateEmailBtn) {
+                        cancelReactivateEmailBtn.disabled = false;
+                        cancelReactivateEmailBtn.style.opacity = '1';
+                        cancelReactivateEmailBtn.style.cursor = 'pointer';
+                    }
+                }
                 finalReactivateBtn.disabled = false;
                 finalReactivateBtn.textContent = 'Reactivate';
             });

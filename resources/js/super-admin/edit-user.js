@@ -648,10 +648,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Show success message if modal exists
                     successModal.classList.remove('hidden');
 
-                    // Refresh page after successful update
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 2500);
+                    const okayButton = document.querySelector('#successModal button');
+                        if (okayButton) {
+                            okayButton.addEventListener('click', function() {
+                                window.location.reload();
+                            }, { once: true }); // Use once:true to prevent multiple handlers
+                        }
                 })
                 .catch(error => {
                     console.error('Error:', error);
