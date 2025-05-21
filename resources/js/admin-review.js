@@ -92,11 +92,194 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// function updateDocumentDetailsView(docData) {
+//     console.log("Document data:", docData);
+    
+//     // Get all elements in the details view
+//     const detailsView = document.getElementById('detailsView');
+    
+//     // Format date
+//     const formattedDate = new Date(docData.created_at).toLocaleDateString('en-US', {
+//         month: 'long', 
+//         day: 'numeric', 
+//         year: 'numeric'
+//     });
+    
+//     // Organization name to acronym mapping
+//     const orgMap = {
+//         'Association of Competent and Aspiring Psychologists': 'ACAP',
+//         'Association of Electronics and Communications Engineering Students': 'AECES',
+//         'Eligible League of Information Technology Enthusiasts': 'ELITE',
+//         'Guild of Imporous and Valuable Educators': 'GIVE',
+//         'Junior Executive of Human Resource Association': 'JEHRA',
+//         'Junior Marketing Association of the Philippines': 'JMAP',
+//         'Junior Philippine Institute of Accountants': 'JPIA',
+//         'Philippine Institute of Industrial Engineers': 'PIIE',
+//         'Artist Guild Dance Squad': 'AGDS',
+//         'PUP SRC Chorale': 'Chorale',
+//         'Supreme Innovators\' Guild for Mathematics Advancements': 'SIGMA',
+//         'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism': 'TAPNOTCH',
+//         'Office of the Student Council': 'OSC'
+//     };
+    
+//     // Get organization acronym if available, otherwise use full name
+//     function getOrgAcronym(fullName) {
+//         return orgMap[fullName] || fullName;
+//     }
+    
+//     try {
+//         // Instead of using complex selectors with square brackets, navigate the DOM step by step
+//         const leftSideDiv = detailsView.querySelector('.w-2\\/3'); // Use escaped backslashes for fractions
+//         if (!leftSideDiv) {
+//             console.error('Left side div not found');
+//             return;
+//         }
+        
+//         const contentDiv = leftSideDiv.querySelector('div'); // First div inside left side div
+//         if (!contentDiv) {
+//             console.error('Content div not found');
+//             return;
+//         }
+        
+//         // Header div which has the "font-bold" class
+//         const headerDiv = contentDiv.querySelector('.font-bold');
+//         if (headerDiv) {
+//             // First paragraph (date)
+//             const datePara = headerDiv.querySelector('p:first-child');
+//             if (datePara) datePara.textContent = formattedDate;
+            
+//             // Organization
+//             const fromPara = headerDiv.querySelector('p:nth-child(2)');
+//             if (fromPara) fromPara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
+            
+//             // Title
+//             const titlePara = headerDiv.querySelector('p:nth-child(3)');
+//             if (titlePara) titlePara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject}`;
+            
+//             // Document Type
+//             const typePara = headerDiv.querySelector('p:nth-child(4)');
+//             if (typePara) typePara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
+//         }
+        
+//         // Update tag in the right corner - find the text-right element
+//         const rightDiv = contentDiv.querySelector('.text-right');
+//         if (rightDiv) {
+//             const tagElement = rightDiv.querySelector('p');
+//             if (tagElement) tagElement.textContent = docData.control_tag;
+//         }
+        
+//         // Update summary - find it by navigating through the DOM structure
+//         // Look for the second div in the parent container
+//         const divs = leftSideDiv.querySelectorAll(':scope > div');
+//         if (divs.length >= 2) {
+//             const summaryDiv = divs[1]; // The second div contains the summary
+//             const summaryElement = summaryDiv.querySelector('p#documentSummary');
+//             if (summaryElement) {
+//                 console.log("Setting summary to:", docData.summary || 'No summary available');
+//                 summaryElement.textContent = docData.summary || 'No summary available';
+//             }
+//         }
+        
+//         // Update attachment (if available) - third div in the structure
+//         if (divs.length >= 3) {
+//             const attachmentDiv = divs[2];
+//             const attachmentButton = attachmentDiv.querySelector('.bg-gray-200');
+//             if (attachmentButton) {
+//                 const attachmentSpan = attachmentButton.querySelector('span');
+//                 if (attachmentSpan && docData.file_path) {
+//                     const fileName = docData.file_path.split('/').pop();
+//                     attachmentSpan.textContent = fileName;
+                    
+//                     // Make button visible and add the filename
+//                     attachmentButton.innerHTML = `
+//                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+//                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+//                         </svg>
+//                         <span>${fileName}</span>
+//                     `;
+                    
+//                     // Set up the click handler for the attachment
+//                     attachmentButton.onclick = function() {
+//                         openDocumentViewer(docData.file_path, 'application/pdf');
+//                     };
+//                 }
+//             }
+//         }
+        
+//         // Update organization info in right panel
+//         const rightSideDiv = detailsView.querySelector('.w-1\\/3'); // Use escaped backslash for fraction
+//         if (rightSideDiv) {
+//             const orgNameElement = rightSideDiv.querySelector('.font-bold.text-lg');
+//             if (orgNameElement) {
+//                 // Use the mapping to convert full organization name to acronym
+//                 orgNameElement.textContent = getOrgAcronym(docData.organization) || 'Organization Name';
+//             }
+            
+//             // Set organization initial
+//             const orgInitial = rightSideDiv.querySelector('#orgInitial');
+//             if (orgInitial && docData.organization) {
+//                 // If we have an acronym, use its first letter, otherwise use the first letter of the full name
+//                 const acronym = getOrgAcronym(docData.organization);
+//                 orgInitial.textContent = acronym.charAt(0).toUpperCase();
+//             }
+//         }
+        
+//         // Update status history if available
+//         // Look for status div which is the fourth div
+//         if (divs.length >= 4) {
+//             const statusDiv = divs[3];
+//             const statusHistory = statusDiv.querySelector('#statusHistory');
+//             if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
+//                 let statusHTML = '';
+                
+//                 docData.reviews.forEach(review => {
+//                     statusHTML += `
+//                         <div class="bg-white text-gray-800 rounded-lg p-3">
+//                             <p><strong>Reviewer:</strong> ${review.reviewer_name || 'Unknown'}</p>
+//                             <p><strong>Status:</strong> ${review.status || 'Unknown'}</p>
+//                             <p><strong>Message:</strong> ${review.message || 'No message'}</p>
+//                             <p><strong>Date:</strong> ${new Date(review.created_at).toLocaleDateString()}</p>
+//                         </div>
+//                     `;
+//                 });
+                
+//                 if (statusHTML === '') {
+//                     statusHTML = '<p class="text-gray-300">No status updates available</p>';
+//                 }
+                
+//                 statusHistory.innerHTML = statusHTML;
+//             }
+//         }
+
+//         const approveButton = document.getElementById('approveButton');
+//         const rejectButton = document.getElementById('rejectButton');
+        
+//         if (docData.has_decision) {
+//             // Disable buttons and update their appearance
+//             approveButton.classList.add('opacity-50', 'cursor-not-allowed');
+//             rejectButton.classList.add('opacity-50', 'cursor-not-allowed');
+//             approveButton.disabled = true;
+//             rejectButton.disabled = true;
+            
+//             // Add tooltips to explain why buttons are disabled
+//             approveButton.title = "This document has already been reviewed";
+//             rejectButton.title = "This document has already been reviewed";
+//         } else {
+//             // Ensure buttons are enabled
+//             approveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+//             rejectButton.classList.remove('opacity-50', 'cursor-not-allowed');
+//             approveButton.disabled = false;
+//             rejectButton.disabled = false;
+//             approveButton.title = "";
+//             rejectButton.title = "";
+//         }
+//     } catch (error) {
+//         console.error('Error updating document details:', error);
+//     }
+// }
+
 function updateDocumentDetailsView(docData) {
     console.log("Document data:", docData);
-    
-    // Get all elements in the details view
-    const detailsView = document.getElementById('detailsView');
     
     // Format date
     const formattedDate = new Date(docData.created_at).toLocaleDateString('en-US', {
@@ -128,127 +311,85 @@ function updateDocumentDetailsView(docData) {
     }
     
     try {
-        // Instead of using complex selectors with square brackets, navigate the DOM step by step
-        const leftSideDiv = detailsView.querySelector('.w-2\\/3'); // Use escaped backslashes for fractions
-        if (!leftSideDiv) {
-            console.error('Left side div not found');
-            return;
-        }
-        
-        const contentDiv = leftSideDiv.querySelector('div'); // First div inside left side div
-        if (!contentDiv) {
-            console.error('Content div not found');
-            return;
-        }
-        
-        // Header div which has the "font-bold" class
-        const headerDiv = contentDiv.querySelector('.font-bold');
-        if (headerDiv) {
-            // First paragraph (date)
-            const datePara = headerDiv.querySelector('p:first-child');
-            if (datePara) datePara.textContent = formattedDate;
+        // Update document information using direct IDs
+        document.getElementById('documentDate').textContent = formattedDate;
+        document.getElementById('documentOrg').innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
+        document.getElementById('documentTitle').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject || docData.title}`;
+        document.getElementById('documentType').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
+        document.getElementById('documentTag').textContent = docData.control_tag || docData.tag;
+
+        // Update summary
+        document.getElementById('documentSummary').textContent = docData.summary || 'No summary available';
             
-            // Organization
-            const fromPara = headerDiv.querySelector('p:nth-child(2)');
-            if (fromPara) fromPara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
+        // Update attachment (if available)
+        const attachmentButton = document.getElementById('documentAttachment');
+        const attachmentSpan = document.getElementById('documentFileName');
+        
+        if (attachmentButton && attachmentSpan && docData.file_path) {
+            const fileName = docData.file_path.split('/').pop();
+            attachmentSpan.textContent = fileName;
+                
+            // Set up the click handler for the attachment
+            attachmentButton.onclick = function() {
+                openDocumentViewer(docData.file_path, 'application/pdf');
+            };
+        }
             
-            // Title
-            const titlePara = headerDiv.querySelector('p:nth-child(3)');
-            if (titlePara) titlePara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject}`;
-            
-            // Document Type
-            const typePara = headerDiv.querySelector('p:nth-child(4)');
-            if (typePara) typePara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
-        }
-        
-        // Update tag in the right corner - find the text-right element
-        const rightDiv = contentDiv.querySelector('.text-right');
-        if (rightDiv) {
-            const tagElement = rightDiv.querySelector('p');
-            if (tagElement) tagElement.textContent = docData.control_tag;
-        }
-        
-        // Update summary - find it by navigating through the DOM structure
-        // Look for the second div in the parent container
-        const divs = leftSideDiv.querySelectorAll(':scope > div');
-        if (divs.length >= 2) {
-            const summaryDiv = divs[1]; // The second div contains the summary
-            const summaryElement = summaryDiv.querySelector('p#documentSummary');
-            if (summaryElement) {
-                console.log("Setting summary to:", docData.summary || 'No summary available');
-                summaryElement.textContent = docData.summary || 'No summary available';
-            }
-        }
-        
-        // Update attachment (if available) - third div in the structure
-        if (divs.length >= 3) {
-            const attachmentDiv = divs[2];
-            const attachmentButton = attachmentDiv.querySelector('.bg-gray-200');
-            if (attachmentButton) {
-                const attachmentSpan = attachmentButton.querySelector('span');
-                if (attachmentSpan && docData.file_path) {
-                    const fileName = docData.file_path.split('/').pop();
-                    attachmentSpan.textContent = fileName;
-                    
-                    // Make button visible and add the filename
-                    attachmentButton.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        <span>${fileName}</span>
-                    `;
-                    
-                    // Set up the click handler for the attachment
-                    attachmentButton.onclick = function() {
-                        openDocumentViewer(docData.file_path, 'application/pdf');
-                    };
-                }
-            }
-        }
-        
         // Update organization info in right panel
-        const rightSideDiv = detailsView.querySelector('.w-1\\/3'); // Use escaped backslash for fraction
-        if (rightSideDiv) {
-            const orgNameElement = rightSideDiv.querySelector('.font-bold.text-lg');
-            if (orgNameElement) {
-                // Use the mapping to convert full organization name to acronym
-                orgNameElement.textContent = getOrgAcronym(docData.organization) || 'Organization Name';
+        document.getElementById('orgName').textContent = getOrgAcronym(docData.organization) || 'Organization Name';
+            
+        // Set organization initial
+        const orgInitial = document.getElementById('orgInitial');
+        if (orgInitial && docData.organization) {
+            // If we have an acronym, use its first letter, otherwise use the first letter of the full name
+            const acronym = getOrgAcronym(docData.organization);
+            orgInitial.textContent = acronym.charAt(0).toUpperCase();
+        }
+
+        // Update status history if available
+        const statusHistory = document.getElementById('statusHistory');
+        if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
+            let statusHTML = '';
+            
+            docData.reviews.forEach(review => {
+                statusHTML += `
+                    <div class="bg-white text-gray-800 rounded-lg p-3 mb-2">
+                        <p><strong>Reviewer:</strong> ${review.reviewer_name || 'Unknown'}</p>
+                        <p><strong>Status:</strong> ${review.status || 'Unknown'}</p>
+                        <p><strong>Message:</strong> ${review.message || 'No message'}</p>
+                        <p><strong>Date:</strong> ${new Date(review.created_at).toLocaleDateString()}</p>
+                    </div>
+                `;
+            });
+            
+            if (statusHTML === '') {
+                statusHTML = '<p class="text-gray-300">No status updates available</p>';
             }
             
-            // Set organization initial
-            const orgInitial = rightSideDiv.querySelector('#orgInitial');
-            if (orgInitial && docData.organization) {
-                // If we have an acronym, use its first letter, otherwise use the first letter of the full name
-                const acronym = getOrgAcronym(docData.organization);
-                orgInitial.textContent = acronym.charAt(0).toUpperCase();
-            }
+            statusHistory.innerHTML = statusHTML;
         }
+
+        const approveButton = document.getElementById('approveButton');
+        const rejectButton = document.getElementById('rejectButton');
         
-        // Update status history if available
-        // Look for status div which is the fourth div
-        if (divs.length >= 4) {
-            const statusDiv = divs[3];
-            const statusHistory = statusDiv.querySelector('#statusHistory');
-            if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
-                let statusHTML = '';
-                
-                docData.reviews.forEach(review => {
-                    statusHTML += `
-                        <div class="bg-white text-gray-800 rounded-lg p-3">
-                            <p><strong>Reviewer:</strong> ${review.reviewer_name || 'Unknown'}</p>
-                            <p><strong>Status:</strong> ${review.status || 'Unknown'}</p>
-                            <p><strong>Message:</strong> ${review.message || 'No message'}</p>
-                            <p><strong>Date:</strong> ${new Date(review.created_at).toLocaleDateString()}</p>
-                        </div>
-                    `;
-                });
-                
-                if (statusHTML === '') {
-                    statusHTML = '<p class="text-gray-300">No status updates available</p>';
-                }
-                
-                statusHistory.innerHTML = statusHTML;
-            }
+        if (docData.has_decision) {
+            // Disable buttons and update their appearance
+            approveButton.classList.add('opacity-50', 'cursor-not-allowed');
+            rejectButton.classList.add('opacity-50', 'cursor-not-allowed');
+            approveButton.disabled = true;
+            rejectButton.disabled = true;
+            
+            // Add tooltips to explain why buttons are disabled
+            approveButton.title = "This document has already been reviewed";
+            rejectButton.title = "This document has already been reviewed";
+        } else {
+            // Ensure buttons are enabled
+            approveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            rejectButton.classList.remove('opacity-50', 'cursor-not-allowed');
+            approveButton.disabled = false;
+            rejectButton.disabled = false;
+            approveButton.title = "";
+            rejectButton.title = "";
         }
     } catch (error) {
         console.error('Error updating document details:', error);
@@ -367,38 +508,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Document Previewing
 function openDocumentViewer(filePath, fileType) {
     console.log("Opening document viewer for:", filePath);
     const modal = document.getElementById('documentViewerModal');
     const pdfViewer = document.getElementById('pdfViewer');
     const imageViewer = document.getElementById('imageViewer');
+    const downloadView = document.getElementById('downloadView');
     const documentTitle = document.getElementById('documentTitle');
+    const previewTab = document.getElementById('previewTab');
+    const downloadTab = document.getElementById('downloadTab');
+    const downloadButton = document.getElementById('downloadButton');
+    const downloadFileName = document.getElementById('downloadFileName');
     
     // Extract just the filename for display
     const filename = filePath.split('/').pop();
     documentTitle.textContent = filename;
+    downloadFileName.textContent = filename;
+    
+    // Set up download link
+    const fullPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
+    downloadButton.href = fullPath;
+    downloadButton.setAttribute('download', filename);
     
     // Show modal first to ensure container is visible
     modal.classList.remove('hidden');
     
+    // Tab switching event listeners
+    previewTab.addEventListener('click', function() {
+        // Activate preview tab
+        previewTab.classList.add('bg-blue-500', 'text-white');
+        previewTab.classList.remove('text-gray-700');
+        downloadTab.classList.remove('bg-blue-500', 'text-white');
+        downloadTab.classList.add('text-gray-700');
+        
+        // Show preview, hide download view
+        downloadView.classList.add('hidden');
+        
+        if (fileType === 'application/pdf' || filename.toLowerCase().endsWith('.pdf')) {
+            pdfViewer.classList.remove('hidden');
+            imageViewer.classList.add('hidden');
+        } else {
+            pdfViewer.classList.add('hidden');
+            imageViewer.classList.remove('hidden');
+        }
+    });
+    
+    downloadTab.addEventListener('click', function() {
+        // Activate download tab
+        downloadTab.classList.add('bg-blue-500', 'text-white');
+        downloadTab.classList.remove('text-gray-700');
+        previewTab.classList.remove('bg-blue-500', 'text-white');
+        previewTab.classList.add('text-gray-700');
+        
+        // Hide preview, show download view
+        pdfViewer.classList.add('hidden');
+        imageViewer.classList.add('hidden');
+        downloadView.classList.remove('hidden');
+    });
+    
+    // Show preview by default
+    previewTab.click();
+    
     // For PDF files
     if (fileType === 'application/pdf' || filename.toLowerCase().endsWith('.pdf')) {
-        pdfViewer.classList.remove('hidden');
-        imageViewer.classList.add('hidden');
-        
-        // Clear previous content
-        pdfViewer.innerHTML = '';
-        
         // Create viewer container
+        pdfViewer.innerHTML = '';
         const viewerDiv = document.createElement('div');
         viewerDiv.id = 'pdf-viewer-container';
         viewerDiv.className = 'h-full';
         pdfViewer.appendChild(viewerDiv);
         
-        // Generate the full PDF URL based on your file storage structure
-        // Adjust this path according to your actual file storage location
-        const pdfUrl = filePath.startsWith('/') ? filePath : `/${filePath}`;
+        // Generate the full PDF URL
+        const pdfUrl = fullPath;
         
         // Initialize WebViewer
         WebViewer({
@@ -411,26 +592,27 @@ function openDocumentViewer(filePath, fileType) {
             // Basic configuration
             const { docViewer, UI } = instance;
             
-            // Set fit mode
-            // docViewer.setFitMode(docViewer.FitMode.FIT_WIDTH);
-            
-            // Optional: Simplify toolbar for basic viewing
-            UI.disableElements(['downloadButton', 'printButton']);
+            // Enable download button in WebViewer
+            UI.enableElements(['downloadButton']);
+            UI.disableElements(['printButton']);
         }).catch(error => {
             console.error("Failed to load WebViewer:", error);
-            // Fallback to basic PDF viewing or show error message
-            pdfViewer.innerHTML = `<div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>`;
+            pdfViewer.innerHTML = `
+                <div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>
+                <div class="p-4">
+                    <a href="${fullPath}" download="${filename}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Download Document Instead
+                    </a>
+                </div>
+            `;
         });
     } else {
         // For image files
-        pdfViewer.classList.add('hidden');
-        imageViewer.classList.remove('hidden');
-        imageViewer.innerHTML = `<img src="${filePath}" class="max-h-full max-w-full" alt="Document Preview">`;
+        imageViewer.innerHTML = `<img src="${fullPath}" class="max-h-full max-w-full" alt="Document Preview">`;
     }
 }
 
-
-// Add a function to close the document viewer
+// Add function to close the document viewer
 window.closeDocumentViewer = function() {
     const modal = document.getElementById('documentViewerModal');
     const pdfViewer = document.getElementById('pdfViewer');
@@ -443,15 +625,22 @@ window.closeDocumentViewer = function() {
 
 // Approval Modal function
 document.addEventListener('DOMContentLoaded', function () {
-    const approveButton = document.getElementById('approveButton'); // Assuming you have an Approve button elsewhere
+    const approveButton = document.getElementById('approveButton');
     const approvalModal = document.getElementById('approvalModal');
     const closeApprovalModalBtn = document.getElementById('closeApprovalModalBtn');
     const sendToAnotherAdminBtn = document.getElementById('sendToAnotherAdminBtn');
     const finalizeApprovalBtn = document.getElementById('finalizeApprovalBtn');
 
-    // Open the modal when the Approve button is clicked
+    // Open the modal when the Approve button is clicked, but check if disabled first
     if (approveButton) {
-        approveButton.addEventListener('click', function () {
+        approveButton.addEventListener('click', function(e) {
+            if (this.disabled) {
+                e.preventDefault();
+                showDocumentActionToast('approved', 'This document has already been reviewed and cannot be modified.', false);
+                return;
+            }
+            
+            // If not disabled, show the approval modal
             approvalModal.classList.remove('hidden');
         });
     }
@@ -617,57 +806,60 @@ document.getElementById('cancelFinalizeBtn').addEventListener('click', function(
 });
 
 // Finalize approval handler
-document.getElementById('confirmFinalizeBtn').addEventListener('click', function() {
-    // Make sure we have a valid ID
-    if (!currentDocumentId) {
-        showDocumentActionToast('approved', "Error: Document ID is missing. Please try again.", false);
-        return;
-    }
-    
-    // Make an AJAX request to approve the document
-    fetch(`/admin/documents/${currentDocumentId}/approve`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({
-            message: 'Document approved and finalized'
+const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
+if (confirmFinalizeBtn) {
+    confirmFinalizeBtn.addEventListener('click', function() {
+        // Make sure we have a valid ID
+        if (!currentDocumentId) {
+            showDocumentActionToast('approved', "Error: Document ID is missing. Please try again.", false);
+            return;
+        }
+        
+        // Make an AJAX request to approve the document
+        fetch(`/admin/documents/${currentDocumentId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                message: 'Document approved and finalized'
+            })
         })
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => { 
-                throw new Error(data.error || 'Failed to approve document');
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            // Show success toast
-            showDocumentActionToast('approved');
-            
-            // Close the modal
-            document.getElementById('finalizeConfirmationModal').classList.add('hidden');
-            
-            // Return to table view
-            closeDetailsPanel();
-            
-            // Refresh the page to update the document list
-            setTimeout(() => {
-                window.location.reload();
-            }, 3000);
-        } else {
-            // Show failure toast
-            showDocumentActionToast('approved', data.error || "An unknown error occurred during approval.", false);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => { 
+                    throw new Error(data.error || 'Failed to approve document');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Show success toast
+                showDocumentActionToast('approved');
+                
+                // Close the modal
+                document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+                
+                // Return to table view
+                closeDetailsPanel();
+                
+                // Refresh the page to update the document list
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } else {
+                // Show failure toast
+                showDocumentActionToast('approved', data.error || "An unknown error occurred during approval.", false);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
+        });
     });
-});
+}
 
 // Close modal when clicking outside
 window.addEventListener('click', function(event) {
@@ -691,8 +883,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeResubmissionModalBtn = document.getElementById('closeResubmissionModalBtn');
     const submitResubmissionBtn = document.getElementById('submitResubmissionBtn');
 
-    // Open the reject modal when the Reject button is clicked
-    rejectButton.addEventListener('click', function () {
+    // Open the reject modal when the Reject button is clicked, but check if disabled first
+    document.getElementById('rejectButton').addEventListener('click', function(e) {
+        if (this.disabled) {
+            e.preventDefault();
+            showDocumentActionToast('rejected', 'This document has already been reviewed and cannot be modified.', false);
+            return;
+        }
+        
+        // If not disabled, show the rejection modal
         rejectModal.classList.remove('hidden');
     });
 
