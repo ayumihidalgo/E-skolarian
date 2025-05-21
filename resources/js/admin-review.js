@@ -92,11 +92,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Viewing Document Details
 function updateDocumentDetailsView(docData) {
     console.log("Document data:", docData);
-    
-    // Get all elements in the details view
-    const detailsView = document.getElementById('detailsView');
     
     // Format date
     const formattedDate = new Date(docData.created_at).toLocaleDateString('en-US', {
@@ -128,126 +126,142 @@ function updateDocumentDetailsView(docData) {
     }
     
     try {
-        // Instead of using complex selectors with square brackets, navigate the DOM step by step
-        const leftSideDiv = detailsView.querySelector('.w-2\\/3'); // Use escaped backslashes for fractions
-        if (!leftSideDiv) {
-            console.error('Left side div not found');
-            return;
-        }
-        
-        const contentDiv = leftSideDiv.querySelector('div'); // First div inside left side div
-        if (!contentDiv) {
-            console.error('Content div not found');
-            return;
-        }
-        
-        // Header div which has the "font-bold" class
-        const headerDiv = contentDiv.querySelector('.font-bold');
-        if (headerDiv) {
-            // First paragraph (date)
-            const datePara = headerDiv.querySelector('p:first-child');
-            if (datePara) datePara.textContent = formattedDate;
+        // Update document information using direct IDs
+        document.getElementById('documentDate').textContent = formattedDate;
+        document.getElementById('documentOrg').innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
+        document.getElementById('documentTitle').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject || docData.title}`;
+        document.getElementById('documentType').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
+        document.getElementById('documentTag').textContent = docData.control_tag || docData.tag;
+
+        // Update summary
+        document.getElementById('documentSummary').textContent = docData.summary || 'No summary available';
             
-            // Organization
-            const fromPara = headerDiv.querySelector('p:nth-child(2)');
-            if (fromPara) fromPara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
+        // Update attachment (if available)
+        const attachmentButton = document.getElementById('documentAttachment');
+        const attachmentSpan = document.getElementById('documentFileName');
+        
+        if (attachmentButton && attachmentSpan && docData.file_path) {
+            const fileName = docData.file_path.split('/').pop();
+            attachmentSpan.textContent = fileName;
+                
+            // Set up the click handler for the attachment
+            attachmentButton.onclick = function() {
+                openDocumentViewer(docData.file_path, 'application/pdf');
+            };
+        }
             
-            // Title
-            const titlePara = headerDiv.querySelector('p:nth-child(3)');
-            if (titlePara) titlePara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject}`;
-            
-            // Document Type
-            const typePara = headerDiv.querySelector('p:nth-child(4)');
-            if (typePara) typePara.innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
-        }
-        
-        // Update tag in the right corner - find the text-right element
-        const rightDiv = contentDiv.querySelector('.text-right');
-        if (rightDiv) {
-            const tagElement = rightDiv.querySelector('p');
-            if (tagElement) tagElement.textContent = docData.control_tag;
-        }
-        
-        // Update summary - find it by navigating through the DOM structure
-        // Look for the second div in the parent container
-        const divs = leftSideDiv.querySelectorAll(':scope > div');
-        if (divs.length >= 2) {
-            const summaryDiv = divs[1]; // The second div contains the summary
-            const summaryElement = summaryDiv.querySelector('p#documentSummary');
-            if (summaryElement) {
-                console.log("Setting summary to:", docData.summary || 'No summary available');
-                summaryElement.textContent = docData.summary || 'No summary available';
-            }
-        }
-        
-        // Update attachment (if available) - third div in the structure
-        if (divs.length >= 3) {
-            const attachmentDiv = divs[2];
-            const attachmentButton = attachmentDiv.querySelector('.bg-gray-200');
-            if (attachmentButton) {
-                const attachmentSpan = attachmentButton.querySelector('span');
-                if (attachmentSpan && docData.file_path) {
-                    const fileName = docData.file_path.split('/').pop();
-                    attachmentSpan.textContent = fileName;
-                    
-                    // Make button visible and add the filename
-                    attachmentButton.innerHTML = `
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        <span>${fileName}</span>
-                    `;
-                    
-                    // Set up the click handler for the attachment
-                    attachmentButton.onclick = function() {
-                        openDocumentViewer(docData.file_path, 'application/pdf');
-                    };
-                }
-            }
-        }
-        
         // Update organization info in right panel
-        const rightSideDiv = detailsView.querySelector('.w-1\\/3'); // Use escaped backslash for fraction
-        if (rightSideDiv) {
-            const orgNameElement = rightSideDiv.querySelector('.font-bold.text-lg');
-            if (orgNameElement) {
-                // Use the mapping to convert full organization name to acronym
-                orgNameElement.textContent = getOrgAcronym(docData.organization) || 'Organization Name';
-            }
+        document.getElementById('orgName').textContent = getOrgAcronym(docData.organization) || 'Organization Name';
             
-            // Set organization initial
-            const orgInitial = rightSideDiv.querySelector('#orgInitial');
-            if (orgInitial && docData.organization) {
-                // If we have an acronym, use its first letter, otherwise use the first letter of the full name
-                const acronym = getOrgAcronym(docData.organization);
-                orgInitial.textContent = acronym.charAt(0).toUpperCase();
-            }
+        // Set organization initial
+        const orgInitial = document.getElementById('orgInitial');
+        if (orgInitial && docData.organization) {
+            // If we have an acronym, use its first letter, otherwise use the first letter of the full name
+            const acronym = getOrgAcronym(docData.organization);
+            orgInitial.textContent = acronym.charAt(0).toUpperCase();
         }
+
+        // Update status history with timeline style similar to the image
+        const statusHistory = document.getElementById('statusHistory');
+        const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+        const actionButtonsContainer = document.getElementById('actionButtonsContainer');
         
-        // Update status history if available
-        // Look for status div which is the fourth div
-        if (divs.length >= 4) {
-            const statusDiv = divs[3];
-            const statusHistory = statusDiv.querySelector('#statusHistory');
-            if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
-                let statusHTML = '';
-                
-                docData.reviews.forEach(review => {
-                    statusHTML += `
-                        <div class="bg-white text-gray-800 rounded-lg p-3">
-                            <p><strong>Reviewer:</strong> ${review.reviewer_name || 'Unknown'}</p>
-                            <p><strong>Status:</strong> ${review.status || 'Unknown'}</p>
-                            <p><strong>Message:</strong> ${review.message || 'No message'}</p>
-                            <p><strong>Date:</strong> ${new Date(review.created_at).toLocaleDateString()}</p>
-                        </div>
-                    `;
+        if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
+            // Group reviews by reviewer
+            const grouped = {};
+            docData.reviews.forEach(r => {
+                if (!grouped[r.reviewer_name]) grouped[r.reviewer_name] = [];
+                grouped[r.reviewer_name].push(r);
+            });
+
+            // Flatten into timeline steps: always start with "Under Review", then show other statuses in order
+            let timelineSteps = [];
+            Object.entries(grouped).forEach(([reviewer, reviews]) => {
+                // Sort reviews by created_at ascending
+                reviews.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                // Always add "Under Review" as the first step (created_at)
+                timelineSteps.push({
+                    reviewer_name: reviewer,
+                    status: "Under Review",
+                    time: reviews[0].created_at
                 });
-                
-                if (statusHTML === '') {
-                    statusHTML = '<p class="text-gray-300">No status updates available</p>';
+                // Add all other statuses for this reviewer except "Under Review"
+                reviews.forEach(r => {
+                    if (r.status && r.status.toLowerCase() !== "under review") {
+                        timelineSteps.push({
+                            reviewer_name: reviewer,
+                            status: r.status,
+                            time: r.updated_at // Use updated_at for these statuses
+                        });
+                    }
+                });
+            });
+
+            // Sort the timeline steps by time ascending
+            timelineSteps.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+            // Build timeline HTML
+            let timelineHTML = `<div class="relative pl-5">`;
+            timelineSteps.forEach((step, idx) => {
+                // Determine colors
+                let dot = "bg-gray-300";
+                let statusColor = "text-white";
+                if (/approved/i.test(step.status)) {
+                    dot = "bg-green-500";
+                    statusColor = "text-green-400 font-semibold";
+                } else if (/rejected/i.test(step.status)) {
+                    dot = "bg-red-500";
+                    statusColor = "text-red-400 font-semibold";
+                } else if (/resubmission/i.test(step.status)) {
+                    dot = "bg-yellow-400";
+                    statusColor = "text-yellow-300 font-semibold";
+                } else if (/sent/i.test(step.status)) {
+                    dot = "bg-blue-400";
+                    statusColor = "text-blue-300 font-semibold";
                 }
-                
-                statusHistory.innerHTML = statusHTML;
+
+                // Format date and status
+                let displayStatus = step.status;
+                let displayTime = new Date(step.time).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+
+                // Timeline bullet and line
+                timelineHTML += `
+                    <div class="flex items-start relative">
+                        ${idx < timelineSteps.length - 1
+                            ? `<span class="absolute left-1 top-4 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>`
+                            : ''}
+                        <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-1.5 mr-3"></span>
+                        <div>
+                            <span class="font-bold">${step.reviewer_name || 'Unknown'}</span>
+                            <div class="ml-0">
+                                <span class="${statusColor}">${displayStatus}</span>
+                                <span class="ml-1 text-white/80">${displayTime}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            timelineHTML += '</div>';
+
+            if (timelineSteps.length === 0) {
+                timelineHTML = '<p class="text-gray-300">No status updates available</p>';
+            }
+
+            statusHistory.innerHTML = timelineHTML;
+
+            // Show or hide action buttons and processed indicator based on document status
+            const finalDecisionExists = timelineSteps.some(step =>
+                step.status && (
+                    step.status.toLowerCase() === 'approved' ||
+                    step.status.toLowerCase() === 'rejected'
+                )
+            );
+            if (docData.has_decision || finalDecisionExists) {
+                if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
+                if (processedStatusIndicator) processedStatusIndicator.classList.remove('hidden');
+            } else {
+                if (actionButtonsContainer) actionButtonsContainer.classList.remove('hidden');
+                if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
             }
         }
     } catch (error) {
@@ -281,28 +295,61 @@ function loadComments(documentId) {
                 return;
             }
             
-            container.innerHTML = comments.map(comment => `
-                <div class="border-b border-[#782626] pb-4 mb-4">
-                    <div class="flex items-start gap-3">
-                        <div class="flex-shrink-0">
-                            <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                    stroke="currentColor" class="w-6 h-6 text-gray-600">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
-                                </svg>
-                            </div>
+            container.innerHTML = comments.map(comment => {
+                // Determine if there's an attachment
+                const hasAttachment = comment.attachment_path && comment.attachment_name;
+                
+                // Generate attachment HTML if needed
+                let attachmentHTML = '';
+                if (hasAttachment) {
+                    const filePath = `/storage/${comment.attachment_path}`;
+                    const fileName = comment.attachment_name;
+                    const fileType = comment.attachment_type;
+                    
+                    // Determine icon based on file type
+                    let icon = '';
+                    if (fileType.startsWith('image/')) {
+                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+                    } else if (fileType === 'application/pdf') {
+                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
+                    } else {
+                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+                    }
+                    
+                    attachmentHTML = `
+                        <div class="mt-2 bg-gray-100 rounded p-2 inline-block">
+                            <a href="${filePath}" target="_blank" class="flex items-center text-blue-600 hover:underline">
+                                ${icon}
+                                <span class="text-xs truncate max-w-[200px]">${fileName}</span>
+                            </a>
                         </div>
-                        <div class="flex-1">
-                            <div class="flex justify-between items-center">
-                                <h4 class="font-bold text-white text-lg">${comment.sender ? comment.sender.username : 'Unknown User'}</h4>
-                                <span class="text-gray-300 text-sm">${new Date(comment.created_at).toLocaleString('en-US', {hour: '2-digit', minute: '2-digit'})}</span>
+                    `;
+                }
+                
+                return `
+                    <div class="border-b border-[#782626] pb-4 mb-4">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0">
+                                <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                        stroke="currentColor" class="w-6 h-6 text-gray-600">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
+                                    </svg>
+                                </div>
                             </div>
-                            <p class="text-white mt-1">${comment.comment}</p>
+                            <div class="flex-1">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-bold text-white text-lg">${comment.sender ? comment.sender.username : 'Unknown User'}</h4>
+                                    <span class="text-gray-300 text-sm">${new Date(comment.created_at).toLocaleString('en-US', {hour: '2-digit', minute: '2-digit'})}</span>
+                                </div>
+                                <p class="text-white mt-1">${comment.comment || ''}</p>
+                                ${attachmentHTML}
+                            </div>
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         })
         .catch(error => {
             console.error('Error loading comments:', error);
@@ -312,41 +359,103 @@ function loadComments(documentId) {
 // Comment submitting
 function submitComment() {
     const input = document.getElementById('commentInput');
-    if (!input) {
-        console.error('Comment input field not found');
+    const fileInput = document.getElementById('commentAttachment');
+    const attachmentPreview = document.getElementById('attachmentPreview');
+    
+    if (!input || !fileInput) {
+        console.error('Comment input fields not found');
         return;
     }
     
     const comment = input.value.trim();
+    const file = fileInput.files[0];
 
-    if (!comment || !currentDocumentId) {
-        console.error('Missing comment or document ID');
+    // Validate - need at least a comment or a file
+    if (!comment && !file) {
+        showDocumentActionToast('comment', 'Please enter a comment or attach a file', false);
         return;
     }
+    
+    // Check if we have a valid document ID
+    if (!currentDocumentId) {
+        console.error('Missing document ID');
+        return;
+    }
+
+    // Create FormData object to handle file uploads
+    const formData = new FormData();
+    formData.append('document_id', currentDocumentId);
+    
+    if (comment) {
+        formData.append('comment', comment);
+    }
+    
+    if (file) {
+        // Validate file size - minimum 5MB for production (using 1KB for testing)
+        if (file.size < 1024) { // 1KB minimum for testing
+            showDocumentActionToast('comment', 'Attachment must be at least 1KB', false);
+            return;
+        }
+        
+        // Validate file size - maximum 10MB
+        if (file.size > 10 * 1024 * 1024) { // 10MB maximum
+            showDocumentActionToast('comment', 'Attachment cannot exceed 10MB', false);
+            return;
+        }
+        
+        formData.append('attachment', file);
+    }
+
+    // Create loading indicator
+    const submitBtn = document.getElementById('submitCommentBtn');
+    const originalInnerHTML = submitBtn.innerHTML;
+    submitBtn.innerHTML = `
+        <svg class="animate-spin h-4 w-4 md:h-5 md:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    `;
+    submitBtn.disabled = true;
 
     fetch('/comments', {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
         },
-        body: JSON.stringify({
-            document_id: currentDocumentId,
-            comment: comment 
-        })
+        body: formData
     })
     .then(response => {
         if (!response.ok) {
-            throw new Error('Server error: ' + response.status);
+            return response.json().then(data => {
+                throw new Error(data.errors ? Object.values(data.errors).flat().join(', ') : 'Server error: ' + response.status);
+            });
         }
         return response.json();
     })
-    .then(comment => {
-        input.value = '';
-        loadComments(currentDocumentId);
+    .then(data => {
+        if (data.success) {
+            // Reset form fields
+            input.value = '';
+            fileInput.value = '';
+            attachmentPreview.classList.add('hidden');
+            
+            // Reload comments
+            loadComments(currentDocumentId);
+            
+            // Show success message
+            showDocumentActionToast('comment', 'Comment added successfully', true);
+        } else {
+            throw new Error(data.message || 'Failed to add comment');
+        }
     })
     .catch(error => {
         console.error('Error submitting comment:', error);
+        showDocumentActionToast('comment', error.message || 'Failed to add comment', false);
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.innerHTML = originalInnerHTML;
+        submitBtn.disabled = false;
     });
 }
 
@@ -367,38 +476,139 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Document Previewing
+// Event listeners for file input
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('commentAttachment');
+    const attachmentPreview = document.getElementById('attachmentPreview');
+    const attachmentName = document.getElementById('attachmentName');
+    const removeAttachment = document.getElementById('removeAttachment');
+    
+    if (fileInput) {
+        fileInput.addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const file = this.files[0];
+                
+                // Display file name in preview area
+                attachmentName.textContent = file.name;
+                attachmentPreview.classList.remove('hidden');
+                
+                // Validate file type
+                const validTypes = ['image/jpeg', 'image/png', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword'];
+                if (!validTypes.includes(file.type)) {
+                    showDocumentActionToast('comment', 'Invalid file type. Please upload an image, PDF, or Word document.', false);
+                    fileInput.value = '';
+                    attachmentPreview.classList.add('hidden');
+                    return;
+                }
+                
+                // Validate file size (minimum 1KB for testing)
+                if (file.size < 1024) {
+                    showDocumentActionToast('comment', 'File is too small. Minimum size is 1KB.', false);
+                    fileInput.value = '';
+                    attachmentPreview.classList.add('hidden');
+                    return;
+                }
+                
+                // Validate file size (maximum 10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    showDocumentActionToast('comment', 'File is too large. Maximum size is 10MB.', false);
+                    fileInput.value = '';
+                    attachmentPreview.classList.add('hidden');
+                    return;
+                }
+            }
+        });
+    }
+    
+    if (removeAttachment) {
+        removeAttachment.addEventListener('click', function() {
+            fileInput.value = '';
+            attachmentPreview.classList.add('hidden');
+        });
+    }
+    
+    // Prevent form submission on Enter
+    const commentForm = document.getElementById('commentForm');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+    }
+});
+
+// Function to show document preview
 function openDocumentViewer(filePath, fileType) {
     console.log("Opening document viewer for:", filePath);
     const modal = document.getElementById('documentViewerModal');
     const pdfViewer = document.getElementById('pdfViewer');
     const imageViewer = document.getElementById('imageViewer');
+    const downloadView = document.getElementById('downloadView');
     const documentTitle = document.getElementById('documentTitle');
+    const previewTab = document.getElementById('previewTab');
+    const downloadTab = document.getElementById('downloadTab');
+    const downloadButton = document.getElementById('downloadButton');
+    const downloadFileName = document.getElementById('downloadFileName');
     
     // Extract just the filename for display
     const filename = filePath.split('/').pop();
     documentTitle.textContent = filename;
+    downloadFileName.textContent = filename;
+    
+    // Set up download link
+    const fullPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
+    downloadButton.href = fullPath;
+    downloadButton.setAttribute('download', filename);
     
     // Show modal first to ensure container is visible
     modal.classList.remove('hidden');
     
+    // Tab switching event listeners
+    previewTab.addEventListener('click', function() {
+        // Activate preview tab
+        previewTab.classList.add('bg-blue-500', 'text-white');
+        previewTab.classList.remove('text-gray-700');
+        downloadTab.classList.remove('bg-blue-500', 'text-white');
+        downloadTab.classList.add('text-gray-700');
+        
+        // Show preview, hide download view
+        downloadView.classList.add('hidden');
+        
+        if (fileType === 'application/pdf' || filename.toLowerCase().endsWith('.pdf')) {
+            pdfViewer.classList.remove('hidden');
+            imageViewer.classList.add('hidden');
+        } else {
+            pdfViewer.classList.add('hidden');
+            imageViewer.classList.remove('hidden');
+        }
+    });
+    
+    downloadTab.addEventListener('click', function() {
+        // Activate download tab
+        downloadTab.classList.add('bg-blue-500', 'text-white');
+        downloadTab.classList.remove('text-gray-700');
+        previewTab.classList.remove('bg-blue-500', 'text-white');
+        previewTab.classList.add('text-gray-700');
+        
+        // Hide preview, show download view
+        pdfViewer.classList.add('hidden');
+        imageViewer.classList.add('hidden');
+        downloadView.classList.remove('hidden');
+    });
+    
+    // Show preview by default
+    previewTab.click();
+    
     // For PDF files
     if (fileType === 'application/pdf' || filename.toLowerCase().endsWith('.pdf')) {
-        pdfViewer.classList.remove('hidden');
-        imageViewer.classList.add('hidden');
-        
-        // Clear previous content
-        pdfViewer.innerHTML = '';
-        
         // Create viewer container
+        pdfViewer.innerHTML = '';
         const viewerDiv = document.createElement('div');
         viewerDiv.id = 'pdf-viewer-container';
         viewerDiv.className = 'h-full';
         pdfViewer.appendChild(viewerDiv);
         
-        // Generate the full PDF URL based on your file storage structure
-        // Adjust this path according to your actual file storage location
-        const pdfUrl = filePath.startsWith('/') ? filePath : `/${filePath}`;
+        // Generate the full PDF URL
+        const pdfUrl = fullPath;
         
         // Initialize WebViewer
         WebViewer({
@@ -411,26 +621,27 @@ function openDocumentViewer(filePath, fileType) {
             // Basic configuration
             const { docViewer, UI } = instance;
             
-            // Set fit mode
-            // docViewer.setFitMode(docViewer.FitMode.FIT_WIDTH);
-            
-            // Optional: Simplify toolbar for basic viewing
-            UI.disableElements(['downloadButton', 'printButton']);
+            // Enable download button in WebViewer
+            UI.enableElements(['downloadButton']);
+            UI.disableElements(['printButton']);
         }).catch(error => {
             console.error("Failed to load WebViewer:", error);
-            // Fallback to basic PDF viewing or show error message
-            pdfViewer.innerHTML = `<div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>`;
+            pdfViewer.innerHTML = `
+                <div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>
+                <div class="p-4">
+                    <a href="${fullPath}" download="${filename}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Download Document Instead
+                    </a>
+                </div>
+            `;
         });
     } else {
         // For image files
-        pdfViewer.classList.add('hidden');
-        imageViewer.classList.remove('hidden');
-        imageViewer.innerHTML = `<img src="${filePath}" class="max-h-full max-w-full" alt="Document Preview">`;
+        imageViewer.innerHTML = `<img src="${fullPath}" class="max-h-full max-w-full" alt="Document Preview">`;
     }
 }
 
-
-// Add a function to close the document viewer
+// Add function to close the document viewer
 window.closeDocumentViewer = function() {
     const modal = document.getElementById('documentViewerModal');
     const pdfViewer = document.getElementById('pdfViewer');
@@ -443,15 +654,22 @@ window.closeDocumentViewer = function() {
 
 // Approval Modal function
 document.addEventListener('DOMContentLoaded', function () {
-    const approveButton = document.getElementById('approveButton'); // Assuming you have an Approve button elsewhere
+    const approveButton = document.getElementById('approveButton');
     const approvalModal = document.getElementById('approvalModal');
     const closeApprovalModalBtn = document.getElementById('closeApprovalModalBtn');
     const sendToAnotherAdminBtn = document.getElementById('sendToAnotherAdminBtn');
     const finalizeApprovalBtn = document.getElementById('finalizeApprovalBtn');
 
-    // Open the modal when the Approve button is clicked
+    // Open the modal when the Approve button is clicked, but check if disabled first
     if (approveButton) {
-        approveButton.addEventListener('click', function () {
+        approveButton.addEventListener('click', function(e) {
+            if (this.disabled) {
+                e.preventDefault();
+                showDocumentActionToast('approved', 'This document has already been reviewed and cannot be modified.', false);
+                return;
+            }
+            
+            // If not disabled, show the approval modal
             approvalModal.classList.remove('hidden');
         });
     }
@@ -617,57 +835,60 @@ document.getElementById('cancelFinalizeBtn').addEventListener('click', function(
 });
 
 // Finalize approval handler
-document.getElementById('confirmFinalizeBtn').addEventListener('click', function() {
-    // Make sure we have a valid ID
-    if (!currentDocumentId) {
-        showDocumentActionToast('approved', "Error: Document ID is missing. Please try again.", false);
-        return;
-    }
-    
-    // Make an AJAX request to approve the document
-    fetch(`/admin/documents/${currentDocumentId}/approve`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({
-            message: 'Document approved and finalized'
+const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
+if (confirmFinalizeBtn) {
+    confirmFinalizeBtn.addEventListener('click', function() {
+        // Make sure we have a valid ID
+        if (!currentDocumentId) {
+            showDocumentActionToast('approved', "Error: Document ID is missing. Please try again.", false);
+            return;
+        }
+        
+        // Make an AJAX request to approve the document
+        fetch(`/admin/documents/${currentDocumentId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                message: 'Document approved and finalized'
+            })
         })
-    })
-    .then(response => {
-        if (!response.ok) {
-            return response.json().then(data => { 
-                throw new Error(data.error || 'Failed to approve document');
-            });
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            // Show success toast
-            showDocumentActionToast('approved');
-            
-            // Close the modal
-            document.getElementById('finalizeConfirmationModal').classList.add('hidden');
-            
-            // Return to table view
-            closeDetailsPanel();
-            
-            // Refresh the page to update the document list
-            setTimeout(() => {
-                window.location.reload();
-            }, 3000);
-        } else {
-            // Show failure toast
-            showDocumentActionToast('approved', data.error || "An unknown error occurred during approval.", false);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => { 
+                    throw new Error(data.error || 'Failed to approve document');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Show success toast
+                showDocumentActionToast('approved');
+                
+                // Close the modal
+                document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+                
+                // Return to table view
+                closeDetailsPanel();
+                
+                // Refresh the page to update the document list
+                setTimeout(() => {
+                    window.location.reload();
+                }, 3000);
+            } else {
+                // Show failure toast
+                showDocumentActionToast('approved', data.error || "An unknown error occurred during approval.", false);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
+        });
     });
-});
+}
 
 // Close modal when clicking outside
 window.addEventListener('click', function(event) {
@@ -691,8 +912,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeResubmissionModalBtn = document.getElementById('closeResubmissionModalBtn');
     const submitResubmissionBtn = document.getElementById('submitResubmissionBtn');
 
-    // Open the reject modal when the Reject button is clicked
-    rejectButton.addEventListener('click', function () {
+    // Open the reject modal when the Reject button is clicked, but check if disabled first
+    document.getElementById('rejectButton').addEventListener('click', function(e) {
+        if (this.disabled) {
+            e.preventDefault();
+            showDocumentActionToast('rejected', 'This document has already been reviewed and cannot be modified.', false);
+            return;
+        }
+        
+        // If not disabled, show the rejection modal
         rejectModal.classList.remove('hidden');
     });
 

@@ -122,6 +122,9 @@ class DocumentReviewController extends Controller
             $document->title = $document->subject;
             $document->date = \Carbon\Carbon::parse($document->created_at);
             
+            // Add flag to indicate if document has already been reviewed with a decision
+            $document->has_decision = $document->reviews()->whereIn('status', ['approved', 'rejected', 'resubmission'])->exists();
+            
             return $document;
         });
 
@@ -169,12 +172,14 @@ class DocumentReviewController extends Controller
             'file_path' => $document->file_path,
             'created_at' => $document->created_at,
             'organization' => $document->user ? $document->user->username : 'Unknown',
+            'has_decision' => $document->reviews()->whereIn('status', ['approved', 'rejected', 'resubmission'])->exists(),
             'reviews' => $document->reviews->map(function($review) {
                 return [
                     'reviewer_name' => $review->reviewer ? $review->reviewer->username : 'Unknown',
                     'status' => $review->status,
                     'message' => $review->message,
-                    'created_at' => $review->created_at
+                    'created_at' => $review->created_at,
+                    'updated_at' => $review->updated_at
                 ];
             })
         ];

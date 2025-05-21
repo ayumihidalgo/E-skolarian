@@ -3,28 +3,30 @@
 @include('components.adminNavBarComponent')
 @include('components.adminSidebarComponent')
 
-<div id="main-content" class="transition-all duration-300 ml-[20%]">
+<div id="main-content" class="transition-all duration-300 ml-0 md:ml-[20%] mt-16">
     <div class="flex-grow bg-gray-100">
         <!-- Main Content -->
-        <div id="mainContentArea" class="p-6 min-h-screen">
+        <div id="mainContentArea" class="p-2 sm:p-4 md:p-6 min-h-screen">
             <!-- Table View -->
             <div id="tableView" class="overflow-hidden h-full flex flex-col">
-                <div class="text-black py-4 px-6 font-semibold text-2xl">
+                <div class="text-black py-2 md:py-4 px-2 md:px-6 font-semibold text-xl md:text-2xl">
                     Admin Approval
                 </div>
 
-                <div class="p-6 flex flex-col flex-grow">
-                    <div class="flex items-center justify-between mb-4">
-                        <!-- Search Bar -->
-                        <div class="relative w-1/2 mr-2">
+                <div class="p-2 md:p-6 flex flex-col flex-grow">
+                    <!-- Search and Filter Section - Responsive Layout -->
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-4 space-y-2 md:space-y-0">
+                        <!-- Search Bar - Full width on mobile -->
+                        <div class="relative w-full md:w-1/2 md:mr-2">
                             <input id="searchInput" type="text" class="w-full rounded-full border-1 border-[#9099A5] bg-white h-10 p-4" placeholder="Search...">
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                             </div>
                         </div>
-                        <!-- Filter Dropdowns -->
-                        <div class="flex space-x-2">
-                            <div class="relative w-40">
+                        
+                        <!-- Filter Dropdowns - Side by side on all viewports including mobile -->
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <div class="relative flex-1 md:w-40">
                                 <select id="organizationFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-8 rounded-full leading-tight focus:outline-none hover:text-white transition-colors duration-200 truncate">
                                     <option class="bg-white text-black truncate" value="" disabled selected>Organization</option>
                                     <option class="bg-white text-black truncate" value="">All</option>
@@ -45,8 +47,8 @@
                                     <i class="fa-solid fa-sort-down"></i>
                                 </div>
                             </div>
-                            <div class="relative w-40">
-                                <select id="documentTypeFilter" class="block cursor-pointer appearance-none w-48 min-w-[8rem] max-w-[10rem] bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-2 rounded-full leading-tight hover:text-white transition-colors duration-200 truncate">
+                            <div class="relative flex-1 md:w-40">
+                                <select id="documentTypeFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-2 rounded-full leading-tight hover:text-white transition-colors duration-200 truncate">
                                     <option class="bg-white text-black truncate" value="" disabled selected>Document Type</option>
                                     <option class="bg-white text-black truncate" value="">All</option>
                                     <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
@@ -107,7 +109,7 @@
 
                     <!-- Table Section -->
                     @if ($documents->isNotEmpty())
-                        <div class="bg-gray-50 overflow-hidden rounded-t-xl flex flex-col min-h-[300px]">
+                        <div class="bg-gray-50 overflow-x-auto rounded-t-xl flex flex-col min-h-[300px] border border-gray-500">
                             <table class="min-w-full text-sm rounded-t-xl">
                                 <thead class="bg-white text-black font-extrabold text-lg">
                                     <tr>
@@ -226,16 +228,9 @@
                     @endif
 
 
-                    <div class="flex justify-between items-center mt-4">
-                        <!-- Previous Button -->
-                        <button onclick="window.location='{{ $documents->previousPageUrl() }}'"
-                        class="bg-[#7A1212] hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed"
-                        {{ $documents->onFirstPage() ? 'disabled' : '' }}>
-                            ← Previous
-                        </button>
-
+                    <div class="flex justify-center mt-4">
                         <!-- Pagination Section -->
-                        <div class="mt-4 flex justify-center">
+                        <div class="flex justify-center">
                             <nav>
                                 <ul class="inline-flex items-center space-x-2">
                                     <li>
@@ -265,47 +260,42 @@
                                 </ul>
                             </nav>
                         </div>
-
-                        <!-- Next Button -->
-                        <button onclick="window.location='{{ $documents->nextPageUrl() }}'"
-                        class="bg-[#7A1212] hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md disabled:bg-gray-400 disabled:cursor-not-allowed"
-                        {{ !$documents->hasMorePages() ? 'disabled' : '' }}>
-                            Next →
-                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Details View (initially hidden) -->
             <div id="detailsView" class="hidden h-full text-white">
-                <div class="flex items-start justify-between px-6">
-                    <!-- Title and Button aligned -->
-                    <h2 class="font-semibold text-2xl text-black">Admin Approval</h2>
-                    <button class="bg-[#7A1212] cursor-pointer text-white font-semibold rounded-full px-8 py-2 hover:bg-[#5d0c0c] focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50" onclick="closeDetailsPanel()">
+                <!-- Header with close button -->
+                <div class="flex items-start justify-between px-3 md:px-6 mb-2 md:mb-0">
+                    <h2 class="font-semibold text-lg md:text-2xl text-black">Admin Approval</h2>
+                    <button class="bg-[#7A1212] cursor-pointer text-white font-semibold rounded-full px-4 md:px-8 py-1 md:py-2 text-sm md:text-base hover:bg-[#5d0c0c] focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50" onclick="closeDetailsPanel()">
                         Close
                     </button>
                 </div>
-                <div class="p-6 flex space-x-6 w-full max-w-7xl">
-                    <!-- Left Side: Document Details -->
-                    <div class="w-2/3 bg-[#4D0F0F] rounded-2xl p-6 space-y-6">
+
+                <!-- Mobile view - stacks vertically -->
+                <div class="p-3 md:p-6 flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0 w-full max-w-7xl">
+                    <!-- Document Details - Full width on mobile -->
+                    <div class="w-full md:w-2/3 bg-[#4D0F0F] rounded-2xl p-4 md:p-6 space-y-4 md:space-y-6">
                         <!-- Header -->
                         <div class="flex justify-between items-start">
-                            <div class="font-bold">
-                                <p class="text-[#FFFFFF91] text-sm mb-1"><!-- Date will be inserted here --></p>
-                                <p><span class="text-[#FFFFFF91] font-normal">From:</span> <!-- Organization will be inserted here --></p>
-                                <p><span class="text-[#FFFFFF91] font-normal">Title:</span> <!-- Subject will be inserted here --></p>
-                                <p><span class="text-[#FFFFFF91] font-normal">Document Type:</span> <!-- Type will be inserted here --></p>
+                            <div class="font-bold text-sm md:text-base max-w-[70%]">
+                                <p id="documentDate" class="text-xs text-[#FFFFFF91] md:text-sm mb-1 break-words"></p>
+                                <p id="documentOrg" class="break-words"><span class="text-[#FFFFFF91] font-normal">From:</span> </p>
+                                <p id="documentTitle" class="break-words"><span class="text-[#FFFFFF91] font-normal">Title:</span> </p>
+                                <p id="documentType" class="break-words"><span class="text-[#FFFFFF91] font-normal">Document Type:</span> </p>
                             </div>
                             <div class="text-right">
-                                <p class="px-3 text-[#FFFFFF91] py-1 text-sm"><!-- Control Tag will be inserted here --></p>
+                                <p id="documentTag" class="px-2 md:px-3 text-[#FFFFFF91] py-1 text-xs md:text-sm break-words"></p>
                             </div>
                         </div>
 
                         <!-- Summary -->
                         <div>
-                            <h2 class="text-lg font-bold mb-2">Summary</h2>
-                            <div class="bg-[#EFEFEF] text-gray-800 rounded-lg p-4">
-                                <p class="text-black break-words whitespace-normal overflow-wrap-anywhere" id="documentSummary">
+                            <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Summary</h2>
+                            <div class="bg-[#EFEFEF] text-gray-800 rounded-lg p-3 md:p-4 max-h-[200px] overflow-y-auto">
+                                <p class="text-black break-words whitespace-normal text-sm md:text-base" id="documentSummary">
                                     <!-- Summary will be inserted here -->
                                 </p>
                             </div>
@@ -313,76 +303,110 @@
 
                         <!-- Attachment -->
                         <div>
-                            <h2 class="text-lg font-bold mb-2">Attachment</h2>
-                            <div class="space-y-4">
+                            <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Attachment</h2>
+                            <div class="space-y-2 md:space-y-4">
                                 <!-- Document preview button -->
-                                <div class="bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-4 py-2 cursor-pointer hover:bg-gray-300">
-                                    <span class="mr-2"><!-- File name will be inserted here --></span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                                <button id="documentAttachment" class="bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-300 text-sm md:text-base max-w-full">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
-                                </div>
+                                    <span id="documentFileName" class="break-words truncate">File attachment</span>
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Status -->
+                        <!-- Status section -->
                         <div>
-                            <h2 class="text-lg font-bold mb-2">Status</h2>
-                            <div class="space-y-3 text-sm" id="statusHistory">
-                                <!-- Status history will be inserted here -->
+                            <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Status</h2>
+                            
+                            <!-- Status history with timeline style -->
+                            <div class="text-xs md:text-sm overflow-y-auto max-h-[250px] pb-2" id="statusHistory">
+                                <!-- Status history will be inserted here by JavaScript -->
+                                <div class="relative pl-6 border-l-2 border-gray-600">
+                                    <div class="mb-4 relative">
+                                        <!-- Placeholder for empty state -->
+                                        <p class="text-gray-300">Loading status updates...</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Processed status indicator - Initially hidden, will be shown by JS -->
+                            <div id="processedStatusIndicator" class="hidden mt-2 p-3 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-yellow-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium">This document has already been processed and cannot be modified.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Action Buttons -->
-                        <div class="flex justify-end space-x-2 mt-4">
-                            <button id="rejectButton" class="bg-[#C42E2E] hover:bg-red-700 text-white font-bold py-2 px-10 rounded-full cursor-pointer">Reject</button>
-                            <button id="approveButton" class="bg-[#478642] hover:bg-green-700 text-white font-bold py-2 px-8 rounded-full cursor-pointer">Approve</button>
+                        <div id="actionButtonsContainer" class="flex justify-end space-x-2 mt-3 md:mt-4">
+                            <button id="rejectButton" class="bg-[#C42E2E] hover:bg-red-700 text-white font-bold py-1.5 md:py-2 px-6 md:px-10 text-sm md:text-base rounded-full cursor-pointer">Reject</button>
+                            <button id="approveButton" class="bg-[#478642] hover:bg-green-700 text-white font-bold py-1.5 md:py-2 px-5 md:px-8 text-sm md:text-base rounded-full cursor-pointer">Approve</button>
                         </div>
                     </div>
 
-                    <!-- Right Side: Organization Info and Comments -->
-                    <div class="w-1/3 bg-[#4D0F0F] text-white rounded-2xl p-6 flex flex-col justify-between">
-                        <div class="space-y-6">
-                            <div class="flex items-center space-x-4">
+                    <!-- Organization Info and Comments - Full width on mobile -->
+                    <div class="w-full md:w-1/3 bg-[#4D0F0F] text-white rounded-2xl p-4 md:p-6 flex flex-col justify-between">
+                        <div class="space-y-4 md:space-y-6">
+                            <div class="flex items-center space-x-3 md:space-x-4">
                                 <!-- Profile Picture Placeholder -->
-                                <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                                    <span class="text-gray-600 text-xl font-bold" id="orgInitial"><!-- Organization initial --></span>
+                                <div class="w-10 h-10 md:w-12 md:h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                                    <span class="text-gray-600 text-lg md:text-xl font-bold" id="orgInitial">O</span>
                                 </div>
                                 <!-- Organization Details -->
-                                <div>
-                                    <p class="font-bold text-lg"><!-- Organization name --></p>
-                                    <p class="text-sm text-gray-300">Academic Organization</p>
+                                <div class="overflow-hidden">
+                                    <p id="orgName" class="font-bold text-base md:text-lg break-words">Organization Name</p>
+                                    <p class="text-xs md:text-sm text-gray-300 break-words">Academic Organization</p>
                                 </div>
                             </div>
 
-                            <hr></hr>
+                            <hr class="border-gray-600"></hr>
 
-                            <!-- Comments section remains the same -->
-                            <div class="space-y-4 text-sm overflow-y-auto max-h-[400px]" id="commentsContainer">
+                            <!-- Comments section -->
+                            <div class="space-y-3 md:space-y-4 text-xs md:text-sm overflow-y-auto max-h-[200px] md:max-h-[400px]" id="commentsContainer">
                                 <!-- Comments will be loaded here -->
                             </div>
                         </div>
 
                         <!-- Comment Input -->
-                        <div class="mt-6">
-                            <div class="flex items-center bg-[#FFFFFFD6] rounded-full px-4 py-1">
-                                <input type="text"
-                                    id="commentInput"
-                                    placeholder="Comment..."
-                                    class="flex-1 rounded-full py-2 px-4 bg-transparent text-black placeholder-gray-300 focus:outline-none placeholder-gray-700" />
-                                <div class="flex items-center">
-                                    <button class="text-[#4D0F0F] hover:tex-[#5d0c0c] cursor-pointer mr-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                        </svg>
-                                    </button>
-                                    <button id="submitCommentBtn" class="text-[#4D0F0F] hover:text-[#5d0c0c] cursor-pointer">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                        <div class="mt-4 md:mt-6">
+                            <form id="commentForm" class="flex flex-col space-y-2">
+                                <div class="flex items-center bg-[#FFFFFFD6] rounded-full px-3 md:px-4 py-1">
+                                    <input type="text"
+                                        id="commentInput"
+                                        placeholder="Comment..."
+                                        class="flex-1 rounded-full py-1.5 md:py-2 px-3 md:px-4 bg-transparent text-black placeholder-gray-700 text-sm md:text-base focus:outline-none" />
+                                    <div class="flex items-center flex-shrink-0">
+                                        <label for="commentAttachment" class="text-[#4D0F0F] hover:text-[#5d0c0c] cursor-pointer mr-2">
+                                            <input type="file" id="commentAttachment" class="hidden" accept=".jpg,.jpeg,.png,.pdf,.docx,.doc" />
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                            </svg>
+                                        </label>
+                                        <button id="submitCommentBtn" type="button" class="text-[#4D0F0F] hover:text-[#5d0c0c] cursor-pointer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Attachment preview -->
+                                <div id="attachmentPreview" class="hidden flex items-center bg-gray-100 rounded-md p-2 mt-2">
+                                    <span id="attachmentName" class="text-xs text-gray-700 truncate flex-1"></span>
+                                    <button type="button" id="removeAttachment" class="text-gray-500 hover:text-red-500">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
                                 </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -391,7 +415,7 @@
     </div>
 
     <!-- Document Preview Modal -->
-    <div id="documentViewerModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+    <!-- <div id="documentViewerModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-11/12 h-5/6 rounded-lg flex flex-col">
             <div class="flex justify-between items-center p-4 border-b">
                 <h3 id="documentTitle" class="font-semibold text-lg truncate">Document Preview</h3>
@@ -402,11 +426,51 @@
                 </button>
             </div>
             <div class="flex-1 overflow-hidden">
+                
+                <div id="pdfViewer" class="w-full h-full"></div>
+                
+                <div id="imageViewer" class="hidden h-full flex items-center justify-center bg-gray-100">
+                </div>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- Document Preview Modal -->
+    <div id="documentViewerModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+        <div class="bg-white w-11/12 h-5/6 rounded-lg flex flex-col">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="documentTitle" class="font-semibold text-lg truncate">Document Preview</h3>
+                <div class="flex items-center space-x-4">
+                    <!-- Tabs for Preview and Download -->
+                    <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                        <button id="previewTab" class="py-1 px-4 rounded-lg bg-blue-500 text-white">Preview</button>
+                        <button id="downloadTab" class="py-1 px-4 rounded-lg text-gray-700">Download</button>
+                    </div>
+                    <!-- Close Button -->
+                    <button onclick="closeDocumentViewer()" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-hidden">
                 <!-- PDF Viewer -->
                 <div id="pdfViewer" class="w-full h-full"></div>
                 
                 <!-- Image Viewer -->
-                <div id="imageViewer" class="hidden h-full flex items-center justify-center bg-gray-100">
+                <div id="imageViewer" class="hidden h-full flex items-center justify-center bg-gray-100"></div>
+                
+                <!-- Download View -->
+                <div id="downloadView" class="hidden h-full flex items-center justify-center bg-gray-100 flex-col p-8">
+                    <h3 id="downloadFileName" class="text-xl font-semibold mb-4">filename.pdf</h3>
+                    <p class="text-gray-600 mb-8 text-center">Click the button below to download this document</p>
+                    <a id="downloadButton" href="#" download class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Download Document
+                    </a>
                 </div>
             </div>
         </div>
