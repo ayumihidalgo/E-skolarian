@@ -54,21 +54,22 @@
 
                 </div>
                 <div>
-                    <h3 class="text-2xl font-black tracking-wider font-['Lexend']">ELITE</h3>
-                    <p class="uppercase text-lg tracking-wider font-semibold font-['Lexend']">Academic Organization</p>
+                    <h3 class="text-2xl font-black tracking-wider font-['Lexend']">{{ $user->username }}</h3>
+                    <p class="uppercase text-lg tracking-wider font-semibold font-['Lexend']">{{ $user->role_name }}</p>
                     <div id="" class="mt-2 text-sm relative flex items-center gap-20">
                         <div class="flex items-center gap-2">
                             <img src="{{ asset('images/Smail.svg') }}" class="w-6 h-6" alt="email icon">
                             <div>
                                 <p class="font-extrabold text-[11px]">Email</p>
-                                <p class="font-extrabold text-[12px]">elite@pup.edu.ph</p>
+                                <p class="font-extrabold text-[12px]">{{ $user->email }}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
                             <img src="{{ asset('images/department.svg') }}" class="w-6 h-6" alt="department icon">
                             <div>
                                 <p class="font-extrabold text-[11px]">Department</p>
-                                <p class="font-extrabold text-[12px]">BSIT</p>
+                                <p class="font-extrabold text-[12px]">BSIT (Papaltan pa ng real acronym ng department)</p>
+                                <!-- Example department -->
                             </div>
                         </div>
                     </div>
@@ -90,7 +91,15 @@
                     </div>
                     <div class="flex flex-col items-center text-center">
                         <p class="font-['Lexend'] text-sm">Password</p>
-                        <p class="text-gray-400 text-xs">Last Updated: 6 months ago</p>
+                        @if ($user->password_changed_at)
+                            <p class="text-gray-400 text-xs">
+                                Last Updated: {{ \Carbon\Carbon::parse($user->password_changed_at)->diffForHumans() }}
+                            </p>
+                        @else
+                            <p class="text-gray-400 text-xs">
+                                Last Updated: Never
+                            </p>
+                        @endif
                     </div>
                     <button class="text-blue-600 font-bold bg-transparent border-none cursor-pointer text-sm"
                         onclick="openChangePasswordModal()">Change</button>
@@ -169,7 +178,7 @@
     </div>
     <!-- Remove Profile Modal -->
     <div id="removeProfileModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-100">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl relative space-y-4">
+        <div class="bg-white rounded-2xl w-[545px] shadow-xl relative space-y-4">
             <div class="w-full flex justify-between pt-5 px-5">
                 <h2 class="text-lg font-semibold font-['Lexend']">Remove Profile Picture?</h2>
             </div>
@@ -189,7 +198,7 @@
     </div>
     <!-- Save Changes for Update Profile Modal -->
     <div id="saveChangesModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-100">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl relative space-y-4">
+        <div class="bg-white rounded-2xl w-[545px] shadow-xl relative space-y-4">
             <div class="w-full flex justify-between pt-5 px-5">
                 <h2 class="text-lg font-semibold font-['Lexend']">Save Changes?</h2>
             </div>
@@ -209,7 +218,7 @@
     </div>
     <!-- Cancel Edit Image Modal -->
     <div id="cancelEditImageModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-100">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl relative space-y-4">
+        <div class="bg-white rounded-2xl w-[545px] shadow-xl relative space-y-4">
             <div class="w-full flex justify-between pt-5 px-5">
                 <h2 class="text-lg font-semibold font-['Lexend']">Discard Changes?</h2>
             </div>
@@ -245,24 +254,48 @@
             <form id="changePasswordForm" action="{{ route('student.settings.change-password') }}" method="POST"
                 class="px-6 pb-6 space-y-5">
                 @csrf
-                <div>
+                <div class="relative">
                     <input type="password" name="current_password" id="current_password" required
                         placeholder="Current Password"
-                        class="block w-full rounded-lg border border-black px-4 py-1 focus:border-gray-500 focus:ring-gray-500 placeholder:text-black placeholder:text-[14px] placeholder:font-[Lexend]">
+                        class="block w-full rounded-lg border border-black px-4 py-1 focus:border-gray-500 focus:ring-gray-500 placeholder:text-black placeholder:text-[14px] placeholder:font-[Lexend] pr-10">
+                    <button type="button" onclick="togglePassword(event, 'current_password')"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer">
+                        <img id="showPass_current_password" src="{{ asset('images/show_pass.svg') }}"
+                            alt="Show Password" class="w-5 md:w-6 opacity-80" />
+                        <img id="hidePass_current_password" src="{{ asset('images/hide_pass.svg') }}"
+                            alt="Hide Password" class="w-5 md:w-6 hidden opacity-80" />
+                    </button>
                 </div>
                 <div>
-                    <input type="password" name="new_password" id="new_password" required minlength="8"
-                        placeholder="New Password"
-                        class="block w-full rounded-lg border border-black px-4 py-1 focus:border-gray-500 focus:ring-gray-500 placeholder:text-black placeholder:text-[14px] placeholder:font-[Lexend]">
+                    <div class="relative">
+                        <input type="password" name="new_password" id="new_password" required minlength="8"
+                            placeholder="New Password"
+                            class="block w-full rounded-lg border border-black px-4 py-1 focus:border-gray-500 focus:ring-gray-500 placeholder:text-black placeholder:text-[14px] placeholder:font-[Lexend] pr-10">
+                        <button type="button" onclick="togglePassword(event, 'new_password')"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer">
+                            <img id="showPass_new_password" src="{{ asset('images/show_pass.svg') }}"
+                                alt="Show Password" class="w-5 md:w-6 opacity-80" />
+                            <img id="hidePass_new_password" src="{{ asset('images/hide_pass.svg') }}"
+                                alt="Hide Password" class="w-5 md:w-6 hidden opacity-80" />
+                        </button>
+                    </div>
                 </div>
                 <div>
-                    <input type="password" name="new_password_confirmation" id="new_password_confirmation" required
-                        placeholder="Confirm Password"
-                        class="mb-2 block w-full rounded-lg border border-black px-4 py-1 focus:border-gray-500 focus:ring-gray-500 placeholder:text-black placeholder:text-[14px] placeholder:font-[Lexend]">
+                    <div class="relative">
+                        <input type="password" name="new_password_confirmation" id="new_password_confirmation" required
+                            placeholder="Confirm Password"
+                            class="mb-2 block w-full rounded-lg border border-black px-4 py-1 focus:border-gray-500 focus:ring-gray-500 placeholder:text-black placeholder:text-[14px] placeholder:font-[Lexend] pr-10">
+                        <button type="button" onclick="togglePassword(event, 'new_password_confirmation')"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer">
+                            <img id="showPass_new_password_confirmation" src="{{ asset('images/show_pass.svg') }}"
+                                alt="Show Password" class="w-5 md:w-6 opacity-80" />
+                            <img id="hidePass_new_password_confirmation" src="{{ asset('images/hide_pass.svg') }}"
+                                alt="Hide Password" class="w-5 md:w-6 hidden opacity-80" />
+                        </button>
+                    </div>
                     <div id="currentPasswordError" class="text-red-500 text-xs font-['Lexend']"></div>
                     <div id="newPasswordError" class="text-red-500 text-xs font-['Lexend']"></div>
                     <div id="confirmPasswordError" class="text-red-500 text-xs font-['Lexend']"></div>
-
                 </div>
 
                 <div class="pt-2">
@@ -276,7 +309,7 @@
     </div>
     <!-- Leave Without Saving Modal -->
     <div id="leaveWithoutSavingModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-100">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl relative space-y-4">
+        <div class="bg-white rounded-2xl w-[545px]  shadow-xl relative space-y-4">
             <div class="w-full flex justify-between pt-5 px-5">
                 <h2 class="text-lg font-semibold font-['Lexend']">Discard Changes?</h2>
             </div>
@@ -297,7 +330,7 @@
     </div>
     <!-- Success Modal -->
     <div id="successModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-100">
-        <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl relative p-6">
+        <div class="bg-white rounded-2xl w-[545] shadow-xl relative p-6">
             <h2 class="text-lg font-semibold font-['Lexend'] mb-4">Password Changed Successfully</h2>
             <p class="text-sm text-gray-600 mb-6">Your password has been updated. Please log in again to continue.</p>
             <form method="POST" action="{{ route('logout') }}" class="mt-4 flex justify-end">
@@ -309,13 +342,33 @@
             </form>
         </div>
     </div>
-
+    <style>
+        input[type="password"]::-ms-reveal {
+            display: none;
+        }
+    </style>
     <!-- Change Password Script -->
     <script>
         const changePasswordButton = document.getElementById('changePasswordButton');
         const currentPasswordInput = document.getElementById('current_password');
         const newPasswordInput = document.getElementById('new_password');
         const confirmPasswordInput = document.getElementById('new_password_confirmation');
+
+        function togglePassword(event, inputId) {
+            event.preventDefault();
+            const input = document.getElementById(inputId);
+            const showIcon = document.getElementById('showPass_' + inputId);
+            const hideIcon = document.getElementById('hidePass_' + inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                showIcon.classList.add('hidden');
+                hideIcon.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                showIcon.classList.remove('hidden');
+                hideIcon.classList.add('hidden');
+            }
+        }
 
         function toggleButtonState() {
             if (currentPasswordInput.value.trim() && newPasswordInput.value.trim() && confirmPasswordInput.value.trim()) {
@@ -466,7 +519,7 @@
             changePasswordModal.style.display = 'none';
             leaveWithoutSavingModal.classList.add('hidden');
             leaveWithoutSavingModal.style.display = 'none';
-
+            changePasswordButton.disabled = true;
             // Clear all input fields
             document.getElementById('current_password').value = '';
             document.getElementById('new_password').value = '';
@@ -483,6 +536,7 @@
                 const errorDiv = document.getElementById(errorId);
                 if (errorDiv) errorDiv.textContent = '';
             });
+
         }
 
         function keepEditing() {
