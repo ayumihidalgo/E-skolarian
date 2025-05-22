@@ -177,6 +177,9 @@ function createCommentElement(comment) {
     const timeAgo = getTimeAgo(new Date(comment.created_at));
     const username = comment.sender ? comment.sender.username : 'Unknown User';
     const userRole = comment.sender && comment.sender.role ? comment.sender.role : '';
+    
+    // Make sure we have a string for the comment text
+    const commentText = typeof comment.comment === 'string' ? comment.comment : '';
 
     return `
         <div class="comment-item flex items-start space-x-3 mb-4 animate-fade-in">
@@ -196,7 +199,7 @@ function createCommentElement(comment) {
                     </div>
                     <span class="text-xs text-gray-300 flex-shrink-0 ml-2">${timeAgo}</span>
                 </div>
-                <p class="text-sm break-words">${formatCommentText(comment.comment)}</p>
+                <p class="text-sm break-words">${formatCommentText(commentText)}</p>
             </div>
         </div>
     `;
@@ -204,11 +207,14 @@ function createCommentElement(comment) {
 
 // Format comment text with basic link detection and emoji support
 function formatCommentText(text) {
+    // Check if text is null/undefined or not a string
+    if (!text || typeof text !== 'string') {
+        return ''; // Return empty string if no valid text
+    }
+    
     // Convert URLs to clickable links
     const urlRegex = /(https?:\/\/[^\s]+)/g;
-    text = text.replace(urlRegex, url => `<a href="${url}" target="_blank" class="text-blue-300 hover:underline">${url}</a>`);
-
-    return text;
+    return text.replace(urlRegex, url => `<a href="${url}" target="_blank" class="text-blue-300 hover:underline">${url}</a>`);
 }
 
 function appendNewComment(commentData) {
@@ -284,8 +290,17 @@ function submitComment() {
         // Reset scroll flag to ensure we scroll to the new comment
         isUserScrolledUp = false;
 
-        // Use the actual comment data returned from the server
-        appendNewComment(data);
+        // Make sure we're passing proper comment data
+        if (data && data.comment) {
+            appendNewComment(data.comment);
+        } else {
+            // Fallback if data structure is different
+            appendNewComment({
+                comment: comment,
+                created_at: new Date().toISOString(),
+                sender: { username: 'You' }
+            });
+        }
 
         // Focus back on input for continuing the conversation
         input.focus();
