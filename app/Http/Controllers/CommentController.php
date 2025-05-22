@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Events\NewChatMessage;
+use App\Models\User;
 
 class CommentController extends Controller
 {
@@ -153,7 +155,11 @@ class CommentController extends Controller
             
             $comment->save();
 
-            // Load the sender relationship
+            // Retrieve the receiver user based on the received_by field
+            $receiverUser = $comment->received_by ? User::find($comment->received_by) : null;
+
+            // Trigger the event
+            event(new NewChatMessage($comment, $receiverUser));   // Load the sender relationship
             $comment->load('sender');
             
             return response()->json([
