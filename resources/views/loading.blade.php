@@ -1,4 +1,6 @@
-    <div class="text-center">
+<!-- USE THIS LOADING COMPONENT FOR YOUR PAGES -->
+
+<div class="text-center">
         <!-- Dotted Loader -->
         <div class="relative w-24 h-24 mx-auto mb-6">
             @for ($i = 0; $i < 8; $i++)
