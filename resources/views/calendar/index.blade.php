@@ -84,6 +84,86 @@
             </div>
         </div>
     @endif
+
+    <!-- Event Details Modal -->
+    <div id="eventDetailsModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-md modal-container modal-hidden">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold" id="event-details-title">Event Details</h3>
+                    <button onclick="closeEventDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div id="event-details-content">
+                        <div class="mb-4">
+                            <h4 class="text-gray-600 text-sm font-medium">Event Title</h4>
+                            <p id="detail-title" class="text-gray-800 font-semibold"></p>
+                        </div>
+                        <div class="mb-4">
+                            <h4 class="text-gray-600 text-sm font-medium">Date/Time</h4>
+                            <p id="detail-date" class="text-gray-800"></p>
+                        </div>
+                        <div class="mb-4">
+                            <div id="event-color-indicator" class="w-full h-2 rounded-full mb-1"></div>
+                        </div>
+                    </div>
+                    @if(Auth::user()->role === 'admin')
+                    <div class="flex justify-end space-x-2 mt-4">
+                        <button type="button" id="delete-event-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                            Delete Event
+                        </button>
+                    </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- CONFIRMATION AND DISCARD MODALS -->
+ <!-- Confirm Save Changes Modal -->
+<div id="confirmSaveModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md modal-container modal-hidden">
+        <div class="p-6">
+            <div class="text-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Confirm Changes</h3>
+                <p class="text-gray-600">Are you sure you want to save these changes?</p>
+            </div>
+            <div class="flex justify-center space-x-4">
+                <button type="button" onclick="closeConfirmSaveModal(false)" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="button" onclick="closeConfirmSaveModal(true)" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Discard Changes Modal -->
+<div id="discardChangesModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md modal-container modal-hidden">
+        <div class="p-6">
+            <div class="text-center mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Discard Changes</h3>
+                <p class="text-gray-600">Are you sure you want to leave without saving changes?</p>
+            </div>
+            <div class="flex justify-center space-x-4">
+                <button type="button" onclick="closeDiscardModal(false)" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="button" onclick="closeDiscardModal(true)" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 @push('scripts')
@@ -112,9 +192,10 @@
         initializeCalendarWhenReady();
         setupEmojiValidation();
     }
+    
 });
 
-// Function to set up emoji and special character validation
+
 // Function to set up emoji and special character validation
 function setupEmojiValidation() {
     const titleInput = document.getElementById('event-title');
@@ -250,19 +331,17 @@ function containsSpecialChars(text) {
                 datesSet: function() {
                     checkIfCurrentMonth();
                 },
+                eventClick: function(info) {
+                    openEventDetailsModal(info.event);
+                    
+                    // Prevent browser from following the link
+                    info.jsEvent.preventDefault();
+                },
                 // Handle date clicks
                 // function dateClick 
                 dateClick: function(info) {
                     // Check if the clicked date is in the past
-                    const clickedDate = new Date(info.dateStr);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
-                    
-                    if (clickedDate < today) {
-                        // Show message if past date is clicked
-                        alert("Events cannot be created on past dates");
-                        return; // Don't open the modal
-                    }
+
                     
                     @if(Auth::user()->role === 'admin')
                     openEventModal(info.dateStr);
@@ -313,6 +392,8 @@ function containsSpecialChars(text) {
             
             // Add custom buttons after calendar is visible
             addCustomButtons();
+            // Setup year dropdown functionality
+            setupYearDropdown();
         } catch (error) {
             console.error('Error initializing calendar:', error);
             document.getElementById('calendar').innerHTML = 
@@ -424,21 +505,42 @@ function openEventModal(dateStr = null) {
         }, 10);
     }
 }
-    function closeEventModal() {
-        const modal = document.getElementById('eventModal');
-        const modalContent = modal.querySelector('.modal-container');
-        
-        if (modal) {
-            // Hide with animation
+function closeEventModal() {
+    // Check if form has changes
+    const titleEl = document.getElementById('event-title');
+    const hasChanges = titleEl && titleEl.value.trim() !== '';
+    
+    if (hasChanges) {
+        // If there are changes, show discard confirmation
+        showDiscardChangesModal(function() {
+            // This runs when user confirms discard
+            const modal = document.getElementById('eventModal');
+            const modalContent = modal.querySelector('.modal-container');
+            
             modalContent.classList.remove('modal-visible');
             modalContent.classList.add('modal-hidden');
             
-            // Completely hide after animation completes
             setTimeout(() => {
                 modal.classList.add('hidden');
+                // Reset form
+                if (document.getElementById('eventForm')) {
+                    document.getElementById('eventForm').reset();
+                }
             }, 300);
-        }
+        });
+    } else {
+        // No changes, close directly
+        const modal = document.getElementById('eventModal');
+        const modalContent = modal.querySelector('.modal-container');
+        
+        modalContent.classList.remove('modal-visible');
+        modalContent.classList.add('modal-hidden');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
     }
+}
 
 function saveEvent() {
     // Get form values
@@ -453,6 +555,12 @@ function saveEvent() {
     }
 
     const title = titleEl.value;
+    const trimmedTitle = title.trim();
+// Alternative combined check
+    if (title.startsWith(' ') || !trimmedTitle) {
+        alert('Event title cannot be empty or start with spaces.');
+        return;
+    }
     const startStr = startEl.value;
     const endStr = endEl && endEl.value ? endEl.value : null;
     const defaultColor = '#7A1212'; // Default maroon color for all events
@@ -464,15 +572,7 @@ function saveEvent() {
     }
     
     // THEN check if the event date is in the past
-    const eventDate = new Date(startStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0); // Reset time to start of day
-    
-    if (eventDate < today) {
-        alert("Events cannot be created on past dates");
-        return;
-    }
-    
+
     // Rest of your validations
     // Check for emoji or special characters in title
     if (containsEmoji(title) || containsSpecialChars(title)) {
@@ -501,11 +601,15 @@ function saveEvent() {
         alert('An event with this title already exists. Please use a different title.');
         return;
     }
+    
 
     // Check if this event should be all-day
     const hasTimeComponent = startStr.includes('T') || (endStr && endStr.includes('T'));
-
-    // Add event to calendar with properly formatted dates
+    
+    
+    
+ showConfirmSaveModal(function() {
+   // Add event to calendar with properly formatted dates
     try {
         calendarObj.addEvent({
             title: title,
@@ -528,11 +632,294 @@ function saveEvent() {
         console.error('Error adding event to calendar:', error);
         alert('Error creating event: ' + error.message);
     }
+})
 }
     function containsEmoji(text) {
     // Regex for common emoji ranges
     const emojiRegex = /[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27BF}|\u{2B50}|\u{1F004}|\u{1F0CF}|\u{1F170}-\u{1F251}|\u{1F300}-\u{1F8FF}]/u;
     return emojiRegex.test(text);
+}
+// Functions to handle the event details modal
+function openEventDetailsModal(event) {
+    const modal = document.getElementById('eventDetailsModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    if (!modal) return;
+    
+    // Populate the modal with event details
+    document.getElementById('detail-title').textContent = event.title;
+    
+    // Format and display the date
+    let dateStr = '';
+    const startDate = event.start ? new Date(event.start) : null;
+    const endDate = event.end ? new Date(event.end) : null;
+    
+    if (startDate) {
+        // Format the date nicely
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        if (event.allDay) {
+            dateStr = startDate.toLocaleDateString(undefined, options);
+            if (endDate) {
+                const endStr = endDate.toLocaleDateString(undefined, options);
+                dateStr += ' to ' + endStr;
+            }
+        } else {
+            options.hour = 'numeric';
+            options.minute = 'numeric';
+            dateStr = startDate.toLocaleString(undefined, options);
+            if (endDate) {
+                const endStr = endDate.toLocaleString(undefined, options);
+                dateStr += ' to ' + endStr;
+            }
+        }
+    }
+    
+    document.getElementById('detail-date').textContent = dateStr;
+    
+    // Set event color indicator
+    const colorIndicator = document.getElementById('event-color-indicator');
+    if (colorIndicator) {
+        colorIndicator.style.backgroundColor = event.backgroundColor || '#7A1212';
+    }
+    
+    @if(Auth::user()->role === 'admin')
+    // Set up delete button handler
+    const deleteBtn = document.getElementById('delete-event-btn');
+    if (deleteBtn) {
+        // Remove any existing event listeners
+        const newDeleteBtn = deleteBtn.cloneNode(true);
+        deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+        
+        // Add event listener for deleting the event
+        newDeleteBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this event?')) {
+                event.remove();
+                closeEventDetailsModal();
+            }
+        });
+    }
+    @endif
+    
+    // Show modal with animation
+    modal.classList.remove('hidden');
+    
+    // Trigger animation after a small delay
+    setTimeout(() => {
+        modalContent.classList.remove('modal-hidden');
+        modalContent.classList.add('modal-visible');
+    }, 10);
+}
+
+function closeEventDetailsModal() {
+    const modal = document.getElementById('eventDetailsModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    if (modal) {
+        // Hide with animation
+        modalContent.classList.remove('modal-visible');
+        modalContent.classList.add('modal-hidden');
+        
+        // Completely hide after animation completes
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+}
+// Improved Year Dropdown implementation
+function setupYearDropdown() {
+    // Find the title element and set up a click handler
+    const titleElement = document.querySelector('.fc-toolbar-title');
+    if (!titleElement) return;
+    
+    // Make the title element clickable
+    titleElement.style.cursor = 'pointer';
+    titleElement.setAttribute('title', 'Click to change year');
+    
+    titleElement.addEventListener('click', function() {
+        // Extract the current year
+        const match = this.textContent.match(/\d{4}/);
+        if (!match) return;
+        
+        const currentYear = parseInt(match[0]);
+        showYearSelector(currentYear, this);
+    });
+}
+
+// Improved Year Selector with better spacing
+function showYearSelector(currentYear, titleElement) {
+    // Remove existing year selector
+    const existingSelector = document.getElementById('year-selector');
+    if (existingSelector) {
+        existingSelector.remove();
+        return;
+    }
+    
+    // Create a custom inline year selector
+    const yearSelector = document.createElement('div');
+    yearSelector.id = 'year-selector';
+    yearSelector.className = 'flex items-center bg-white border border-gray-300 rounded-md';
+    yearSelector.style.position = 'absolute';
+    yearSelector.style.zIndex = '100';
+    
+    // Position it over the title
+    const rect = titleElement.getBoundingClientRect();
+    yearSelector.style.top = (rect.top + window.scrollY) + 'px';
+    yearSelector.style.left = (rect.left + window.scrollX + rect.width/2 - 100) + 'px';
+    yearSelector.style.width = '220px'; // Increased width
+    
+    // Add a select dropdown
+    const selectContainer = document.createElement('div');
+    selectContainer.className = 'relative flex-grow';
+    
+    const select = document.createElement('select');
+    select.className = 'block w-full px-3 py-2 text-base font-medium text-gray-900 focus:outline-none';
+    select.style.border = 'none';
+    select.style.backgroundColor = 'transparent';
+    select.style.appearance = 'none';
+    select.style.paddingRight = '1.5rem';
+    
+    // Add years (20 years back, 20 years forward)
+    const startYear = currentYear - 20;
+    const endYear = currentYear + 20;
+    
+    for (let year = startYear; year <= endYear; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        if (year === currentYear) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    }
+    
+    // Add change handler
+    select.addEventListener('change', function() {
+        const selectedYear = parseInt(this.value);
+        const currentDate = calendarObj.getDate();
+        const newDate = new Date(selectedYear, currentDate.getMonth(), 1);
+        calendarObj.gotoDate(newDate);
+        yearSelector.remove();
+    });
+    
+    // Add custom arrow inside the select container
+    const arrow = document.createElement('div');
+    arrow.className = 'pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700';
+    arrow.innerHTML = '<svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>';
+    
+    selectContainer.appendChild(select);
+    selectContainer.appendChild(arrow);
+    
+    // Add a cancel button with more spacing
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 border-l';
+    cancelBtn.innerHTML = '×';
+    cancelBtn.style.fontSize = '1.2rem';
+    cancelBtn.style.fontWeight = 'bold';
+    cancelBtn.style.borderLeft = '1px solid #e2e8f0';
+    cancelBtn.setAttribute('title', 'Close');
+    cancelBtn.addEventListener('click', function() {
+        yearSelector.remove();
+    });
+    
+    // Append everything
+    yearSelector.appendChild(selectContainer);
+    yearSelector.appendChild(cancelBtn);
+    document.body.appendChild(yearSelector);
+    
+    // Auto-focus the select
+    select.focus();
+    
+    // Close when clicking outside
+    document.addEventListener('click', function closeSelector(e) {
+        if (!yearSelector.contains(e.target) && e.target !== titleElement) {
+            yearSelector.remove();
+            document.removeEventListener('click', closeSelector);
+        }
+    });
+}
+// Variables to track callbacks
+let confirmSaveCallback = null;
+// Confirm Save Modal functions
+function showConfirmSaveModal(callback) {
+    const modal = document.getElementById('confirmSaveModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    // Store the callback function
+    confirmSaveCallback = callback;
+    
+    // Show modal with animation
+    modal.classList.remove('hidden');
+    
+    // Trigger animation after a small delay
+    setTimeout(() => {
+        modalContent.classList.remove('modal-hidden');
+        modalContent.classList.add('modal-visible');
+    }, 10);
+}
+
+function closeConfirmSaveModal(confirmed) {
+    const modal = document.getElementById('confirmSaveModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    // Hide with animation
+    modalContent.classList.remove('modal-visible');
+    modalContent.classList.add('modal-hidden');
+    
+    // Completely hide after animation completes
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        
+        // Call the callback if it exists
+        if (confirmed && typeof confirmSaveCallback === 'function') {
+            confirmSaveCallback();
+        }
+        
+        // Reset the callback
+        confirmSaveCallback = null;
+    }, 300);
+}
+let discardChangesCallback = null;
+
+
+
+// Discard Changes Modal functions
+function showDiscardChangesModal(callback) {
+    const modal = document.getElementById('discardChangesModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    // Store the callback function
+    discardChangesCallback = callback;
+    
+    // Show modal with animation
+    modal.classList.remove('hidden');
+    
+    // Trigger animation after a small delay
+    setTimeout(() => {
+        modalContent.classList.remove('modal-hidden');
+        modalContent.classList.add('modal-visible');
+    }, 10);
+}
+
+function closeDiscardModal(confirmed) {
+    const modal = document.getElementById('discardChangesModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    // Hide with animation
+    modalContent.classList.remove('modal-visible');
+    modalContent.classList.add('modal-hidden');
+    
+    // Completely hide after animation completes
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        
+        // Call the callback if it exists
+        if (confirmed && typeof discardChangesCallback === 'function') {
+            discardChangesCallback();
+        }
+        
+        // Reset the callback
+        discardChangesCallback = null;
+    }, 300);
 }
 </script>
 @endpush
