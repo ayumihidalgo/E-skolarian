@@ -1,11 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Loading - E-SKOLARI★N</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-black h-screen flex items-center justify-center">
     <div class="text-center">
         <!-- Dotted Loader -->
         <div class="relative w-24 h-24 mx-auto mb-6">
@@ -29,5 +21,3 @@
             <span class="text-white">N</span>
         </h1>
     </div>
-</body>
-</html>
