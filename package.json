@@ -1,0 +1,27 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "watch": "vite --watch",
+        "preview": "vite preview"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.1.4",
+        "axios": "^1.8.2",
+        "concurrently": "^9.0.1",
+        "laravel-echo": "^2.1.4",
+        "laravel-mix": "^6.0.49",
+        "laravel-vite-plugin": "^1.2.0",
+        "pusher-js": "^8.4.0",
+        "tailwindcss": "^4.1.4",
+        "vite": "^6.2.4"
+    },
+    "dependencies": {
+        "@fullcalendar/core": "^6.1.17",
+        "@fullcalendar/daygrid": "^6.1.17",
+        "@fullcalendar/interaction": "^6.1.17",
+        "@pdftron/webviewer": "^11.4.0"
+    }
+}
