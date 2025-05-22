@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // User Details Modal Elements
     const userDetailsModal = document.getElementById('userDetailsModal');
     const userDetailsRows = document.querySelectorAll('.user-details-row');
+    const userDetailsBackdrop = document.querySelector('.user-details-backdrop');
 
     // Debug log to check if elements are found
     console.log('Modal element found:', userDetailsModal !== null);
@@ -20,7 +21,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 try {
                     // Get user data from the row attribute
                     const userData = JSON.parse(this.getAttribute('data-user'));
+                    if (userData.role === 'student') {
+                    const usernameCell = row.querySelector('.username-cell'); // Add this class to your username table cell
+                    if (usernameCell) {
+                        let displayUsername = userData.username.replace(/\s*\([^)]*\)/, '');
+                        usernameCell.textContent = displayUsername;
+                    }
+                }
                     console.log('User data:', userData);
+
+                    // Remove acronym from username display
+                    let displayUsername = userData.username;
+                    if (userData.role === 'student') {
+                        // Remove the acronym in parentheses
+                        displayUsername = displayUsername.replace(/\s*\([^)]*\)/, '');
+                    }
 
                     // Fill user details in the modal
                     const usernameEl = document.getElementById('userUsername');
@@ -59,8 +74,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     if (userDetailsBackdrop) {
-        userDetailsBackdrop.addEventListener('click', function() {
-            userDetailsModal.classList.add('hidden');
+        userDetailsBackdrop.addEventListener('click', function(e) {
+            // Only close if the backdrop itself was clicked
+            if (e.target === userDetailsBackdrop) {
+                userDetailsModal.classList.add('hidden');
+            }
         });
     }
 

@@ -109,7 +109,7 @@
                 <!-- Profile Picture Cell -->
             <td class="w-[10%] px-6 py-4 pl-15">
                 <div class="flex justify-center">
-                    <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
+                    <div class="w-6 h-6 rounded-full overflow-hidden bg-gray-200">
                         @if ($user->profile_pic)
                             <img src="{{ asset('storage/' . $user->profile_pic) }}" 
                                  alt="Profile" 

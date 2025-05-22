@@ -1,5 +1,6 @@
 <!-- Add User Component -->
 <div class="bg-white rounded-[25px] shadow-xl w-full max-w-lg relative z-50">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Close button -->
     <button id="closeAddUserModalBtn" 
             class="absolute top-7 right-5 text-gray-500 hover:text-[#7A1212] transition-colors duration-200 cursor-pointer">
