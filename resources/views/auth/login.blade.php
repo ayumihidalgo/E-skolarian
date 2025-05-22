@@ -55,17 +55,7 @@
             changeRadiusPanel(role);
             slidePanel(role, true);
 
-
-            // Remove lockout message if present (but DO NOT clear localStorage for other role)
-            const lockoutMsg = document.getElementById('lockout-message');
-            if (lockoutMsg) {
-                const parent = lockoutMsg.closest('div');
-                if (parent) {
-                    parent.classList.add('opacity-0', 'transition-opacity');
-                    setTimeout(() => parent.remove(), 500);
-                }
-                document.querySelectorAll('input, button[type="submit"]').forEach(input => input.disabled = false);
-            }
+            handleLockoutError({!! json_encode($errors->has('lockout_time')) !!}, currentRole);
         }
 
         // Store error state per role
@@ -171,8 +161,6 @@
             }
 
             if (roleInput.value === currentRole) {
-                emailLabel.classList.add('ring-3', '!ring-red-600');
-                passwordLabel.classList.add('ring-3', '!ring-red-600');
                 lockoutMsg.style.display = '';
 
                 if (!isLockoutExpiredMessage) {
@@ -180,8 +168,6 @@
                     passwordInput.disabled = true;
                 }
             } else {
-                emailLabel.classList.remove('ring-3', '!ring-red-600');
-                passwordLabel.classList.remove('ring-3', '!ring-red-600');
                 lockoutMsg.style.display = 'none';
                 emailInput.disabled = false;
                 passwordInput.disabled = false;
@@ -403,7 +389,6 @@
                 }, 3000);
             });
         });
-
     </script>
     @php
         $randomIndex = rand(1, 6);
