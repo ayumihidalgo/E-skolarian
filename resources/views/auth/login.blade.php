@@ -161,6 +161,8 @@
             }
 
             if (roleInput.value === currentRole) {
+                emailLabel.classList.add('ring-3', '!ring-red-600');
+                passwordLabel.classList.add('ring-3', '!ring-red-600');
                 lockoutMsg.style.display = '';
 
                 if (!isLockoutExpiredMessage) {
@@ -168,6 +170,8 @@
                     passwordInput.disabled = true;
                 }
             } else {
+                emailLabel.classList.remove('ring-3', '!ring-red-600');
+                passwordLabel.classList.remove('ring-3', '!ring-red-600');
                 lockoutMsg.style.display = 'none';
                 emailInput.disabled = false;
                 passwordInput.disabled = false;
@@ -688,7 +692,6 @@
         validateInputs();
     });
     </script>
-
     </body>
 </body>
 </html>
