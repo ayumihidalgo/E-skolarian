@@ -59,7 +59,7 @@
         <tr>
             <td colspan="5" class="py-4 px-4 text-center text-gray-500 font-extrabold empty-state-cell">
                 <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No File Found" class="mx-auto mb-10" style="height: 80px;">
-                No records found.
+                No records found at the moment.
             </td>
         </tr>
         @endforelse
