@@ -2,6 +2,12 @@
 
 @extends('base')
 
+<style>
+    body {
+        overflow: hidden;
+    }
+</style>
+
 @section('content')
     @include('components.studentNavBarComponent')
     @include('components.studentSideBarComponent')
