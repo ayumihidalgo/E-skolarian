@@ -1,5 +1,105 @@
 let currentDocumentId = null;
 
+// Function to clear input fields in modals
+function clearModalInputs(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        // Find all input, textarea and select elements in the modal
+        const inputs = modal.querySelectorAll('input:not([type="button"]):not([type="submit"]), textarea, select');
+        
+        // Reset each input field
+        inputs.forEach(input => {
+            if (input.tagName === 'SELECT') {
+                input.selectedIndex = 0; // Reset select to first option
+            } else {
+                input.value = ''; // Clear text inputs and textareas
+            }
+        });
+    }
+}
+
+// Function to manage button loading states
+function setButtonLoading(buttonId, isLoading, modalId = null) {
+    const button = document.getElementById(buttonId);
+    if (!button) return;
+    
+    const originalText = button.getAttribute('data-original-text') || button.innerHTML;
+    
+    if (isLoading) {
+        // Save original text if not already saved
+        if (!button.getAttribute('data-original-text')) {
+            button.setAttribute('data-original-text', button.innerHTML);
+        }
+        
+        // Replace with loading spinner
+        button.innerHTML = `
+            <svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        `;
+        button.disabled = true;
+        
+        // Also disable related close/cancel buttons if a modal ID is provided
+        if (modalId) {
+            disableModalCloseButtons(modalId, true);
+        }
+    } else {
+        // Restore original text
+        button.innerHTML = originalText;
+        button.disabled = false;
+        
+        // Re-enable related close/cancel buttons if a modal ID is provided
+        if (modalId) {
+            disableModalCloseButtons(modalId, false);
+        }
+    }
+}
+
+// Helper function to disable/enable modal close and cancel buttons
+function disableModalCloseButtons(modalId, disable) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    
+    // Map of modals to their close/cancel button IDs
+    const modalButtonMap = {
+        'sendToAdminModal': ['closeSendToAdminModalBtn'],
+        'resubmissionModal': ['closeResubmissionModalBtn'],
+        'rejectConfirmationModal': ['closeRejectConfirmationModalBtn'],
+        'finalRejectConfirmationModal': ['closeFinalRejectModalBtn', 'cancelFinalRejectBtn'],
+        'finalizeConfirmationModal': ['closeFinalizeModalBtn', 'cancelFinalizeBtn']
+    };
+    
+    // Get the button IDs for the current modal
+    const buttonIds = modalButtonMap[modalId] || [];
+    
+    // Disable/enable each close/cancel button
+    buttonIds.forEach(buttonId => {
+        const button = document.getElementById(buttonId);
+        if (button) {
+            button.disabled = disable;
+            if (disable) {
+                button.classList.add('opacity-50', 'cursor-not-allowed');
+                // Store original pointer events style if not already stored
+                if (!button.getAttribute('data-original-pointer-events')) {
+                    button.setAttribute('data-original-pointer-events', 
+                                        window.getComputedStyle(button).pointerEvents);
+                }
+                button.style.pointerEvents = 'none';
+            } else {
+                button.classList.remove('opacity-50', 'cursor-not-allowed');
+                // Restore original pointer events style if stored
+                const originalPointerEvents = button.getAttribute('data-original-pointer-events');
+                if (originalPointerEvents) {
+                    button.style.pointerEvents = originalPointerEvents;
+                } else {
+                    button.style.pointerEvents = '';
+                }
+            }
+        }
+    });
+}
+
 // Function to handle document click
 document.addEventListener('DOMContentLoaded', function() {
     const documentRows = document.querySelectorAll('tbody tr');
@@ -675,16 +775,11 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Close the modal when the close button is clicked
-    closeApprovalModalBtn.addEventListener('click', function () {
-        approvalModal.classList.add('hidden');
-    });
-
-    // Close modal when clicking outside the modal
-    window.addEventListener('click', function (event) {
-        if (event.target === approvalModal) {
-            approvalModal.classList.add('hidden');
-        }
-    });
+    if (closeApprovalModalBtn) {
+        closeApprovalModalBtn.addEventListener('click', function() {
+            document.getElementById('approvalModal').classList.add('hidden');
+        });
+    }
 });
 
 // Send to Another Admin functionality
@@ -737,82 +832,88 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Close the "Send to Another Admin" modal
-    closeSendToAdminModalBtn.addEventListener('click', function () {
-        sendToAdminModal.classList.add('hidden');
-    });
-
-    // Close the modal when clicking outside the modal
-    window.addEventListener('click', function (event) {
-        if (event.target === sendToAdminModal) {
-            sendToAdminModal.classList.add('hidden');
-        }
-    });
+    if (closeSendToAdminModalBtn) {
+        closeSendToAdminModalBtn.addEventListener('click', function() {
+            document.getElementById('sendToAdminModal').classList.add('hidden');
+            clearModalInputs('sendToAdminModal');
+        });
+    }
 
     // Handle the "SEND" button click
-    sendToAdminSubmitBtn.addEventListener('click', function () {
-        const selectedAdmin = document.getElementById('adminSelect').value;
-        const message = document.getElementById('adminMessage').value.trim();
+    if (sendToAdminSubmitBtn) {
+        sendToAdminSubmitBtn.addEventListener('click', function () {
+            const selectedAdmin = document.getElementById('adminSelect').value;
+            const message = document.getElementById('adminMessage').value.trim();
 
-        if (!selectedAdmin) {
-            showDocumentActionToast('forward', 'Please select an admin to send the document to.', false);
-            return;
-        }
+            if (!selectedAdmin) {
+                showDocumentActionToast('forward', 'Please select an admin to send the document to.', false);
+                return;
+            }
 
-        if (!message) {
-            showDocumentActionToast('forward', 'Please enter a message for the admin.', false);
-            return;
-        }
-        
-        if (!currentDocumentId) {
-            showDocumentActionToast('forward', 'Error: Document ID is missing.', false);
-            return;
-        }
+            if (!message) {
+                showDocumentActionToast('forward', 'Please enter a message for the admin.', false);
+                return;
+            }
+            
+            if (!currentDocumentId) {
+                showDocumentActionToast('forward', 'Error: Document ID is missing.', false);
+                return;
+            }
 
-        // Send the data to the server
-        fetch(`/admin/documents/${currentDocumentId}/forward`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                forward_to: selectedAdmin,
-                message: message
+            // Show loading state
+            setButtonLoading('sendToAdminSubmitBtn', true, 'sendToAdminModal');
+
+            // Send the data to the server
+            fetch(`/admin/documents/${currentDocumentId}/forward`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    forward_to: selectedAdmin,
+                    message: message
+                })
             })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => {
-                    throw new Error(data.error || 'Failed to forward document');
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Show success toast
-                showDocumentActionToast('forward');
-                
-                // Close the modal
-                document.getElementById('sendToAdminModal').classList.add('hidden'); 
-                
-                // Return to table view
-                closeDetailsPanel();
-                
-                // Refresh the page
-                setTimeout(() => {
-                    window.location.reload();
-                }, 3000);
-            } else {
-                showDocumentActionToast('forward', data.error || 'Failed to forward the document.', false);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showDocumentActionToast('forward', error.message || 'An error occurred while forwarding the document.', false);
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Failed to forward document');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Show success toast
+                    showDocumentActionToast('forward');
+                    
+                    // Close the modal
+                    document.getElementById('sendToAdminModal').classList.add('hidden'); 
+                    clearModalInputs('sendToAdminModal');
+                    
+                    // Return to table view
+                    closeDetailsPanel();
+                    
+                    // Refresh the page
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
+                } else {
+                    showDocumentActionToast('forward', data.error || 'Failed to forward the document.', false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showDocumentActionToast('forward', error.message || 'An error occurred while forwarding the document.', false);
+            })
+            .finally(() => {
+                // Reset button state
+                setButtonLoading('sendToAdminSubmitBtn', false, 'sendToAdminModal');
+            });
         });
-    });
+    }
 });
 
 // Handle "Finalize Approval" button click - show confirmation modal
@@ -826,13 +927,20 @@ finalizeApprovalBtn.addEventListener('click', function () {
 });
 
 // Handle confirmation modal buttons
-document.getElementById('closeFinalizeModalBtn').addEventListener('click', function() {
-    document.getElementById('finalizeConfirmationModal').classList.add('hidden');
-});
+const closeFinalizeModalBtn = document.getElementById('closeFinalizeModalBtn');
+if (closeFinalizeModalBtn) {
+    closeFinalizeModalBtn.addEventListener('click', function() {
+        document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+    });
+}
 
-document.getElementById('cancelFinalizeBtn').addEventListener('click', function() {
-    document.getElementById('finalizeConfirmationModal').classList.add('hidden');
-});
+// Cancel buttons
+const cancelFinalizeBtn = document.getElementById('cancelFinalizeBtn');
+if (cancelFinalizeBtn) {
+    cancelFinalizeBtn.addEventListener('click', function() {
+        document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+    });
+}
 
 // Finalize approval handler
 const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
@@ -844,6 +952,9 @@ if (confirmFinalizeBtn) {
             return;
         }
         
+        // Show loading state
+        setButtonLoading('confirmFinalizeBtn', true, 'finalizeConfirmationModal');
+
         // Make an AJAX request to approve the document
         fetch(`/admin/documents/${currentDocumentId}/approve`, {
             method: 'POST',
@@ -886,17 +997,13 @@ if (confirmFinalizeBtn) {
         .catch(error => {
             console.error('Error:', error);
             showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
+        })
+        .finally(() => {
+            // Reset button state
+            setButtonLoading('confirmFinalizeBtn', false, 'finalizeConfirmationModal');
         });
     });
 }
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const finalizeConfirmationModal = document.getElementById('finalizeConfirmationModal');
-    if (event.target === finalizeConfirmationModal) {
-        finalizeConfirmationModal.classList.add('hidden');
-    }
-});
 
 // Reject modal functionality
 document.addEventListener('DOMContentLoaded', function () {
@@ -904,51 +1011,27 @@ document.addEventListener('DOMContentLoaded', function () {
     const rejectButton = document.getElementById('rejectButton');
     const rejectModal = document.getElementById('rejectModal');
     const closeRejectModalBtn = document.getElementById('closeRejectModalBtn');
-    const requestResubmissionBtn = document.getElementById('requestResubmissionBtn');
-    const confirmRejectBtn = document.getElementById('confirmRejectBtn');
-    
-    // Resubmission modal elements
-    const resubmissionModal = document.getElementById('resubmissionModal');
-    const closeResubmissionModalBtn = document.getElementById('closeResubmissionModalBtn');
-    const submitResubmissionBtn = document.getElementById('submitResubmissionBtn');
 
     // Open the reject modal when the Reject button is clicked, but check if disabled first
-    document.getElementById('rejectButton').addEventListener('click', function(e) {
-        if (this.disabled) {
-            e.preventDefault();
-            showDocumentActionToast('rejected', 'This document has already been reviewed and cannot be modified.', false);
-            return;
-        }
-        
-        // If not disabled, show the rejection modal
-        rejectModal.classList.remove('hidden');
-    });
+    if (rejectButton) {
+        rejectButton.addEventListener('click', function(e) {
+            if (this.disabled) {
+                e.preventDefault();
+                showDocumentActionToast('rejected', 'This document has already been reviewed and cannot be modified.', false);
+                return;
+            }
+            
+            // If not disabled, show the rejection modal
+            rejectModal.classList.remove('hidden');
+        });
+    }
 
     // Close the reject modal
-    closeRejectModalBtn.addEventListener('click', function () {
-        rejectModal.classList.add('hidden');
-    });
-
-    // Handle Request Resubmission button click
-    requestResubmissionBtn.addEventListener('click', function () {
-        rejectModal.classList.add('hidden'); // Hide reject modal
-        resubmissionModal.classList.remove('hidden'); // Show resubmission modal
-    });
-
-    // Close resubmission modal
-    closeResubmissionModalBtn.addEventListener('click', function () {
-        resubmissionModal.classList.add('hidden');
-    });
-
-    // Close modals when clicking outside
-    window.addEventListener('click', function (event) {
-        if (event.target === rejectModal) {
+    if (closeRejectModalBtn) {
+        closeRejectModalBtn.addEventListener('click', function() {
             rejectModal.classList.add('hidden');
-        }
-        if (event.target === resubmissionModal) {
-            resubmissionModal.classList.add('hidden');
-        }
-    });
+        });
+    }
 });
 
 // Handle Request Resubmission button click
@@ -971,7 +1054,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Close resubmission modal
     if (closeResubmissionModalBtn) {
         closeResubmissionModalBtn.addEventListener('click', function() {
-            resubmissionModal.classList.add('hidden');
+            document.getElementById('resubmissionModal').classList.add('hidden');
+            clearModalInputs('resubmissionModal');
         });
     }
     
@@ -989,6 +1073,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 showDocumentActionToast('resubmit', 'Error: Document ID is missing.', false);
                 return;
             }
+
+            // Show loading state
+            setButtonLoading('submitResubmissionBtn', true, 'resubmissionModal');
             
             // Submit the resubmission request
             fetch(`/admin/documents/${currentDocumentId}/request-resubmission`, {
@@ -1031,16 +1118,13 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error('Error:', error);
                 showDocumentActionToast('resubmit', error.message || 'An error occurred while requesting resubmission.', false);
+            })
+            .finally(() => {
+                // Reset button state
+                setButtonLoading('submitResubmissionBtn', false, 'resubmissionModal');
             });
         });
     }
-    
-    // Close modal when clicking outside
-    window.addEventListener('click', function(event) {
-        if (event.target === resubmissionModal) {
-            resubmissionModal.classList.add('hidden');
-        }
-    });
 });
 
 // Handle "Confirm Reject" button click - show rejection message modal
@@ -1054,9 +1138,13 @@ document.getElementById('confirmRejectBtn').addEventListener('click', function()
 });
 
 // Close reject confirmation modal
-document.getElementById('closeRejectConfirmationModalBtn').addEventListener('click', function() {
-    document.getElementById('rejectConfirmationModal').classList.add('hidden');
-});
+const closeRejectConfirmationModalBtn = document.getElementById('closeRejectConfirmationModalBtn');
+if (closeRejectConfirmationModalBtn) {
+    closeRejectConfirmationModalBtn.addEventListener('click', function() {
+        document.getElementById('rejectConfirmationModal').classList.add('hidden');
+        clearModalInputs('rejectConfirmationModal');
+    });
+}
 
 // Handle "Confirm Final Reject" button click
 document.getElementById('confirmFinalRejectBtn').addEventListener('click', function() {
@@ -1070,30 +1158,30 @@ document.getElementById('confirmFinalRejectBtn').addEventListener('click', funct
     
     // Hide the rejection message modal
     document.getElementById('rejectConfirmationModal').classList.add('hidden');
+
+    // Show loading state
+    setButtonLoading('confirmFinalRejectBtn', true, 'rejectConfirmationModal');
     
     // Show the final confirmation modal
     const finalRejectConfirmationModal = document.getElementById('finalRejectConfirmationModal');
     finalRejectConfirmationModal.classList.remove('hidden');
 });
 
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const rejectConfirmationModal = document.getElementById('rejectConfirmationModal');
-    if (event.target === rejectConfirmationModal) {
-        rejectConfirmationModal.classList.add('hidden');
-    }
-});
-
-
 // Close final reject confirmation modal
-document.getElementById('closeFinalRejectModalBtn').addEventListener('click', function() {
-    document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
-});
+const closeFinalRejectModalBtn = document.getElementById('closeFinalRejectModalBtn');
+if (closeFinalRejectModalBtn) {
+    closeFinalRejectModalBtn.addEventListener('click', function() {
+        document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
+    });
+}
 
 // Cancel final rejection
-document.getElementById('cancelFinalRejectBtn').addEventListener('click', function() {
-    document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
-});
+const cancelFinalRejectBtn = document.getElementById('cancelFinalRejectBtn');
+if (cancelFinalRejectBtn) {
+    cancelFinalRejectBtn.addEventListener('click', function() {
+        document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
+    });
+}
 
 // Finalize rejection
 document.getElementById('finalizeRejectionBtn').addEventListener('click', function() {
@@ -1104,6 +1192,9 @@ document.getElementById('finalizeRejectionBtn').addEventListener('click', functi
         showDocumentActionToast('rejected', 'Please provide a reason for rejection.', false);
         return;
     }
+
+    // Show loading state
+    setButtonLoading('finalizeRejectionBtn', true, 'finalRejectConfirmationModal');
     
     // Submit the rejection
     fetch(`/admin/documents/${currentDocumentId}/reject`, {
@@ -1146,15 +1237,11 @@ document.getElementById('finalizeRejectionBtn').addEventListener('click', functi
     .catch(error => {
         console.error('Error:', error);
         showDocumentActionToast('rejected', error.message || 'An error occurred while rejecting the document.', false);
+    })
+    .finally(() => {
+        // Reset button state
+        setButtonLoading('finalizeRejectionBtn', false, 'finalRejectConfirmationModal');
     });
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const finalRejectConfirmationModal = document.getElementById('finalRejectConfirmationModal');
-    if (event.target === finalRejectConfirmationModal) {
-        finalRejectConfirmationModal.classList.add('hidden');
-    }
 });
 
 

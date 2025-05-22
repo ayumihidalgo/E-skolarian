@@ -415,27 +415,6 @@
     </div>
 
     <!-- Document Preview Modal -->
-    <!-- <div id="documentViewerModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
-        <div class="bg-white w-11/12 h-5/6 rounded-lg flex flex-col">
-            <div class="flex justify-between items-center p-4 border-b">
-                <h3 id="documentTitle" class="font-semibold text-lg truncate">Document Preview</h3>
-                <button onclick="closeDocumentViewer()" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                    </svg>
-                </button>
-            </div>
-            <div class="flex-1 overflow-hidden">
-                
-                <div id="pdfViewer" class="w-full h-full"></div>
-                
-                <div id="imageViewer" class="hidden h-full flex items-center justify-center bg-gray-100">
-                </div>
-            </div>
-        </div>
-    </div> -->
-
-    <!-- Document Preview Modal -->
     <div id="documentViewerModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-11/12 h-5/6 rounded-lg flex flex-col">
             <div class="flex justify-between items-center p-4 border-b">
@@ -536,7 +515,7 @@
                 <div>
                     <div class="relative mt-1">
                         <label for="adminSelect" class="absolute -top-2 left-6 bg-white px-1 text-xs text-black">Send to</label>
-                        <select id="adminSelect" class="mt-1 block w-full border border-black rounded-md py-2 px-3 shadow-sm focus:ring-[#7A1212] focus:border-[#7A1212] text-sm">
+                        <select id="adminSelect" class="mt-1 block w-full border border-black rounded-md py-2 px-3 shadow-sm focus:ring-[#7A1212] focus:border-[#7A1212] text-sm cursor-pointer">
                             <option value="" disabled selected></option>
                             <option value="admin1">Admin 1</option>
                             <option value="admin2">Admin 2</option>
@@ -557,7 +536,7 @@
                 </div>
 
                 <div>
-                    <button id="sendToAdminSubmitBtn" class="w-full bg-[#7A1212] hover:bg-[#5e0b0b] text-white py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50 text-sm font-semibold">
+                    <button id="sendToAdminSubmitBtn" class="w-full bg-[#7A1212] hover:bg-[#5e0b0b] text-white py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50 text-sm font-semibold cursor-pointer">
                         SEND
                     </button>
                 </div>
@@ -570,7 +549,7 @@
         <div class="bg-white w-[30rem] rounded-2xl shadow-xl p-6">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-lg font-semibold text-gray-800">Approval Confirmation</h3>
-                <button id="closeFinalizeModalBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                <button id="closeFinalizeModalBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -661,7 +640,7 @@
                 </div>
 
                 <div>
-                    <button id="submitResubmissionBtn" class="w-full bg-[#7A1212] hover:bg-[#5e0b0b] text-white py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50 text-sm font-semibold uppercase">
+                    <button id="submitResubmissionBtn" class="w-full bg-[#7A1212] hover:bg-[#5e0b0b] text-white py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50 text-sm font-semibold uppercase cursor-pointer">
                         Request
                     </button>
                 </div>
@@ -699,7 +678,7 @@
                 </div>
 
                 <div>
-                    <button id="confirmFinalRejectBtn" class="w-full bg-[#7A1212] hover:bg-[#5e0b0b] text-white py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50 text-sm font-semibold uppercase">
+                    <button id="confirmFinalRejectBtn" class="w-full bg-[#7A1212] hover:bg-[#5e0b0b] text-white py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50 text-sm font-semibold uppercase cursor-pointer">
                         Reject
                     </button>
                 </div>
@@ -712,7 +691,7 @@
         <div class="bg-white w-[30rem] rounded-lg shadow-xl p-6">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-lg font-semibold text-gray-800">Reject Confirmation</h3>
-                <button id="closeFinalRejectModalBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                <button id="closeFinalRejectModalBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
