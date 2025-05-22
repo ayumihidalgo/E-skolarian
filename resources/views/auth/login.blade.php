@@ -465,81 +465,96 @@
                         <p id="lockout-message">Too many login attempts. Please try again in <span id="lockout-timer"></span>.</p>
                     </div>
                     <script>
-                        // Countdown Timer with persistence
                         function formatTime(seconds) {
                             const m = Math.floor(seconds / 60);
                             const s = seconds % 60;
                             return `${m}:${s.toString().padStart(2, '0')}`;
                         }
 
-                        const emailInput = document.getElementById('emailInput');
-                        const passwordInput = document.getElementById('password');
-
-                        const roleInput = document.getElementById('role');
-
-
-                        let lockoutTime = {{ $errors->first('lockout_time') }};
-                        const lockoutMessage = document.getElementById('lockout-message');
-                        const lockoutTimer = document.getElementById('lockout-timer');
-                        const formInputs = Array.from(document.querySelectorAll('input, button[type="submit"]'))
-                            .filter(input => !(input.name === '_token' || input.id === 'role'));
-                        const role = document.getElementById('role')?.value || 'student';
-
-                        // Calculate lockout end timestamp
-                        const now = Math.floor(Date.now() / 1000);
-                        let lockoutEnd = now + lockoutTime;
-
-                        // If already stored, use the later one
-                        const storedEnd = localStorage.getItem('lockoutEnd_' + role);
-                        if (storedEnd && parseInt(storedEnd) > now) {
-                            lockoutEnd = parseInt(storedEnd);
-                            lockoutTime = lockoutEnd - now;
-                        } else {
-                            localStorage.setItem('lockoutEnd_' + role, lockoutEnd);
+                        function removeLockoutMsg(labelId) {
+                            const lockoutMessage = document.getElementById('lockout-message');
+                            const label = document.getElementById(labelId);
+                            if (lockoutMessage && label) {
+                                const parent = lockoutMessage.closest('div');
+                                if (parent) {
+                                    parent.classList.add('opacity-0', 'transition-opacity');
+                                    setTimeout(() => parent.remove(), 500);
+                                }
+                                label.classList.remove('ring-3', '!ring-red-600');
+                            }
                         }
 
-                        // Disable inputs
-                        formInputs.forEach(input => input.disabled = true);
+                        window.onload = function () {
+                            const emailInput = document.getElementById('emailInput');
+                            const passwordInput = document.getElementById('password');
+                            const emailLabel = document.getElementById('emailLabel');
+                            const passwordLabel = document.getElementById('passwordLabel');
+                            const roleInputElem = document.getElementById('role');
+                            const role = roleInputElem?.value || 'student';
+                            const lockoutMessage = document.getElementById('lockout-message');
+                            const lockoutTimer = document.getElementById('lockout-timer');
 
-                        // Display initial time
-                        lockoutTimer.innerText = formatTime(lockoutTime);
+                            const formInputs = Array.from(document.querySelectorAll('input, button[type="submit"]'))
+                                .filter(input => !(input.name === '_token' || input.id === 'role'));
 
-                        const timerInterval = setInterval(() => {
                             const now = Math.floor(Date.now() / 1000);
-                            const remaining = lockoutEnd - now;
-                            if (remaining <= 0) {
-                                clearInterval(timerInterval);
-                                lockoutMessage.innerText = "You can now try logging in again.";
-                                formInputs.forEach(input => input.disabled = false);
-                                localStorage.removeItem('lockoutEnd_' + role);
 
-                               // Remove lockout message and error rings in a modular way
-                                function removeLockoutMsg(role, label) {
-                                    const lockoutMessage = document.getElementById('lockout-message');
-                                    const emailLabel = document.getElementById('emailLabel');
-                                    const passwordLabel = document.getElementById('passwordLabel');
-                                    if (lockoutMessage) {
-                                        const parent = lockoutMessage.closest('div');
-                                        if (parent) {
-                                            parent.classList.add('opacity-0', 'transition-opacity');
-                                            setTimeout(() => parent.remove(), 500);
-                                        }
-                                        label.classList.remove('ring-3', '!ring-red-600');
-                                    }
-                                }
+                            // Try to get stored lockoutEnd for this role
+                            const storedEnd = parseInt(localStorage.getItem('lockoutEnd_' + role)) || 0;
 
-                                emailInput.addEventListener('focus', function () {
-                                    if (roleInput.value === currentRole) removeLockoutMsg(currentRole, emailLabel);
-                                }, { once: true });
+                            // Backend lockout time in seconds, fallback to 0
+                            const backendLockoutTime = parseInt({{ $errors->first('lockout_time') ?? '0' }});
 
-                                passwordInput.addEventListener('focus', function () {
-                                    if (roleInput.value === currentRole) removeLockoutMsg(currentRole, passwordLabel);
-                                }, { once: true });
+                            let lockoutEnd;
+                            let lockoutTime;
+
+                            if (storedEnd > now) {
+                                // Active lockout already exists from storage
+                                lockoutEnd = storedEnd;
+                                lockoutTime = lockoutEnd - now;
+                            } else if (backendLockoutTime > 0) {
+                                // Use backend lockout if no current lockout exists
+                                lockoutEnd = now + backendLockoutTime;
+                                lockoutTime = backendLockoutTime;
+                                localStorage.setItem('lockoutEnd_' + role, lockoutEnd);
                             } else {
-                                lockoutTimer.innerText = formatTime(remaining);
+                                // No active lockout
+                                return;
                             }
-                        }, 1000);
+                            if (lockoutTimer) lockoutTimer.innerText = formatTime(lockoutTime);
+
+                            // If there's a lockout, proceed
+                            formInputs.forEach(input => input.disabled = true);
+                            if (lockoutTimer) lockoutTimer.innerText = formatTime(lockoutTime);
+
+                            const timerInterval = setInterval(() => {
+                                const current = Math.floor(Date.now() / 1000);
+                                const remaining = lockoutEnd - current;
+
+                                if (remaining <= 0) {
+                                    clearInterval(timerInterval);
+                                    if (lockoutMessage) lockoutMessage.innerText = "You can now try logging in again.";
+                                    formInputs.forEach(input => input.disabled = false);
+                                    localStorage.removeItem('lockoutEnd_' + role);
+
+                                    if (emailInput) {
+                                        emailInput.addEventListener('focus', () => {
+                                            if (roleInputElem.value === role) removeLockoutMsg('emailLabel');
+                                        }, { once: true });
+                                    }
+
+                                    if (passwordInput) {
+                                        passwordInput.addEventListener('focus', () => {
+                                            if (roleInputElem.value === role) removeLockoutMsg('passwordLabel');
+                                        }, { once: true });
+                                    }
+                                } else {
+                                    if (lockoutTimer) lockoutTimer.innerText = formatTime(remaining);
+                                }
+                            }, 1000);
+                        };
                     </script>
+
                     @endif
 
                     <!-- Remember Me (Visible only for students) -->
@@ -692,6 +707,7 @@
         validateInputs();
     });
     </script>
+
     </body>
 </body>
 </html>
