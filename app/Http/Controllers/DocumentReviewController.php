@@ -6,6 +6,7 @@ use App\Models\SubmittedDocument;
 use App\Models\Review;
 use App\Models\DocumentForward;
 use App\Models\Document;
+use App\Models\DocumentVersion;
 use App\Notifications\DocumentResubmissionRequested;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -149,6 +150,44 @@ class DocumentReviewController extends Controller
         return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType'));
     }
 
+    // /**
+    //  * Get the details of a specific document
+    //  *
+    //  * @param int $id
+    //  * @return \Illuminate\Http\JsonResponse
+    //  */
+    // public function getDetails($id)
+    // {
+    //     $document = SubmittedDocument::with(['user', 'reviews.reviewer'])
+    //         ->where('received_by', Auth::id())  // Only allow access to documents intended for this user
+    //         ->findOrFail($id);
+            
+    //     // Transform document for the view
+    //     $documentData = [
+    //         'id' => $document->id,
+    //         'subject' => $document->subject,
+    //         'summary' => $document->summary,
+    //         'type' => $document->type,
+    //         'control_tag' => $document->control_tag,
+    //         'status' => $document->status,
+    //         'file_path' => $document->file_path,
+    //         'created_at' => $document->created_at,
+    //         'organization' => $document->user ? $document->user->username : 'Unknown',
+    //         'has_decision' => $document->reviews()->whereIn('status', ['approved', 'rejected', 'resubmission'])->exists(),
+    //         'reviews' => $document->reviews->map(function($review) {
+    //             return [
+    //                 'reviewer_name' => $review->reviewer ? $review->reviewer->username : 'Unknown',
+    //                 'status' => $review->status,
+    //                 'message' => $review->message,
+    //                 'created_at' => $review->created_at,
+    //                 'updated_at' => $review->updated_at
+    //             ];
+    //         })
+    //     ];
+        
+    //     return response()->json($documentData);
+    // }
+
     /**
      * Get the details of a specific document
      *
@@ -157,9 +196,15 @@ class DocumentReviewController extends Controller
      */
     public function getDetails($id)
     {
-        $document = SubmittedDocument::with(['user', 'reviews.reviewer'])
-            ->where('received_by', Auth::id())  // Only allow access to documents intended for this user
-            ->findOrFail($id);
+        $document = SubmittedDocument::with([
+            'user',
+            'reviews.reviewer',
+            'documentVersions' => function($query) {
+                $query->orderBy('version', 'desc');
+            }
+        ])
+        ->where('received_by', Auth::id())  // Only allow access to documents intended for this user
+        ->findOrFail($id);
             
         // Transform document for the view
         $documentData = [
@@ -169,7 +214,6 @@ class DocumentReviewController extends Controller
             'type' => $document->type,
             'control_tag' => $document->control_tag,
             'status' => $document->status,
-            'file_path' => $document->file_path,
             'created_at' => $document->created_at,
             'organization' => $document->user ? $document->user->username : 'Unknown',
             'has_decision' => $document->reviews()->whereIn('status', ['approved', 'rejected', 'resubmission'])->exists(),
@@ -181,11 +225,36 @@ class DocumentReviewController extends Controller
                     'created_at' => $review->created_at,
                     'updated_at' => $review->updated_at
                 ];
-            })
+            }),
+            'attachments' => []
         ];
+
+        // Get document versions and add them as attachments
+        if ($document->documentVersions && $document->documentVersions->count() > 0) {
+            foreach ($document->documentVersions as $version) {
+                $documentData['attachments'][] = [
+                    'id' => $version->id,
+                    'version' => $version->version,
+                    'file_path' => $version->file_path,
+                    'comments' => $version->comments,
+                    'submitted_at' => $version->submitted_at,
+                    'is_latest' => $version->id === $document->documentVersions->first()->id
+                ];
+            }
+            
+            // Set the latest version as the primary file_path
+            $latestVersion = $document->documentVersions->first();
+            $documentData['file_path'] = $latestVersion->file_path;
+            $documentData['version'] = $latestVersion->version;
+            $documentData['submitted_at'] = $latestVersion->submitted_at;
+        } else {
+            // If no versions exist, use the file_path from the document itself (for backward compatibility)
+            $documentData['file_path'] = $document->file_path ?? null;
+        }
         
         return response()->json($documentData);
     }
+    
 
     /**
      * Mark a document as opened/reviewed

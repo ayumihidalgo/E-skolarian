@@ -47,4 +47,12 @@ class SubmittedDocument extends Model
     {
         return $this->hasMany(Review::class, 'document_id');
     }
+    
+    /**
+     * Get the document versions for this document
+     */
+    public function documentVersions()
+    {
+        return $this->hasMany(DocumentVersion::class, 'document_id');
+    }
 }
