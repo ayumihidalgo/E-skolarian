@@ -302,16 +302,23 @@
                         </div>
 
                         <!-- Attachment -->
-                        <div>
+                        <!-- <div>
                             <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Attachment</h2>
                             <div class="space-y-2 md:space-y-4">
-                                <!-- Document preview button -->
                                 <button id="documentAttachment" class="bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-300 text-sm md:text-base max-w-full">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                     </svg>
                                     <span id="documentFileName" class="break-words truncate">File attachment</span>
                                 </button>
+                            </div>
+                        </div> -->
+
+                        <div>
+                            <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Attachment</h2>
+                            <div class="space-y-2 md:space-y-4">
+                                <!-- Document previews will be inserted here -->
+                                <div id="attachmentSection" class="space-y-2"></div>
                             </div>
                         </div>
 
@@ -422,11 +429,11 @@
                 <div class="flex items-center space-x-4">
                     <!-- Tabs for Preview and Download -->
                     <div class="flex items-center bg-gray-100 rounded-lg p-1">
-                        <button id="previewTab" class="py-1 px-4 rounded-lg bg-blue-500 text-white">Preview</button>
-                        <button id="downloadTab" class="py-1 px-4 rounded-lg text-gray-700">Download</button>
+                        <button id="previewTab" class="py-1 px-4 rounded-lg bg-blue-500 text-white cursor-pointer">Preview</button>
+                        <button id="downloadTab" class="py-1 px-4 rounded-lg text-gray-700 cursor-pointer">Download</button>
                     </div>
                     <!-- Close Button -->
-                    <button onclick="closeDocumentViewer()" class="text-gray-500 hover:text-gray-700">
+                    <button onclick="closeDocumentViewer()" class="text-gray-500 hover:text-gray-700 cursor-pointer">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                         </svg>

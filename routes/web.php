@@ -190,39 +190,56 @@ Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->n
         // Document Viewing (Shared)
         // ----------------------------------------
         Route::get('/documents/{filename}', function ($filename) {
-            // Set headers for WebAssembly threads support
+            // Set headers for WebAssembly threads support and PDF viewing
             header("Cross-Origin-Embedder-Policy: require-corp");
             header("Cross-Origin-Opener-Policy: same-origin");
             
-            // Look in the storage/app/public/documents folder
-            $path = storage_path('app/public/documents/' . $filename);
+            // Look in different possible storage locations
+            $paths = [
+                storage_path('app/public/documents/' . $filename),
+                public_path('storage/documents/' . $filename),
+            ];
             
-            if (!file_exists($path)) {
-                // Try public path as fallback
-                $path = public_path('storage/documents/' . $filename);
-                
-                if (!file_exists($path)) {
-                    return response()->json(['error' => 'File not found'], 404);
+            // Find the file in one of the possible locations
+            $filePath = null;
+            foreach ($paths as $path) {
+                if (file_exists($path)) {
+                    $filePath = $path;
+                    break;
                 }
             }
             
-            // For PDF files, set appropriate headers
-            if (strtolower(pathinfo($filename, PATHINFO_EXTENSION)) === 'pdf') {
-                // Return the file with headers that encourage browsers to display it
-                return response()->file($path, [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                    'X-Content-Type-Options' => 'nosniff',
-                    'Accept-Ranges' => 'bytes',
-                    'Pragma' => 'public',
-                    'Cache-Control' => 'public, max-age=86400',
-                    'Cross-Origin-Embedder-Policy' => 'require-corp',
-                    'Cross-Origin-Opener-Policy' => 'same-origin'
-                ]);
+            // Return 404 if file not found
+            if (!$filePath) {
+                return response()->json(['error' => 'File not found'], 404);
             }
             
-            // For other files
-            return response()->file($path);
+            // Set appropriate headers to ensure in-browser display
+            $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+            $contentType = 'application/octet-stream';
+            
+            // Set content type based on file extension
+            if ($extension === 'pdf') {
+                $contentType = 'application/pdf';
+            } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+                $contentType = 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension);
+            } elseif ($extension === 'docx') {
+                $contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            } elseif ($extension === 'doc') {
+                $contentType = 'application/msword';
+            }
+            
+            // Return the file with headers that encourage browsers to display it
+            return response()->file($filePath, [
+                'Content-Type' => $contentType,
+                'Content-Disposition' => 'inline; filename="' . $filename . '"', // 'inline' is key here
+                'X-Content-Type-Options' => 'nosniff',
+                'Accept-Ranges' => 'bytes',
+                'Pragma' => 'public',
+                'Cache-Control' => 'public, max-age=86400',
+                'Cross-Origin-Embedder-Policy' => 'require-corp',
+                'Cross-Origin-Opener-Policy' => 'same-origin'
+            ]);
         })->name('document.view')->middleware('auth');
 
         // Debugger

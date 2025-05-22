@@ -193,6 +193,182 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Viewing Document Details
+// function updateDocumentDetailsView(docData) {
+//     console.log("Document data:", docData);
+    
+//     // Format date
+//     const formattedDate = new Date(docData.created_at).toLocaleDateString('en-US', {
+//         month: 'long', 
+//         day: 'numeric', 
+//         year: 'numeric'
+//     });
+    
+//     // Organization name to acronym mapping
+//     const orgMap = {
+//         'Association of Competent and Aspiring Psychologists': 'ACAP',
+//         'Association of Electronics and Communications Engineering Students': 'AECES',
+//         'Eligible League of Information Technology Enthusiasts': 'ELITE',
+//         'Guild of Imporous and Valuable Educators': 'GIVE',
+//         'Junior Executive of Human Resource Association': 'JEHRA',
+//         'Junior Marketing Association of the Philippines': 'JMAP',
+//         'Junior Philippine Institute of Accountants': 'JPIA',
+//         'Philippine Institute of Industrial Engineers': 'PIIE',
+//         'Artist Guild Dance Squad': 'AGDS',
+//         'PUP SRC Chorale': 'Chorale',
+//         'Supreme Innovators\' Guild for Mathematics Advancements': 'SIGMA',
+//         'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism': 'TAPNOTCH',
+//         'Office of the Student Council': 'OSC'
+//     };
+    
+//     // Get organization acronym if available, otherwise use full name
+//     function getOrgAcronym(fullName) {
+//         return orgMap[fullName] || fullName;
+//     }
+    
+//     try {
+//         // Update document information using direct IDs
+//         document.getElementById('documentDate').textContent = formattedDate;
+//         document.getElementById('documentOrg').innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
+//         document.getElementById('documentTitle').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject || docData.title}`;
+//         document.getElementById('documentType').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
+//         document.getElementById('documentTag').textContent = docData.control_tag || docData.tag;
+
+//         // Update summary
+//         document.getElementById('documentSummary').textContent = docData.summary || 'No summary available';
+            
+//         // Update attachment (if available)
+//         const attachmentButton = document.getElementById('documentAttachment');
+//         const attachmentSpan = document.getElementById('documentFileName');
+        
+//         if (attachmentButton && attachmentSpan && docData.file_path) {
+//             const fileName = docData.file_path.split('/').pop();
+//             attachmentSpan.textContent = fileName;
+                
+//             // Set up the click handler for the attachment
+//             attachmentButton.onclick = function() {
+//                 openDocumentViewer(docData.file_path, 'application/pdf');
+//             };
+//         }
+            
+//         // Update organization info in right panel
+//         document.getElementById('orgName').textContent = getOrgAcronym(docData.organization) || 'Organization Name';
+            
+//         // Set organization initial
+//         const orgInitial = document.getElementById('orgInitial');
+//         if (orgInitial && docData.organization) {
+//             // If we have an acronym, use its first letter, otherwise use the first letter of the full name
+//             const acronym = getOrgAcronym(docData.organization);
+//             orgInitial.textContent = acronym.charAt(0).toUpperCase();
+//         }
+
+//         // Update status history with timeline style similar to the image
+//         const statusHistory = document.getElementById('statusHistory');
+//         const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+//         const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+        
+//         if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
+//             // Group reviews by reviewer
+//             const grouped = {};
+//             docData.reviews.forEach(r => {
+//                 if (!grouped[r.reviewer_name]) grouped[r.reviewer_name] = [];
+//                 grouped[r.reviewer_name].push(r);
+//             });
+
+//             // Flatten into timeline steps: always start with "Under Review", then show other statuses in order
+//             let timelineSteps = [];
+//             Object.entries(grouped).forEach(([reviewer, reviews]) => {
+//                 // Sort reviews by created_at ascending
+//                 reviews.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+//                 // Always add "Under Review" as the first step (created_at)
+//                 timelineSteps.push({
+//                     reviewer_name: reviewer,
+//                     status: "Under Review",
+//                     time: reviews[0].created_at
+//                 });
+//                 // Add all other statuses for this reviewer except "Under Review"
+//                 reviews.forEach(r => {
+//                     if (r.status && r.status.toLowerCase() !== "under review") {
+//                         timelineSteps.push({
+//                             reviewer_name: reviewer,
+//                             status: r.status,
+//                             time: r.updated_at // Use updated_at for these statuses
+//                         });
+//                     }
+//                 });
+//             });
+
+//             // Sort the timeline steps by time ascending
+//             timelineSteps.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+//             // Build timeline HTML
+//             let timelineHTML = `<div class="relative pl-5">`;
+//             timelineSteps.forEach((step, idx) => {
+//                 // Determine colors
+//                 let dot = "bg-gray-300";
+//                 let statusColor = "text-white";
+//                 if (/approved/i.test(step.status)) {
+//                     dot = "bg-green-500";
+//                     statusColor = "text-green-400 font-semibold";
+//                 } else if (/rejected/i.test(step.status)) {
+//                     dot = "bg-red-500";
+//                     statusColor = "text-red-400 font-semibold";
+//                 } else if (/resubmission/i.test(step.status)) {
+//                     dot = "bg-yellow-400";
+//                     statusColor = "text-yellow-300 font-semibold";
+//                 } else if (/sent/i.test(step.status)) {
+//                     dot = "bg-blue-400";
+//                     statusColor = "text-blue-300 font-semibold";
+//                 }
+
+//                 // Format date and status
+//                 let displayStatus = step.status;
+//                 let displayTime = new Date(step.time).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+
+//                 // Timeline bullet and line
+//                 timelineHTML += `
+//                     <div class="flex items-start relative">
+//                         ${idx < timelineSteps.length - 1
+//                             ? `<span class="absolute left-1 top-4 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>`
+//                             : ''}
+//                         <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-1.5 mr-3"></span>
+//                         <div>
+//                             <span class="font-bold">${step.reviewer_name || 'Unknown'}</span>
+//                             <div class="ml-0">
+//                                 <span class="${statusColor}">${displayStatus}</span>
+//                                 <span class="ml-1 text-white/80">${displayTime}</span>
+//                             </div>
+//                         </div>
+//                     </div>
+//                 `;
+//             });
+//             timelineHTML += '</div>';
+
+//             if (timelineSteps.length === 0) {
+//                 timelineHTML = '<p class="text-gray-300">No status updates available</p>';
+//             }
+
+//             statusHistory.innerHTML = timelineHTML;
+
+//             // Show or hide action buttons and processed indicator based on document status
+//             const finalDecisionExists = timelineSteps.some(step =>
+//                 step.status && (
+//                     step.status.toLowerCase() === 'approved' ||
+//                     step.status.toLowerCase() === 'rejected'
+//                 )
+//             );
+//             if (docData.has_decision || finalDecisionExists) {
+//                 if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
+//                 if (processedStatusIndicator) processedStatusIndicator.classList.remove('hidden');
+//             } else {
+//                 if (actionButtonsContainer) actionButtonsContainer.classList.remove('hidden');
+//                 if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
+//             }
+//         }
+//     } catch (error) {
+//         console.error('Error updating document details:', error);
+//     }
+// }
+
 function updateDocumentDetailsView(docData) {
     console.log("Document data:", docData);
     
@@ -239,15 +415,138 @@ function updateDocumentDetailsView(docData) {
         // Update attachment (if available)
         const attachmentButton = document.getElementById('documentAttachment');
         const attachmentSpan = document.getElementById('documentFileName');
-        
-        if (attachmentButton && attachmentSpan && docData.file_path) {
-            const fileName = docData.file_path.split('/').pop();
-            attachmentSpan.textContent = fileName;
+        const attachmentSection = document.getElementById('attachmentSection');
+
+        if (attachmentSection) {
+            // Clear previous attachments
+            attachmentSection.innerHTML = '';
+            
+            // If we have multiple attachments/versions, display them all
+            if (docData.attachments && docData.attachments.length > 0) {
+                // Add all versions with the latest version marked
+                const versions = docData.attachments;
+                versions.forEach((version, index) => {
+                    const fileName = version.file_path.split('/').pop();
+                    const isLatest = version.is_latest;
+                    
+                    // Create attachment button
+                    const attachmentItem = document.createElement('div');
+                    attachmentItem.className = 'mb-2';
+                    
+                    const button = document.createElement('button');
+                    button.className = 'bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-300 text-sm md:text-base max-w-full';
+                    
+                    button.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                        </svg>
+                        <span class="break-words truncate">${fileName} (v${version.version})</span>
+                        ${isLatest ? '<span class="bg-green-500 text-white text-xs px-2 py-0.5 rounded ml-2">Latest</span>' : ''}
+                    `;
+                    
+                    // Set up click handler for viewing the document
+                    button.onclick = function() {
+                        openDocumentViewer(version.file_path, 'application/pdf');
+                    };
+                    
+                    attachmentItem.appendChild(button);
+                    attachmentSection.appendChild(attachmentItem);
+                });
+            } else if (docData.file_path) {
+                // For backward compatibility - just one attachment
+                const fileName = docData.file_path.split('/').pop();
                 
-            // Set up the click handler for the attachment
-            attachmentButton.onclick = function() {
-                openDocumentViewer(docData.file_path, 'application/pdf');
-            };
+                // Create attachment button
+                const button = document.createElement('button');
+                button.id = 'documentAttachment';
+                button.className = 'bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-300 text-sm md:text-base max-w-full';
+                
+                button.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span id="documentFileName" class="break-words truncate">${fileName}</span>
+                `;
+                
+                // Set up click handler for viewing the document
+                button.onclick = function() {
+                    openDocumentViewer(docData.file_path, 'application/pdf');
+                };
+                
+                attachmentSection.appendChild(button);
+            } else {
+                // No attachments
+                attachmentSection.innerHTML = '<p class="text-gray-500">No attachments available</p>';
+            }
+        }
+        
+        // If we have multiple versions, show them in a dropdown or list
+        const versionsContainer = document.getElementById('documentVersions');
+        if (versionsContainer && docData.versions && docData.versions.length > 0) {
+            // Clear previous versions
+            versionsContainer.innerHTML = '';
+            
+            // Show the versions container
+            versionsContainer.classList.remove('hidden');
+            
+            // Add heading
+            const heading = document.createElement('h2');
+            heading.className = 'text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2';
+            heading.textContent = 'Document Versions';
+            versionsContainer.appendChild(heading);
+            
+            // Create version list
+            const versionList = document.createElement('div');
+            versionList.className = 'bg-[#EFEFEF] text-gray-800 rounded-lg p-3 md:p-4 max-h-[200px] overflow-y-auto';
+            
+            // Add versions
+            docData.versions.forEach(version => {
+                const versionDate = new Date(version.submitted_at).toLocaleString();
+                
+                const versionItem = document.createElement('div');
+                versionItem.className = 'flex justify-between items-center p-2 border-b border-gray-300 last:border-0';
+                
+                // Version info
+                const versionInfo = document.createElement('div');
+                versionInfo.className = 'flex-1';
+                
+                const versionNumber = document.createElement('span');
+                versionNumber.className = 'font-bold';
+                versionNumber.textContent = `Version ${version.version}`;
+                if (version.is_latest) {
+                    versionNumber.innerHTML += ' <span class="bg-green-500 text-white text-xs px-2 py-0.5 rounded ml-2">Latest</span>';
+                }
+                
+                const versionTime = document.createElement('div');
+                versionTime.className = 'text-sm text-gray-600';
+                versionTime.textContent = versionDate;
+                
+                const versionComments = document.createElement('div');
+                versionComments.className = 'text-sm mt-1';
+                versionComments.textContent = version.comments || 'No comments provided';
+                
+                versionInfo.appendChild(versionNumber);
+                versionInfo.appendChild(versionTime);
+                versionInfo.appendChild(versionComments);
+                
+                // View button
+                const viewButton = document.createElement('button');
+                viewButton.className = 'bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm';
+                viewButton.textContent = 'View';
+                viewButton.onclick = function() {
+                    openDocumentViewer(version.file_path, 'application/pdf');
+                };
+                
+                versionItem.appendChild(versionInfo);
+                versionItem.appendChild(viewButton);
+                
+                versionList.appendChild(versionItem);
+            });
+            
+            versionsContainer.appendChild(versionList);
+        } else if (versionsContainer) {
+            // Hide the versions container if there are no versions
+            versionsContainer.classList.add('hidden');
         }
             
         // Update organization info in right panel
