@@ -171,7 +171,7 @@
                         </label>
 
                         <!-- Hidden File Input -->
-                        <input type="file" id="fileUpload" name="file_upload" class="hidden" onchange="validateFile(this)">
+                        <input type="file" id="fileUpload" name="file_upload[]" class="hidden" onchange="validateFile(this)" multiple>
 
                         <!-- Filename Display (Right side) -->
                         <div id="fileName" class="flex-1 px-3 py-2 text-sm text-gray-500 truncate">No File Chosen</div>
@@ -411,38 +411,61 @@
 
     // File Upload Validation
     function validateFile(input) {
-        const file = input.files[0];
+        const files = input.files;
         const fileNameDisplay = document.getElementById('fileName');
 
-        if (!file) {
+        if (!files.length) {
             fileNameDisplay.textContent = "No File Chosen";
             return;
         }
 
-        const validTypes = ['application/pdf', //PDF
+        const validTypes = [
+            'application/pdf', //PDF
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
             'application/msword' // DOC
         ];
 
         const maxSize = 5 * 1024 * 1024;
+        const maxFiles = 30;
 
-        if (!validTypes.includes(file.type)) {
+        if (files.length > maxFiles) {
             hideAllToasts();
-            showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
+            showToast('error', `You can only upload up to ${maxFiles} files.`);
             input.value = "";
             fileNameDisplay.textContent = "No File Chosen";
             return;
         }
 
-        if (file.size > maxSize) {
-            hideAllToasts();
-            showToast('error', "File size must not exceed 5 mb.");
-            input.value = "";
-            fileNameDisplay.textContent = "No File Chosen";
-            return;
+        let errorShown = false;
+        let fileNames = [];
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            if (!validTypes.includes(file.type)) {
+                hideAllToasts();
+                showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
+                input.value = "";
+                fileNameDisplay.textContent = "No File Chosen";
+                errorShown = true;
+                break;
+            }
+
+            if (file.size > maxSize) {
+                hideAllToasts();
+                showToast('error', "File size must not exceed 5 mb.");
+                input.value = "";
+                fileNameDisplay.textContent = "No File Chosen";
+                errorShown = true;
+                break;
+            }
+
+            fileNames.push(file.name);
         }
 
-        fileNameDisplay.textContent = file.name;
+        if (!errorShown) {
+            fileNameDisplay.textContent = fileNames.join(', ');
+        }
     }
 
     // Dynamic Toast Message

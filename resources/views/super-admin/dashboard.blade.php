@@ -36,11 +36,15 @@
     <!-- Table Header and Container -->
     <div class="overflow-hidden rounded-[25px] shadow bg-[#D9D9D9]"  style="width: 100%; height: 400px; flex-shrink:0;">
         <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
-                    <thead>
+            <thead>
                 <tr>
-                    <th class="px-6 py-3 text-left pl-40 font-['Manrope'] text-[17px] font-bold">
+                    <!-- New Profile Picture Column -->
+                    <th class="w-[10%] px-6 py-3">
+                        <!-- Empty header for profile picture -->
+                    </th>
+                    <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center">
-                            <span>Username</span>
+                            <span class="whitespace-nowrap">Username</span>
                             <div class="flex flex-col ml-2">
                             <a href="{{ request()->fullUrlWithQuery(['sort' => 'username', 'direction' => 'asc']) }}"
                             class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'username' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
@@ -57,9 +61,9 @@
                             </div>
                         </div>
                     </th>
-                    <th class="px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[20%] px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center justify-center">
-                            <span>Role</span>
+                            <span class="whitespace-nowrap">Role</span>
                             <div class="flex flex-col ml-2">
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'role_name', 'direction' => 'asc']) }}"
                                 class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'role_name' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
@@ -76,9 +80,9 @@
                             </div>
                         </div>
                     </th>
-                    <th class="px-6 py-3 text-right pr-40 font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[40%] px-6 py-3 text-right pr-40 font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center justify-end">
-                            <span>Creation Date</span>
+                            <span class="whitespace-nowrap">Creation Date</span>
                             <div class="flex flex-col ml-2">
                             <a href="{{ request()->fullUrlWithQuery(['sort' => 'created_at', 'direction' => 'asc']) }}"
                                 class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'created_at' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
@@ -101,22 +105,40 @@
             <tbody class="divide-y divide-[#7A1212]/70">
                 @forelse ($users as $user)
                 <tr class="border-y-[0.1px] border-[#7A1212] bg-[#d9c698] hover:bg-[#DAA520] transition duration-300 cursor-pointer user-details-row"
-                    data-user="{{ $user->toJson() }}">
-                    <td class="px-6 py-4 text-left pl-40 text-[Lexend] text-[17px] text-black text-semibold">
-                        {{ $user->username }}
-                    </td>
+                data-user="{{ $user->toJson() }}">
+                <!-- Profile Picture Cell -->
+            <td class="w-[10%] px-6 py-4 pl-15">
+                <div class="flex justify-center">
+                    <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
+                        @if ($user->profile_pic)
+                            <img src="{{ asset('storage/' . $user->profile_pic) }}" 
+                                 alt="Profile" 
+                                 class="w-full h-full object-cover">
+                        @else
+                            <img src="{{ asset('images/dprofile.svg') }}" 
+                                 alt="Default Profile"
+                                 class="w-full h-full object-cover">
+                        @endif
+                    </div>
+                </div>
+            </td>
+            
+            <!-- Username Cell -->
+            <td class="w-[30%] px-6 py-4 text-left pl-4">
+                <div class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[17px] text-black text-semibold">
+                    {{ $user->username }}
+                </div>
+            </td>
+                </td>
                     <td class="px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
                         {{ $user->role_name }}
                     </td>
                     <td class="px-6 py-4 text-right pr-40 text-[Lexend] text-[17px] text-black text-semibold">
-                        {{ $user->created_at->format('M-d-Y') }}
+                        {{ $user->created_at->format('F j, Y') }}
                     </td>
 
                 </tr>
                 @empty
-                <tr class="h-[68px] border-t-[0.3px] border-[#7A1212] bg-[#DAA52080]">
-                    <td colspan="3" class="px-6 py-4 text-center font-['Manrope'] text-[17px] text-[#625B5BB2]">No users found</td>
-                </tr>
                 @endforelse
             </tbody>
         </table>

@@ -102,6 +102,7 @@ class SettingsController extends Controller
         }
 
         $user->password = Hash::make($request->new_password);
+        $user->password_changed_at = now();
         $user->save();
 
         return response()->json(['message' => 'Password changed successfully.']);

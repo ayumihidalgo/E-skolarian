@@ -36,6 +36,11 @@ class LoginController extends Controller
         // Check if the user has exceeded the allowed number of login attempts
         if ($this->hasTooManyLoginAttempts($request)) {
             $seconds = $this->secondsRemainingForLockout($request);
+
+            if ($seconds != 300) {
+                $seconds = $this->decayMinutes * 60;
+            }
+
             return back()->withErrors([
                 'lockout_time' => $seconds,
             ]);

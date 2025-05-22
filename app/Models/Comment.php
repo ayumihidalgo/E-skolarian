@@ -2,11 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Comment extends Model
 {
-    protected $fillable = ['document_id', 'sent_by', 'received_by', 'comment'];
+    protected $fillable = [
+        'document_id',
+        'sent_by',
+        'received_by',
+        'attachment_path',
+        'attachment_type',
+        'attachment_name'
+    ];
     
     // Relationship with the document
     public function document()
