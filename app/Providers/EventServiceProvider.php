@@ -16,6 +16,9 @@ protected $listen = [
         \App\Listeners\SendDocumentStatusNotification::class,
         \Illuminate\Log\Events\MessageLogged::class,
     ],
+     \App\Events\NewChatMessage::class => [
+        \App\Listeners\SendChatNotification::class,
+    ],
     
 ];
     

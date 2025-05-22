@@ -61,12 +61,12 @@
                     @endif
                 </button>
             </div>
-            {{-- <div class="hover:bg-gray-100 rounded cursor-pointer transition-colors duration-300" id="collapseArrow">
-                <svg id="arrowIcon hidden" width="20" height="20" viewBox="0 0 20 20" fill="none"
+            <div class="hover:bg-gray-100 rounded cursor-pointer transition-colors duration-300" id="collapseArrow">
+                <svg id="arrowIcon" width="20" height="20" viewBox="0 0 20 20" fill="none"
                     xmlns="http://www.w3.org/2000/svg" class="transform transition-transform duration-300">
                     <path d="M10.0001 10.879L13.7126 7.1665L14.7731 8.227L10.0001 13L5.22705 8.227L6.28755 7.1665L10.0001 10.879Z" fill="#525866"/>
                 </svg>
-            </div> --}}
+            </div>
         </div>
 
         <!-- Notification Content -->
@@ -115,15 +115,14 @@
             </a>
             
             <!-- Unread Notifications Tab Content -->
-            <div id="unreadNotifications" class="hidden">
-                @if($unreadNotifications->isEmpty())
-                 
-                    <div class="flex flex-col items-center justify-center h-full text-center text-gray-500 w-full min-h-[30rem]">
-                        <svg class="w-16 h-16 text-gray-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                        </svg>
-                        <p class="text-sm sm:text-base">You have no unread notifications.</p>
-                    </div>
+           <div id="unreadNotifications" class="hidden">
+    @if($unreadNotifications->isEmpty())
+        <div class="flex flex-col items-center justify-center min-h-[24rem] sm:min-h-[32rem] text-center text-gray-500">
+            <svg class="w-16 h-16 text-gray-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <p class="text-sm sm:text-base">You have no unread notifications.</p>
+        </div>
                 @else
                     @foreach($unreadNotifications as $notification)
                     @php
@@ -303,8 +302,11 @@
 
         // Handle mark as read functionality
         document.querySelectorAll('.mark-as-read-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-            
+            checkbox.addEventListener('click', function(event) {
+                // Prevent the checkbox click from triggering the link navigation
+                event.stopPropagation();
+                event.preventDefault();
+
                 // If checked, show modal for confirmation
                 if (this.checked) {
                     pendingCheckbox = this;
@@ -398,18 +400,116 @@
             }
         });
 
-        // Add click event to notification links to mark as read
-        document.querySelectorAll('[data-notification-id]').forEach(link => {
-            link.addEventListener('click', function(e) {
-                const notificationId = this.getAttribute('data-notification-id');
-                fetch(`/notifications/${notificationId}/mark-as-read`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        // Handle "mark as read" on click for unread notifications in the "Unread" tab
+        document.querySelectorAll('#unreadNotifications a').forEach(link => {
+            link.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const notificationElement = link.querySelector('[data-notification-id]');
+                if (!notificationElement) return;
+                const notificationId = notificationElement.dataset.notificationId;
+                
+                try {
+                    const response = await fetch(`/notifications/${notificationId}/mark-as-read`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+                    if (response.ok) {
+                        // Remove the unread notification from the unread view
+                        notificationElement.closest('.p-4').remove();
+                        
+                        // Update unread badge in the Unread tab
+                        const unreadBadge = document.querySelector('#unreadTab span');
+                        if (unreadBadge) {
+                            let count = parseInt(unreadBadge.textContent);
+                            count = count > 1 ? count - 1 : 0;
+                            if (count === 0) {
+                                unreadBadge.remove();
+                            } else {
+                                unreadBadge.textContent = count;
+                            }
+                        }
+                        
+                        // Update the notification button badge
+                        const btnBadge = document.querySelector('#notificationBtn span');
+                        if (btnBadge) {
+                            let count = parseInt(btnBadge.textContent);
+                            count = count > 1 ? count - 1 : 0;
+                            if (count === 0) {
+                                btnBadge.remove();
+                            } else {
+                                btnBadge.textContent = count;
+                            }
+                        }
+                    } else {
+                        alert('Failed to mark notification as read. Please try again.');
                     }
-                });
-                // Let the link continue to its href
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                }
+                
+                // Navigate to the notification link after processing
+                window.location.href = link.href;
+            });
+        });
+
+        // Handle "mark as read" on click for notifications in the "All" tab
+        document.querySelectorAll('#allNotifications a').forEach(link => {
+            link.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const notificationElement = link.querySelector('[data-notification-id]');
+                if (!notificationElement) return;
+                const notificationId = notificationElement.dataset.notificationId;
+
+                try {
+                    const response = await fetch(`/notifications/${notificationId}/mark-as-read`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+                    if (response.ok) {
+                        // Update unread badge in the Unread tab
+                        const unreadBadge = document.querySelector('#unreadTab span');
+                        if (unreadBadge) {
+                            let count = parseInt(unreadBadge.textContent);
+                            count = count > 1 ? count - 1 : 0;
+                            if (count === 0) {
+                                unreadBadge.remove();
+                            } else {
+                                unreadBadge.textContent = count;
+                            }
+                        }
+
+                        // Update the notification button badge
+                        const btnBadge = document.querySelector('#notificationBtn span');
+                        if (btnBadge) {
+                            let count = parseInt(btnBadge.textContent);
+                            count = count > 1 ? count - 1 : 0;
+                            if (count === 0) {
+                                btnBadge.remove();
+                            } else {
+                                btnBadge.textContent = count;
+                            }
+                        }
+
+                        // Update the checkbox state in the All tab
+                        const checkbox = notificationElement.querySelector('.mark-as-read-checkbox');
+                        if (checkbox) {
+                            checkbox.checked = true;
+                        }
+                    } else {
+                        alert('Failed to mark notification as read. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
+                }
+
+                // Navigate to the notification link after processing
+                window.location.href = link.href;
             });
         });
 
