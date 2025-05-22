@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Role;
 use App\Events\DocumentSubmitted;
+use App\Models\DocumentVersion;
 
 class DocumentController extends Controller
 {
@@ -42,29 +43,44 @@ class DocumentController extends Controller
                 'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:type,Event Proposal',
                 'event-title' => 'nullable|string|max:50|required_if:type,Event Proposal',
                 'event-desc' => 'nullable|string|max:255|required_if:type,Event Proposal',
-                'file_upload' => 'required|file|mimes:pdf,doc,docx|max:5120',
+                'file_upload' => 'required|array|max:30',
+                'file_upload.*' => 'file|mimes:pdf,doc,docx|max:5120',
+                'comments' => 'nullable|string|max:500',
             ]);
 
             $validated['user_id'] = Auth::id();
 
-            // Check for file and store it safely if available
-            if ($request->hasFile('file_upload')) {
-                try {
-                    $file = $request->file('file_upload');
-                    $validated['file_path'] = $file->store('documents', 'public');
-                } catch (\Exception $e) {
-                    return back()->withErrors(['file_upload' => 'Failed to upload file. Please try again.']);
-                }
-            }
-
             // Save first to get the auto-increment ID
-            $document = Document::create($validated);
+            $document = Document::create([
+                'user_id' => $validated['user_id'],
+                'received_by' => $validated['received_by'],
+                'subject' => $validated['subject'],
+                'summary' => $validated['summary'],
+                'type' => $validated['type'],
+            ]);
 
             // Format: DOC-0001 ("DOC" IS USED FOR A MOMENT, ORGANIZATION NAME OF USER IS NOT YET INCLUDED IN THE FORMAT)
             $document->control_tag = 'DOC-' . str_pad($document->id, 4, '0', STR_PAD_LEFT);
 
-            // Store the validated data in the database.
+            // Store the validated data with the generated control tag
             $document->save();
+
+            // Handle the uploaded file
+            $files = $request->file('file_upload');
+
+            $version = 1;   // NOTE: Version control not implemented yet
+            foreach ($files as $file) {
+                $filePath = $file->store('documents', 'public');
+
+                DocumentVersion::create([
+                    'document_id' => $document->id,
+                    'uploaded_by' => Auth::id(),
+                    'version' => $version, // NOTE: Version control not implemented yet
+                    'file_path' => $filePath,
+                    'comments' => $request->input('comments'),
+                    'submitted_at' => now(),
+                ]);
+            }
 
             // Add these lines to dispatch the event
             Log::info('Dispatching DocumentSubmitted event for document ID: ' . $document->id);
@@ -90,49 +106,5 @@ class DocumentController extends Controller
 
             return back()->with('error', 'Something went wrong while submitting the document. Please try again.');
         }
-    }
-
-    public function submit(Request $request)
-    {
-        // Validate and save the document
-        $validated = $request->validate([
-            'subject' => 'required|string|max:255',
-            'summary' => 'required|string|max:255',
-            'file_upload' => 'required|file|max:5120',
-        ]);
-
-        $document = Document::create([
-            'subject' => $validated['subject'],
-            'summary' => $validated['summary'],
-            'file_path' => $request->file('file_upload')->store('documents'),
-            'submitted_by' => auth()->id(),
-        ]);
-
-        // Dispatch the event
-        \App\Events\DocumentSubmitted::dispatch($document);
-
-        return redirect()->back()->with('success', 'Document submitted successfully!');
-    }
-
-    public function submitDocument(Request $request)
-    {
-        // Validate and save the document
-        $validated = $request->validate([
-            'subject' => 'required|string|max:255',
-            'summary' => 'required|string|max:255',
-            'file_upload' => 'required|file|max:5120',
-        ]);
-
-        $document = Document::create([
-            'subject' => $validated['subject'],
-            'summary' => $validated['summary'],
-            'file_path' => $request->file('file_upload')->store('documents'),
-            'submitted_by' => auth()->id(),
-        ]);
-
-        // Dispatch the event
-        DocumentSubmitted::dispatch($document);
-
-        return redirect()->back()->with('success', 'Document submitted successfully!');
     }
 }
