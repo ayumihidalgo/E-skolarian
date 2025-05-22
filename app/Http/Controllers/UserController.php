@@ -21,45 +21,37 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the request data
-        $validated = $request->validate([
-            'username' => 'required|string|max:255|unique:users,username',
-            'email' => 'required|email|max:255|unique:users,email',
-            'role' => 'required|in:admin,student',
-            'role_name' => 'required|string|max:255',
-        ]);
-
-        // Generate a random password
-        $password = Str::random(10); 
-
-        // Create the user
-        $user = User::create([
-            'username' => $validated['username'],
-            'email' => $validated['email'],
-            'role' => $validated['role'],
-            'role_name' => $validated['role_name'],
-            'password' => Hash::make($password), // Use the generated password
-        ]);
-
-        // Send notification email to the user with the generated password
         try {
-            Mail::to($user->email)->send(new UserNotificationMail($user, 'created', $password));
-        } catch (\Exception $e) {
-            // Log the error but don't stop the process
-            Log::error('Failed to send email notification: ' . $e->getMessage());
-        }
+        $validated = $request->validate([
+            'username' => 'required|string|unique:users,username',
+            'email' => 'required|email|unique:users,email',
+            'role' => 'required|string',
+            'role_name' => 'required|string',
+            'organization_acronym' => 'nullable|string|required_if:role,student',
+        ]);
 
-        // Return a JSON response for AJAX requests
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'User added successfully!',
-                'user' => $user
-            ]);
-        }
+        $user = User::create([
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => Hash::make($request->password ?? Str::random(10)), // Generate random password
+            'role' => $request->role,
+            'role_name' => $request->role_name,
+            'organization_acronym' => $request->organization_acronym,
+            'active' => true
+        ]);
 
-        // For normal form submissions, redirect with a success message
-        return redirect()->route('super-admin.dashboard')->with('success', 'User added successfully!');
+        return response()->json([
+            'success' => true,
+            'message' => 'User created successfully'
+        ], 201);
+
+    } catch (\Exception $e) {
+        \Log::error('User creation failed: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to create user: ' . $e->getMessage()
+        ], 500);
     }
 
     /**
@@ -69,6 +61,7 @@ class UserController extends Controller
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
+}
     public function update(Request $request, $id)
     {
         // Find the user
