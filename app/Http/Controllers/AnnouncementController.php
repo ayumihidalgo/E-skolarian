@@ -23,4 +23,21 @@ class AnnouncementController extends Controller
 
         return redirect()->back()->with('success', 'Announcement posted successfully!');
     }
+
+    public function update(Request $request, $id)
+    {
+        $announcement = Announcement::findOrFail($id);
+
+        $request->validate([
+            'title' => 'required|string|max:60',
+            'content' => 'required|string|max:5000',
+        ]);
+
+        $announcement->title = $request->input('title');
+        $announcement->content = $request->input('content');
+        $announcement->save();
+
+        // Set a specific session message for editing
+        return redirect()->back()->with('success', 'Announcement changed successfully!');
+    }
 }

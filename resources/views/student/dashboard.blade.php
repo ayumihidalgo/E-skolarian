@@ -25,7 +25,7 @@
                     @if ($latestAnnouncements->count())
                         <div class="space-y-4 h-64 overflow-y-auto pr-2">
                             @foreach ($latestAnnouncements as $announcement)
-                                <div class="border-b pb-2">
+                                <div class="mb-4 pb-4 border-b border-gray-300">
                                     <h3 class="text-xl font-semibold">{{ $announcement->title }}</h3>
                                     <p class="text-sm text-gray-500">
                                         Posted by {{ $announcement->user->username }} on 
@@ -63,7 +63,7 @@
                     @if ($previousAnnouncements->count())
                         <div class="space-y-4 h-[32rem] overflow-y-auto pr-2">
                             @foreach ($previousAnnouncements as $announcement)
-                                <div class="border-b pb-2">
+                                <div class="border-b pb-2 border-gray-300">
                                     <h3 class="text-base font-semibold">{{ $announcement->title }}</h3>
                                     <p class="text-sm text-gray-500">
                                         Posted by {{ $announcement->user->username }} on 

@@ -72,6 +72,7 @@ Route::get('/notification', function () {
         // ---------------- Admin ----------------
         Route::get('/admin/dashboard', [AdminDashboardController::class, 'showDashboard'])->name('admin.dashboard');
         Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
+        Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
         Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
         Route::get('/admin/review', fn () => view('admin.review'))->name('admin.review');
         Route::get('/admin/documentHistory', [AdminDocumentController::class, 'documentHistory'])->name('admin.documentHistory');

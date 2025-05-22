@@ -12,9 +12,9 @@
                     <div class="flex items-center gap-4">
                         <img src="{{ asset('images/successful.svg') }}" alt="Success Icon" id="docTypeIcon" class="">
                         <div>
-                            <h6 class="font-bold font-['Manrope']">Announcement posted successfully!</h6>
-                            <p class="sm:inline inline text-sm font-['Manrope']">{{ session('success') }}
-                            </p>
+                            <h6 class="font-bold font-['Manrope']">
+                                {{ session('success') }}
+                            </h6>
                         </div>
                     </div>
                     <button type="button"
@@ -46,8 +46,37 @@
                 <div class="max-h-[350px] overflow-y-auto pr-1">
                     @if ($latestAnnouncements->count())
                         @foreach ($latestAnnouncements as $announcement)
-                            <div class="mb-4 pb-4 border-b border-gray-300">
-                                <h3 class="text-xl font-bold text-gray-800 mb-1">{{ $announcement->title }}</h3>
+                            <div class="mb-4 pb-4 border-b border-gray-300 relative">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-xl font-bold text-gray-800 mb-1">{{ $announcement->title }}</h3>
+                                    <!-- Ellipsis Button -->
+                                    <div class="relative">
+                                        <button 
+                                            class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition"
+                                            onclick="toggleMenu('menu-{{ $announcement->id }}')"
+                                            type="button"
+                                            aria-haspopup="true"
+                                            aria-expanded="false"
+                                        >
+                                            <span class="sr-only">Open menu</span>
+                                            <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                                <circle cx="4" cy="10" r="1.5"/>
+                                                <circle cx="10" cy="10" r="1.5"/>
+                                                <circle cx="16" cy="10" r="1.5"/>
+                                            </svg>
+                                        </button>
+                                        <!-- Dropdown Menu -->
+                                        <div id="menu-{{ $announcement->id }}" class="hidden absolute right-0 mt-2 w-28 bg-white border border-gray-200 rounded shadow z-30">
+                                            <button 
+                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition"
+                                                onclick="openEditModal({{ $announcement->id }}, `{{ addslashes($announcement->title) }}`, `{{ addslashes(e($announcement->content)) }}`)"
+                                                type="button"
+                                            >
+                                                Edit
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <p class="text-sm text-gray-500 mb-1">
                                     Posted by {{ $announcement->user->username }} on {{ $announcement->created_at->format('F j, Y') }}
                                 </p>
@@ -157,9 +186,9 @@
                         </div>
                         <div class="text-right">
                             <button type="submit" id="submitBtn"
-                                    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-                                Post Announcement
-                            </button>
+    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+    Post Announcement
+</button>
                         </div>
                     </form>
                 </div>
@@ -182,6 +211,60 @@
             <div id="modalContent" class="text-gray-700 whitespace-pre-line"></div>
         </div>
     </div>
+
+    {{-- Edit Announcement Modal --}}
+    <div id="editAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-lg">Edit Announcement</span>
+                <button onclick="closeEditModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <form id="editAnnouncementForm" method="POST">
+                @csrf
+                @method('PUT')
+                <input type="hidden" id="editAnnouncementId" name="id">
+                <input type="hidden" id="originalTitle">
+                <input type="hidden" id="originalContent">
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input type="text" id="editTitle" name="title" maxlength="60"
+                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        required>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                    <textarea id="editContent" name="content" rows="4" maxlength="5000"
+                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        required></textarea>
+                </div>
+                <div class="text-right">
+                    <button type="submit" id="saveChangesBtn"
+    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+    Save Changes
+</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="NoChangeToast"
+    class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-yellow-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+    role="alert">
+    <div class="w-full flex justify-between">
+        <div class="flex items-center gap-4">
+            <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
+            <div>
+                <h6 class="font-bold font-['Manrope']">
+                    There was no change.
+                </h6>
+            </div>
+        </div>
+        <button type="button"
+            class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+            onclick="document.getElementById('NoChangeToast').style.display='none';">&times;</button>
+    </div>
+</div>
 
     <script>
     function showAnnouncementModal(title, content, meta = '', type = 'announcement') {
@@ -219,6 +302,12 @@
             contentError.style.display = 'none';
         }
 
+        if (valid) {
+            // Disable the button to prevent multiple clicks
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
         if (!valid) {
             e.preventDefault(); // Prevent form submission
         }
@@ -242,6 +331,60 @@
                 toast.style.display = 'none';
             }
         }, 5000);
+
+        function toggleMenu(menuId) {
+            // Hide all other menus
+            document.querySelectorAll('[id^="menu-"]').forEach(menu => {
+                if (menu.id !== menuId) menu.classList.add('hidden');
+            });
+            // Toggle current menu
+            const menu = document.getElementById(menuId);
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        // Hide menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('[id^="menu-"]') && !event.target.closest('button[onclick^="toggleMenu"]')) {
+                document.querySelectorAll('[id^="menu-"]').forEach(menu => menu.classList.add('hidden'));
+            }
+        });
+
+        // Open Edit Modal
+        function openEditModal(id, title, content) {
+            document.getElementById('editAnnouncementId').value = id;
+            document.getElementById('editTitle').value = title;
+            document.getElementById('editContent').value = content;
+            document.getElementById('originalTitle').value = title;
+            document.getElementById('originalContent').value = content;
+            document.getElementById('editAnnouncementModal').classList.remove('hidden');
+            document.getElementById('editAnnouncementForm').action = `/announcements/${id}`;
+        }
+
+        // Close Edit Modal
+        function closeEditModal() {
+            document.getElementById('editAnnouncementModal').classList.add('hidden');
+        }
+
+        document.getElementById('editAnnouncementForm').addEventListener('submit', function(e) {
+            const originalTitle = document.getElementById('originalTitle').value.trim();
+            const originalContent = document.getElementById('originalContent').value.trim();
+            const currentTitle = document.getElementById('editTitle').value.trim();
+            const currentContent = document.getElementById('editContent').value.trim();
+
+            if (originalTitle === currentTitle && originalContent === currentContent) {
+                e.preventDefault();
+                const toast = document.getElementById('NoChangeToast');
+                toast.style.display = 'flex';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+            } else {
+                // Disable the button to prevent multiple clicks
+                const saveBtn = document.getElementById('saveChangesBtn');
+                saveBtn.disabled = true;
+                saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        });
     </script>
     
 @endsection
