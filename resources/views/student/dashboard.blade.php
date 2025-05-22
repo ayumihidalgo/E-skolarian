@@ -22,9 +22,8 @@
                <!-- Announcements -->
                 <div class="md:col-span-2 bg-white rounded-xl shadow-md p-4">
                     <h2 class="text-lg font-semibold mb-2">📢 Announcements</h2>
-
                     @if ($latestAnnouncements->count())
-                        <div class="space-y-4 h-64 overflow-y-auto pr-2"> {{-- Fixed height and scroll --}}
+                        <div class="space-y-4 h-64 overflow-y-auto pr-2">
                             @foreach ($latestAnnouncements as $announcement)
                                 <div class="border-b pb-2">
                                     <h3 class="text-xl font-semibold">{{ $announcement->title }}</h3>
@@ -32,7 +31,24 @@
                                         Posted by {{ $announcement->user->username }} on 
                                         {{ $announcement->created_at->format('F j, Y') }}
                                     </p>
-                                    <p class="text-gray-700">{{ $announcement->content }}</p>
+                                    @php
+                                        $maxLength = 150;
+                                        $isLong = strlen($announcement->content) > $maxLength;
+                                        $preview = $isLong ? mb_substr($announcement->content, 0, $maxLength) . '...' : $announcement->content;
+                                    @endphp
+                                    <span class="text-gray-700 whitespace-pre-line">{{ $preview }}</span>
+                                    @if ($isLong)
+                                        <button 
+                                            class="text-indigo-600 hover:underline ml-2 text-sm"
+                                            onclick="showAnnouncementModal(
+                                                `{{ addslashes($announcement->title) }}`,
+                                                `{{ addslashes(e($announcement->content)) }}`,
+                                                `Posted by {{ addslashes($announcement->user->username) }} on {{ $announcement->created_at->format('F j, Y') }}`,
+                                                'announcement'
+                                            )">
+                                            Read More
+                                        </button>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -44,9 +60,8 @@
                <!-- Previous Announcements -->
                 <div class="bg-white rounded-xl shadow-md p-4 md:row-span-2">
                     <h2 class="text-lg font-semibold mb-2">Previous Announcements</h2>
-
                     @if ($previousAnnouncements->count())
-                        <div class="space-y-4 h-[32rem] overflow-y-auto pr-2"> {{-- Scrollable content --}}
+                        <div class="space-y-4 h-[32rem] overflow-y-auto pr-2">
                             @foreach ($previousAnnouncements as $announcement)
                                 <div class="border-b pb-2">
                                     <h3 class="text-base font-semibold">{{ $announcement->title }}</h3>
@@ -54,7 +69,24 @@
                                         Posted by {{ $announcement->user->username }} on 
                                         {{ $announcement->created_at->format('F j, Y') }}
                                     </p>
-                                    <p class="text-gray-700">{{ $announcement->content }}</p>
+                                    @php
+                                        $maxLength = 100;
+                                        $isLong = strlen($announcement->content) > $maxLength;
+                                        $preview = $isLong ? mb_substr($announcement->content, 0, $maxLength) . '...' : $announcement->content;
+                                    @endphp
+                                    <span class="text-gray-700 whitespace-pre-line">{{ $preview }}</span>
+                                    @if ($isLong)
+                                        <button 
+                                            class="text-indigo-600 hover:underline ml-2 text-sm"
+                                            onclick="showAnnouncementModal(
+                                                `{{ addslashes($announcement->title) }}`,
+                                                `{{ addslashes(e($announcement->content)) }}`,
+                                                `Posted by {{ addslashes($announcement->user->username) }} on {{ $announcement->created_at->format('F j, Y') }}`,
+                                                'previous'
+                                            )">
+                                            Read More
+                                        </button>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -80,4 +112,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal for full announcement -->
+    <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
+        <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
+            <div class="flex items-center justify-between mb-2 border-b pb-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl text-red-500">📢</span>
+                    <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
+                </div>
+                <button onclick="closeAnnouncementModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <h3 id="modalTitle" class="text-lg font-bold mt-3 mb-1"></h3>
+            <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
+            <div id="modalContent" class="text-gray-700 whitespace-pre-line"></div>
+        </div>
+    </div>
+
+    <script>
+    function showAnnouncementModal(title, content, meta = '', type = 'announcement') {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalContent').textContent = content;
+        document.getElementById('modalMeta').innerHTML = meta;
+        document.getElementById('modalLabel').textContent = 
+            type === 'previous' ? 'Previous Announcement' : 'Announcement';
+        document.getElementById('announcementModal').classList.remove('hidden');
+    }
+    function closeAnnouncementModal() {
+        document.getElementById('announcementModal').classList.add('hidden');
+    }
+    </script>
 @endsection

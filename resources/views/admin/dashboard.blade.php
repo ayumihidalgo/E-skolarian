@@ -49,10 +49,28 @@
                             <div class="mb-4 pb-4 border-b border-gray-300">
                                 <h3 class="text-xl font-bold text-gray-800 mb-1">{{ $announcement->title }}</h3>
                                 <p class="text-sm text-gray-500 mb-1">
-                                    Posted by {{ $announcement->user->username }} on {{ $announcement->created_at->format('F j, Y g:i A') }}
+                                    Posted by {{ $announcement->user->username }} on {{ $announcement->created_at->format('F j, Y') }}
                                 </p>
                                 <div class="text-gray-700 whitespace-pre-line">
-                                    {{ $announcement->content }}
+                                    @php
+                                        $maxLength = 150;
+                                        $isLong = strlen($announcement->content) > $maxLength;
+                                        $preview = $isLong ? mb_substr($announcement->content, 0, $maxLength) . '...' : $announcement->content;
+                                        $meta = "Posted by {$announcement->user->username} on {$announcement->created_at->format('F j, Y')}";
+                                    @endphp
+                                    <span>{{ $preview }}</span>
+                                    @if ($isLong)
+                                        <button 
+                                            class="text-indigo-600 hover:underline ml-2 text-sm" 
+                                            onclick="showAnnouncementModal(
+                                                `{{ addslashes($announcement->title) }}`,
+                                                `{{ addslashes(e($announcement->content)) }}`,
+                                                `Posted by {{ addslashes($announcement->user->username) }} on {{ $announcement->created_at->format('F j, Y') }}`,
+                                                'announcement'
+                                            )">
+                                            Read More
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -74,7 +92,25 @@
                                     Posted by {{ $announcement->user->username }} on {{ $announcement->created_at->format('F j, Y g:i A') }}
                                 </p>
                                 <div class="text-gray-700 whitespace-pre-line">
-                                    {{ $announcement->content }}
+                                    @php
+                                        $maxLength = 100;
+                                        $isLong = strlen($announcement->content) > $maxLength;
+                                        $preview = $isLong ? mb_substr($announcement->content, 0, $maxLength) . '...' : $announcement->content;
+                                        $meta = "Posted by {$announcement->user->username} on {$announcement->created_at->format('F j, Y g:i A')}";
+                                    @endphp
+                                    <span>{{ $preview }}</span>
+                                    @if ($isLong)
+                                        <button 
+                                            class="text-indigo-600 hover:underline ml-2 text-sm" 
+                                            onclick="showAnnouncementModal(
+                                                `{{ addslashes($announcement->title) }}`,
+                                                `{{ addslashes(e($announcement->content)) }}`,
+                                                `{{ $meta }}`,
+                                                'previous'
+                                            )">
+                                            Read More
+                                        </button>
+                                    @endif
                                 </div>
                             </div>
                         @endforeach
@@ -130,7 +166,35 @@
             </div>
         </div>
     </div>
+    {{-- Modal for full announcement --}}
+    <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
+        <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl text-red-500">📢</span>
+                    <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
+                </div>
+                <button onclick="closeAnnouncementModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
+            <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
+            <div id="modalContent" class="text-gray-700 whitespace-pre-line"></div>
+        </div>
+    </div>
+
     <script>
+    function showAnnouncementModal(title, content, meta = '', type = 'announcement') {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalContent').textContent = content;
+        document.getElementById('modalMeta').innerHTML = meta;
+        document.getElementById('modalLabel').textContent = 
+            type === 'previous' ? 'Previous Announcement' : 'Announcement';
+        document.getElementById('announcementModal').classList.remove('hidden');
+    }
+    function closeAnnouncementModal() {
+        document.getElementById('announcementModal').classList.add('hidden');
+    }
 
     const form = document.getElementById('announcementForm');
     const titleInput = document.getElementById('titleInput');
