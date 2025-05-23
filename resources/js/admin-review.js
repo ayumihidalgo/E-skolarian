@@ -166,7 +166,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error('Failed to mark document as opened');
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log("Mark as opened response:", response);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.error("Error response:", text);
+                        throw new Error('Failed to mark document as opened: ' + response.status);
+                    });
+                }
+                return response.json();
+            })
             .then(docData => {
                 console.log("Document details received:", docData);
                 // Update the details view with document data
@@ -560,10 +569,47 @@ function updateDocumentDetailsView(docData) {
             orgInitial.textContent = acronym.charAt(0).toUpperCase();
         }
 
-        // Update status history with timeline style similar to the image
+        // Status history with timeline style 
         const statusHistory = document.getElementById('statusHistory');
         const processedStatusIndicator = document.getElementById('processedStatusIndicator');
         const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+        const forwardedStatusIndicator = document.getElementById('forwardedStatusIndicator');
+
+        // Handle forwarded document status
+        if (forwardedStatusIndicator) {
+            if (docData.forward_info && !docData.is_current_receiver) {
+                // Update forwarded status message
+                const forwardedToElement = document.getElementById('forwardedToUser');
+                if (forwardedToElement) {
+                    forwardedToElement.textContent = docData.forward_info.forwarded_to;
+                }
+                
+                // Format the forwarding date
+                const forwardedDateElement = document.getElementById('forwardedDate');
+                if (forwardedDateElement && docData.forward_info.forwarded_at) {
+                    const forwardedDate = new Date(docData.forward_info.forwarded_at);
+                    forwardedDateElement.textContent = forwardedDate.toLocaleDateString('en-US', {
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+                
+                // Show forwarded message
+                const forwardedMessageElement = document.getElementById('forwardedMessage');
+                if (forwardedMessageElement) {
+                    forwardedMessageElement.textContent = docData.forward_info.message || 'No message provided';
+                }
+                
+                // Show the forwarded status indicator
+                forwardedStatusIndicator.classList.remove('hidden');
+            } else {
+                // Hide the forwarded status indicator
+                forwardedStatusIndicator.classList.add('hidden');
+            }
+        }
         
         if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
             // Group reviews by reviewer
@@ -649,17 +695,51 @@ function updateDocumentDetailsView(docData) {
             statusHistory.innerHTML = timelineHTML;
 
             // Show or hide action buttons and processed indicator based on document status
-            const finalDecisionExists = timelineSteps.some(step =>
-                step.status && (
-                    step.status.toLowerCase() === 'approved' ||
-                    step.status.toLowerCase() === 'rejected'
-                )
-            );
-            if (docData.has_decision || finalDecisionExists) {
+            const finalDecisionExists = docData.has_decision;
+            const isCurrentReceiver = docData.is_current_receiver;
+            
+            if (finalDecisionExists) {
+                // If a decision has been made, hide action buttons for everyone
                 if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
                 if (processedStatusIndicator) processedStatusIndicator.classList.remove('hidden');
+            } else if (!isCurrentReceiver) {
+                // If user is not the current receiver, disable buttons but show forwarded status
+                if (actionButtonsContainer) {
+                    // If user is not the current receiver, HIDE the buttons completely
+                    actionButtonsContainer.classList.add('hidden');
+                    // Disable the buttons
+                    const approveButton = document.getElementById('approveButton');
+                    const rejectButton = document.getElementById('rejectButton');
+                    
+                    if (approveButton) {
+                        approveButton.disabled = true;
+                        approveButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                    
+                    if (rejectButton) {
+                        rejectButton.disabled = true;
+                        rejectButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+                if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
             } else {
-                if (actionButtonsContainer) actionButtonsContainer.classList.remove('hidden');
+                // Current receiver and no decision made yet - show enabled action buttons
+                if (actionButtonsContainer) {
+                    actionButtonsContainer.classList.remove('hidden');
+                    // Make sure buttons are enabled
+                    const approveButton = document.getElementById('approveButton');
+                    const rejectButton = document.getElementById('rejectButton');
+                    
+                    if (approveButton) {
+                        approveButton.disabled = false;
+                        approveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                    
+                    if (rejectButton) {
+                        rejectButton.disabled = false;
+                        rejectButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                }
                 if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
             }
         }
