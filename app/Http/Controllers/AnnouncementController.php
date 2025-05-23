@@ -40,4 +40,40 @@ class AnnouncementController extends Controller
         // Set a specific session message for editing
         return redirect()->back()->with('success', 'Announcement changed successfully!');
     }
+
+    public function archive(Request $request)
+    {
+        // Redirect to admin dashboard with archive tab active
+        return redirect()->route('admin.dashboard', ['archive' => 1]);
+    }
+
+    public function moveToArchive($id)
+    {
+        $announcement = Announcement::findOrFail($id);
+        $announcement->archived = true;
+        $announcement->save();
+
+        // Redirect to dashboard with archive tab active
+        return redirect()->route('admin.dashboard', ['archive' => 1])
+            ->with('success', 'Announcement moved to archive!');
+    }
+
+    public function restore($id)
+    {
+        $announcement = Announcement::findOrFail($id);
+        $announcement->archived = false;
+        $announcement->save();
+
+        return redirect()->route('admin.dashboard', ['archive' => 1])
+            ->with('success', 'Announcement restored successfully!');
+    }
+
+    public function destroy($id)
+    {
+        $announcement = Announcement::findOrFail($id);
+        $announcement->delete();
+
+        return redirect()->route('admin.dashboard', ['archive' => 1])
+            ->with('success', 'Announcement permanently deleted!');
+    }
 }

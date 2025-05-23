@@ -67,12 +67,17 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
     Route::post('/super-admin/reactivate-user/{user}', [UserController::class, 'reactivateUser'])->name('reactivate.user');
 
+
 });
 Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
     // ---------------- Admin ----------------
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'showDashboard'])->name('admin.dashboard');
     Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
     Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
+    Route::get('/admin/announcement-archive', [AnnouncementController::class, 'archive'])->name('admin.announcementArchive');
+    Route::post('/admin/announcements/{id}/archive', [AnnouncementController::class, 'moveToArchive'])->name('admin.announcements.archive');
+    Route::post('/admin/announcements/{id}/restore', [AnnouncementController::class, 'restore'])->name('admin.announcements.restore');
+    Route::delete('/admin/announcements/{id}/delete', [AnnouncementController::class, 'destroy'])->name('admin.announcements.delete');
     Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
     Route::get('/admin/review', fn() => view('admin.review'))->name('admin.review');
     Route::get('/admin/documentHistory', [AdminDocumentController::class, 'documentHistory'])->name('admin.documentHistory');
@@ -108,6 +113,7 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(funct
     Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('student.settings.update-profile-picture');
     Route::post('student/settings/change-password', [SettingsController::class, 'changePassword'])->name('student.settings.change-password');
     Route::post('student/settings/remove-profile', [SettingsController::class, 'removeProfilePicture'])->name('student.settings.remove-profile-picture');
+
 });
 
 Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(function () {
