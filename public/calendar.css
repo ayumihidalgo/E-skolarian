@@ -126,7 +126,7 @@
 /* Stable navigation buttons */
 .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
     position: relative !important;
-    min-width: 240px !important; /* Fixed width to prevent shifting */
+    min-width: 300px !important; /* Fixed width to prevent shifting */
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -156,12 +156,12 @@
 
 .fc-prev-button {
     margin-right: 15px !important;
-    left: 0 !important;
+    left:-20px !important;
 }
 
 .fc-next-button {
     margin-left: 15px !important;
-    right: 0 !important;
+    right: -20px !important;
 }
 
 /* Today button styling */
