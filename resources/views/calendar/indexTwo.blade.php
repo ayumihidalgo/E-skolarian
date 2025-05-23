@@ -604,8 +604,25 @@ function saveEvent() {
         alert("Events cannot be created on past dates");
         return;
     }
+
+        // Add end date validation here
+    if (endStr) {
+        const endDate = new Date(endStr);
+        
+        // Check if end date is in the past
+        if (endDate < today) {
+            alert("Event cannot end in the past");
+            return;
+        }
+        
+        // Check if end date is before start date
+        if (endDate < eventDate) {
+            alert("End date cannot be before start date");
+            return;
+        }
+    }
     
-    // Rest of your validations
+
     // Check for emoji or special characters in title
     if (containsEmoji(title) || containsSpecialChars(title)) {
         alert('Your event title contains invalid characters. Please use only letters, numbers, spaces, and basic punctuation.');
