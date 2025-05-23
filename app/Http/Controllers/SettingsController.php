@@ -37,13 +37,23 @@ class SettingsController extends Controller
         $user = auth()->user();
         $imageData = $request->input('profile_image_base64');
 
-        // Ensure it's a valid base64 image
+        // Validate base64 format and extract type
         if (!preg_match('/^data:image\/(\w+);base64,/', $imageData, $type)) {
             return back()->with('error', 'Invalid image format.');
         }
 
         $extension = strtolower($type[1]);
+        if (!in_array($extension, ['jpg', 'jpeg', 'png'])) {
+            return back()->with('error', 'Only JPG, JPEG, and PNG images are allowed.');
+        }
+
         $imageData = base64_decode(substr($imageData, strpos($imageData, ',') + 1));
+
+        // Check file size (30MB = 30 * 1024 * 1024 bytes)
+        if (strlen($imageData) > 30 * 1024 * 1024) {
+            return back()->with('error', 'Image size must not exceed 30MB.');
+        }
+
         $filename = Str::random(20) . '.' . $extension;
         $path = 'images/profiles/' . $filename;
 
