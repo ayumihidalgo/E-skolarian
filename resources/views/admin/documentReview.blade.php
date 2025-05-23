@@ -3,7 +3,7 @@
 @include('components.adminNavBarComponent')
 @include('components.adminSidebarComponent')
 
-<div id="main-content" class="transition-all duration-300 ml-0 md:ml-[20%] mt-16">
+<div id="main-content" class="transition-all duration-300 ml-0 md:ml-[20%] sm:mt-16 md:mt-0">
     <div class="flex-grow bg-gray-100">
         <!-- Main Content -->
         <div id="mainContentArea" class="p-2 sm:p-4 md:p-6 min-h-screen">
@@ -48,7 +48,7 @@
                                 </div>
                             </div>
                             <div class="relative flex-1 md:w-40">
-                                <select id="documentTypeFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-2 rounded-full leading-tight hover:text-white transition-colors duration-200 truncate">
+                                <select id="documentTypeFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-6 rounded-full leading-tight hover:text-white transition-colors duration-200 truncate">
                                     <option class="bg-white text-black truncate" value="" disabled selected>Document Type</option>
                                     <option class="bg-white text-black truncate" value="">All</option>
                                     <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
@@ -738,11 +738,96 @@
 
     <script>
         // Document Viewer Functionality
+        // document.addEventListener('DOMContentLoaded', function() {
+        //     // Get form elements
+        //     const searchInput = document.getElementById('searchInput');
+        //     const organizationFilter = document.getElementById('organizationFilter');
+        //     const documentTypeFilter = document.getElementById('documentTypeFilter');
+            
+        //     if (searchInput && organizationFilter && documentTypeFilter) {
+        //         // Create the form dynamically
+        //         const form = document.createElement('form');
+        //         form.method = 'GET';
+        //         form.action = window.location.pathname; // Use the current URL path
+        //         form.style.display = 'none'; // Hide the form
+        //         document.body.appendChild(form);
+                
+        //         // Create hidden input fields
+        //         const searchField = document.createElement('input');
+        //         searchField.type = 'hidden';
+        //         searchField.name = 'search';
+        //         form.appendChild(searchField);
+                
+        //         const orgField = document.createElement('input');
+        //         orgField.type = 'hidden';
+        //         orgField.name = 'organization';
+        //         form.appendChild(orgField);
+                
+        //         const typeField = document.createElement('input');
+        //         typeField.type = 'hidden';
+        //         typeField.name = 'documentType';
+        //         form.appendChild(typeField);
+                
+        //         // Set initial values from URL parameters
+        //         const urlParams = new URLSearchParams(window.location.search);
+        //         searchInput.value = urlParams.get('search') || '';
+        //         if (urlParams.has('organization') && urlParams.get('organization') !== 'All') {
+        //             organizationFilter.value = urlParams.get('organization');
+        //         }
+        //         if (urlParams.has('documentType') && urlParams.get('documentType') !== 'All') {
+        //             documentTypeFilter.value = urlParams.get('documentType');
+        //         }
+                
+        //         // Add event listeners
+        //         let searchTimeout;
+        //         searchInput.addEventListener('input', function() {
+        //             clearTimeout(searchTimeout);
+        //             searchTimeout = setTimeout(() => {
+        //                 searchField.value = searchInput.value;
+        //                 orgField.value = organizationFilter.value || 'All';
+        //                 typeField.value = documentTypeFilter.value || 'All';
+        //                 form.submit();
+        //             }, 500); // 500ms debounce
+        //         });
+                
+        //         organizationFilter.addEventListener('change', function() {
+        //             searchField.value = searchInput.value;
+        //             orgField.value = organizationFilter.value || 'All'; 
+        //             typeField.value = documentTypeFilter.value || 'All';
+        //             form.submit();
+        //         });
+                
+        //         documentTypeFilter.addEventListener('change', function() {
+        //             searchField.value = searchInput.value;
+        //             orgField.value = organizationFilter.value || 'All';
+        //             typeField.value = documentTypeFilter.value || 'All';
+        //             form.submit();
+        //         });
+        //     }
+        // });
+
         document.addEventListener('DOMContentLoaded', function() {
             // Get form elements
             const searchInput = document.getElementById('searchInput');
             const organizationFilter = document.getElementById('organizationFilter');
             const documentTypeFilter = document.getElementById('documentTypeFilter');
+            
+            // Organization name to acronym mapping
+            const orgMap = {
+                'ACAP': 'Association of Competent and Aspiring Psychologists',
+                'AECES': 'Association of Electronics and Communications Engineering Students',
+                'ELITE': 'Eligible League of Information Technology Enthusiasts',
+                'GIVE': 'Guild of Imporous and Valuable Educators',
+                'JEHRA': 'Junior Executive of Human Resource Association',
+                'JMAP': 'Junior Marketing Association of the Philippines',
+                'JPIA': 'Junior Philippine Institute of Accountants',
+                'PIIE': 'Philippine Institute of Industrial Engineers',
+                'AGDS': 'Artist Guild Dance Squad',
+                'Chorale': 'PUP SRC Chorale',
+                'SIGMA': 'Supreme Innovators\' Guild for Mathematics Advancements',
+                'TAPNOTCH': 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
+                'OSC': 'Office of the Student Council'
+            };
             
             if (searchInput && organizationFilter && documentTypeFilter) {
                 // Create the form dynamically
@@ -783,13 +868,24 @@
                 searchInput.addEventListener('input', function() {
                     clearTimeout(searchTimeout);
                     searchTimeout = setTimeout(() => {
-                        searchField.value = searchInput.value;
+                        // Check if search term is an acronym
+                        const searchTerm = searchInput.value.trim().toUpperCase();
+                        let enhancedSearchTerm = searchInput.value;
+                        
+                        // If the search term matches an acronym, enhance the search term
+                        if (orgMap[searchTerm]) {
+                            // Format the search to include both the acronym and full name
+                            enhancedSearchTerm = `${orgMap[searchTerm]}`;
+                        }
+                        
+                        searchField.value = enhancedSearchTerm;
                         orgField.value = organizationFilter.value || 'All';
                         typeField.value = documentTypeFilter.value || 'All';
                         form.submit();
                     }, 500); // 500ms debounce
                 });
                 
+                // Keep the filters unchanged - no acronym expansion
                 organizationFilter.addEventListener('change', function() {
                     searchField.value = searchInput.value;
                     orgField.value = organizationFilter.value || 'All'; 
