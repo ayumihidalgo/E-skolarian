@@ -40,12 +40,50 @@
                 </button>
                 <h2 class="text-lg font-semibold text-gray-800">Notifications</h2>
             </div>
-            <div class="right-nav flex flex-row space-x-5">
+           <div class="right-nav flex flex-row space-x-5 relative">
                 <!-- Dots Icon -->
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"
+                <svg id="optionsMenuBtn" width="20" height="20" viewBox="0 0 20 20" fill="none"
                     xmlns="http://www.w3.org/2000/svg" class="cursor-pointer hover:text-gray-700 transition-colors duration-300">
                     <path d="M4.75 8.5C3.925 8.5 3.25 9.175 3.25 10C3.25 10.825 3.925 11.5 4.75 11.5C5.575 11.5 6.25 10.825 6.25 10C6.25 9.175 5.575 8.5 4.75 8.5ZM15.25 8.5C14.425 8.5 13.75 9.175 13.75 10C13.75 10.825 14.425 11.5 15.25 11.5C16.075 11.5 16.75 10.825 16.75 10C16.75 9.175 16.075 8.5 15.25 8.5ZM10 8.5C9.175 8.5 8.5 9.175 8.5 10C8.5 10.825 9.175 11.5 10 11.5C10.825 11.5 11.5 10.825 11.5 10C11.5 9.175 10.825 8.5 10 8.5Z" fill="#525866"/>
                 </svg>
+
+                <!-- Options Menu -->
+                <div id="optionsMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
+                    <ul class="py-1 text-sm text-gray-700">
+                        <li>
+                            <button id="markAsReadBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
+                                <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Mark as Read</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button id="markAsUnreadBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
+                                <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h11M9 21V3m0 0L3 10m6-7l6 7" />
+                                </svg>
+                                <span>Mark as Unread</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button id="deleteBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
+                                <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span>Delete</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button id="deleteAllBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
+                                <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                <span>Delete All</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
 
@@ -207,6 +245,7 @@
         const confirmBtn = document.getElementById('confirmMarkAsRead');
         const cancelBtn = document.getElementById('cancelMarkAsRead');
         const backBtn = document.getElementById('backBtn');
+        const optionsMenuBtn = document.getElementById('optionsMenuBtn');
         
         // Fixed height for notification body
         const NOTIFICATION_HEIGHT = '24rem'; // Adjust as needed
@@ -215,6 +254,25 @@
         let pendingCheckbox = null;
         let pendingNotificationId = null;
         
+
+
+        // Function to toggle options menu
+        function toggleOptionsMenu(event) {
+            event.stopPropagation(); // Prevent the click from propagating to the document
+            const optionsMenu = document.getElementById('optionsMenu');
+            optionsMenu.classList.toggle('hidden');
+        }
+
+        // Close the options menu when clicking outside
+        document.addEventListener('click', () => {
+            const optionsMenu = document.getElementById('optionsMenu');
+            if (!optionsMenu.classList.contains('hidden')) {
+            optionsMenu.classList.add('hidden');
+            }
+        });
+
+        // Attach the toggle function to the options menu button
+        optionsMenuBtn.addEventListener('click', toggleOptionsMenu);
         // Function to toggle panel with animation
         function togglePanel() {
             isPanelVisible = !isPanelVisible;
