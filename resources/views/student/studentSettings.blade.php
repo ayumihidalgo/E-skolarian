@@ -68,7 +68,7 @@
                             <img src="{{ asset('images/department.svg') }}" class="w-6 h-6" alt="department icon">
                             <div>
                                 <p class="font-extrabold text-[11px]">Department</p>
-                                <p class="font-extrabold text-[12px]">BSIT (Papaltan pa ng real acronym ng department)</p>
+                                <p class="font-extrabold text-[12px]">{{ $user->organization_acronym }}</p>
                                 <!-- Example department -->
                             </div>
                         </div>
@@ -120,21 +120,30 @@
                 </div>
             </div>
             <div class="flex justify-center mb-4">
-                <img id="profilePreviewImage"
-                    src="{{ $user->profile_pic ? asset('storage/' . $user->profile_pic) : asset('images/dprofile.svg') }}"
-                    alt="Profile Preview" class="w-70 h-70 rounded-full border-5 border-gray-300 object-cover">
+                <div class="space-y-4">
+                    <img id="profilePreviewImage"
+                        src="{{ $user->profile_pic ? asset('storage/' . $user->profile_pic) : asset('images/dprofile.svg') }}"
+                        alt="Profile Preview" class="w-70 h-70 rounded-full border-5 border-gray-300 object-cover">
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center justify-center mb-4">
+                <p id="requirements" class="text-xs text-gray-400">Supported formats: JPG, JPEG, JFIF, PNG (Max
+                    size: 10MB)</p>
+                <p id="toLargefile" class="text-xs text-red-700 hidden">Image size must not exceed 10MB.</p>
+                <p id="toFiletype" class="text-xs text-red-700 hidden">Only JPG, JPEG, and PNG images are allowed.</p>
             </div>
             <div class="flex justify-end p-6 gap-4">
                 @if ($user->profile_pic != null)
                     <form action="{{ route('student.settings.remove-profile-picture') }}" method="POST">
                         @csrf
                         <input type="hidden" name="profile_image" value="{{ $user->profile_pic }}">
-                        <label id="removeProfileButton" onclick="openRemoveProfileModal()"
-                            class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">
-                            Remove Profile
-                        </label>
                     </form>
                 @endif
+                <label id="removeProfileButton" onclick="openRemoveProfileModal()"
+                    class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] border-1 border-gray-300 font-[Lexend] hover:bg-gray-400 transition cursor-pointer">
+                    Remove Profile
+                </label>
                 <label for="profileImageInput"
                     class="rounded-lg bg-red-900 px-4 py-2 text-white font-medium text-[14px] font-[Lexend] hover:bg-red-800 transition cursor-pointer">
                     Upload Profile
@@ -145,6 +154,16 @@
     </div>
     <!-- Image Preview Modal -->
     <div id="imagePreviewModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+        @if (session('error'))
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+                <strong class="font-bold">Error!</strong>
+                <span class="block sm:inline">{{ session('error') }}</span>
+                <button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3"
+                    onclick="this.parentElement.style.display='none';">
+                    <span class="text-red-500">&times;</span>
+                </button>
+            </div>
+        @endif
         <div class="bg-white rounded-2xl w-full max-w-lg shadow-xl relative">
             <div class="w-full flex justify-center py-6 px-4">
                 <h2 class="text-2xl font-semibold font-['Lexend']">Edit Profile Picture</h2>
@@ -168,7 +187,7 @@
                 <div class="flex justify-between items-center gap-4">
                     <div class="flex gap-2">
                         <button type="button" onclick="closeModal()"
-                            class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Cancel</button>
+                            class="rounded-lg text-gray-900 font-medium px-4 py-2 border-1 border-gray-300 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Cancel</button>
                     </div>
                     <button id="saveProfileButton"
                         class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">Save</button>
@@ -188,7 +207,7 @@
                 </p>
                 <div class="flex justify-end gap-4 mt-4">
                     <button type="button" onclick="closeRemoveProfileModal()"
-                        class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Cancel</button>
+                        class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] border-1 border-gray-300 font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Cancel</button>
                     <button type="button" onclick="submitRemoveProfileForm()"
                         class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">Remove
                         Profile</button>
@@ -208,7 +227,7 @@
                 </p>
                 <div class="flex justify-end gap-4 mt-4">
                     <button type="button" onclick="closeChangesModal()"
-                        class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Cancel</button>
+                        class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] border-1 border-gray-300 font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Cancel</button>
                     <button type="button" onclick="keepEditing()"
                         class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">Save
                         Changes</button>
@@ -228,7 +247,7 @@
                 </p>
                 <div class="flex justify-end gap-4 mt-4">
                     <button type="button" onclick="closeModal()"
-                        class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Close
+                        class="rounded-lg text-gray-900 font-medium px-4 py-2 border-1 border-gray-300 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Close
                         without saving</button>
                     <button type="button" onclick="keepEditing()"
                         class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">Keep
@@ -319,7 +338,7 @@
                 </p>
                 <div class="flex justify-end gap-4 mt-4">
                     <button type="button" onclick="closeUnsavedModal()"
-                        class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Close
+                        class="rounded-lg text-gray-900 font-medium border-1 border-gray-300 px-4 py-2 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Close
                         without saving</button>
                     <button type="button" onclick="keepEditing()"
                         class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">Keep
@@ -562,11 +581,37 @@
         const preview = document.getElementById('previewImage');
         const base64Input = document.getElementById('profileImageBase64');
         const zoomSlider = document.getElementById('zoomRange');
+        const requirements = document.getElementById('requirements');
+        const toLargefile = document.getElementById('toLargefile');
+        const toFiletype = document.getElementById('toFiletype');
         let cropper;
 
         input.addEventListener('change', function(e) {
             const file = e.target.files[0];
+            // Hide all error/info messages first
             if (file) {
+                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/jfif', 'image/png'];
+                const maxSize = 10 * 1024 * 1024; // 10MB
+
+                if (!allowedTypes.includes(file.type)) {
+                    document.getElementById('requirements').classList.add('hidden');
+                    document.getElementById('toFiletype').classList.remove('hidden');
+                    document.getElementById('toLargefile').classList.add('hidden');
+                    e.target.value = '';
+                    return;
+                }
+                if (file.size > maxSize) {
+                    document.getElementById('requirements').classList.add('hidden');
+                    document.getElementById('toLargefile').classList.remove('hidden');
+                    document.getElementById('toFiletype').classList.add('hidden');
+                    e.target.value = '';
+                    return;
+                }
+                // If valid, show requirements and hide errors
+                document.getElementById('requirements').classList.remove('hidden');
+                document.getElementById('toLargefile').classList.add('hidden');
+                document.getElementById('toFiletype').classList.add('hidden');
+
 
                 const reader = new FileReader();
                 reader.onload = function(event) {

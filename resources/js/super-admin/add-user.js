@@ -1371,6 +1371,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const formData = {
                 username: usernameInput.value.trim(),
                 email: adminEmailInput.value.trim().toLowerCase(),
+                password: Math.random().toString(36).slice(-10), // Generate random password
                 role_name: finalRoleNameInput.value,
                 role: 'admin',
                 _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')

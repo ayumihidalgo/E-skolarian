@@ -145,7 +145,7 @@
                 document.getElementById('custom-loader-overlay').classList.remove('hidden');
                 setTimeout(() => {
                     window.location.href = url;
-                }, 3000); // 3 seconds
+                }, 1500); // 3 seconds
             });
         });
     });

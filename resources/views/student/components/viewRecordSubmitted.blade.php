@@ -26,33 +26,46 @@
 
                     <div>
                         <h3 class="font-semibold mb-1">Attachment</h3>
-                        @if ($record->file_path)
-                            <a href="{{ asset('storage/' . $record->file_path) }}" target="_blank"
-                                class="bg-white text-black text-sm px-4 py-2 rounded hover:bg-gray-200 transition inline-block">
-                                {{ basename($record->file_path) }}
-                            </a>
+                        @if ($record->documentVersions->count() > 0)
+                            <div class="space-y-2">
+                                @foreach ($record->documentVersions as $version)
+                                    <div>
+                                        <a href="{{ asset('storage/' . $version->file_path) }}" target="_blank"
+                                            class="bg-white text-black text-sm px-4 py-2 rounded hover:bg-gray-200 transition inline-block">
+                                            Version {{ $version->version }}: {{ basename($version->file_path) }}
+                                        </a>
+                                        @if ($version->comments)
+                                            <p class="text-xs text-gray-300 mt-1">{{ $version->comments }}</p>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         @else
-                            <span class="text-gray-400">No attachment</span>
+                            <span class="text-gray-400">No attachments</span>
                         @endif
                     </div>
 
                     <div class="space-y-2">
                         <div class="flex items-center flex-wrap gap-1 text-sm">
                             <span
-                                class="w-3 h-3 rounded-full {{ $record->status === 'Pending' ? 'bg-green-500' : 'bg-gray-400' }}"></span>
+                                class="w-3 h-3 rounded-full {{ $record->status === 'Pending' ? 'bg-yellow-500' : 'bg-gray-400' }}"></span>
                             <span>Pending</span>
+
                             <span
-                                class="w-3 h-3 rounded-full {{ $record->status === 'Under Review' ? 'bg-green-600' : 'bg-gray-400' }}"></span>
-                            <span>Under Review [admin]</span>
+                                class="w-3 h-3 rounded-full {{ $record->status === 'Under Review' ? 'bg-blue-500' : 'bg-gray-400' }}"></span>
+                            <span>Under Review</span>
+
                             <span
                                 class="w-3 h-3 rounded-full {{ $record->status === 'Rejected' ? 'bg-red-600' : 'bg-gray-400' }}"></span>
                             <span>Rejected</span>
+
                             <span
-                                class="w-3 h-3 rounded-full {{ $record->status === 'Under Review of Director' ? 'bg-gray-600' : 'bg-gray-400' }}"></span>
-                            <span>Under Review of Director</span>
+                                class="w-3 h-3 rounded-full {{ $record->status === 'Resubmit' ? 'bg-orange-500' : 'bg-gray-400' }}"></span>
+                            <span>Resubmit</span>
+
                             <span
-                                class="w-3 h-3 rounded-full {{ $record->status === 'Approved' ? 'bg-blue-500' : 'bg-gray-400' }}"></span>
-                            <span>Approval</span>
+                                class="w-3 h-3 rounded-full {{ $record->status === 'Approved' ? 'bg-green-500' : 'bg-gray-400' }}"></span>
+                            <span>Approved</span>
                         </div>
 
                         <div class="bg-[#3D1515] text-xs p-3 rounded-md">
@@ -131,8 +144,15 @@
     <style>
         /* Add fade-in animation for new comments */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .animate-fade-in {

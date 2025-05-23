@@ -16,19 +16,25 @@
         <div class="p-6 bg-[#f2f4f7] min-h-screen">
             @include('student.components.titleSubmittedDocuments')
 
-            @include('student.components.viewSearch')
+            <!-- Search and Filters in One Line -->
+            <div class="flex justify-between items-center gap-4 mb-6">
+                <!-- Search on the left -->
+                <div class="flex-1">
+                    @include('student.components.viewSearch')
+                </div>
 
-            <!-- Filters -->
-            <div class="flex flex-wrap items-center gap-4">
-                <!-- Document Type Dropdown -->
-                @include('student.components.viewDocumentTypeDropdown')
+                <!-- Filters on the right -->
+                <div class="flex items-center gap-4">
+                    <!-- Document Type Dropdown -->
+                    @include('student.components.viewDocumentTypeDropdown')
 
-                <!-- Status Dropdown -->
-                @include('student.components.viewStatusDropdownComponent')
+                    <!-- Status Dropdown -->
+                    @include('student.components.viewStatusDropdownComponent')
+                </div>
             </div>
-        </div>
 
-        @include('student.components.viewSubmissionTrackerTable')
+            @include('student.components.viewSubmissionTrackerTable')
+        </div>
 
     </div>
     </div>

@@ -33,7 +33,7 @@ function setButtonLoading(buttonId, isLoading, modalId = null) {
         
         // Replace with loading spinner
         button.innerHTML = `
-            <svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-5 w-5 mx-auto cursor-not-allowed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -166,7 +166,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error('Failed to mark document as opened');
                 }
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log("Mark as opened response:", response);
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        console.error("Error response:", text);
+                        throw new Error('Failed to mark document as opened: ' + response.status);
+                    });
+                }
+                return response.json();
+            })
             .then(docData => {
                 console.log("Document details received:", docData);
                 // Update the details view with document data
@@ -560,10 +569,47 @@ function updateDocumentDetailsView(docData) {
             orgInitial.textContent = acronym.charAt(0).toUpperCase();
         }
 
-        // Update status history with timeline style similar to the image
+        // Status history with timeline style 
         const statusHistory = document.getElementById('statusHistory');
         const processedStatusIndicator = document.getElementById('processedStatusIndicator');
         const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+        const forwardedStatusIndicator = document.getElementById('forwardedStatusIndicator');
+
+        // Handle forwarded document status
+        if (forwardedStatusIndicator) {
+            if (docData.forward_info && !docData.is_current_receiver) {
+                // Update forwarded status message
+                const forwardedToElement = document.getElementById('forwardedToUser');
+                if (forwardedToElement) {
+                    forwardedToElement.textContent = docData.forward_info.forwarded_to;
+                }
+                
+                // Format the forwarding date
+                const forwardedDateElement = document.getElementById('forwardedDate');
+                if (forwardedDateElement && docData.forward_info.forwarded_at) {
+                    const forwardedDate = new Date(docData.forward_info.forwarded_at);
+                    forwardedDateElement.textContent = forwardedDate.toLocaleDateString('en-US', {
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+                
+                // Show forwarded message
+                const forwardedMessageElement = document.getElementById('forwardedMessage');
+                if (forwardedMessageElement) {
+                    forwardedMessageElement.textContent = docData.forward_info.message || 'No message provided';
+                }
+                
+                // Show the forwarded status indicator
+                forwardedStatusIndicator.classList.remove('hidden');
+            } else {
+                // Hide the forwarded status indicator
+                forwardedStatusIndicator.classList.add('hidden');
+            }
+        }
         
         if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
             // Group reviews by reviewer
@@ -649,17 +695,51 @@ function updateDocumentDetailsView(docData) {
             statusHistory.innerHTML = timelineHTML;
 
             // Show or hide action buttons and processed indicator based on document status
-            const finalDecisionExists = timelineSteps.some(step =>
-                step.status && (
-                    step.status.toLowerCase() === 'approved' ||
-                    step.status.toLowerCase() === 'rejected'
-                )
-            );
-            if (docData.has_decision || finalDecisionExists) {
+            const finalDecisionExists = docData.has_decision;
+            const isCurrentReceiver = docData.is_current_receiver;
+            
+            if (finalDecisionExists) {
+                // If a decision has been made, hide action buttons for everyone
                 if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
                 if (processedStatusIndicator) processedStatusIndicator.classList.remove('hidden');
+            } else if (!isCurrentReceiver) {
+                // If user is not the current receiver, disable buttons but show forwarded status
+                if (actionButtonsContainer) {
+                    // If user is not the current receiver, HIDE the buttons completely
+                    actionButtonsContainer.classList.add('hidden');
+                    // Disable the buttons
+                    const approveButton = document.getElementById('approveButton');
+                    const rejectButton = document.getElementById('rejectButton');
+                    
+                    if (approveButton) {
+                        approveButton.disabled = true;
+                        approveButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                    
+                    if (rejectButton) {
+                        rejectButton.disabled = true;
+                        rejectButton.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                }
+                if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
             } else {
-                if (actionButtonsContainer) actionButtonsContainer.classList.remove('hidden');
+                // Current receiver and no decision made yet - show enabled action buttons
+                if (actionButtonsContainer) {
+                    actionButtonsContainer.classList.remove('hidden');
+                    // Make sure buttons are enabled
+                    const approveButton = document.getElementById('approveButton');
+                    const rejectButton = document.getElementById('rejectButton');
+                    
+                    if (approveButton) {
+                        approveButton.disabled = false;
+                        approveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                    
+                    if (rejectButton) {
+                        rejectButton.disabled = false;
+                        rejectButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                    }
+                }
                 if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
             }
         }
@@ -704,20 +784,26 @@ function loadComments(documentId) {
                     const filePath = `/storage/${comment.attachment_path}`;
                     const fileName = comment.attachment_name;
                     const fileType = comment.attachment_type;
+                    const fileExt = fileName.split('.').pop().toLowerCase();
                     
                     // Determine icon based on file type
                     let icon = '';
                     if (fileType.startsWith('image/')) {
                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
-                    } else if (fileType === 'application/pdf') {
+                    } else if (fileType === 'application/pdf' || fileExt === 'pdf') {
                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
+                    } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                              fileExt === 'docx' || 
+                              fileType === 'application/msword' || 
+                              fileExt === 'doc') {
+                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
                     } else {
                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
                     }
                     
                     attachmentHTML = `
                         <div class="mt-2 bg-gray-100 rounded p-2 inline-block">
-                            <a href="${filePath}" target="_blank" class="flex items-center text-blue-600 hover:underline">
+                            <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
                                 ${icon}
                                 <span class="text-xs truncate max-w-[200px]">${fileName}</span>
                             </a>
@@ -754,6 +840,107 @@ function loadComments(documentId) {
             console.error('Error loading comments:', error);
         });
 }
+
+// Add the comment attachment preview function
+function openCommentAttachmentPreview(filePath, fileType, fileName) {
+    console.log("Opening comment attachment preview for:", filePath);
+    const modal = document.getElementById('documentViewerModal');
+    const pdfViewer = document.getElementById('pdfViewer');
+    const imageViewer = document.getElementById('imageViewer');
+    const downloadView = document.getElementById('downloadView');
+    const documentTitle = document.getElementById('documentTitle');
+    const previewTab = document.getElementById('previewTab');
+    const downloadTab = document.getElementById('downloadTab');
+    const downloadButton = document.getElementById('downloadButton');
+    const downloadFileName = document.getElementById('downloadFileName');
+    
+    // Set the document title and download filename
+    documentTitle.textContent = fileName;
+    downloadFileName.textContent = fileName;
+    
+    // Set up download link
+    downloadButton.href = filePath;
+    downloadButton.setAttribute('download', fileName);
+    
+    // Show modal first to ensure container is visible
+    modal.classList.remove('hidden');
+    
+    // Tab switching event listeners (reuse existing functionality)
+    previewTab.click(); // Show preview by default
+    
+    // Determine content type and display appropriately
+    const isDocx = fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                  fileName.toLowerCase().endsWith('.docx') ||
+                  fileType === 'application/msword' ||
+                  fileName.toLowerCase().endsWith('.doc');
+                  
+    const isPdf = fileType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf');
+    
+    if (isPdf || isDocx) {
+        // For PDF and DOCX files
+        pdfViewer.innerHTML = '';
+        imageViewer.classList.add('hidden');
+        pdfViewer.classList.remove('hidden');
+        
+        const viewerDiv = document.createElement('div');
+        viewerDiv.id = 'pdf-viewer-container';
+        viewerDiv.className = 'h-full';
+        pdfViewer.appendChild(viewerDiv);
+        
+        // Initialize WebViewer
+        WebViewer({
+            path: '/webviewer',
+            initialDoc: filePath,
+            extension: isDocx ? 'docx' : 'pdf',
+            enableFilePicker: false,
+            enableAnnotations: false,
+        }, viewerDiv).then(instance => {
+            // Save instance for later cleanup
+            window.currentPdfViewerInstance = instance;
+            
+            // Basic configuration
+            const { docViewer, UI } = instance;
+            
+            // Enable download button in WebViewer
+            UI.enableElements(['downloadButton']);
+            UI.disableElements(['printButton']);
+            
+            // For DOCX files, configure specific options
+            if (isDocx) {
+                UI.setToolbarGroup('toolbarGroup-View');
+            }
+        }).catch(error => {
+            console.error("Failed to load WebViewer:", error);
+            pdfViewer.innerHTML = `
+                <div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>
+                <div class="p-4">
+                    <a href="${filePath}" download="${fileName}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Download Document Instead
+                    </a>
+                </div>
+            `;
+        });
+    } else if (fileType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif'].some(ext => fileName.toLowerCase().endsWith(ext))) {
+        // For image files
+        pdfViewer.classList.add('hidden');
+        imageViewer.classList.remove('hidden');
+        imageViewer.innerHTML = `<img src="${filePath}" class="max-h-full max-w-full object-contain" alt="Document Preview">`;
+    } else {
+        // For other file types, directly show download view
+        pdfViewer.classList.add('hidden');
+        imageViewer.classList.add('hidden');
+        downloadView.classList.remove('hidden');
+        
+        // Activate download tab
+        downloadTab.classList.add('bg-blue-500', 'text-white');
+        downloadTab.classList.remove('text-gray-700');
+        previewTab.classList.remove('bg-blue-500', 'text-white');
+        previewTab.classList.add('text-gray-700');
+    }
+}
+
+// Add this to the window object so it can be called from HTML
+window.openCommentAttachmentPreview = openCommentAttachmentPreview;
 
 // Comment submitting
 function submitComment() {
@@ -1044,6 +1231,24 @@ function openDocumentViewer(filePath, fileType) {
 window.closeDocumentViewer = function() {
     const modal = document.getElementById('documentViewerModal');
     const pdfViewer = document.getElementById('pdfViewer');
+    
+    // Clean up any existing WebViewer instance
+    if (window.currentPdfViewerInstance) {
+        try {
+            // For newer versions of WebViewer
+            if (typeof window.currentPdfViewerInstance.dispose === 'function') {
+                window.currentPdfViewerInstance.dispose();
+            } 
+            // For older versions
+            else if (window.currentPdfViewerInstance.docViewer && 
+                    typeof window.currentPdfViewerInstance.docViewer.dispose === 'function') {
+                window.currentPdfViewerInstance.docViewer.dispose();
+            }
+        } catch (error) {
+            console.error("Error disposing WebViewer:", error);
+        }
+        window.currentPdfViewerInstance = null;
+    }
     
     // Clear the PDF viewer
     pdfViewer.innerHTML = '';

@@ -20,8 +20,8 @@ class UserController extends Controller
      * @return \Illuminate\Http\JsonResponse
      */
     public function store(Request $request)
-    {
-        try {
+{
+    try {
         $validated = $request->validate([
             'username' => 'required|string|unique:users,username',
             'email' => 'required|email|unique:users,email',
@@ -30,15 +30,26 @@ class UserController extends Controller
             'organization_acronym' => 'nullable|string|required_if:role,student',
         ]);
 
+        // Generate random password
+        $password = Str::random(10);
+
         $user = User::create([
             'username' => $request->username,
             'email' => $request->email,
-            'password' => Hash::make($request->password ?? Str::random(10)), // Generate random password
+            'password' => Hash::make($password),
             'role' => $request->role,
             'role_name' => $request->role_name,
             'organization_acronym' => $request->organization_acronym,
             'active' => true
         ]);
+
+        // Send email notification
+        try {
+            Mail::to($user->email)->send(new UserNotificationMail($user, 'created', $password));
+            \Log::info('Account creation email sent to: ' . $user->email);
+        } catch (\Exception $e) {
+            \Log::error('Failed to send account creation email: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,
@@ -53,6 +64,7 @@ class UserController extends Controller
             'message' => 'Failed to create user: ' . $e->getMessage()
         ], 500);
     }
+
 
     /**
      * Update the specified user in storage.
