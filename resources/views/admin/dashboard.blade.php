@@ -66,14 +66,24 @@
                                             </svg>
                                         </button>
                                         <!-- Dropdown Menu -->
-                                        <div id="menu-{{ $announcement->id }}" class="hidden absolute right-0 mt-2 w-28 bg-white border border-gray-200 rounded shadow z-30">
+                                        <div id="menu-{{ $announcement->id }}" class="hidden absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow z-30">
                                             <button 
-                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition"
+                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition whitespace-nowrap"
                                                 onclick="openEditModal({{ $announcement->id }}, `{{ addslashes($announcement->title) }}`, `{{ addslashes(e($announcement->content)) }}`)"
                                                 type="button"
                                             >
                                                 Edit
                                             </button>
+                                            <form action="{{ route('admin.announcements.archive', $announcement->id) }}" method="POST" onsubmit="return confirm('Move this announcement to archive?');">
+                                                @csrf
+                                                <button
+                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition border-t border-gray-100 whitespace-nowrap"
+                                                    type="button"
+                                                    onclick="openArchiveModal({{ $announcement->id }})"
+                                                >
+                                                    Move to Archive
+                                                </button>
+                                            </form>
                                         </div>
                                     </div>
                                 </div>
@@ -109,49 +119,126 @@
                 </div>
             </div>
 
-            <!-- Previous Announcements -->
+            <!-- Previous Announcements and Archived Announcements-->
             <div class="bg-white rounded-xl shadow-md p-4">
-                <h2 class="text-lg font-semibold mb-2">Previous Announcements</h2>
-                <div class="max-h-[350px] overflow-y-auto pr-1">
-                    @if ($previousAnnouncements->count())
-                        @foreach ($previousAnnouncements as $announcement)
-                            <div class="mb-4 pb-4 border-b border-gray-300">
-                                <h3 class="text-md font-bold text-gray-800 mb-1">{{ $announcement->title }}</h3>
-                                <p class="text-sm text-gray-500 mb-2">
-                                    Posted by {{ $announcement->user->username }} on {{ $announcement->created_at->format('F j, Y g:i A') }}
-                                </p>
-                                <div class="text-gray-700 whitespace-pre-line">
-                                    @php
-                                        $maxLength = 100;
-                                        $isLong = strlen($announcement->content) > $maxLength;
-                                        $preview = $isLong ? mb_substr($announcement->content, 0, $maxLength) . '...' : $announcement->content;
-                                        $meta = "Posted by {$announcement->user->username} on {$announcement->created_at->format('F j, Y g:i A')}";
-                                    @endphp
-                                    <span>{{ $preview }}</span>
-                                    @if ($isLong)
-                                        <button 
-                                            class="text-indigo-600 hover:underline ml-2 text-sm" 
-                                            onclick="showAnnouncementModal(
-                                                `{{ addslashes($announcement->title) }}`,
-                                                `{{ addslashes(e($announcement->content)) }}`,
-                                                `{{ $meta }}`,
-                                                'previous'
-                                            )">
-                                            Read More
-                                        </button>
-                                    @endif
+    <div class="flex justify-between items-center mb-2">
+        <h2 class="text-lg font-semibold">
+            {{ $showArchive ? 'Archived Announcements' : 'Previous Announcements' }}
+        </h2>
+        @if ($showArchive)
+            <a href="{{ route('admin.dashboard') }}" class="text-gray-600 hover:underline text-sm font-medium">Previous</a>
+        @else
+            <a href="{{ route('admin.announcementArchive') }}" class="text-gray-600 hover:underline text-sm font-medium">Archive</a>
+        @endif
+    </div>
+    <div class="max-h-[350px] overflow-y-auto pr-1">
+        @php
+            $announcements = $showArchive ? $archivedAnnouncements : $previousAnnouncements;
+        @endphp
+        @if ($announcements->count())
+            @foreach ($announcements as $announcement)
+                <div class="mb-4 pb-4 border-b border-gray-300 relative">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-md font-bold text-gray-800 mb-1">{{ $announcement->title }}</h3>
+                        @if ($showArchive)
+                            <!-- Ellipsis for archived (Restore/Delete) -->
+                            <div class="relative">
+                                <button 
+                                    class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition"
+                                    onclick="toggleMenu('archive-menu-{{ $announcement->id }}')"
+                                    type="button"
+                                    aria-haspopup="true"
+                                    aria-expanded="false"
+                                >
+                                    <span class="sr-only">Open menu</span>
+                                    <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                        <circle cx="4" cy="10" r="1.5"/>
+                                        <circle cx="10" cy="10" r="1.5"/>
+                                        <circle cx="16" cy="10" r="1.5"/>
+                                    </svg>
+                                </button>
+                                <div id="archive-menu-{{ $announcement->id }}" class="hidden absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow z-30">
+                                    <button
+                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition whitespace-nowrap"
+                                        type="button"
+                                        onclick="openRestoreModal({{ $announcement->id }})"
+                                    >
+                                        Restore
+                                    </button>
+                                    <button
+                                        class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition whitespace-nowrap"
+                                        type="button"
+                                        onclick="openDeleteModal({{ $announcement->id }})"
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
                             </div>
-                        @endforeach
-                    @else
-                        <div class="text-center text-gray-500 py-8">
-                            <img src="{{ asset('images/Illustrations.svg') }}" alt="No previous post"
-                                class="w-24 h-24 mx-auto mb-2 opacity-80">
-                            <p>No previous post</p>
-                        </div>
-                    @endif
+                        @else
+                            @if (!$showArchive)
+                                <div class="relative">
+                                    <button 
+                                        class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition"
+                                        onclick="toggleMenu('prev-menu-{{ $announcement->id }}')"
+                                        type="button"
+                                        aria-haspopup="true"
+                                        aria-expanded="false"
+                                    >
+                                        <span class="sr-only">Open menu</span>
+                                        <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                            <circle cx="4" cy="10" r="1.5"/>
+                                            <circle cx="10" cy="10" r="1.5"/>
+                                            <circle cx="16" cy="10" r="1.5"/>
+                                        </svg>
+                                    </button>
+                                    <!-- Dropdown Menu -->
+                                    <div id="prev-menu-{{ $announcement->id }}" class="hidden absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow z-30">
+                                        <button
+                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition whitespace-nowrap"
+                                            type="button"
+                                            onclick="openArchiveModal({{ $announcement->id }})"
+                                        >
+                                            Move to Archive
+                                        </button>
+                                    </div>
+                                </div>
+                            @endif
+                        @endif
+                    </div>
+                    <p class="text-sm text-gray-500 mb-2">
+                        Posted by {{ $announcement->user->username }} on {{ $announcement->created_at->format('F j, Y') }}
+                    </p>
+                    <div class="text-gray-700 whitespace-pre-line">
+                        @php
+                            $maxLength = 100;
+                            $isLong = strlen($announcement->content) > $maxLength;
+                            $preview = $isLong ? mb_substr($announcement->content, 0, $maxLength) . '...' : $announcement->content;
+                        @endphp
+                        <span>{{ $preview }}</span>
+                        @if ($isLong)
+                            <button 
+                                class="text-indigo-600 hover:underline ml-2 text-sm" 
+                                onclick="showAnnouncementModal(
+                                    `{{ addslashes($announcement->title) }}`,
+                                    `{{ addslashes(e($announcement->content)) }}`,
+                                    `Posted by {{ addslashes($announcement->user->username) }} on {{ $announcement->created_at->format('F j, Y g:i A') }}`,
+                                    '{{ $showArchive ? 'archive' : 'previous' }}'
+                                )">
+                                Read More
+                            </button>
+                        @endif
+                    </div>
                 </div>
+            @endforeach
+        @else
+            <div class="text-center text-gray-500 py-8">
+                <img src="{{ asset('images/Illustrations.svg') }}" alt="No post"
+                    class="w-24 h-24 mx-auto mb-2 opacity-80">
+                <p>No {{ $showArchive ? 'archived' : 'previous' }} announcements</p>
             </div>
+        @endif
+    </div>
+</div>
 
                 <!-- Recent Documents -->
                 <div class="lg:col-span-2 space-y-2">
@@ -186,9 +273,9 @@
                         </div>
                         <div class="text-right">
                             <button type="submit" id="submitBtn"
-    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-    Post Announcement
-</button>
+                                class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                                Post Announcement
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -240,9 +327,9 @@
                 </div>
                 <div class="text-right">
                     <button type="submit" id="saveChangesBtn"
-    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-    Save Changes
-</button>
+                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                        Save Changes
+                    </button>
                 </div>
             </form>
         </div>
@@ -266,6 +353,70 @@
     </div>
 </div>
 
+    <!-- Archive Confirmation Modal -->
+<div id="archiveConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
+        <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-lg">Archive Announcement Confirmation</span>
+            <button onclick="closeArchiveModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <div class="mb-4 text-gray-700">
+            Are you sure you want to archive this Announcement? Once archived, it will be removed from your list and will no longer be visible there.
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="closeArchiveModal()" class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+            <form id="archiveForm" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Archive</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Restore Confirmation Modal -->
+<div id="restoreConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
+        <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-lg">Restore Announcement Confirmation</span>
+            <button onclick="closeRestoreModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <div class="mb-4 text-gray-700">
+            Are you sure you want to restore this announcement?<br>
+            It will be moved back to the previous announcements list and become visible to users again.
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="closeRestoreModal()" class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+            <form id="restoreForm" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Restore</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
+        <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-lg">Delete Announcement Confirmation</span>
+            <button onclick="closeDeleteModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <div class="mb-4 text-gray-700">
+            Are you sure you want to permanently delete this announcement? This action cannot be undone.
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="closeDeleteModal()" class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+            <form id="deleteForm" method="POST" class="inline">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
     <script>
     function showAnnouncementModal(title, content, meta = '', type = 'announcement') {
         document.getElementById('modalTitle').textContent = title;
@@ -334,7 +485,7 @@
 
         function toggleMenu(menuId) {
             // Hide all other menus
-            document.querySelectorAll('[id^="menu-"]').forEach(menu => {
+            document.querySelectorAll('[id$="-menu-"]').forEach(menu => {
                 if (menu.id !== menuId) menu.classList.add('hidden');
             });
             // Toggle current menu
@@ -385,6 +536,37 @@
                 saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
             }
         });
+
+        // Open Archive Modal
+        function openArchiveModal(announcementId) {
+            const form = document.getElementById('archiveForm');
+            form.action = `/admin/announcements/${announcementId}/archive`;
+            document.getElementById('archiveConfirmModal').classList.remove('hidden');
+        }
+        function closeArchiveModal() {
+            document.getElementById('archiveConfirmModal').classList.add('hidden');
+        }
+
+        // Open Restore Modal
+        function openRestoreModal(announcementId) {
+            const form = document.getElementById('restoreForm');
+            form.action = `/admin/announcements/${announcementId}/restore`;
+            document.getElementById('restoreConfirmModal').classList.remove('hidden');
+        }
+        // Close Restore Modal
+        function closeRestoreModal() {
+            document.getElementById('restoreConfirmModal').classList.add('hidden');
+        }
+
+        // Open Delete Modal
+        function openDeleteModal(announcementId) {
+            const form = document.getElementById('deleteForm');
+            form.action = `/admin/announcements/${announcementId}/delete`;
+            document.getElementById('deleteConfirmModal').classList.remove('hidden');
+        }
+        function closeDeleteModal() {
+            document.getElementById('deleteConfirmModal').classList.add('hidden');
+        }
     </script>
     
 @endsection

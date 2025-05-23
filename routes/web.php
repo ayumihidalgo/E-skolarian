@@ -73,6 +73,9 @@ Route::get('/notification', function () {
         Route::get('/admin/dashboard', [AdminDashboardController::class, 'showDashboard'])->name('admin.dashboard');
         Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
         Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
+        Route::post('/admin/announcements/{id}/archive', [AnnouncementController::class, 'moveToArchive'])->name('admin.announcements.archive');
+        Route::post('/admin/announcements/{id}/restore', [AnnouncementController::class, 'restore'])->name('admin.announcements.restore');
+        Route::delete('/admin/announcements/{id}/delete', [AnnouncementController::class, 'destroy'])->name('admin.announcements.delete');
         Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
         Route::get('/admin/review', fn () => view('admin.review'))->name('admin.review');
         Route::get('/admin/documentHistory', [AdminDocumentController::class, 'documentHistory'])->name('admin.documentHistory');
@@ -81,6 +84,7 @@ Route::get('/notification', function () {
         Route::post('admin/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('admin.settings.update-profile-picture');
         Route::post('admin/settings/change-password', [SettingsController::class, 'changePassword'])->name('admin.settings.change-password');
         Route::get('/admin/archivePage', action: [AdminDocumentController::class, 'archivePage'])->name('admin.archivePage');
+        Route::get('/admin/announcement-archive', [AnnouncementController::class, 'archive'])->name('admin.announcementArchive');
 
 
        // Document processing
