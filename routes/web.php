@@ -108,6 +108,7 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(funct
     Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('student.settings.update-profile-picture');
     Route::post('student/settings/change-password', [SettingsController::class, 'changePassword'])->name('student.settings.change-password');
     Route::post('student/settings/remove-profile', [SettingsController::class, 'removeProfilePicture'])->name('student.settings.remove-profile-picture');
+
 });
 
 Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(function () {
@@ -170,6 +171,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
 // Comments (Shared)
 // ----------------------------------------
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+Route::post('/comments', [CommentController::class, 'studentstore'])->name('comments.studentstore');
 Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
 
 // ----------------------------------------

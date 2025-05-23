@@ -3,8 +3,8 @@
 @section('content')
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    @include('components.studentNavBarComponent')
-    @include('components.studentSideBarComponent')
+    @include('components.adminNavBarComponent')
+    @include('components.adminSideBarComponent')sssss
     <div id="main-content" class="transition-all duration-300 ml-[20%]">
         @if (session('success'))
             <div id="Toast"

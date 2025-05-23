@@ -97,7 +97,7 @@ class CommentController extends Controller
             $file = $request->file('attachment');
             $fileSize = $file->getSize();
             $minSize = 1024; // 1KB minimum for testing (change to 5MB in production)
-            
+
             if ($fileSize < $minSize) {
                 return response()->json([
                     'success' => false,
@@ -109,7 +109,7 @@ class CommentController extends Controller
         try {
             // Check if the document exists
             $document = SubmittedDocument::findOrFail($request->document_id);
-            
+
             // Create a new comment
             $comment = new Comment();
             $comment->document_id = $request->document_id;
@@ -121,26 +121,26 @@ class CommentController extends Controller
                 $comment->received_by = $document->received_by ?? null; // If student/submitter is commenting, the receiver is the admin
             }
             $comment->comment = $request->comment ?? '';
-            
+
             // Handle file upload if present
             if ($request->hasFile('attachment')) {
                 try {
                     $file = $request->file('attachment');
                     $filename = time() . '_' . $file->getClientOriginalName();
-                    
+
                     // Debug file information
                     Log::info('File information:', [
                         'name' => $file->getClientOriginalName(),
                         'size' => $file->getSize(),
                         'mime' => $file->getClientMimeType()
                     ]);
-                    
+
                     // Store the file
                     $path = $file->storeAs('comment_attachments', $filename, 'public');
-                    
+
                     // Log storage result
                     Log::info('File stored at: ' . $path);
-                    
+
                     $comment->attachment_path = 'comment_attachments/' . $filename;
                     $comment->attachment_type = $file->getClientMimeType();
                     $comment->attachment_name = $file->getClientOriginalName();
@@ -152,7 +152,7 @@ class CommentController extends Controller
                     ], 500);
                 }
             }
-            
+
             $comment->save();
 
             // Retrieve the receiver user based on the received_by field
@@ -161,24 +161,124 @@ class CommentController extends Controller
             // Trigger the event
             event(new NewChatMessage($comment, $receiverUser));   // Load the sender relationship
             $comment->load('sender');
-            
+
             return response()->json([
                 'success' => true,
+                'message' => 'Comment added successfully.',
                 'comment' => $comment
             ]);
-            
+
         } catch (\Exception $e) {
             // Log the error for debugging
             Log::error('Failed to add comment: ' . $e->getMessage());
             Log::error($e->getTraceAsString());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to add comment: ' . $e->getMessage()
             ], 500);
         }
     }
+    public function studentstore(Request $request)
+    {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'document_id' => 'required|exists:submitted_documents,id',
+            'comment' => 'required_without:attachment|string|nullable',
+            'attachment' => 'nullable|file|mimes:jpeg,png,jpg,pdf,docx,doc|max:10240', // 10MB max
+        ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Check if file size meets minimum requirement
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $fileSize = $file->getSize();
+            $minSize = 1024; // 1KB minimum for testing (change to 5MB in production)
+
+            if ($fileSize < $minSize) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => ['attachment' => 'The attachment must be at least 1KB.']
+                ], 422);
+            }
+        }
+
+        try {
+            // Check if the document exists
+            $document = SubmittedDocument::findOrFail($request->document_id);
+
+            // Create a new comment
+            $comment = new Comment();
+            $comment->document_id = $request->document_id;
+            $comment->sent_by = Auth::id();
+            // Determine received_by based on user role
+            if (Auth::user()->role === 'admin') {
+                $comment->received_by = $document->user_id; // If admin is commenting, the receiver is the document submitter
+            } else {
+                $comment->received_by = $document->received_by ?? null; // If student/submitter is commenting, the receiver is the admin
+            }
+            $comment->comment = $request->comment ?? '';
+
+            // Handle file upload if present
+            if ($request->hasFile('attachment')) {
+                try {
+                    $file = $request->file('attachment');
+                    $filename = time() . '_' . $file->getClientOriginalName();
+
+                    // Debug file information
+                    Log::info('File information:', [
+                        'name' => $file->getClientOriginalName(),
+                        'size' => $file->getSize(),
+                        'mime' => $file->getClientMimeType()
+                    ]);
+
+                    // Store the file
+                    $path = $file->storeAs('comment_attachments', $filename, 'public');
+
+                    // Log storage result
+                    Log::info('File stored at: ' . $path);
+
+                    $comment->attachment_path = 'comment_attachments/' . $filename;
+                    $comment->attachment_type = $file->getClientMimeType();
+                    $comment->attachment_name = $file->getClientOriginalName();
+                } catch (\Exception $e) {
+                    Log::error('File upload error: ' . $e->getMessage());
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Failed to upload attachment: ' . $e->getMessage()
+                    ], 500);
+                }
+            }
+
+            $comment->save();
+
+            // Retrieve the receiver user based on the received_by field
+            $receiverUser = $comment->received_by ? User::find($comment->received_by) : null;
+
+            // Trigger the event
+            event(new NewChatMessage($comment, $receiverUser));   // Load the sender relationship
+            $comment->load('sender');
+
+            // Return response
+            return back()->with('success', 'Comment added successfully.');
+
+        } catch (\Exception $e) {
+            // Log the error for debugging
+            Log::error('Failed to add comment: ' . $e->getMessage());
+            Log::error($e->getTraceAsString());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to add comment: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * Get all comments for a document
      *
