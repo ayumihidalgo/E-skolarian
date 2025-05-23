@@ -49,17 +49,6 @@
                     <p class="text-sm">{{ $document['content'] }}</p>
                 </div>
 
-                <!-- File attachment section -->
-                <p><strong class="text-white/60">Attachment:</strong></p>
-                <!-- Link to view/download the attached document -->
-                <a href="{{ asset('storage/'.$document['file_path']) }}" target="_blank" class="block w-[200px]">
-                    <div class="p-2 bg-[#f2f4f7] text-black rounded-xl hover:bg-gray-200 cursor-pointer transition-colors duration-200">
-                        <div class="flex items-center gap-2">
-                            <img src="{{ asset('images/Download.svg') }}" alt="Download" class="w-4 h-4">
-                            <p class="text-sm">View Attachment</p>
-                        </div>
-                    </div>
-                </a>
 
                 <!-- Document approval status section -->
                 <p>
