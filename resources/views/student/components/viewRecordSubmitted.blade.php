@@ -168,10 +168,10 @@
                         <!-- Organization Details -->
                         <div class="overflow-hidden">
                             <p class="font-bold text-base md:text-lg break-words">
-                                {{ $record->receiver->organization_name ?? 'Organization Name' }}
+                                {{ $record->receiver->username ?? 'Organization Name' }}
                             </p>
                             <p class="text-xs md:text-sm text-gray-300 break-words">
-                                {{ $record->receiver->organization_type ?? 'Academic Organization' }}
+                                {{ $record->receiver->role_name ?? 'Academic Organization' }}
                             </p>
                         </div>
                     </div>
