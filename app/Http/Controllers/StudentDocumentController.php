@@ -53,7 +53,7 @@ class StudentDocumentController extends Controller
                 'type' => $document->type,
                 'status' => $document->status,
                 'organization' => $organizationName,
-                
+
             ]
         ]);
     }
