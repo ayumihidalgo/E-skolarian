@@ -148,7 +148,6 @@
                     <div class="flex justify-end space-x-2">
                         <button onclick="window.history.back()"
                             class="bg-gray-600 hover:bg-gray-500 text-sm px-4 py-2 rounded">Close</button>
-                        <button class="bg-green-600 hover:bg-green-500 text-sm px-4 py-2 rounded">Follow Up</button>
                     </div>
                 </div>
             </div>
