@@ -195,13 +195,13 @@ Route::get('/documents/{filename}', function ($filename) {
     // Set headers for WebAssembly threads support and PDF viewing
     header("Cross-Origin-Embedder-Policy: require-corp");
     header("Cross-Origin-Opener-Policy: same-origin");
-
+    
     // Look in different possible storage locations
     $paths = [
         storage_path('app/public/documents/' . $filename),
         public_path('storage/documents/' . $filename),
     ];
-
+    
     // Find the file in one of the possible locations
     $filePath = null;
     foreach ($paths as $path) {
@@ -210,16 +210,16 @@ Route::get('/documents/{filename}', function ($filename) {
             break;
         }
     }
-
+    
     // Return 404 if file not found
     if (!$filePath) {
         return response()->json(['error' => 'File not found'], 404);
     }
-
+    
     // Set appropriate headers to ensure in-browser display
     $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
     $contentType = 'application/octet-stream';
-
+    
     // Set content type based on file extension
     if ($extension === 'pdf') {
         $contentType = 'application/pdf';
@@ -230,7 +230,7 @@ Route::get('/documents/{filename}', function ($filename) {
     } elseif ($extension === 'doc') {
         $contentType = 'application/msword';
     }
-
+    
     // Return the file with headers that encourage browsers to display it
     return response()->file($filePath, [
         'Content-Type' => $contentType,
@@ -243,6 +243,46 @@ Route::get('/documents/{filename}', function ($filename) {
         'Cross-Origin-Opener-Policy' => 'same-origin'
     ]);
 })->name('document.view')->middleware('auth');
+
+// Add specific route for comment attachments
+Route::get('/storage/comment_attachments/{filename}', function ($filename) {
+    // Set headers for WebAssembly threads support
+    header("Cross-Origin-Embedder-Policy: require-corp");
+    header("Cross-Origin-Opener-Policy: same-origin");
+    
+    $path = storage_path('app/public/comment_attachments/' . $filename);
+    
+    // Return 404 if file not found
+    if (!file_exists($path)) {
+        return response()->json(['error' => 'File not found'], 404);
+    }
+    
+    // Set appropriate headers based on file extension
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $contentType = 'application/octet-stream';
+    
+    if ($extension === 'pdf') {
+        $contentType = 'application/pdf';
+    } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+        $contentType = 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension);
+    } elseif ($extension === 'docx') {
+        $contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    } elseif ($extension === 'doc') {
+        $contentType = 'application/msword';
+    }
+    
+    // Return the file with appropriate headers
+    return response()->file($path, [
+        'Content-Type' => $contentType,
+        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        'X-Content-Type-Options' => 'nosniff',
+        'Accept-Ranges' => 'bytes',
+        'Pragma' => 'public',
+        'Cache-Control' => 'public, max-age=86400',
+        'Cross-Origin-Embedder-Policy' => 'require-corp',
+        'Cross-Origin-Opener-Policy' => 'same-origin'
+    ]);
+})->name('comment.attachment.view')->middleware('auth');
 
 // Debugger
 Route::get('/debug-documents', function () {
