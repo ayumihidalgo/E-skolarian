@@ -37,17 +37,6 @@
                 <div class="p-4 bg-[#f2f4f7] text-black rounded-xl">
                     <p class="text-sm">{{ $document['content'] }}</p>
                 </div>
-
-                <p><strong class="text-white/60">Attachment:</strong></p>
-                <a href="{{ asset('storage/'.$document['file_path']) }}" target="_blank" class="block w-[200px]">
-                    <div class="p-2 bg-[#f2f4f7] text-black rounded-xl hover:bg-gray-200 cursor-pointer transition-colors duration-200">
-                        <div class="flex items-center gap-2">
-                            <img src="{{ asset('images/Download.svg') }}" alt="Download" class="w-4 h-4">
-                            <p class="text-sm">View Attachment</p>
-                        </div>
-                    </div>
-                </a>
-
                 <p>
                     <strong class="text-white/60">Status:</strong><br>
                     <span class="status-pill {{ $document['status'] === 'Approved' ? 'bg-[#10B981]' : 'bg-[#EF4444]' }} text-white px-4 py-1 rounded-full inline-block mt-1">
