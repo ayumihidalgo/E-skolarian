@@ -462,6 +462,22 @@ function openEventModal(dateStr = null) {
         if (eventForm) {
             eventForm.reset();
             
+            // Remove any existing listeners first to prevent duplicates
+            const inputFields = eventForm.querySelectorAll('input');
+            inputFields.forEach(input => {
+                // Clone the element to remove all event listeners
+                const newInput = input.cloneNode(true);
+                input.parentNode.replaceChild(newInput, input);
+                
+                // Add fresh event listener
+                newInput.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        saveEvent();
+                    }
+                });
+            });
+            
             // Also clear any validation messages or character counter
             const charCounter = document.getElementById('char-counter');
             if (charCounter) {
