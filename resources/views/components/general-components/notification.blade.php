@@ -51,7 +51,7 @@
                 <div id="optionsMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50">
                     <ul class="py-1 text-sm text-gray-700">
                         <li>
-                            <button id="markAsReadBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
+                            <button id="markAsReadBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"disabled>
                                 <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
@@ -59,7 +59,7 @@
                             </button>
                         </li>
                         <li>
-                            <button id="markAsUnreadBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
+                            <button id="markAsUnreadBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2"disabled>
                                 <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h11M9 21V3m0 0L3 10m6-7l6 7" />
                                 </svg>
@@ -67,7 +67,7 @@
                             </button>
                         </li>
                         <li>
-                            <button id="deleteBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
+                            <button id="deleteBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" disabled>
                                 <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
@@ -75,7 +75,7 @@
                             </button>
                         </li>
                         <li>
-                            <button id="deleteAllBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2">
+                            <button id="deleteAllBtn" class="w-full text-left px-4 py-2 hover:bg-gray-100 flex items-center space-x-2" disabled>
                                 <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
