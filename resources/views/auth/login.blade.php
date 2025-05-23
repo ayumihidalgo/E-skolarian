@@ -399,6 +399,8 @@
         $randomImage = asset("images/PUP_Bg$randomIndex.jpg");
     @endphp
 </head>
+
+@include('loading');
 <body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] md:bg-[var(--secondary-color)] font-['Manrope'] font-bold">
     <div id="bgA" class="absolute inset-0 transition-all duration-1000 ease-in-out opacity-100 max-md:hidden" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: bottom;"></div>
     <div id="bgB" class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-0 max-md:hidden"></div>
@@ -688,6 +690,10 @@
                 // Disable button to prevent multiple submissions
             signInButton.disabled = true;
             signInButton.innerText = 'Signing in...'; // Optional: change button text
+
+            // Show loader
+            document.getElementById('loader').classList.toggle('hidden');
+            document.getElementById('loader').classList.toggle('flex');
         });
 
         passwordInput.addEventListener('focus', function () {

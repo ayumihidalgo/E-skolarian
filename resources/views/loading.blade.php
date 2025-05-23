@@ -1,6 +1,6 @@
 <!-- USE THIS LOADING COMPONENT FOR YOUR PAGES -->
 
-<div class="text-center">
+<div id="loader" class="absolute top-0 left-0 right-0 bottom-0 z-1000 hidden flex-col justify-center bg-black/50">
         <!-- Dotted Loader -->
         <div class="relative w-24 h-24 mx-auto mb-6">
             @for ($i = 0; $i < 8; $i++)
@@ -17,7 +17,7 @@
         </div>
 
         <!-- Logo Text -->
-        <h1 class="text-white text-xl font-semibold tracking-wider">
+        <h1 class="text-center text-white text-xl font-semibold tracking-wider">
             E-SKOLARI
             <span class="text-yellow-400">★</span>
             <span class="text-white">N</span>

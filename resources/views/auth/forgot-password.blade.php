@@ -50,6 +50,7 @@
     </script>
 
 </head>
+@include('loading');
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
     <div class="p-5 w-full">
         <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-white/60 max-md:shadow-md">
@@ -215,6 +216,10 @@
 
                 sendEmailBtn.disabled = true;
                 sendEmailBtn.textContent = "Processing...";
+
+                // Show loader
+                document.getElementById('loader').classList.toggle('hidden');
+                document.getElementById('loader').classList.toggle('flex');
             });
 
             // Start countdown ONLY if backend confirms email sent
