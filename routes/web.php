@@ -176,6 +176,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
 // Comments (Shared)
 // ----------------------------------------
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+Route::post('/comments', [CommentController::class, 'studentstore'])->name('comments.studentstore');
 Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
 
 // ----------------------------------------

@@ -70,13 +70,16 @@ class DocumentController extends Controller
 
             $version = 1;   // NOTE: Version control not implemented yet
             foreach ($files as $file) {
-                $filePath = $file->store('documents', 'public');
+                $originalName = $file->getClientOriginalName();
+                // Optionally, you can prepend a unique ID or timestamp to avoid overwriting files with the same name
+                $filePath = $file->storeAs('documents', $originalName, 'public');
 
                 DocumentVersion::create([
                     'document_id' => $document->id,
                     'uploaded_by' => Auth::id(),
-                    'version' => $version, // NOTE: Version control not implemented yet
+                    'version' => $version,
                     'file_path' => $filePath,
+                    'original_name' => $originalName,
                     'comments' => $request->input('comments'),
                     'submitted_at' => now(),
                 ]);
