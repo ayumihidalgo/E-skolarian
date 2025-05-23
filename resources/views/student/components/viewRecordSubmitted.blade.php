@@ -162,16 +162,16 @@
                         <div
                             class="w-10 h-10 md:w-12 md:h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
                             <span class="text-gray-600 text-lg md:text-xl font-bold">
-                                {{ strtoupper(substr($record->receiver->organization_acronym ?? 'O', 0, 1)) }}
+                                {{ strtoupper(substr($record->receiver->profile_pic ?? 'O', 0, 1)) }}
                             </span>
                         </div>
                         <!-- Organization Details -->
                         <div class="overflow-hidden">
                             <p class="font-bold text-base md:text-lg break-words">
-                                {{ $record->receiver->organization_name ?? 'Organization Name' }}
+                                {{ $record->receiver->username ?? 'Organization Name' }}
                             </p>
                             <p class="text-xs md:text-sm text-gray-300 break-words">
-                                {{ $record->receiver->organization_type ?? 'Academic Organization' }}
+                                {{ $record->receiver->role_name ?? 'Academic Organization' }}
                             </p>
                         </div>
                     </div>
