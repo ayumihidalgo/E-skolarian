@@ -806,7 +806,8 @@
         //     }
         // });
 
-        document.addEventListener('DOMContentLoaded', function() {
+        // Filter and Search Functions
+       document.addEventListener('DOMContentLoaded', function() {
             // Get form elements
             const searchInput = document.getElementById('searchInput');
             const organizationFilter = document.getElementById('organizationFilter');
@@ -853,6 +854,18 @@
                 typeField.name = 'documentType';
                 form.appendChild(typeField);
                 
+                // New field for month/day pattern
+                const monthDayField = document.createElement('input');
+                monthDayField.type = 'hidden';
+                monthDayField.name = 'monthDayPattern';
+                form.appendChild(monthDayField);
+                
+                // New field for full date (MM/DD/YYYY)
+                const fullDateField = document.createElement('input');
+                fullDateField.type = 'hidden';
+                fullDateField.name = 'fullDate';
+                form.appendChild(fullDateField);
+                
                 // Set initial values from URL parameters
                 const urlParams = new URLSearchParams(window.location.search);
                 searchInput.value = urlParams.get('search') || '';
@@ -868,14 +881,61 @@
                 searchInput.addEventListener('input', function() {
                     clearTimeout(searchTimeout);
                     searchTimeout = setTimeout(() => {
-                        // Check if search term is an acronym
-                        const searchTerm = searchInput.value.trim().toUpperCase();
-                        let enhancedSearchTerm = searchInput.value;
+                        const searchTerm = searchInput.value.trim();
                         
-                        // If the search term matches an acronym, enhance the search term
-                        if (orgMap[searchTerm]) {
-                            // Format the search to include both the acronym and full name
-                            enhancedSearchTerm = `${orgMap[searchTerm]}`;
+                        // Clear all special search fields initially
+                        monthDayField.value = '';
+                        fullDateField.value = '';
+                        
+                        // Check for full date format (MM/DD/YYYY)
+                        const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+                        const fullDateMatch = searchTerm.match(fullDatePattern);
+                        
+                        if (fullDateMatch) {
+                            // Extract values for validation
+                            const month = parseInt(fullDateMatch[1], 10);
+                            const day = parseInt(fullDateMatch[2], 10);
+                            const year = parseInt(fullDateMatch[3], 10);
+                            
+                            // Validate date values
+                            if (isValidDate(month, day, year)) {
+                                // Format as MM/DD/YYYY for consistency
+                                fullDateField.value = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
+                                searchField.value = ''; // Clear regular search
+                                orgField.value = organizationFilter.value || 'All';
+                                typeField.value = documentTypeFilter.value || 'All';
+                                form.submit();
+                                return;
+                            }
+                        }
+                        
+                        // Check for month/day pattern (M/D or MM/DD)
+                        const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
+                        const monthDayMatch = searchTerm.match(monthDayPattern);
+                        
+                        if (monthDayMatch && searchTerm.length <= 5) {
+                            // Extract values for validation
+                            const month = parseInt(monthDayMatch[1], 10);
+                            const day = parseInt(monthDayMatch[2], 10);
+                            
+                            // Validate month and day values
+                            if (isValidDate(month, day, new Date().getFullYear())) {
+                                // Format as MM/DD for consistency
+                                monthDayField.value = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
+                                searchField.value = ''; // Clear regular search
+                                orgField.value = organizationFilter.value || 'All';
+                                typeField.value = documentTypeFilter.value || 'All';
+                                form.submit();
+                                return;
+                            }
+                        }
+                        
+                        // Not a valid date pattern, check for organization acronym
+                        const searchTermUpper = searchTerm.toUpperCase();
+                        let enhancedSearchTerm = searchTerm;
+                        
+                        if (orgMap[searchTermUpper]) {
+                            enhancedSearchTerm = orgMap[searchTermUpper];
                         }
                         
                         searchField.value = enhancedSearchTerm;
@@ -885,8 +945,37 @@
                     }, 500); // 500ms debounce
                 });
                 
-                // Keep the filters unchanged - no acronym expansion
+                // Helper function to validate dates
+                function isValidDate(month, day, year) {
+                    // Basic range checks
+                    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+                        return false;
+                    }
+                    
+                    // Days in month validation
+                    const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+                    
+                    // Adjust February for leap years
+                    if (month === 2) {
+                        const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+                        if (isLeapYear) {
+                            if (day > 29) return false;
+                        } else {
+                            if (day > 28) return false;
+                        }
+                    } else if (day > daysInMonth[month]) {
+                        return false;
+                    }
+                    
+                    return true;
+                }
+                
+                // Keep the filters unchanged
                 organizationFilter.addEventListener('change', function() {
+                    // Reset date search patterns when changing filters
+                    monthDayField.value = '';
+                    fullDateField.value = '';
+                    
                     searchField.value = searchInput.value;
                     orgField.value = organizationFilter.value || 'All'; 
                     typeField.value = documentTypeFilter.value || 'All';
@@ -894,6 +983,10 @@
                 });
                 
                 documentTypeFilter.addEventListener('change', function() {
+                    // Reset date search patterns when changing filters
+                    monthDayField.value = '';
+                    fullDateField.value = '';
+                    
                     searchField.value = searchInput.value;
                     orgField.value = organizationFilter.value || 'All';
                     typeField.value = documentTypeFilter.value || 'All';

@@ -50,33 +50,32 @@ class DocumentReviewController extends Controller
         // Apply search filter if provided
         if ($searchTerm) {
             $documentsQuery->where(function($query) use ($searchTerm) {
-            $query->where('control_tag', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('subject', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('type', 'LIKE', "%{$searchTerm}%")
-                  ->orWhereHas('user', function($q) use ($searchTerm) {
-                  $q->where('username', 'LIKE', "%{$searchTerm}%");
-                  })
-                  // Add date search capabilities
-                  ->orWhere(function($q) use ($searchTerm) {
-                  // Search for YYYY-MM-DD format
-                  if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $searchTerm)) {
-                      $q->whereDate('submitted_documents.created_at', $searchTerm);
-                  }
-                  // Search for MM/DD/YYYY format
-                  elseif (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $searchTerm, $matches)) {
-                      $formattedDate = sprintf('%04d-%02d-%02d', $matches[3], $matches[1], $matches[2]);
-                      $q->whereDate('submitted_documents.created_at', $formattedDate);
-                  }
-                  // Search for just year
-                  elseif (strlen($searchTerm) === 4 && is_numeric($searchTerm)) {
-                      $q->whereYear('submitted_documents.created_at', $searchTerm);
-                  }
-                  // Search for month name
-                  elseif (($month = date_parse($searchTerm)['month']) !== false && $month > 0) {
-                      $q->whereMonth('submitted_documents.created_at', $month);
-                  }
-                  });
+                $query->where('control_tag', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('subject', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('type', 'LIKE', "%{$searchTerm}%")
+                    ->orWhereHas('user', function($q) use ($searchTerm) {
+                        $q->where('username', 'LIKE', "%{$searchTerm}%");
+                    });
             });
+        }
+
+        // Handle full date search (MM/DD/YYYY)
+        if ($request->filled('fullDate')) {
+            $datePattern = $request->input('fullDate');
+            list($month, $day, $year) = explode('/', $datePattern);
+            
+            $formattedDate = "{$year}-{$month}-{$day}";
+            $documentsQuery->whereDate('submitted_documents.created_at', $formattedDate);
+        }
+
+        // Handle month/day pattern search
+        elseif ($request->filled('monthDayPattern')) {
+            $pattern = $request->input('monthDayPattern');
+            list($month, $day) = explode('/', $pattern);
+            
+            // Search for the specific month and day across any year
+            $documentsQuery->whereMonth('submitted_documents.created_at', $month)
+                        ->whereDay('submitted_documents.created_at', $day);
         }
         
         // Apply organization filter if provided
