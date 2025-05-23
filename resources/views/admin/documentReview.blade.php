@@ -350,6 +350,22 @@
                                     </div>
                                 </div>
                             </div>
+                            
+                            <!-- Forward Status -->
+                            <div id="forwardedStatusIndicator" class="hidden mt-2 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 rounded">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium">You've forwarded this document to <strong id="forwardedToUser">another admin</strong> on <span id="forwardedDate">loading date...</span></p>
+                                        <p class="text-sm mt-1">Message: <span id="forwardedMessage" class="italic">Loading message...</span></p>
+                                        <p class="text-xs mt-2 font-medium">You can still view the document, but only the current receiver can perform actions on it.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Action Buttons -->
@@ -901,7 +917,6 @@
                             if (isValidDate(month, day, year)) {
                                 // Format as MM/DD/YYYY for consistency
                                 fullDateField.value = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                                searchField.value = ''; // Clear regular search
                                 orgField.value = organizationFilter.value || 'All';
                                 typeField.value = documentTypeFilter.value || 'All';
                                 form.submit();
@@ -922,7 +937,6 @@
                             if (isValidDate(month, day, new Date().getFullYear())) {
                                 // Format as MM/DD for consistency
                                 monthDayField.value = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
-                                searchField.value = ''; // Clear regular search
                                 orgField.value = organizationFilter.value || 'All';
                                 typeField.value = documentTypeFilter.value || 'All';
                                 form.submit();
@@ -942,7 +956,7 @@
                         orgField.value = organizationFilter.value || 'All';
                         typeField.value = documentTypeFilter.value || 'All';
                         form.submit();
-                    }, 500); // 500ms debounce
+                    }, 1000); // 500ms debounce
                 });
                 
                 // Helper function to validate dates
