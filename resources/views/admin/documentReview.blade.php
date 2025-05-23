@@ -823,7 +823,7 @@
         // });
 
         // Filter and Search Functions
-        document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
             // Get form elements
             const searchInput = document.getElementById('searchInput');
             const organizationFilter = document.getElementById('organizationFilter');
@@ -933,7 +933,7 @@
                         // Validate month and day values
                         if (isValidDate(month, day, new Date().getFullYear())) {
                             // Format as MM/DD for consistency
-                            monthDayField.value = ${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')};
+                            monthDayField.value = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
                             orgField.value = organizationFilter.value || 'All';
                             typeField.value = documentTypeFilter.value || 'All';
                             form.submit();
