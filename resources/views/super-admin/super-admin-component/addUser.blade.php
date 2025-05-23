@@ -104,12 +104,11 @@
                 <div class="mb-4">
                     <label for="organization_acronym" class="block text-sm font-medium mb-2 text-gray-700">Organization Acronym</label>
                     <input type="text" 
-                        name="organization_acronym" 
                         id="organization_acronym" 
-                        maxlength="20"
-                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
-                        placeholder="Organization Acronym (e.g. SSG)">
-                    <p id="acronymError" class="text-red-600 text-xs mt-1 hidden"></p>
+                        name="organization_acronym" 
+                        class="w-full px-3 py-2 border border-black rounded-md bg-gray-100 cursor-not-allowed" 
+                        readonly>
+                    <p id="organizationAcronymError" class="text-red-600 text-xs mt-1 hidden"></p>
                 </div>
                 
                 <div class="mb-4">
