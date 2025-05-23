@@ -68,7 +68,7 @@
                             <img src="{{ asset('images/department.svg') }}" class="w-6 h-6" alt="department icon">
                             <div>
                                 <p class="font-extrabold text-[11px]">Department</p>
-                                <p class="font-extrabold text-[12px]">BSIT (Papaltan pa ng real acronym ng department)</p>
+                                <p class="font-extrabold text-[12px]">{{$user->organization_acronym}}</p>
                                 <!-- Example department -->
                             </div>
                         </div>
