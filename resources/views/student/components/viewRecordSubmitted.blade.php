@@ -158,12 +158,19 @@
                 <div class="space-y-4 md:space-y-6 flex-1 flex flex-col">
                     <div class="flex items-center space-x-3 md:space-x-4">
                         <!-- Profile Picture Placeholder -->
-                        <div
-                            class="w-10 h-10 md:w-12 md:h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                            <span class="text-gray-600 text-lg md:text-xl font-bold">
-                                {{ strtoupper(substr($record->receiver->profile_pic ?? 'O', 0, 1)) }}
-                            </span>
-                        </div>
+                        @if ($record->receiver && $record->receiver->profile_pic)
+                            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-1 flex-shrink-0">
+                                <img src="{{ asset('storage/' . $record->receiver->profile_pic) }}" alt="Profile"
+                                    class="w-full h-full object-cover rounded-full">
+                            </div>
+                        @else
+                            <div
+                                class="w-10 h-10 md:w-12 md:h-12 bg-gray-300 rounded-full border-1 flex items-center justify-center flex-shrink-0">
+                                <span class="text-gray-600 text-lg md:text-xl font-bold">
+                                    {{ strtoupper(substr($record->receiver->username ?? 'O', 0, 1)) }}
+                                </span>
+                            </div>
+                        @endif
                         <!-- Organization Details -->
                         <div class="overflow-hidden">
                             <p class="font-bold text-base md:text-lg break-words">
@@ -178,32 +185,35 @@
                     <hr class="border-gray-600">
 
                     <!-- Comments Section (Latest at top, scrollbar starts at top) -->
-                    <div id="commentsContainer" class="overflow-y-auto max-h-80 pr-2 flex flex-col-reverse">
+                    <div id="comments" class="overflow-y-auto max-h-80 pr-2 flex flex-col-reverse scroll-smooth"
+                        style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;">
                         @foreach ($comments->reverse() as $comment)
                             <div class="border-b border-[#782626] pb-4 mb-4">
                                 <div class="flex items-start gap-3">
                                     <div class="flex-shrink-0">
-                                        <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                                            @if ($comment->sender && $comment->sender->profile_pic)
-                                                <!-- Show uploaded profile image -->
-                                                <div class="border-1 border-gray-300 rounded-full">
-                                                    <img src="{{ asset('storage/' . $comment->sender->profile_pic) }}"
-                                                        alt="Profile" class="w-12 h-12 rounded-full object-cover">
-                                                </div>
-                                            @else
-                                                <!-- Default profile with initials -->
-                                                <div
-                                                    class="w-12 h-12 rounded-full bg-maroon-700 flex items-center justify-center text-white text-3xl font-bold">
-                                                    <img src="{{ asset('images/dprofile.svg') }}" class="w-12 h-12"
-                                                        alt="camera icon">
-                                                </div>
-                                            @endif
-                                        </div>
+                                        @if ($comment->sender && $comment->sender->profile_pic)
+                                            <!-- Show uploaded profile image -->
+                                            <div
+                                                class="border-1 border-gray-300 rounded-full w-10 h-10 bg-white flex items-center justify-center">
+                                                <img src="{{ asset('storage/' . $comment->sender->profile_pic) }}"
+                                                    alt="Profile" class="w-10 h-10 rounded-full object-cover">
+                                            </div>
+                                        @else
+                                            <div
+                                                class="w-10 h-10 bg-white rounded-full bg-maroon-700 flex items-center border-1 justify-center text-white text-3xl font-bold">
+                                                <img src="{{ asset('images/dprofile.svg') }}" class="w-10 h-10"
+                                                    alt="camera icon">
+                                            </div>
+                                        @endif
                                     </div>
                                     <div class="flex-1">
                                         <div class="flex justify-between items-center">
-                                            <h4 class="font-bold text-white text-lg">
-                                                {{ $comment->sender->username ?? 'Unknown User' }}</h4>
+                                            <div>
+                                                <p class="font-medium truncate">
+                                                    {{ $comment->sender->username ?? 'Unknown User' }}</p>
+                                                <p class="text-xs text-gray-300">
+                                                    {{ $comment->sender->role_name ?? 'Unknown User' }}</p>
+                                            </div>
                                             <span
                                                 class="text-gray-300 text-sm">{{ $comment->created_at->format('h:i A') }}</span>
                                         </div>
