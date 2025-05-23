@@ -151,35 +151,34 @@
     </div>
 </div>
 
-<!-- Pagination Buttons -->
-<div class="flex justify-between items-center px-15" style="width: 100%;">
-    <button
-        class="flex items-center bg-[#7A121280] px-4 py-2 rounded-[8px] hover:bg-red-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        {{ $users->onFirstPage() ? 'disabled' : '' }}
-        onclick="window.location.href='{{ $users->previousPageUrl() }}'"
-    >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75 3 12m0 0 3.75-3.75M3 12h18" />
-        </svg>
-        Previous
-    </button>
-    <!-- Pagination Indicator -->
-    <div class="flex items-center space-x-2 font-[Lexend] text-black">
-        <span>Page</span>
-        <span class="border-b-4 rounded-[3px] border-[#7A1212] px-2">{{ $users->currentPage() }}</span>
-        <span>of</span>
-        <span class="border-b-4 rounded-[3px] border-[#7A1212] px-2">{{ $users->lastPage() }}</span>
-    </div>
-    <button
-        class="flex items-center bg-[#7A121280] px-4 py-2 rounded-[8px] hover:bg-red-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        {{ !$users->hasMorePages() ? 'disabled' : '' }}
-        onclick="window.location.href='{{ $users->nextPageUrl() }}'"
-    >
-        Next
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 ml-2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
-        </svg>
-    </button>
+<!-- Pagination controls -->
+<div class="mt-4 flex justify-center">
+    <nav>
+        <ul class="inline-flex items-center space-x-2">
+            <li>
+                <a href="{{ $users->url(1) }}"
+                    class="pagination-btn-first px-3 py-1 rounded-lg {{ $users->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
+                    First
+                </a>
+            </li>
+
+            @for ($i = 1; $i <= $users->lastPage(); $i++)
+                <li>
+                    <a href="{{ $users->url($i) }}"
+                        class="pagination-btn px-3 py-1 rounded-lg {{ $users->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
+                        {{ $i }}
+                    </a>
+                </li>
+            @endfor
+
+            <li>
+                <a href="{{ $users->url($users->lastPage()) }}"
+                    class="pagination-btn-last px-3 py-1 rounded-lg {{ $users->currentPage() == $users->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
+                    Last
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <!-- Modal for Add User Button -->
