@@ -46,32 +46,6 @@
     </nav>
 </div>
 
-<!-- Loader Overlay -->
-<div id="custom-loader-overlay" class="fixed inset-0 bg-[#7A1212]/90 flex items-center justify-center z-[9999] hidden">
-    <div class="text-center">
-        <!-- Dotted Loader -->
-        <div class="relative w-24 h-24 mx-auto mb-6">
-            @for ($i = 0; $i < 8; $i++)
-                @php
-                    $angle = (360 / 8) * $i;
-                    $radius = 40;
-                    $x = 50 + $radius * cos(deg2rad($angle));
-                    $y = 50 + $radius * sin(deg2rad($angle));
-                @endphp
-                <div class="absolute w-4 h-4 bg-white rounded-full animate-ping"
-                    style="top: calc({{ $y }}% - 8px); left: calc({{ $x }}% - 8px); animation-delay: {{ $i * 0.1 }}s;">
-                </div>
-            @endfor
-        </div>
-        <!-- Logo Text -->
-        <h1 class="text-white text-xl font-semibold tracking-wider">
-            E-SKOLARI
-            <span class="text-yellow-400">★</span>
-            <span class="text-white">N</span>
-        </h1>
-    </div>
-</div>
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const toggleBtn = document.getElementById('sidebarToggleBtn');
@@ -131,17 +105,5 @@
 
         window.addEventListener('resize', handleResponsive);
         handleResponsive(); // Initial check
-
-        // Sidebar link loading logic
-        document.querySelectorAll('.sidebar-link').forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const url = this.getAttribute('href');
-                document.getElementById('custom-loader-overlay').classList.remove('hidden');
-                setTimeout(() => {
-                    window.location.href = url;
-                }, 1500); // 3 seconds
-            });
-        });
     });
 </script>
