@@ -20,7 +20,7 @@ class AdminDocumentController extends Controller
         if (!$document) {
             abort(404, 'Document not found');
         }
-        
+
         // Organization mapping
         $orgMap = [
             'ACAP' => 'Association of Competent and Aspiring Psychologists',
@@ -37,12 +37,12 @@ class AdminDocumentController extends Controller
             'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
             'OSC' => 'Office of the Student Council',
         ];
-        
+
         // Extract organization acronym from control tag
         $parts = explode('_', $document->control_tag);
         $acronym = count($parts) > 0 ? $parts[0] : '';
         $organizationName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
-        
+
         return view('admin.documentPreview', [
             'document' => [
                 'id' => $document->id,
@@ -53,7 +53,6 @@ class AdminDocumentController extends Controller
                 'type' => $document->type,
                 'status' => $document->status,
                 'organization' => $organizationName,
-                'file_path' => $document->file_path
             ]
         ]);
     }
@@ -66,21 +65,21 @@ class AdminDocumentController extends Controller
         $query = DB::table('submitted_documents')
             ->whereNull('archived_at')
             ->where('received_by', $adminId); // Only documents assigned to this admin
-        
+
         // Apply filters from request parameters
         if ($request->has('status') && $request->status !== 'All') {
             $query->where('status', $request->status);
         }
-        
+
         if ($request->has('organization') && $request->organization !== 'All') {
-            // Filter by organization prefix in control_tag 
+            // Filter by organization prefix in control_tag
             $query->where('control_tag', 'like', $request->organization . '_%');
         }
-        
+
         if ($request->has('type') && $request->type !== 'All') {
             $query->where('type', $request->type);
         }
-        
+
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -89,12 +88,12 @@ class AdminDocumentController extends Controller
                   ->orWhere('type', 'like', "%{$search}%");
             });
         }
-        
+
         // Fetch documents with pagination
         $documents = $query->orderBy('created_at', 'desc')
                           ->paginate(6)
                           ->appends($request->except('page')); // Important: maintain filters across pagination
-        
+
         // Get organization mapping for display purposes (your existing code)
         $orgMap = [
             'ACAP' => 'Association of Competent and Aspiring Psychologists',
@@ -111,7 +110,7 @@ class AdminDocumentController extends Controller
             'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
             'OSC' => 'Office of the Student Council',
         ];
-        
+
         $tagColors = [
             'OSC' => 'text-blue-500',
             'ECE' => 'text-red-500',
@@ -127,28 +126,28 @@ class AdminDocumentController extends Controller
             'AGDS' => 'text-yellow-900',
             'CHO' => 'text-blue-500',
         ];
-        
+
         return view('admin.documentHistory', compact('documents', 'orgMap', 'tagColors'));
     }
-    
+
     public function archiveDocuments(Request $request)
     {
         $documentIds = $request->input('document_ids', []);
-        
+
         if (empty($documentIds)) {
             return response()->json([
                 'success' => false,
                 'message' => 'No documents selected for archiving'
             ]);
         }
-        
+
         try {
             DB::table('submitted_documents')
                 ->whereIn('id', $documentIds)
                 ->update([
                     'archived_at' => now()
                 ]);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => count($documentIds) . ' document(s) archived successfully'
@@ -173,15 +172,15 @@ class AdminDocumentController extends Controller
         if ($request->has('status') && $request->status !== 'All') {
             $query->where('status', $request->status);
         }
-        
+
         if ($request->has('organization') && $request->organization !== 'All') {
             $query->where('control_tag', 'like', $request->organization . '_%');
         }
-        
+
         if ($request->has('type') && $request->type !== 'All') {
             $query->where('type', $request->type);
         }
-        
+
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
@@ -190,12 +189,12 @@ class AdminDocumentController extends Controller
                   ->orWhere('type', 'like', "%{$search}%");
             });
         }
-        
+
         // Fetch archived documents with pagination
         $documents = $query->orderBy('archived_at', 'desc')
                           ->paginate(6)
                           ->appends($request->except('page')); // Maintain filters across pagination
-    
+
         // Your existing organization mapping code
         $orgMap = [
             'ACAP' => 'Association of Competent and Aspiring Psychologists',
@@ -212,7 +211,7 @@ class AdminDocumentController extends Controller
             'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
             'OSC' => 'Office of the Student Council',
         ];
-        
+
         $tagColors = [
             'OSC' => 'text-blue-500',
             'ECE' => 'text-red-500',
@@ -228,28 +227,28 @@ class AdminDocumentController extends Controller
             'AGDS' => 'text-yellow-900',
             'CHO' => 'text-blue-500',
         ];
-        
+
         return view('admin.archivePage', compact('documents', 'orgMap', 'tagColors'));
     }
 
     public function restoreDocuments(Request $request)
     {
         $documentIds = $request->input('document_ids', []);
-        
+
         if (empty($documentIds)) {
             return response()->json([
                 'success' => false,
                 'message' => 'No documents selected for restoration'
             ]);
         }
-        
+
         try {
             DB::table('submitted_documents')
                 ->whereIn('id', $documentIds)
                 ->update([
                     'archived_at' => null
                 ]);
-            
+
             return response()->json([
                 'success' => true,
                 'message' => count($documentIds) . ' document(s) restored successfully'
