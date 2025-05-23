@@ -438,3 +438,29 @@
     transform: translateY(-2px);
 }
 
+/* Year selector styling */
+#year-selector {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: inherit;
+}
+
+#year-selector select {
+    font-size: inherit;
+    cursor: pointer;
+}
+
+.fc-toolbar-title {
+    position: relative;
+}
+
+.fc-toolbar-title::after {
+    content: "▾";
+    font-size: 0.7em;
+    margin-left: 4px;
+    vertical-align: middle;
+    opacity: 0.7;
+}
+
+.fc-toolbar-title:hover {
+    color: #7A1212;
+}
