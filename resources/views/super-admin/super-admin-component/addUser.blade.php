@@ -81,7 +81,7 @@
                             class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] cursor-pointer text-ellipsis"
                             style="text-overflow: ellipsis;">
                         <option value="" disabled selected>Select an organization</option>
-                        <optgroup label="Academic Organization (Student)">
+                        <!-- <optgroup label="Academic Organization (Student)"> -->
                             <option value="Eligible League of Information Technology Enthusiast">Eligible League of Information Technology Enthusiast</option>
                             <option value="Association of Electronics Engineering Students">Association of Electronics Engineering Students</option>
                             <option value="Association of Competent and Aspiring Psychologists">Association of Competent and Aspiring Psychologists</option>
@@ -90,13 +90,13 @@
                             <option value="Guild of Imporous and Valuable Educators">Guild of Imporous and Valuable Educators</option>
                             <option value="Junior Philippine Institute of Accountants">Junior Philippine Institute of Accountants</option>
                             <option value="Junior Executives of Human Resources Association">Junior Executives of Human Resources Association</option>
-                        </optgroup>
-                        <optgroup label="Non-Academic Organization (Student)">
+                        <!-- </optgroup> -->
+                        <!-- <optgroup label="Non-Academic Organization (Student)"> -->
                             <option value="Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism">Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism</option>
                             <option value="PUP SRC CHORALE">PUP SRC CHORALE</option>
                             <option value="Supreme Innovators' Guild for Mathematics Advancement">Supreme Innovators' Guild for Mathematics Advancement</option>
                             <option value="Artist Guild Dance Squad">Artist Guild Dance Squad</option>
-                        </optgroup>
+                        <!-- </optgroup> -->
                     </select>
                     <p id="organizationNameError" class="text-red-600 text-xs mt-1 hidden"></p>
                 </div>
