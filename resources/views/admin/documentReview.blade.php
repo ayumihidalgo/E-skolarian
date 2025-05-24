@@ -3,7 +3,7 @@
 @include('components.adminNavBarComponent')
 @include('components.adminSidebarComponent')
 
-<div id="main-content" class="transition-all duration-300 ml-0 md:ml-[20%] sm:mt-16 md:mt-0">
+<div id="main-content" class="transition-all duration-300 sm:mt-16 md:mt-0">
     <div class="flex-grow bg-gray-100">
         <!-- Main Content -->
         <div id="mainContentArea" class="p-2 sm:p-4 md:p-6 min-h-screen">
@@ -823,7 +823,7 @@
         // });
 
         // Filter and Search Functions
-       document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
             // Get form elements
             const searchInput = document.getElementById('searchInput');
             const organizationFilter = document.getElementById('organizationFilter');
@@ -892,71 +892,90 @@
                     documentTypeFilter.value = urlParams.get('documentType');
                 }
                 
+                // Function to submit search form with current values
+                function submitSearch() {
+                    const searchTerm = searchInput.value.trim();
+                    
+                    // Clear all special search fields initially
+                    monthDayField.value = '';
+                    fullDateField.value = '';
+                    
+                    // Check for full date format (MM/DD/YYYY)
+                    const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+                    const fullDateMatch = searchTerm.match(fullDatePattern);
+                    
+                    if (fullDateMatch) {
+                        // Extract values for validation
+                        const month = parseInt(fullDateMatch[1], 10);
+                        const day = parseInt(fullDateMatch[2], 10);
+                        const year = parseInt(fullDateMatch[3], 10);
+                        
+                        // Validate date values
+                        if (isValidDate(month, day, year)) {
+                            // Format as MM/DD/YYYY for consistency
+                            fullDateField.value = ${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year};
+                            orgField.value = organizationFilter.value || 'All';
+                            typeField.value = documentTypeFilter.value || 'All';
+                            form.submit();
+                            return;
+                        }
+                    }
+                    
+                    // Check for month/day pattern (M/D or MM/DD)
+                    const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
+                    const monthDayMatch = searchTerm.match(monthDayPattern);
+                    
+                    if (monthDayMatch && searchTerm.length <= 5) {
+                        // Extract values for validation
+                        const month = parseInt(monthDayMatch[1], 10);
+                        const day = parseInt(monthDayMatch[2], 10);
+                        
+                        // Validate month and day values
+                        if (isValidDate(month, day, new Date().getFullYear())) {
+                            // Format as MM/DD for consistency
+                            monthDayField.value = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
+                            orgField.value = organizationFilter.value || 'All';
+                            typeField.value = documentTypeFilter.value || 'All';
+                            form.submit();
+                            return;
+                        }
+                    }
+                    
+                    // Not a valid date pattern, check for organization acronym
+                    const searchTermUpper = searchTerm.toUpperCase();
+                    let enhancedSearchTerm = searchTerm;
+                    
+                    if (orgMap[searchTermUpper]) {
+                        enhancedSearchTerm = orgMap[searchTermUpper];
+                    }
+                    
+                    searchField.value = enhancedSearchTerm;
+                    orgField.value = organizationFilter.value || 'All';
+                    typeField.value = documentTypeFilter.value || 'All';
+                    form.submit();
+                }
+                
                 // Add event listeners
                 let searchTimeout;
                 searchInput.addEventListener('input', function() {
                     clearTimeout(searchTimeout);
                     searchTimeout = setTimeout(() => {
-                        const searchTerm = searchInput.value.trim();
-                        
-                        // Clear all special search fields initially
-                        monthDayField.value = '';
-                        fullDateField.value = '';
-                        
-                        // Check for full date format (MM/DD/YYYY)
-                        const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-                        const fullDateMatch = searchTerm.match(fullDatePattern);
-                        
-                        if (fullDateMatch) {
-                            // Extract values for validation
-                            const month = parseInt(fullDateMatch[1], 10);
-                            const day = parseInt(fullDateMatch[2], 10);
-                            const year = parseInt(fullDateMatch[3], 10);
-                            
-                            // Validate date values
-                            if (isValidDate(month, day, year)) {
-                                // Format as MM/DD/YYYY for consistency
-                                fullDateField.value = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                                orgField.value = organizationFilter.value || 'All';
-                                typeField.value = documentTypeFilter.value || 'All';
-                                form.submit();
-                                return;
-                            }
+                        submitSearch();
+                    }, 1000); // 1000ms debounce
+                });
+                
+                // Handle Enter key in search field
+                searchInput.addEventListener('keydown', function(event) {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        if (searchInput.value.trim() === '') {
+                            // Reset all filters and redirect to base URL
+                            window.location.href = window.location.pathname;
+                            return false;
+                        } else {
+                            submitSearch();
                         }
-                        
-                        // Check for month/day pattern (M/D or MM/DD)
-                        const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
-                        const monthDayMatch = searchTerm.match(monthDayPattern);
-                        
-                        if (monthDayMatch && searchTerm.length <= 5) {
-                            // Extract values for validation
-                            const month = parseInt(monthDayMatch[1], 10);
-                            const day = parseInt(monthDayMatch[2], 10);
-                            
-                            // Validate month and day values
-                            if (isValidDate(month, day, new Date().getFullYear())) {
-                                // Format as MM/DD for consistency
-                                monthDayField.value = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
-                                orgField.value = organizationFilter.value || 'All';
-                                typeField.value = documentTypeFilter.value || 'All';
-                                form.submit();
-                                return;
-                            }
-                        }
-                        
-                        // Not a valid date pattern, check for organization acronym
-                        const searchTermUpper = searchTerm.toUpperCase();
-                        let enhancedSearchTerm = searchTerm;
-                        
-                        if (orgMap[searchTermUpper]) {
-                            enhancedSearchTerm = orgMap[searchTermUpper];
-                        }
-                        
-                        searchField.value = enhancedSearchTerm;
-                        orgField.value = organizationFilter.value || 'All';
-                        typeField.value = documentTypeFilter.value || 'All';
-                        form.submit();
-                    }, 1000); // 500ms debounce
+                    }
                 });
                 
                 // Helper function to validate dates
