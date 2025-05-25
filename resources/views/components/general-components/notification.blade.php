@@ -43,7 +43,7 @@
            <div class="right-nav flex flex-row space-x-5 relative">
                 <!-- Dots Icon -->
                 <svg id="optionsMenuBtn" width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg" class="cursor-pointer hover:text-gray-700 transition-colors duration-300">
+                    xmlns="http://www.w3.org/2000/svg" class="cursor-pointer hover:text-gray-700 transition-colors duration-300 hidden">
                     <path d="M4.75 8.5C3.925 8.5 3.25 9.175 3.25 10C3.25 10.825 3.925 11.5 4.75 11.5C5.575 11.5 6.25 10.825 6.25 10C6.25 9.175 5.575 8.5 4.75 8.5ZM15.25 8.5C14.425 8.5 13.75 9.175 13.75 10C13.75 10.825 14.425 11.5 15.25 11.5C16.075 11.5 16.75 10.825 16.75 10C16.75 9.175 16.075 8.5 15.25 8.5ZM10 8.5C9.175 8.5 8.5 9.175 8.5 10C8.5 10.825 9.175 11.5 10 11.5C10.825 11.5 11.5 10.825 11.5 10C11.5 9.175 10.825 8.5 10 8.5Z" fill="#525866"/>
                 </svg>
 
@@ -79,7 +79,7 @@
                                 <svg class="w-4 h-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
-                                <span>Delete All</span>
+                                <span>Clear All</span>
                             </button>
                         </li>
                     </ul>
@@ -117,40 +117,39 @@
                         $link = $notification->url ?? '#';
                     @endphp
                     <a href="{{ $link }}" class="block">
-                <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
-                    <div class="flex items-start justify-between">
-                        <div class="flex items-start space-x-2">
-                            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
-                            </svg>
-                            <div class="flex flex-col">
-                                <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
-                                <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
-                                <p class="text-xs text-gray-400 mt-2">
-                        @if($notification->created_at->isToday())
-                            Today at {{ $notification->created_at->format('h:i A') }}
-                        @elseif($notification->created_at->isYesterday())
-                            Yesterday at {{ $notification->created_at->format('h:i A') }}
-                        @elseif($notification->created_at->isCurrentYear())
-                            {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
-                        @else
-                            {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
-                        @endif
-                    </p>
-                            </div>
-                        </div>
-                        {{-- <div class="flex items-center">
-                            <input type="checkbox" 
-                                class="mark-as-read-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
-                                data-notification-id="{{ $notification->id }}"
-                                @if($notification->is_read) checked @endif
-                            >
-                        </div> --}}
-                    </div>
-                </div>
+              <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
+    <div class="flex items-start justify-between">
+        <a href="{{ $link }}" class="flex items-start space-x-2 flex-1">
+            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
+            </svg>
+            <div class="flex flex-col">
+                <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
+                <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
+                <p class="text-xs text-gray-400 mt-2">
+                    @if($notification->created_at->isToday())
+                        Today at {{ $notification->created_at->format('h:i A') }}
+                    @elseif($notification->created_at->isYesterday())
+                        Yesterday at {{ $notification->created_at->format('h:i A') }}
+                    @elseif($notification->created_at->isCurrentYear())
+                        {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
+                    @else
+                        {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
+                    @endif
+                </p>
+            </div>
+        </a>
+        <div class="flex items-center">
+            <input type="checkbox" 
+                class="notification-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+                data-notification-id="{{ $notification->id }}"
+            >
+        </div>
+    </div>
+</div>
                 @endforeach
             </div>
-            </a>
+          
             
             <!-- Unread Notifications Tab Content -->
            <div id="unreadNotifications" class="hidden">
@@ -167,37 +166,37 @@
                         $link = $notification->url ?? '#';
                     @endphp
                     <a href="{{ $link }}" class="block">
-                    <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
-                        <div class="flex items-start justify-between">
-                            <div class="flex items-start space-x-2">
-                                <svg class="text-gray-400 flex-shrink-0 mt-1" width="1rem" height="1rem" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
-                                </svg>
-                                <div class="flex flex-col">
-                                    <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
-                                    <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
-                                    <p class="text-xs text-gray-400 mt-2">
-                        @if($notification->created_at->isToday())
-                            Today at {{ $notification->created_at->format('h:i A') }}
-                        @elseif($notification->created_at->isYesterday())
-                            Yesterday at {{ $notification->created_at->format('h:i A') }}
-                        @elseif($notification->created_at->isCurrentYear())
-                            {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
-                        @else
-                            {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
-                        @endif
-                    </p>
-                                </div>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" 
-                                    class="mark-as-read-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
-                                    data-notification-id="{{ $notification->id }}"
-                                >
-                            </div>
-                        </div>
-                    </div>
-                    </a>
+     <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
+    <div class="flex items-start justify-between">
+        <a href="{{ $link }}" class="flex items-start space-x-2 flex-1">
+            <svg class="text-gray-400 flex-shrink-0 mt-1" width="1rem" height="1rem" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
+            </svg>
+            <div class="flex flex-col">
+                <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
+                <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
+                <p class="text-xs text-gray-400 mt-2">
+                    @if($notification->created_at->isToday())
+                        Today at {{ $notification->created_at->format('h:i A') }}
+                    @elseif($notification->created_at->isYesterday())
+                        Yesterday at {{ $notification->created_at->format('h:i A') }}
+                    @elseif($notification->created_at->isCurrentYear())
+                        {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
+                    @else
+                        {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
+                    @endif
+                </p>
+            </div>
+        </a>
+        <div class="flex items-center">
+            <input type="checkbox" 
+                class="notification-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+                data-notification-id="{{ $notification->id }}"
+            >
+        </div>
+    </div>
+</div>
+                   
                     @endforeach
                 @endif
             </div>
@@ -216,17 +215,8 @@
     </div>
 </div>
 
-<!-- Confirmation Modal -->
-<div id="markAsReadModal" class="fixed inset-0 z-500 hidden flex items-center justify-center bg-gray-900/75 w-screen min-h-screen">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-[90vw] sm:w-full sm:max-w-xs">
-        <h3 class="text-lg font-semibold mb-2 text-gray-800">Mark as Read?</h3>
-        <p class="text-gray-600 mb-4 text-sm sm:text-base">Are you sure you want to mark this notification as read?</p>
-        <div class="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-2">
-            <button id="cancelMarkAsRead" class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 w-full sm:w-auto">Cancel</button>
-            <button id="confirmMarkAsRead" class="px-4 py-2 rounded bg-purple-600 text-white hover:bg-purple-700 w-full sm:w-auto">Yes</button>
-        </div>
-    </div>
-</div>
+
+
 
 <!-- JS -->
 <script>
@@ -241,38 +231,75 @@
         const tabs = document.getElementById('tabs-nav');
         const allNotifications = document.getElementById('allNotifications');
         const unreadNotifications = document.getElementById('unreadNotifications');
-        const modal = document.getElementById('markAsReadModal');
-        const confirmBtn = document.getElementById('confirmMarkAsRead');
-        const cancelBtn = document.getElementById('cancelMarkAsRead');
         const backBtn = document.getElementById('backBtn');
         const optionsMenuBtn = document.getElementById('optionsMenuBtn');
         
         // Fixed height for notification body
-        const NOTIFICATION_HEIGHT = '24rem'; // Adjust as needed
+        const NOTIFICATION_HEIGHT = '24rem';
         let isCollapsed = false;
         let isPanelVisible = false;
-        let pendingCheckbox = null;
-        let pendingNotificationId = null;
-        
 
+        // Handle checkbox selection to show/hide options menu (GitHub style)
+        function updateOptionsMenu() {
+            const checkedBoxes = document.querySelectorAll('.notification-checkbox:checked');
+            const optionsMenuBtn = document.getElementById('optionsMenuBtn');
+            const optionsMenu = document.getElementById('optionsMenu');
+            
+            if (checkedBoxes.length > 0) {
+                // Show dots icon when checkboxes are selected
+                optionsMenuBtn.classList.remove('hidden');
+                
+                // Enable all buttons
+                document.getElementById('markAsReadBtn').disabled = false;
+                document.getElementById('markAsUnreadBtn').disabled = false;
+                document.getElementById('deleteBtn').disabled = false;
+                document.getElementById('deleteAllBtn').disabled = false;
+            } else {
+                // Hide dots icon when no checkboxes are selected
+                optionsMenuBtn.classList.add('hidden');
+                optionsMenu.classList.add('hidden');
+                
+                // Disable all buttons
+                document.getElementById('markAsReadBtn').disabled = true;
+                document.getElementById('markAsUnreadBtn').disabled = true;
+                document.getElementById('deleteBtn').disabled = true;
+                document.getElementById('deleteAllBtn').disabled = true;
+            }
+        }
 
+        // Handle checkbox clicks without interfering with notification links
+      function initializeCheckboxes() {
+    document.querySelectorAll('.notification-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function(event) {
+            updateOptionsMenu();
+        });
+    });
+}
         // Function to toggle options menu
         function toggleOptionsMenu(event) {
-            event.stopPropagation(); // Prevent the click from propagating to the document
+            event.stopPropagation();
             const optionsMenu = document.getElementById('optionsMenu');
-            optionsMenu.classList.toggle('hidden');
+            const checkedBoxes = document.querySelectorAll('.notification-checkbox:checked');
+            
+            // Only show if there are checked items
+            if (checkedBoxes.length > 0) {
+                optionsMenu.classList.toggle('hidden');
+            }
         }
 
         // Close the options menu when clicking outside
         document.addEventListener('click', () => {
             const optionsMenu = document.getElementById('optionsMenu');
             if (!optionsMenu.classList.contains('hidden')) {
-            optionsMenu.classList.add('hidden');
+                optionsMenu.classList.add('hidden');
             }
         });
 
         // Attach the toggle function to the options menu button
-        optionsMenuBtn.addEventListener('click', toggleOptionsMenu);
+        if (optionsMenuBtn) {
+            optionsMenuBtn.addEventListener('click', toggleOptionsMenu);
+        }
+
         // Function to toggle panel with animation
         function togglePanel() {
             isPanelVisible = !isPanelVisible;
@@ -325,6 +352,10 @@
                 unreadNotifications.classList.add('block');
                 unreadNotifications.classList.remove('hidden');
             }
+            
+            // Reinitialize checkboxes after tab switch
+            setTimeout(initializeCheckboxes, 100);
+            updateOptionsMenu();
         });
         
         allTab.addEventListener('click', () => {
@@ -340,236 +371,193 @@
                 unreadNotifications.classList.add('hidden');
                 unreadNotifications.classList.remove('block');
             }
+            
+            // Reinitialize checkboxes after tab switch
+            setTimeout(initializeCheckboxes, 100);
+            updateOptionsMenu();
         });
         
         // Toggle content collapse with arrow rotation
-        collapseArrow.addEventListener('click', () => {
-            isCollapsed = !isCollapsed;
-            
-            // Rotate arrow
-            if (isCollapsed) {
-                arrowIcon.style.transform = 'rotate(180deg)';
-                notificationBody.style.height = '0px';
-                tabs.style.borderBottom = 'none';
-            } else {
-                arrowIcon.style.transform = 'rotate(0deg)';
-                notificationBody.style.height = NOTIFICATION_HEIGHT;
-                tabs.style.borderBottom = '1px solid black';
-            }
-        });
-
-        // Handle mark as read functionality
-        document.querySelectorAll('.mark-as-read-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('click', function(event) {
-                // Prevent the checkbox click from triggering the link navigation
-                event.stopPropagation();
-                event.preventDefault();
-
-                // If checked, show modal for confirmation
-                if (this.checked) {
-                    pendingCheckbox = this;
-                    pendingNotificationId = this.dataset.notificationId;
-                    modal.classList.remove('hidden');
+        if (collapseArrow) {
+            collapseArrow.addEventListener('click', () => {
+                isCollapsed = !isCollapsed;
+                
+                // Rotate arrow
+                if (isCollapsed) {
+                    arrowIcon.style.transform = 'rotate(180deg)';
+                    notificationBody.style.height = '0px';
+                    tabs.style.borderBottom = 'none';
                 } else {
-                    // If unchecked, just revert (no unmarking in this UI)
-                    this.checked = false;
+                    arrowIcon.style.transform = 'rotate(0deg)';
+                    notificationBody.style.height = NOTIFICATION_HEIGHT;
+                    tabs.style.borderBottom = '1px solid black';
                 }
             });
-        });
+        }
 
-        cancelBtn.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevent the event from propagating to the document click listener
-            if (pendingCheckbox) {
-                pendingCheckbox.checked = false;
+        // Back button functionality
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                if (isPanelVisible) {
+                    togglePanel();
+                }
+            });
+        }
+
+   
+       
+
+        // Handle "mark as read" on click for notifications in the "All" tab
+       document.querySelectorAll('#allNotifications a, #unreadNotifications a').forEach(link => {
+    link.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const notificationElement = link.closest('[data-notification-id]');
+        if (!notificationElement) return;
+        const notificationId = notificationElement.dataset.notificationId;
+
+        // Your existing mark-as-read logic here...
+        try {
+            const response = await fetch(`/notifications/${notificationId}/mark-as-read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+            
+            if (response.ok) {
+                // Your existing badge update logic...
             }
-            modal.classList.add('hidden');
-            pendingCheckbox = null;
-            pendingNotificationId = null;
-            
-        });
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+        
+        // Navigate to the notification link
+        window.location.href = link.href;
+    });
+});
+        // Handle options menu actions (mark as read, unread, delete, delete all)
+        function getSelectedNotificationIds() {
+            return Array.from(document.querySelectorAll('.notification-checkbox:checked'))
+                .map(cb => cb.dataset.notificationId);
+        }
 
-        confirmBtn.addEventListener('click', async () => {
-        event.stopPropagation();
-            if (!pendingCheckbox || !pendingNotificationId) return;
-            
+        async function bulkAction(action, notificationIds) {
+            let url = '';
+            let method = 'POST';
+            let body = { ids: notificationIds };
+            if (action === 'markAsRead') {
+                url = '/notifications/mark-as-read';
+            } else if (action === 'markAsUnread') {
+                url = '/notifications/mark-as-unread';
+            } else if (action === 'delete') {
+                url = '/notifications/delete';
+            } else if (action === 'deleteAll') {
+                url = '/notifications/delete-all';
+                body = {}; // No ids needed for delete all
+            }
             try {
-                const response = await fetch(`/notifications/${pendingNotificationId}/mark-as-read`, {
-                    method: 'POST',
+                const response = await fetch(url, {
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    }
+                    },
+                    body: JSON.stringify(body)
                 });
-
                 if (response.ok) {
-                    // Remove notification from unread tab
-                    const notificationElement = document.querySelector(`#unreadNotifications [data-notification-id="${pendingNotificationId}"]`);
-                    if (notificationElement) {
-                        notificationElement.remove();
-                    }
-                    
-                    // Update unread count in badge
-                    const unreadCount = document.querySelector('#unreadTab span');
-                    if (unreadCount) {
-                        const currentCount = parseInt(unreadCount.textContent);
-                        if (currentCount > 1) {
-                            unreadCount.textContent = currentCount - 1;
+                    // Remove or update notifications in UI
+                    if (action === 'delete' || action === 'deleteAll') {
+                        if (action === 'deleteAll') {
+                            document.querySelectorAll('.notification-checkbox').forEach(cb => {
+                                const el = cb.closest('[data-notification-id]');
+                                if (el) el.remove();
+                            });
                         } else {
-                            unreadCount.remove();
+                            notificationIds.forEach(id => {
+                                const el = document.querySelector('[data-notification-id="' + id + '"]');
+                                if (el) el.remove();
+                            });
                         }
+                    } else if (action === 'markAsRead' || action === 'markAsUnread') {
+                        notificationIds.forEach(id => {
+                            const el = document.querySelector('[data-notification-id="' + id + '"]');
+                            if (el) {
+                                // Optionally update style to indicate read/unread
+                                el.classList.toggle('bg-gray-100', action === 'markAsRead');
+                            }
+                        });
                     }
-
-                    // Update notification button badge
-                    const buttonBadge = document.querySelector('#notificationBtn span');
-                    if (buttonBadge) {
-                        const currentCount = parseInt(buttonBadge.textContent);
-                        if (currentCount > 1) {
-                            buttonBadge.textContent = currentCount - 1;
-                        } else {
-                            buttonBadge.remove();
-                        }
-                    }
-
-                    // Update the checkbox state in the All tab
-                    const allTabNotification = document.querySelector(`#allNotifications [data-notification-id="${pendingNotificationId}"]`);
-                    if (allTabNotification) {
-                        const checkbox = allTabNotification.querySelector('.mark-as-read-checkbox');
-                        if (checkbox) {
-                            checkbox.checked = true;
-                        }
-                    }
-                } else {
-                    alert('Failed to update notification. Please try again.');
-                    pendingCheckbox.checked = false;
+                    // Uncheck all checkboxes and update menu
+                    document.querySelectorAll('.notification-checkbox').forEach(cb => cb.checked = false);
+                    updateOptionsMenu();
                 }
             } catch (error) {
-                console.error('Error marking notification as read:', error);
-                pendingCheckbox.checked = false;
+                alert('An error occurred. Please try again.');
             }
-            
-            modal.classList.add('hidden');
-            pendingCheckbox = null;
-            pendingNotificationId = null;
-        });
-        // Back button functionality
-        backBtn.addEventListener('click', () => {
-            if (isPanelVisible) {
-                togglePanel();
-            }
-        });
+        }
 
-        // Handle "mark as read" on click for unread notifications in the "Unread" tab
-        document.querySelectorAll('#unreadNotifications a').forEach(link => {
-            link.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const notificationElement = link.querySelector('[data-notification-id]');
-                if (!notificationElement) return;
-                const notificationId = notificationElement.dataset.notificationId;
-                
-                try {
-                    const response = await fetch(`/notifications/${notificationId}/mark-as-read`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        }
-                    });
-                    if (response.ok) {
-                        // Remove the unread notification from the unread view
-                        notificationElement.closest('.p-4').remove();
-                        
-                        // Update unread badge in the Unread tab
-                        const unreadBadge = document.querySelector('#unreadTab span');
-                        if (unreadBadge) {
-                            let count = parseInt(unreadBadge.textContent);
-                            count = count > 1 ? count - 1 : 0;
-                            if (count === 0) {
-                                unreadBadge.remove();
-                            } else {
-                                unreadBadge.textContent = count;
-                            }
-                        }
-                        
-                        // Update the notification button badge
-                        const btnBadge = document.querySelector('#notificationBtn span');
-                        if (btnBadge) {
-                            let count = parseInt(btnBadge.textContent);
-                            count = count > 1 ? count - 1 : 0;
-                            if (count === 0) {
-                                btnBadge.remove();
-                            } else {
-                                btnBadge.textContent = count;
-                            }
-                        }
-                    } else {
-                        alert('Failed to mark notification as read. Please try again.');
-                    }
-                } catch (error) {
-                    console.error('Error marking notification as read:', error);
-                }
-                
-                // Navigate to the notification link after processing
-                window.location.href = link.href;
-            });
+        document.getElementById('markAsReadBtn').addEventListener('click', function() {
+            const ids = getSelectedNotificationIds();
+            if (ids.length === 0) return;
+            showConfirmationModal('Mark selected notifications as read?', function() {
+                bulkAction('markAsRead', ids);
+            }, 'Mark as Read');
+        });
+        document.getElementById('markAsUnreadBtn').addEventListener('click', function() {
+            const ids = getSelectedNotificationIds();
+            if (ids.length === 0) return;
+            showConfirmationModal('Mark selected notifications as unread?', function() {
+                bulkAction('markAsUnread', ids);
+            }, 'Mark as Unread');
+        });
+        document.getElementById('deleteBtn').addEventListener('click', function() {
+            const ids = getSelectedNotificationIds();
+            if (ids.length === 0) return;
+            showConfirmationModal('Delete selected notifications?', function() {
+                bulkAction('delete', ids);
+            }, 'Delete Notifications');
+        });
+        document.getElementById('deleteAllBtn').addEventListener('click', function() {
+            showConfirmationModal('Clear All notifications? This cannot be undone.', function() {
+                bulkAction('deleteAll', []);
+            }, 'Clear All Notifications');
         });
 
-        // Handle "mark as read" on click for notifications in the "All" tab
-        document.querySelectorAll('#allNotifications a').forEach(link => {
-            link.addEventListener('click', async (e) => {
-                e.preventDefault();
-                const notificationElement = link.querySelector('[data-notification-id]');
-                if (!notificationElement) return;
-                const notificationId = notificationElement.dataset.notificationId;
-
-                try {
-                    const response = await fetch(`/notifications/${notificationId}/mark-as-read`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                        }
-                    });
-                    if (response.ok) {
-                        // Update unread badge in the Unread tab
-                        const unreadBadge = document.querySelector('#unreadTab span');
-                        if (unreadBadge) {
-                            let count = parseInt(unreadBadge.textContent);
-                            count = count > 1 ? count - 1 : 0;
-                            if (count === 0) {
-                                unreadBadge.remove();
-                            } else {
-                                unreadBadge.textContent = count;
-                            }
-                        }
-
-                        // Update the notification button badge
-                        const btnBadge = document.querySelector('#notificationBtn span');
-                        if (btnBadge) {
-                            let count = parseInt(btnBadge.textContent);
-                            count = count > 1 ? count - 1 : 0;
-                            if (count === 0) {
-                                btnBadge.remove();
-                            } else {
-                                btnBadge.textContent = count;
-                            }
-                        }
-
-                        // Update the checkbox state in the All tab
-                        const checkbox = notificationElement.querySelector('.mark-as-read-checkbox');
-                        if (checkbox) {
-                            checkbox.checked = true;
-                        }
-                    } else {
-                        alert('Failed to mark notification as read. Please try again.');
-                    }
-                } catch (error) {
-                    console.error('Error marking notification as read:', error);
-                }
-
-                // Navigate to the notification link after processing
-                window.location.href = link.href;
-            });
-        });
-
+        // Initialize everything
+        initializeCheckboxes();
+        updateOptionsMenu();
     });
+</script>
+
+<!-- Confirmation Modal -->
+<div id="confirmationModal" class="fixed inset-0 z-500 flex  hidden items-center justify-center bg-gray-900/75 w-screen min-h-screen"">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-[90vw] sm:w-full sm:max-w-xs">
+        <h3 id="confirmationModalTitle" class="text-lg font-semibold mb-2 text-gray-800">Are you sure?</h3>
+        <p id="confirmationModalMessage" class="text-gray-600 mb-4 text-sm sm:text-base">Are you sure you want to proceed?</p>
+        <div class="flex justify-end space-x-2">
+            <button id="confirmationCancelBtn" class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 w-full sm:w-auto">Cancel</button>
+            <button id="confirmationOkBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 w-full sm:w-auto">Yes</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Confirmation Modal Logic
+let confirmAction = null;
+function showConfirmationModal(message, onConfirm, title = 'Are you sure?') {
+    document.getElementById('confirmationModalMessage').textContent = message;
+    document.getElementById('confirmationModalTitle').textContent = title;
+    document.getElementById('confirmationModal').classList.remove('hidden');
+    confirmAction = onConfirm;
+}
+function hideConfirmationModal() {
+    document.getElementById('confirmationModal').classList.add('hidden');
+    confirmAction = null;
+}
+document.getElementById('confirmationCancelBtn').addEventListener('click', hideConfirmationModal);
+document.getElementById('confirmationOkBtn').addEventListener('click', function() {
+    if (typeof confirmAction === 'function') confirmAction();
+    hideConfirmationModal();
+});
 </script>

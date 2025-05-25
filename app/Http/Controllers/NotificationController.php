@@ -75,4 +75,41 @@ class NotificationController extends Controller
             'is_read' => $notification->is_read
         ]);
     }
+
+    // Bulk mark as read
+    public function markAsReadBulk(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        Notification::whereIn('id', $ids)
+            ->where('user_id', auth()->id())
+            ->update(['is_read' => true]);
+        return response()->json(['success' => true]);
+    }
+
+    // Bulk mark as unread
+    public function markAsUnreadBulk(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        Notification::whereIn('id', $ids)
+            ->where('user_id', auth()->id())
+            ->update(['is_read' => false]);
+        return response()->json(['success' => true]);
+    }
+
+    // Bulk delete
+    public function deleteBulk(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        Notification::whereIn('id', $ids)
+            ->where('user_id', auth()->id())
+            ->delete();
+        return response()->json(['success' => true]);
+    }
+
+    // Delete all notifications for the user
+    public function deleteAll(Request $request)
+    {
+        Notification::where('user_id', auth()->id())->delete();
+        return response()->json(['success' => true]);
+    }
 }

@@ -186,6 +186,10 @@ Route::get('/notification', fn() => view('components.general-components.notifica
 Route::get('/notifications', fn() => view('notifications'))->name('notifications');
 Route::post('/notifications/{notification}/mark-as-read', [NotificationController::class, 'markAsRead'])->middleware('auth');
 Route::post('/notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsReadBulk'])->middleware('auth');
+Route::post('/notifications/mark-as-unread', [NotificationController::class, 'markAsUnreadBulk'])->middleware('auth');
+Route::post('/notifications/delete', [NotificationController::class, 'deleteBulk'])->middleware('auth');
+Route::post('/notifications/delete-all', [NotificationController::class, 'deleteAll'])->middleware('auth');
 Route::middleware(['auth', 'role:student'])->group(function () {
     Route::get('/notifications', [StudentNotificationController::class, 'index'])->name('student.notifications.index');
 });

@@ -1,8 +1,9 @@
 @extends('base')
 
+
+@section('content')
 @include('components.adminNavBarComponent')
 @include('components.adminSidebarComponent')
-@section('content')
     <div id="main-content" class="transition-all duration-300 ml-[20%]">
         @if (session('success'))
             <div id="Toast"
