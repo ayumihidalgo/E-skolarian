@@ -34,8 +34,8 @@
                                     @foreach ($adminUsers as $admin)
                                         <li tabindex="0" role="option"
                                             class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                            onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->username }}', '{{ $admin->role_name }}')">
-                                            {{ $admin->username }}
+                                            onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->role_name }}')">
+                                            {{ $admin->role_name }}
                                         </li>
                                     @endforeach
                                 </ul>
@@ -527,8 +527,8 @@
         }
 
         // selectReceiver() function
-        window.selectReceiver = function(id, name, role) {
-            const displayText = `${name} <span class="text-gray-400">&lsaquo;${role}&rsaquo;</span>`; // ‹ ›
+        window.selectReceiver = function(id, role) {
+            const displayText = `${role}`;
             receiver.selected.innerHTML = displayText; // Use innerHTML to apply styling
             receiver.input.value = id;
             receiver.dropdown.classList.add('hidden');
