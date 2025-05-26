@@ -28,7 +28,7 @@
                                 <div class="mb-4 pb-4 border-b border-gray-300">
                                     <h3 class="text-xl font-semibold">{{ $announcement->title }}</h3>
                                     <p class="text-sm text-gray-500">
-                                        Posted by {{ $announcement->user->username }} on 
+                                        Posted by {{ $announcement->user->username }} on
                                         {{ $announcement->created_at->format('F j, Y') }}
                                     </p>
                                     @php
@@ -38,7 +38,7 @@
                                     @endphp
                                     <span class="text-gray-700 whitespace-pre-line">{{ $preview }}</span>
                                     @if ($isLong)
-                                        <button 
+                                        <button
                                             class="text-indigo-600 hover:underline ml-2 text-sm"
                                             onclick="showAnnouncementModal(
                                                 `{{ addslashes($announcement->title) }}`,
@@ -66,7 +66,7 @@
                                 <div class="border-b pb-2 border-gray-300">
                                     <h3 class="text-base font-semibold">{{ $announcement->title }}</h3>
                                     <p class="text-sm text-gray-500">
-                                        Posted by {{ $announcement->user->username }} on 
+                                        Posted by {{ $announcement->user->username }} on
                                         {{ $announcement->created_at->format('F j, Y') }}
                                     </p>
                                     @php
@@ -76,7 +76,7 @@
                                     @endphp
                                     <span class="text-gray-700 whitespace-pre-line">{{ $preview }}</span>
                                     @if ($isLong)
-                                        <button 
+                                        <button
                                             class="text-indigo-600 hover:underline ml-2 text-sm"
                                             onclick="showAnnouncementModal(
                                                 `{{ addslashes($announcement->title) }}`,
@@ -135,7 +135,7 @@
         document.getElementById('modalTitle').textContent = title;
         document.getElementById('modalContent').textContent = content;
         document.getElementById('modalMeta').innerHTML = meta;
-        document.getElementById('modalLabel').textContent = 
+        document.getElementById('modalLabel').textContent =
             type === 'previous' ? 'Previous Announcement' : 'Announcement';
         document.getElementById('announcementModal').classList.remove('hidden');
     }

@@ -1,11 +1,8 @@
 @php
     $role = request()->query('role', 'student'); // Default to 'student' if not provided
-if ($role === 'super admin') {
-    $role = 'admin'; // treat super admin same as admin
-}
 @endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $role }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8" >
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -101,11 +98,11 @@ if ($role === 'super admin') {
             </div>
             <div class="w-full max-w-[550px] mx-auto  md:bg-[var(--forgot-color-bg)]/50 px-8 md:py-12 rounded-[40px] md:shadow-md md:backdrop-blur-lg">
                 <h1 class="text-2xl md:text-3xl font-bold text-center mb-6 font-['Lexend'] uppercase text-[var(--secondary-color)]">Reset Password</h1>
-                <form method="POST" action="{{ route('password.update') }}">
+                <form method="POST" action="{{ route('student.password.update') }}">
                     @csrf
                     <input type="hidden" name="token" value="{{ $token }}">
                     <input type="hidden" name="email" value="{{ request()->get('email') }}">
-                    <input type="hidden" name="role" value="{{ $role }}">
+                    <input type="hidden" name="role" value="student"> <!-- Set to student -->
 
                     <div class="mt-5 mb-2">
                         <label id="passwordLabel" class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">

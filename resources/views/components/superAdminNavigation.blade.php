@@ -13,7 +13,7 @@
         <!-- Right side: Super Admin and Logout -->
         <div class="flex items-center space-x-6 text-white font-[Manrope]">
             <span> <a href = "#">Super Admin</a></span>
-            <form method="POST" action="{{ route('logout') }}" class="mt-0">
+            <form method="POST" action="{{ route('superadmin.logout') }}" class="mt-0">
                 @csrf
                 <button type="submit" class="flex items-center space-x-2 top-10 hover:text-yellow-400 transition duration-200 cursor-pointer">
                     <img src="{{ asset('images/logout.svg') }}" class="h-5 w-5" alt="Logout Icon">

@@ -1,8 +1,5 @@
-@php
-    $role = request()->query('role', 'student'); // Default to 'student' if not provided
-@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $role }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="admin">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,6 +44,5 @@
             </div>
         </div>
     </div>
-
 </body>
 </html>
