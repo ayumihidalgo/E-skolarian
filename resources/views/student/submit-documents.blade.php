@@ -93,6 +93,9 @@
                                 <li tabindex="0" role="option"
                                     class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
                                     onclick="selectDocType('Petition and Concern')">Petition and Concern</li>
+                                <li tabindex="0" role="option"
+                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                    onclick="selectDocType('Others')">Others</li>
                             </ul>
 
                             <!-- Hidden input for form submission -->

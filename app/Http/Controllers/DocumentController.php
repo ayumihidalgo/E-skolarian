@@ -37,7 +37,7 @@ class DocumentController extends Controller
             $validated = $request->validate([
                 'received_by' => 'required|exists:users,id',
                 'subject' => 'required|string|max:50',
-                'type' => 'required|in:Event Proposal,General Plan of Activities,Calendar of Activities,Accomplishment Report,Constitution and By-Laws,Request Letter,Off Campus,Petition and Concern',
+                'type' => 'required|in:Event Proposal,General Plan of Activities,Calendar of Activities,Accomplishment Report,Constitution and By-Laws,Request Letter,Off Campus,Petition and Concern,Others',
                 'summary' => 'required|string|max:255',
                 'eventStartDate' => 'nullable|date|required_if:type,Event Proposal',
                 'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:type,Event Proposal',
