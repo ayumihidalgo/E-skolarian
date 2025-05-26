@@ -187,7 +187,7 @@
                     </div>
 
                     <!-- Confirmation Popup -->
-                    <div id="confirmPopup" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50 hidden">
+                    <div id="confirmPopup" class="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 hidden">
                         <div
                             class="bg-white rounded-xl p-6 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl shadow-lg text-gray-800">
                             <div class="flex justify-between items-start mb-4">
