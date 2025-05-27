@@ -97,6 +97,7 @@ class AdminPasswordResetLinkController extends Controller
         }
 
         $user->password = bcrypt($request->password);
+        $user->password_changed_at = now();
         $user->save();
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
