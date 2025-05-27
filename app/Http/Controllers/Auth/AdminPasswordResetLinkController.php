@@ -47,7 +47,29 @@ class AdminPasswordResetLinkController extends Controller
 
     public function edit($token)
     {
-        return view('auth.admin-reset-password', ['token' => $token]);
+       $email = request()->query('email');
+        $tokenRecord = null;
+
+        if ($email) {
+            $tokenRecord = DB::table('password_reset_tokens')
+                ->where('email', $email)
+                ->first();
+        }
+
+        $tokenExpired = false;
+        if (
+            !$tokenRecord ||
+            !Hash::check($token, $tokenRecord->token) ||
+            \Carbon\Carbon::parse($tokenRecord->created_at)->addMinutes(15)->isPast()
+        ) {
+            $tokenExpired = true;
+        }
+
+        return view('auth.admin-reset-password', [
+            'token' => $token,
+            'tokenExpired' => $tokenExpired,
+            'email' => $email,
+        ]);
     }
 
     public function update(Request $request)

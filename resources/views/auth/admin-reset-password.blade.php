@@ -88,6 +88,23 @@
 
 @include('loading');
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
+    {{-- Modal for expired token --}}
+    @if (!empty($tokenExpired) && $tokenExpired)
+        <div id="expiredModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div class="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
+                <h2 class="text-xl font-bold mb-4 text-red-600">Token Expired</h2>
+                <p class="mb-6">Your password reset link has expired or is invalid. Please request a new one.</p>
+                <a href="{{ route('admin.login.form') }}" class="inline-block px-6 py-2 bg-[var(--secondary-color)] text-white rounded-full font-bold hover:bg-[var(--primary-color)] transition">Back to Login</a>
+            </div>
+        </div>
+        <script>
+            // Prevent form interaction when modal is open
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelector('form').style.filter = 'blur(2px)';
+                document.querySelector('form').style.pointerEvents = 'none';
+            });
+        </script>
+    @endif
     <div class="p-5 w-full">
         <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-white/60 max-md:shadow-md">
             <div class="flex justify-center pb-4">
