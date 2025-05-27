@@ -357,7 +357,6 @@
             setInterval(transitionBackground, 10000); // Change image every 10s
         });
 
-
         /* Toggle Show/Hide Password */
         function togglePassword(event) {
             const input = document.getElementById('password');
@@ -376,8 +375,7 @@
             }
         }
 
-
-          /* Fade Messages  */
+        /* Fade Messages  */
         document.addEventListener('DOMContentLoaded', function () {
             const statusMessages = document.querySelectorAll('.status-message');
 
@@ -409,25 +407,12 @@
             <div class="h-35 flex items-center">
                 <img class="mx-auto h-19 md:h-22" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
             </div>
-            <!-- Role Switch Buttons -->
-            <div id="switchButton">
-                <div class="p-1 max-w-[280px] mx-auto bg-[#D9D9D9] rounded-3xl flex flex-wrap justify-center gap-1 mb-6 font-['Lexend'] font-bold">
-                    <button type="button" id="studentBtn" onclick="changeRole('student');"
-                        class="group min-w-[120px] flex items-center px-5 py-3 border border-gray-300 rounded-4xl hover:bg-[var(--secondary-color)] hover:text-white transition">
-                        <div id="studentIcon" class="pr-[10px] group-hover:invert"><img class="h-[15px]" src="{{ asset('images/student.png') }}" alt="Student Icon"></div>
-                        <p class="uppercase font-bold text-[14px] font-['Lexend', 'Georgia']">Student</p>
-                    </button>
-                    <button type="button" id="adminBtn" onclick="changeRole('admin');"
-                        class="group min-w-[120px] flex items-center px-5 py-3 border border-gray-300 rounded-4xl hover:bg-[var(--secondary-color)] hover:text-white transition">
-                        <div id="adminIcon" class="pr-[10px] group-hover:invert"><img class="h[15px]" src="{{ asset('images/admin.png') }}" alt="Admin Icon"></div>
-                        <p class="uppercase font-bold text-[14px]">Admin</p>
-                    </button>
-                </div>
-            </div>
+            <!-- Role Switch Buttons (REMOVED) -->
+
             <div class="w-full max-w-[400px] mx-auto pt-14 md:pt-5">
-                <form method="POST" action="{{ route('login') }}" class="space-y-4 md:space-y-2">
+                <form method="POST" action="{{ route('superadmin.login') }}" class="space-y-4 md:space-y-2">
                     @csrf
-                    <input type="hidden" name="role" id="role" value="student">
+                    <input type="hidden" name="role" id="role" value="super admin">
                     <!-- Email -->
                     <div class="pb-6">
                         <label id="emailLabel" class="w-full rounded-2xl px-3 py-2 md:p-4 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
@@ -462,111 +447,15 @@
                         <p>{{ $errors->first() }} </p>
                     </div>
                     @endif
-                    @if ($errors->has('lockout_time'))
-                    <div class="text-red-600 text-sm mt-1 pb-1.5 font-[Lexend] font-normal">
-                        <p id="lockout-message">Too many login attempts. Please try again in <span id="lockout-timer"></span>.</p>
+
+                    <!-- Lockout Message -->
+                    <div id="lockout-message-container" class="text-red-600 text-sm mt-1 pb-1.5 font-[Lexend] font-normal" style="display:none;">
+                        <p id="lockout-message">
+                            Too many login attempts. Please try again in <span id="lockout-timer"></span>.
+                        </p>
                     </div>
-                    <script>
-                        function formatTime(seconds) {
-                            const m = Math.floor(seconds / 60);
-                            const s = seconds % 60;
-                            return `${m}:${s.toString().padStart(2, '0')}`;
-                        }
 
-                        function removeLockoutMsg(labelId) {
-                            const lockoutMessage = document.getElementById('lockout-message');
-                            const label = document.getElementById(labelId);
-                            if (lockoutMessage && label) {
-                                const parent = lockoutMessage.closest('div');
-                                if (parent) {
-                                    parent.classList.add('opacity-0', 'transition-opacity');
-                                    setTimeout(() => parent.remove(), 500);
-                                }
-                                label.classList.remove('ring-3', '!ring-red-600');
-                            }
-                        }
-
-                        window.onload = function () {
-                            const emailInput = document.getElementById('emailInput');
-                            const passwordInput = document.getElementById('password');
-                            const emailLabel = document.getElementById('emailLabel');
-                            const passwordLabel = document.getElementById('passwordLabel');
-                            const roleInputElem = document.getElementById('role');
-                            const role = roleInputElem?.value || 'student';
-                            const lockoutMessage = document.getElementById('lockout-message');
-                            const lockoutTimer = document.getElementById('lockout-timer');
-
-                            const formInputs = Array.from(document.querySelectorAll('input, button[type="submit"]'))
-                                .filter(input => !(input.name === '_token' || input.id === 'role'));
-
-                            const now = Math.floor(Date.now() / 1000);
-
-                            // Try to get stored lockoutEnd for this role
-                            const storedEnd = parseInt(localStorage.getItem('lockoutEnd_' + role)) || 0;
-
-                            // Backend lockout time in seconds, fallback to 0
-                            const backendLockoutTime = parseInt({{ $errors->first('lockout_time') ?? '0' }});
-
-                            let lockoutEnd;
-                            let lockoutTime;
-
-                            if (storedEnd > now) {
-                                // Active lockout already exists from storage
-                                lockoutEnd = storedEnd;
-                                lockoutTime = lockoutEnd - now;
-                            } else if (backendLockoutTime > 0) {
-                                // Use backend lockout if no current lockout exists
-                                lockoutEnd = now + backendLockoutTime;
-                                lockoutTime = backendLockoutTime;
-                                localStorage.setItem('lockoutEnd_' + role, lockoutEnd);
-                            } else {
-                                // No active lockout
-                                return;
-                            }
-                            if (lockoutTimer) lockoutTimer.innerText = formatTime(lockoutTime);
-
-                            // If there's a lockout, proceed
-                            formInputs.forEach(input => input.disabled = true);
-                            if (lockoutTimer) lockoutTimer.innerText = formatTime(lockoutTime);
-
-                            const timerInterval = setInterval(() => {
-                                const current = Math.floor(Date.now() / 1000);
-                                const remaining = lockoutEnd - current;
-
-                                if (remaining <= 0) {
-                                    clearInterval(timerInterval);
-                                    if (lockoutMessage) lockoutMessage.innerText = "You can now try logging in again.";
-                                    formInputs.forEach(input => input.disabled = false);
-                                    localStorage.removeItem('lockoutEnd_' + role);
-
-                                    if (emailInput) {
-                                        emailInput.addEventListener('focus', () => {
-                                            if (roleInputElem.value === role) removeLockoutMsg('emailLabel');
-                                        }, { once: true });
-                                    }
-
-                                    if (passwordInput) {
-                                        passwordInput.addEventListener('focus', () => {
-                                            if (roleInputElem.value === role) removeLockoutMsg('passwordLabel');
-                                        }, { once: true });
-                                    }
-                                } else {
-                                    if (lockoutTimer) lockoutTimer.innerText = formatTime(remaining);
-                                }
-                            }, 1000);
-                        };
-                    </script>
-
-                    @endif
-
-                    <!-- Remember Me (Visible only for students) -->
-                    <div class="flex justify-between items-center font-['Manrope'] font-normal">
-                        <label id="rememberMeContainer" class="text-[14px] flex items-center cursor-pointer invisible">
-                            <input type="checkbox" name="remember" class="cursor-pointer">
-                            <span class="ml-2">Remember Me</span>
-                        </label>
-                        <a href="" class="forgot-password-link max-md:hidden text-[14px] hover:text-[var(--secondary-color)] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
-                    </div>
+                    <!-- Remember Me (REMOVED) -->
 
                     <!-- Submit -->
                     <div class="pt-4 flex justify-center">
@@ -574,9 +463,6 @@
                             class="opacity-50 w-full rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-2 md:py-4  hover:bg-[var(--primary-color)] transition font-semibold">
                             Sign In
                         </button>
-                    </div>
-                    <div class="pb-7 flex justify-center">
-                        <a href="#" class="forgot-password-link md:hidden font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
                     </div>
                 </form>
             </div>
@@ -713,6 +599,98 @@
         validateInputs();
     });
     </script>
+    <script>
+function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function removeLockoutMsg(labelId) {
+    const lockoutMessage = document.getElementById('lockout-message');
+    const label = document.getElementById(labelId);
+    if (lockoutMessage && label) {
+        const parent = lockoutMessage.closest('div');
+        if (parent) {
+            parent.classList.add('opacity-0', 'transition-opacity');
+            setTimeout(() => parent.remove(), 500);
+        }
+        label.classList.remove('ring-3', '!ring-red-600');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('password');
+    const emailLabel = document.getElementById('emailLabel');
+    const passwordLabel = document.getElementById('passwordLabel');
+    const lockoutMessage = document.getElementById('lockout-message');
+    const lockoutMessageContainer = document.getElementById('lockout-message-container');
+    const lockoutTimer = document.getElementById('lockout-timer');
+
+    const formInputs = Array.from(document.querySelectorAll('input, button[type="submit"]'))
+        .filter(input => !(input.name === '_token' || input.id === 'role'));
+
+    const now = Math.floor(Date.now() / 1000);
+
+    // Always check localStorage for lockoutEnd
+    let storedEnd = parseInt(localStorage.getItem('lockoutEnd_superadmin')) || 0;
+    let backendLockoutTime = parseInt({{ $errors->first('lockout_time') ?? '0' }});
+    let lockoutEnd = 0;
+    let lockoutTime = 0;
+
+    if (storedEnd > now) {
+        // Use lockout from storage
+        lockoutEnd = storedEnd;
+        lockoutTime = lockoutEnd - now;
+    } else if (backendLockoutTime > 0) {
+        // Use backend lockout if present
+        lockoutEnd = now + backendLockoutTime;
+        lockoutTime = backendLockoutTime;
+        localStorage.setItem('lockoutEnd_superadmin', lockoutEnd);
+    } else {
+        // No lockout, remove any previous lockoutEnd and hide message
+        localStorage.removeItem('lockoutEnd_superadmin');
+        if (lockoutMessageContainer) lockoutMessageContainer.style.display = 'none';
+        return;
+    }
+
+    // Show lockout message and timer
+    if (lockoutMessageContainer && lockoutTimer) {
+        lockoutMessageContainer.style.display = '';
+        lockoutTimer.innerText = formatTime(lockoutTime);
+    }
+
+    // Disable form inputs
+    formInputs.forEach(input => input.disabled = true);
+
+    const timerInterval = setInterval(() => {
+        const current = Math.floor(Date.now() / 1000);
+        const remaining = lockoutEnd - current;
+
+        if (remaining <= 0) {
+            clearInterval(timerInterval);
+            if (lockoutMessage) lockoutMessage.innerText = "You can now try logging in again.";
+            formInputs.forEach(input => input.disabled = false);
+            localStorage.removeItem('lockoutEnd_superadmin');
+
+            if (emailInput) {
+                emailInput.addEventListener('focus', () => {
+                    removeLockoutMsg('emailLabel');
+                }, { once: true });
+            }
+
+            if (passwordInput) {
+                passwordInput.addEventListener('focus', () => {
+                    removeLockoutMsg('passwordLabel');
+                }, { once: true });
+            }
+        } else {
+            if (lockoutTimer) lockoutTimer.innerText = formatTime(remaining);
+        }
+    }, 1000);
+});
+</script>
 
     </body>
 </body>

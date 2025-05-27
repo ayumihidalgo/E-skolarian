@@ -6,11 +6,14 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DocumentController;
-use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\StudentLoginController;
+use App\Http\Controllers\Auth\AdminLoginController;
+use App\Http\Controllers\Auth\SuperAdminLoginController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\AdminDocumentController;
 use App\Http\Controllers\StudentDocumentController;
-use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\StudentPasswordResetLinkController;
+use App\Http\Controllers\Auth\AdminPasswordResetLinkController;
 use App\Http\Controllers\StudentTrackerController;
 use App\Http\Controllers\DocumentReviewController;
 use App\Http\Middleware\NoBackHistory;
@@ -25,24 +28,50 @@ use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\StudentDashboardController;
 
 
-
-
+// Redirect /login to landing page
 Route::get('/', function () {
-    return redirect()->route('login');
-});
+    return view('auth.landingPage');
+})->name('landing');
 
+// Guest routes for login selection
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
+    // Student Login
+    Route::get('/student/login', function () {
+        return view('auth.Studentlogin');
+    })->name('student.login.form');
+    Route::post('/student/login', [StudentLoginController::class, 'login'])->name('student.login');
 
-    Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])->name('password.request');
-    Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
-    Route::get('reset-password/{token}', [PasswordResetLinkController::class, 'edit'])->name('password.reset');
-    Route::post('reset-password', [PasswordResetLinkController::class, 'update'])->name('password.update');
+    // Admin Login
+    Route::get('/admin/login', function () {
+        return view('auth.Adminlogin');
+    })->name('admin.login.form');
+    Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login');
 
-    Route::get('password-reset-confirmation', function () {
-        return view('auth.password-reset-confirmation');
-    })->name('password.reset.confirmation');
+    // Super Admin Login
+    Route::get('/superadmin/login', [SuperAdminLoginController::class, 'showLoginForm'])->name('superadmin.login.form');
+    Route::post('/superadmin/login', [SuperAdminLoginController::class, 'login'])->name('superadmin.login');
+
+    // --- Student Password Reset ---
+    Route::get('/student/forgot-password', [StudentPasswordResetLinkController::class, 'create'])->name('student.password.request');
+    Route::post('/student/forgot-password', [StudentPasswordResetLinkController::class, 'store'])->name('student.password.email');
+    Route::get('/student/reset-password/{token}', [StudentPasswordResetLinkController::class, 'edit'])->name('student.password.reset');
+    Route::post('/student/reset-password', [StudentPasswordResetLinkController::class, 'update'])->name('student.password.update');
+
+    // --- Admin Password Reset ---
+    Route::get('/admin/forgot-password', [AdminPasswordResetLinkController::class, 'create'])->name('admin.password.request');
+    Route::post('/admin/forgot-password', [AdminPasswordResetLinkController::class, 'store'])->name('admin.password.email');
+    Route::get('/admin/reset-password/{token}', [AdminPasswordResetLinkController::class, 'edit'])->name('admin.password.reset');
+    Route::post('/admin/reset-password', [AdminPasswordResetLinkController::class, 'update'])->name('admin.password.update');
+
+    Route::get('student-password-reset-confirmation', function () {
+        return view('auth.student-password-reset-confirmation');
+    })->name('student.password.reset.confirmation');
+
+      Route::get('admin-password-reset-confirmation', function () {
+        return view('auth.admin-password-reset-confirmation');
+    })->name('admin.password.reset.confirmation');
+
+
 
     /* Temporary Route for Email Template */
     Route::get('/custom-reset-password', function () {
@@ -56,7 +85,6 @@ Route::get('/notification', function () {
 });
 
 
-
 // ----------------------------------------
 // Authenticated Routes
 // ----------------------------------------
@@ -66,7 +94,16 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
     Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])->name('deactivated.accounts');
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
     Route::post('/super-admin/reactivate-user/{user}', [UserController::class, 'reactivateUser'])->name('reactivate.user');
+    Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
+        ->name('deactivated.accounts');
 
+    Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
+    Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
+    Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
+
+    Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
+        ->name('super-admin.reactivate-user')
+        ->middleware('auth');
 
 });
 Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
@@ -119,7 +156,13 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(funct
 Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(function () {
 
     // ---------------- Shared Routes ----------------
-    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
+    // Student Logout
+    Route::post('/student/logout', [StudentLoginController::class, 'logout'])->name('student.logout');
+    // Admin Logout
+    Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
+    // Super Admin Logout
+    Route::post('/superadmin/logout', [SuperAdminLoginController::class, 'logout'])->name('superadmin.logout');
     Route::get('/dashboard', fn() => view('student.dashboard'))->name('dashboard');
 
     // Calendar
@@ -138,26 +181,16 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
 
     Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
 
-    Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
-        ->name('deactivated.accounts');
-
     Route::get('/admin/review', function () {
         return view('admin.review');
     })->name('admin.review');
 
-    Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
 
     // Submit Document Route
     Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
 
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
-
-    Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
-
-    Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
-        ->name('super-admin.reactivate-user')
-        ->middleware('auth');
     // Dashboard Route
     Route::get('/dashboard', function () {
         return view('student.dashboard');
@@ -206,13 +239,13 @@ Route::get('/documents/{filename}', function ($filename) {
     // Set headers for WebAssembly threads support and PDF viewing
     header("Cross-Origin-Embedder-Policy: require-corp");
     header("Cross-Origin-Opener-Policy: same-origin");
-    
+
     // Look in different possible storage locations
     $paths = [
         storage_path('app/public/documents/' . $filename),
         public_path('storage/documents/' . $filename),
     ];
-    
+
     // Find the file in one of the possible locations
     $filePath = null;
     foreach ($paths as $path) {
@@ -221,16 +254,16 @@ Route::get('/documents/{filename}', function ($filename) {
             break;
         }
     }
-    
+
     // Return 404 if file not found
     if (!$filePath) {
         return response()->json(['error' => 'File not found'], 404);
     }
-    
+
     // Set appropriate headers to ensure in-browser display
     $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
     $contentType = 'application/octet-stream';
-    
+
     // Set content type based on file extension
     if ($extension === 'pdf') {
         $contentType = 'application/pdf';
@@ -241,7 +274,7 @@ Route::get('/documents/{filename}', function ($filename) {
     } elseif ($extension === 'doc') {
         $contentType = 'application/msword';
     }
-    
+
     // Return the file with headers that encourage browsers to display it
     return response()->file($filePath, [
         'Content-Type' => $contentType,
@@ -260,18 +293,18 @@ Route::get('/storage/comment_attachments/{filename}', function ($filename) {
     // Set headers for WebAssembly threads support
     header("Cross-Origin-Embedder-Policy: require-corp");
     header("Cross-Origin-Opener-Policy: same-origin");
-    
+
     $path = storage_path('app/public/comment_attachments/' . $filename);
-    
+
     // Return 404 if file not found
     if (!file_exists($path)) {
         return response()->json(['error' => 'File not found'], 404);
     }
-    
+
     // Set appropriate headers based on file extension
     $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
     $contentType = 'application/octet-stream';
-    
+
     if ($extension === 'pdf') {
         $contentType = 'application/pdf';
     } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
@@ -281,7 +314,7 @@ Route::get('/storage/comment_attachments/{filename}', function ($filename) {
     } elseif ($extension === 'doc') {
         $contentType = 'application/msword';
     }
-    
+
     // Return the file with appropriate headers
     return response()->file($path, [
         'Content-Type' => $contentType,
@@ -344,3 +377,8 @@ Route::get('/records/{id}', [StudentTrackerController::class, 'show'])->name('re
 Route::get('/loading', function () {
     return view('loading');
 });
+
+// Redirect /login to landing page
+Route::get('/login', function () {
+    return redirect()->route('landing');
+})->name('login');

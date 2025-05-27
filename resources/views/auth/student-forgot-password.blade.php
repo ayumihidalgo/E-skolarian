@@ -1,8 +1,5 @@
-@php
-    $role = request()->query('role', 'student'); // Default to 'student' if not provided
-@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $role }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -61,9 +58,9 @@
                 <h1 class="text-2xl md:text-3xl font-bold text-center mb-6 font-['Lexend'] uppercase text-[var(--secondary-color)]">Password Reset Request</h1>
                 <h2 class="md:text-[var(--forgot-color-text)] text-center text-[20px] md:text-[25px] mb-1">Forgot Password?</h2>
                 <p class="md:text-[var(--forgot-color-text)] text-center font-normal text-xs">Enter your email to reset your password</p>
-                <form method="POST" action="{{ route('password.email') }}">
+                <form method="POST" action="{{ route('student.password.email') }}">
                     @csrf
-                    <input type="hidden" name="role" value="{{ $role }}"> <!-- Add this hidden input -->
+                    <input type="hidden" name="role" value="student"> <!-- Set to student -->
 
                     <div class="mt-5 mb-2">
                         <label id="emailLabel" class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
@@ -98,13 +95,10 @@
                         class="mt-6 w-full rounded-full text-white max-w-[380px] block mx-auto mb-5 bg-[var(--secondary-color)] py-2 md:hover:text-white md:hover:bg-[var(--primary-color)] transition-all duration-200 disabled:opacity-50">
                         Send Email
                     </button>
-
                 </form>
                 <div class="mt-4 text-center">
-                    <a href="{{ route('login') }}" class="flex items-center justify-center md:text-[var(--secondary-color)] font-normal group transition-all duration-75">
-                        @if ($role === 'student') <img class="md:h-[25px] pr-5 pt-0.5 group-hover:translate-x-1 transition-all duration-75" src="{{asset('images/arrow-left.svg')}}" alt="Arrow Left Icon">
-                        @elseif ($role === 'admin') <img class="md:h-[25px] pr-5 pt-0.5 group-hover:translate-x-1 transition-all duration-75" src="{{asset('images/arrow-left-admin.svg')}}" alt="Arrow Left Icon">
-                        @endif
+                    <a href="{{ route('student.login') }}" class="flex items-center justify-center md:text-[var(--secondary-color)] font-normal group transition-all duration-75">
+                        <img class="md:h-[25px] pr-5 pt-0.5 group-hover:translate-x-1 transition-all duration-75" src="{{asset('images/arrow-left-admin.svg')}}" alt="Arrow Left Icon">
                         <span class="border-b-2 border-transparent group-hover:border-[var(--secondary-color)] transition-all duration-75">Back to Login</span>
                     </a>
                 </div>
