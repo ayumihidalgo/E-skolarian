@@ -65,6 +65,7 @@ class StudentDocumentController extends Controller
         $documents = DB::table('submitted_documents')
             ->where('user_id', $userId)
             ->whereNull('archived_at') // Exclude archived documents
+            ->whereIn('status', ['Approved', 'Rejected']) // show Approved or Rejected
             ->orderBy('created_at', 'desc')
             ->paginate(6);
 
