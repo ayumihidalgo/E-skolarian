@@ -252,8 +252,11 @@
                             @empty
                             <!-- Empty state when no documents are found -->
                             <tr>
-                                <td colspan="{{ count($headers) + 1 }}" class="px-4 py-8 text-center text-gray-500">
-                                    No documents found.
+                                <td colspan="{{ count($headers) }}" class="px-4 py-8 text-center text-gray-500 align-middle">
+                                    <div class="flex flex-col items-center justify-center min-h-[300px] pl-36">
+                                        <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No documents found" class="mb-4 w-40 h-40" />
+                                        <span>No documents found.</span>
+                                    </div>
                                 </td>
                             </tr>
                             @endforelse
@@ -315,7 +318,7 @@
                     Cancel
                 </button>
                 <button id="confirmArchiveBtn" class="px-4 py-2 bg-[#7A1212] text-white rounded-md hover:bg-[#DAA520] cursor-pointer">
-                     Archive
+                    Archive
                 </button>
             </div>
         </div>
@@ -338,31 +341,55 @@
             // Get all rows in the table
             const rows = document.querySelectorAll("#documentTable tbody tr[data-id]");
             
+            let visibleRowCount = 0;
+
             // Loop through each row and apply filters
             rows.forEach(row => {
                 const orgAcronym = row.getAttribute('data-org-acronym');
                 const docType = row.getAttribute('data-type');
                 const docStatus = row.getAttribute('data-status');
                 const rowText = row.textContent.toLowerCase();
-                
+
                 // Check if row matches all filters
                 const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
                 const matchesOrg = organizationFilter === 'Organization' || organizationFilter === 'All' || orgAcronym === organizationFilter;
                 const matchesType = typeFilter === 'Type' || typeFilter === 'All' || docType === typeFilter;
                 const matchesStatus = statusFilter === 'Status' || statusFilter === 'All' || docStatus === statusFilter;
-                
+
                 // Show or hide the row based on filter matches
-                row.style.display = (matchesSearch && matchesOrg && matchesType && matchesStatus) ? '' : 'none';
+                const shouldShow = matchesSearch && matchesOrg && matchesType && matchesStatus;
+                row.style.display = shouldShow ? '' : 'none';
+                
+                if (shouldShow) {
+                    visibleRowCount++;
+                }
             });
-            
+
             // Update counts and UI
             updateSelectedCount();
+
+            // Handle "No documents found" row
+            let noDocRow = document.querySelector("#documentTable tbody tr:not([data-id])");
             
-            // Hide the "No documents found" row if needed
-            const noDocRow = document.querySelector("#documentTable tbody tr:not([data-id])");
-            if (noDocRow) {
-                const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
-                noDocRow.style.display = visibleRows.length === 0 ? '' : 'none';
+            // If no existing "No documents found" row and no visible rows, create one
+            if (!noDocRow && visibleRowCount === 0) {
+                const tbody = document.querySelector("#documentTable tbody");
+                const headerCount = document.querySelectorAll("#documentTable thead th").length;
+                
+                noDocRow = document.createElement('tr');
+                noDocRow.innerHTML = `
+                    <td colspan="${headerCount}" class="px-4 py-8 text-center text-gray-500 align-middle">
+                        <div class="flex flex-col items-center justify-center min-h-[300px]">
+                            <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No documents found" class="mb-4 w-40 h-40" />
+                            <span>No documents found.</span>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(noDocRow);
+            } 
+            // If there is a "No documents found" row, show/hide based on visible rows
+            else if (noDocRow) {
+                noDocRow.style.display = visibleRowCount === 0 ? 'table-row' : 'none';
             }
         }
 
@@ -393,32 +420,32 @@
          */
         function processArchiving() {
             if (selectedItems.size === 0) return;
-            
+
             const documentIds = Array.from(selectedItems);
-            
+
             fetch("{{ route('admin.archiveDocuments') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    document_ids: documentIds
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        document_ids: documentIds
+                    })
                 })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Reload the page to show updated list
-                    window.location.reload();
-                } else {
-                    alert(data.message || 'Failed to archive documents.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while archiving documents.');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Reload the page to show updated list
+                        window.location.reload();
+                    } else {
+                        alert(data.message || 'Failed to archive documents.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while archiving documents.');
+                });
         }
 
         // Track sort direction for each column
@@ -468,7 +495,7 @@
                 showArchiveConfirmation();
             }
         });
-        
+
         // Close button functionality for the modal
         document.getElementById("closeArchiveModalBtn").addEventListener("click", function() {
             document.getElementById("archiveConfirmationModal").classList.add("hidden");

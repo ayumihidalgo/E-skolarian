@@ -179,8 +179,11 @@
                             @empty
                             <!-- Empty state when no documents are found -->
                             <tr>
-                                <td colspan="{{ count($headers) + 1 }}" class="px-4 py-8 text-center text-gray-500">
-                                    No archived documents found.
+                                <td colspan="{{ count($headers) }}" class="px-4 py-8 text-center text-gray-500 align-middle">
+                                    <div class="flex flex-col items-center justify-center min-h-[300px] pl-36">
+                                        <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No documents found" class="mb-4 w-40 h-40" />
+                                        <span>No documents found.</span>
+                                    </div>
                                 </td>
                             </tr>
                             @endforelse

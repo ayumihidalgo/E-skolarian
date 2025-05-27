@@ -64,9 +64,10 @@ class AdminDocumentController extends Controller
         // Start with base query
         $query = DB::table('submitted_documents')
             ->whereNull('archived_at')
-            ->where('received_by', $adminId); // Only documents assigned to this admin
+            ->where('received_by', $adminId) // Only documents assigned to this admin
+            ->whereIn('status', ['Approved', 'Rejected']); // Only show Approved or Rejected
 
-        // Apply filters from request parameters
+        // Apply filters from request parametersr
         if ($request->has('status') && $request->status !== 'All') {
             $query->where('status', $request->status);
         }
@@ -166,7 +167,8 @@ class AdminDocumentController extends Controller
 
         $query = DB::table('submitted_documents')
             ->whereNotNull('archived_at')
-            ->where('received_by', $adminId); // Only documents assigned to this admin
+            ->where('received_by', $adminId) // Only documents assigned to this admin
+            ->whereIn('status', ['Approved', 'Rejected']); // Only show Approved or Rejected
 
         // Apply filters from request parameters
         if ($request->has('status') && $request->status !== 'All') {
