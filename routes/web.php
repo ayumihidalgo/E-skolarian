@@ -55,7 +55,6 @@ Route::middleware('guest')->group(function () {
     Route::get('/student/forgot-password', [StudentPasswordResetLinkController::class, 'create'])->name('student.password.request');
     Route::post('/student/forgot-password', [StudentPasswordResetLinkController::class, 'store'])->name('student.password.email');
     Route::get('/student/reset-password/{token}', [StudentPasswordResetLinkController::class, 'edit'])->name('student.password.reset');
-    Route::get('/student/reset-password/{token}', [StudentPasswordResetLinkController::class, 'edit'])->name('password.reset');
     Route::post('/student/reset-password', [StudentPasswordResetLinkController::class, 'update'])->name('student.password.update');
 
     // --- Admin Password Reset ---
@@ -64,10 +63,15 @@ Route::middleware('guest')->group(function () {
     Route::get('/admin/reset-password/{token}', [AdminPasswordResetLinkController::class, 'edit'])->name('admin.password.reset');
     Route::post('/admin/reset-password', [AdminPasswordResetLinkController::class, 'update'])->name('admin.password.update');
 
+    Route::get('student-password-reset-confirmation', function () {
+        return view('auth.student-password-reset-confirmation');
+    })->name('student.password.reset.confirmation');
 
-    Route::get('password-reset-confirmation', function () {
-        return view('auth.password-reset-confirmation');
-    })->name('password.reset.confirmation');
+      Route::get('admin-password-reset-confirmation', function () {
+        return view('auth.admin-password-reset-confirmation');
+    })->name('admin.password.reset.confirmation');
+
+
 
     /* Temporary Route for Email Template */
     Route::get('/custom-reset-password', function () {

@@ -94,6 +94,6 @@ class StudentPasswordResetLinkController extends Controller
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
         // Always redirect as student
-        return redirect()->route('password.reset.confirmation');
+        return redirect()->route('student.password.reset.confirmation');
     }
 }

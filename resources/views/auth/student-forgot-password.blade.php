@@ -1,7 +1,3 @@
-@php
-    $role = request()->query('role', 'student'); // Default to 'student' if not provided
-@endphp
-
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
