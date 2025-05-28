@@ -97,7 +97,7 @@
                     </button>
                 </form>
                 <div class="mt-4 text-center">
-                    <a href="{{ route('admin.login') }}" class="flex items-center justify-center md:text-[var(--secondary-color)] font-normal group transition-all duration-75">
+                        <a href="#" id="backToLogin" class="flex items-center justify-center md:text-[var(--secondary-color)] font-normal group transition-all duration-75">
                         <img class="md:h-[25px] pr-5 pt-0.5 group-hover:translate-x-1 transition-all duration-75" src="{{asset('images/arrow-left-admin.svg')}}" alt="Arrow Left Icon">
                         <span class="border-b-2 border-transparent group-hover:border-[var(--secondary-color)] transition-all duration-75">Back to Login</span>
                     </a>
@@ -105,6 +105,19 @@
             </div>
         </div>
     </div>
+
+    <!-- Confirmation Modal -->
+<div id="unsavedChangesModal" class="fixed inset-0 flex items-center justify-center bg-black/50 hidden z-50">
+    <div class="bg-white p-6 rounded-2xl shadow-lg text-center w-80">
+        <h1 class="text-lg mb-4 font-semibold text-gray-800">Go back to Login Page?</h1>
+        <p class="text-sm mb-6 text-gray-600">You have unsaved changes. Do you wish to go back to the Login Page?</p>
+        <div class="flex justify-center space-x-4">
+            <button id="confirmLeave" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Back to Login Page</button>
+            <button id="cancelLeave" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+        </div>
+    </div>
+</div>
+
     <script>
         const hasFormErrors = {{ $errors->any() ? 'true' : 'false' }};
     </script>
@@ -229,6 +242,42 @@
                 emailLabel.classList.add('ring-3', '!ring-red-600');
             }
         });
+
+        let isDirty = false;
+        const emailInput = document.getElementById('emailInput');
+        const backToLogin = document.getElementById('backToLogin');
+        const modal = document.getElementById('unsavedChangesModal');
+        const confirmLeave = document.getElementById('confirmLeave');
+        const cancelLeave = document.getElementById('cancelLeave');
+
+        // Detect changes
+        emailInput.addEventListener('input', () => {
+            if (emailInput.value.trim() !== '') {
+                isDirty = true;
+            } else {
+                isDirty = false;
+            }
+        });
+
+        // Intercept back to login click
+        backToLogin.addEventListener('click', (e) => {
+            if (isDirty) {
+                e.preventDefault();
+                modal.classList.remove('hidden');
+            } else {
+                window.location.href = "{{ route('admin.login') }}";
+            }
+        });
+
+        // Modal buttons
+        confirmLeave.addEventListener('click', () => {
+            window.location.href = "{{ route('admin.login') }}";
+        });
+
+        cancelLeave.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
         </script>
 
 </body>
