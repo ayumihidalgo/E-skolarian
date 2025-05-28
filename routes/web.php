@@ -25,6 +25,7 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\IsStudent;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\ProblemReportController;
 use App\Http\Controllers\StudentDashboardController;
 
 
@@ -50,6 +51,9 @@ Route::middleware('guest')->group(function () {
     // Super Admin Login
     Route::get('/superadmin/login', [SuperAdminLoginController::class, 'showLoginForm'])->name('superadmin.login.form');
     Route::post('/superadmin/login', [SuperAdminLoginController::class, 'login'])->name('superadmin.login');
+
+
+    Route::post('/report-problem', [ProblemReportController::class, 'store'])->name('report.problem.store');
 
     // --- Student Password Reset ---
     Route::get('/student/forgot-password', [StudentPasswordResetLinkController::class, 'create'])->name('student.password.request');
