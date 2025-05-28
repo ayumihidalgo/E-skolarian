@@ -14,62 +14,6 @@ use App\Models\User;
 
 class CommentController extends Controller
 {
-    // public function store(Request $request)
-    // {
-    //     try {
-    //         $validated = $request->validate([
-    //             'document_id' => 'required|exists:submitted_documents,id',
-    //             'comment' => 'required|string'
-    //         ]);
-
-    //         // Get the document to determine the receiver
-    //         $document = SubmittedDocument::findOrFail($validated['document_id']);
-
-    //         // Determine sent_by and received_by based on user role
-    //         $currentUser = Auth::user();
-
-    //         if ($currentUser->role === 'admin') {
-    //             // If admin is commenting, the receiver is the document submitter
-    //             $sentBy = $currentUser->id;
-    //             $receivedBy = $document->user_id;
-    //         } else {
-    //             // If student/submitter is commenting, the receiver is the admin
-    //             $sentBy = $currentUser->id;
-    //             $receivedBy = $document->received_by;
-    //         }
-
-    //         $comment = Comment::create([
-    //             'document_id' => $validated['document_id'],
-    //             'sent_by' => $sentBy,
-    //             'received_by' => $receivedBy,
-    //             'comment' => $validated['comment']
-    //         ]);
-
-    //         // Load the sender info for the response
-    //         $commentWithSender = Comment::with('sender')->find($comment->id);
-
-    //         return response()->json($commentWithSender);
-    //     } catch (\Exception $e) {
-    //         Log::error('Comment creation failed: ' . $e->getMessage());
-    //         return response()->json(['error' => 'Failed to create comment: ' . $e->getMessage()], 500);
-    //     }
-    // }
-
-    // public function getComments($documentId)
-    // {
-    //     try {
-    //         $comments = Comment::where('document_id', $documentId)
-    //             ->with(['sender', 'receiver'])
-    //             ->orderBy('created_at', 'desc')
-    //             ->get();
-
-    //         return response()->json($comments);
-    //     } catch (\Exception $e) {
-    //         Log::error('Failed to fetch comments: ' . $e->getMessage());
-    //         return response()->json(['error' => 'Failed to fetch comments'], 500);
-    //     }
-    // }
-
     /**
      * Store a newly created comment.
      *
@@ -115,8 +59,9 @@ class CommentController extends Controller
             $comment->document_id = $request->document_id;
             $comment->sent_by = Auth::id();
             // Determine received_by based on user role
-            if (Auth::user()->role === 'admin') {
-                $comment->received_by = $document->user_id; // If admin is commenting, the receiver is the document submitter
+            $adminRoles = ['admin', 'Student Services', 'Academic Services', 'Administrative Services', 'Campus Director'];
+            if (in_array(Auth::user()->role, $adminRoles)) {
+                $comment->received_by = $document->user_id; // If admin/staff is commenting, the receiver is the document submitter
             } else {
                 $comment->received_by = $document->received_by ?? null; // If student/submitter is commenting, the receiver is the admin
             }
@@ -179,6 +124,13 @@ class CommentController extends Controller
             ], 500);
         }
     }
+    
+    /**
+     * Store a newly created comment for students.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function studentstore(Request $request)
     {
         // Validate the request
@@ -218,8 +170,9 @@ class CommentController extends Controller
             $comment->document_id = $request->document_id;
             $comment->sent_by = Auth::id();
             // Determine received_by based on user role
-            if (Auth::user()->role === 'admin') {
-                $comment->received_by = $document->user_id; // If admin is commenting, the receiver is the document submitter
+            $adminRoles = ['admin', 'Student Services', 'Academic Services', 'Administrative Services', 'Campus Director'];
+            if (in_array(Auth::user()->role, $adminRoles)) {
+                $comment->received_by = $document->user_id; // If admin/staff is commenting, the receiver is the document submitter
             } else {
                 $comment->received_by = $document->received_by ?? null; // If student/submitter is commenting, the receiver is the admin
             }
@@ -262,11 +215,17 @@ class CommentController extends Controller
             $receiverUser = $comment->received_by ? User::find($comment->received_by) : null;
 
             // Trigger the event
-            event(new NewChatMessage($comment, $receiverUser));   // Load the sender relationship
+            event(new NewChatMessage($comment, $receiverUser));
+            
+            // Load the sender relationship
             $comment->load('sender');
 
-            // Return response
-            return back()->with('success', 'Comment added successfully.');
+            // Return JSON response instead of redirecting
+            return response()->json([
+                'success' => true,
+                'message' => 'Comment added successfully.',
+                'comment' => $comment
+            ]);
 
         } catch (\Exception $e) {
             // Log the error for debugging
@@ -279,6 +238,7 @@ class CommentController extends Controller
             ], 500);
         }
     }
+
     /**
      * Get all comments for a document
      *
@@ -289,8 +249,8 @@ class CommentController extends Controller
     {
         try {
             $comments = Comment::where('document_id', $documentId)
-                ->with('sender')
-                ->orderBy('created_at', 'desc')
+                ->with(['sender:id,username,profile_pic,role'])
+                ->orderBy('created_at', 'asc')
                 ->get();
 
             return response()->json($comments);
