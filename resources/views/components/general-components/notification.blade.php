@@ -5,7 +5,7 @@
     $unreadNotifications = Auth::check() ? Notification::where('user_id', Auth::id())->where('is_read', false)->orderBy('created_at', 'desc')->get() : [];
 @endphp
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<div id="notificationComponent" class="relative">
+<div id="notificationComponent" class="relative font-manrope" style="font-family: 'Manrope', sans-serif;">
     <!-- Notification Button -->
     <button id="notificationBtn" class="relative p-2 rounded-full cursor-pointer  transition-all duration-300">
         <svg class="text-w hover: rounded-full transition-colors duration-300 w-[24px] h-[24px]" viewBox="0 0 24 24" fill="none"
@@ -27,7 +27,7 @@
 
     <!-- Notification Panel -->
    <div id="notificationPanel"
-        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-[31.25rem] sm:h-auto">
+        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-72 md:w-80 lg:w-96 xl:w-[26rem] 2xl:w-[28rem] sm:h-auto sm:max-h-[70vh] md:max-h-[75vh] lg:max-h-[80vh] xl:max-h-[85vh]">
         
         <!-- Header -->
       <div class="notif-top-content p-4 border-b flex flex-row justify-between w-full h-[40px]">
@@ -43,7 +43,7 @@
            <div class="right-nav flex flex-row space-x-5 relative">
                 <!-- Dots Icon -->
                 <svg id="optionsMenuBtn" width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg" class="cursor-pointer hover:text-gray-700 transition-colors duration-300 hidden">
+                    xmlns="http://www.w3.org/2000/svg" class="cursor-pointer hover:text-gray-700 transition-all duration-300 hidden rounded-full p-1">
                     <path d="M4.75 8.5C3.925 8.5 3.25 9.175 3.25 10C3.25 10.825 3.925 11.5 4.75 11.5C5.575 11.5 6.25 10.825 6.25 10C6.25 9.175 5.575 8.5 4.75 8.5ZM15.25 8.5C14.425 8.5 13.75 9.175 13.75 10C13.75 10.825 14.425 11.5 15.25 11.5C16.075 11.5 16.75 10.825 16.75 10C16.75 9.175 16.075 8.5 15.25 8.5ZM10 8.5C9.175 8.5 8.5 9.175 8.5 10C8.5 10.825 9.175 11.5 10 11.5C10.825 11.5 11.5 10.825 11.5 10C11.5 9.175 10.825 8.5 10 8.5Z" fill="#525866"/>
                 </svg>
 
@@ -89,9 +89,9 @@
 
 
         <!-- Tabs -->
-        <div id="tabs-nav" class="flex items-center justify-between text-sm font-medium text-gray-600 border-b mt-4">
+        <div id="tabs-nav" class="flex items-center justify-between text-sm font-medium text-gray-600 shadow mt-4">
             <div class="flex">
-                <button id="allTab" class="px-4 py-2 border-b-2 border-purple-600 text-black font-semibold bg-gray-50 cursor-pointer">All</button>
+                <button id="allTab" class="px-4 py-2 border-b-2 border-purple-400 border-opacity-50 text-black font-semibold bg-gray-50 cursor-pointer">All</button>
                 <button id="unreadTab" class="px-4 py-2 hover:bg-gray-100 text-gray-500 cursor-pointer relative">
                     Unread
                     @if($unreadCount > 0)
@@ -108,7 +108,7 @@
         </div>
 
         <!-- Notification Content -->
-        <div id="notificationBody" class="overflow-y-auto transition-all duration-300 w-full h-[24rem] sm:h-[32rem]">
+        <div id="notificationBody" class="overflow-y-auto transition-all duration-300 w-full h-[18rem] sm:h-[20rem] md:h-[24rem] lg:h-[28rem] xl:h-[32rem]">
             @if(Auth::check() && Auth::user()->notifications->count() > 0)
             <!-- All Notifications Tab Content -->
             <div id="allNotifications" class="block  cursor-default">
@@ -154,9 +154,10 @@
             <!-- Unread Notifications Tab Content -->
            <div id="unreadNotifications" class="hidden">
     @if($unreadNotifications->isEmpty())
-        <div class="flex flex-col items-center justify-center min-h-[24rem] sm:min-h-[32rem] text-center text-gray-500">
-            <svg class="w-16 h-16 text-gray-300 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        <div class="flex flex-col items-center justify-center min-h-[18rem] sm:min-h-[20rem] md:min-h-[24rem] text-center text-gray-500">
+            <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M31.5 14C31.5 11.2152 30.3938 8.54451 28.4246 6.57538C26.4555 4.60625 23.7848 3.5 21 3.5C18.2152 3.5 15.5445 4.60625 13.5754 6.57538C11.6062 8.54451 10.5 11.2152 10.5 14C10.5 26.25 5.25 29.75 5.25 29.75H36.75C36.75 29.75 31.5 26.25 31.5 14Z" stroke="black" stroke-opacity="0.6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M24.0275 36.75C23.7198 37.2804 23.2782 37.7206 22.7469 38.0267C22.2155 38.3327 21.6131 38.4938 21 38.4938C20.3868 38.4938 19.7844 38.3327 19.2531 38.0267C18.7217 37.7206 18.2801 37.2804 17.9725 36.75" stroke="black" stroke-opacity="0.6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             <p class="text-sm sm:text-base">You have no unread notifications.</p>
         </div>
@@ -215,6 +216,18 @@
     </div>
 </div>
 
+<!-- Confirmation Modal -->
+<div id="confirmationModal" class="fixed inset-0 z-500 items-center justify-center bg-gray-900/75 w-screen min-h-screen hidden">
+    <div class="bg-white rounded-lg shadow-lg p-6 w-[90vw] sm:w-full sm:max-w-xs">
+        <h3 id="confirmationModalTitle" class="text-lg font-semibold mb-2 text-gray-800">Are you sure?</h3>
+        <p id="confirmationModalMessage" class="text-gray-600 mb-4 text-sm sm:text-base">Are you sure you want to proceed?</p>
+        <div class="flex justify-end space-x-2">
+            <button id="confirmationCancelBtn" class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 w-full sm:w-auto">Cancel</button>
+            <button id="confirmationOkBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 w-full sm:w-auto">Yes</button>
+        </div>
+    </div>
+</div>
+
 
 
 
@@ -233,9 +246,18 @@
         const unreadNotifications = document.getElementById('unreadNotifications');
         const backBtn = document.getElementById('backBtn');
         const optionsMenuBtn = document.getElementById('optionsMenuBtn');
+
+        const confirmAction = null;
         
-        // Fixed height for notification body
-        const NOTIFICATION_HEIGHT = '24rem';
+        // Fixed height for notification body - responsive values
+        const getNotificationHeight = () => {
+            const width = window.innerWidth;
+            if (width < 640) return '18rem';  // sm
+            if (width < 768) return '20rem';  // md
+            if (width < 1024) return '24rem'; // lg
+            if (width < 1280) return '28rem'; // xl
+            return '32rem'; // 2xl+
+        };
         let isCollapsed = false;
         let isPanelVisible = false;
 
@@ -248,6 +270,7 @@
             if (checkedBoxes.length > 0) {
                 // Show dots icon when checkboxes are selected
                 optionsMenuBtn.classList.remove('hidden');
+                optionsMenuBtn.classList.add('shadow-lg', 'bg-gray-100');
                 
                 // Enable all buttons
                 document.getElementById('markAsReadBtn').disabled = false;
@@ -257,6 +280,7 @@
             } else {
                 // Hide dots icon when no checkboxes are selected
                 optionsMenuBtn.classList.add('hidden');
+                optionsMenuBtn.classList.remove('shadow-lg', 'bg-gray-100');
                 optionsMenu.classList.add('hidden');
                 
                 // Disable all buttons
@@ -288,9 +312,9 @@
         }
 
         // Close the options menu when clicking outside
-        document.addEventListener('click', () => {
+        document.addEventListener('click', (event) => {
             const optionsMenu = document.getElementById('optionsMenu');
-            if (!optionsMenu.classList.contains('hidden')) {
+            if (!optionsMenu.classList.contains('hidden') && !optionsMenuBtn.contains(event.target)) {
                 optionsMenu.classList.add('hidden');
             }
         });
@@ -300,7 +324,7 @@
             optionsMenuBtn.addEventListener('click', toggleOptionsMenu);
         }
 
-        // Function to toggle panel with animation
+        // Toggle panel with animation
         function togglePanel() {
             isPanelVisible = !isPanelVisible;
             
@@ -389,7 +413,7 @@
                     tabs.style.borderBottom = 'none';
                 } else {
                     arrowIcon.style.transform = 'rotate(0deg)';
-                    notificationBody.style.height = NOTIFICATION_HEIGHT;
+                    notificationBody.style.height = getNotificationHeight();
                     tabs.style.borderBottom = '1px solid black';
                 }
             });
@@ -426,7 +450,27 @@
             });
             
             if (response.ok) {
-                // Your existing badge update logic...
+                // Update the notification element to show it as read
+                notificationElement.classList.add('opacity-75');
+                
+                // Remove from unread tab if it exists there
+                const unreadEl = document.querySelector('#unreadNotifications [data-notification-id="' + notificationId + '"]');
+                if (unreadEl) unreadEl.remove();
+                
+                // Update badge count immediately
+                updateNotificationBadge();
+                
+                // Optionally, you can also remove the checkbox or disable it
+                const checkbox = notificationElement.querySelector('.notification-checkbox');
+                if (checkbox) {
+                    checkbox.checked = false; // Uncheck the box
+                    checkbox.disabled = true; // Disable the checkbox
+                }
+                
+                // Update options menu state
+                updateOptionsMenu();
+            } else {
+                console.error('Failed to mark notification as read:', response.statusText);
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);
@@ -466,34 +510,71 @@
                     body: JSON.stringify(body)
                 });
                 if (response.ok) {
-                    // Remove or update notifications in UI
-                    if (action === 'delete' || action === 'deleteAll') {
-                        if (action === 'deleteAll') {
-                            document.querySelectorAll('.notification-checkbox').forEach(cb => {
-                                const el = cb.closest('[data-notification-id]');
-                                if (el) el.remove();
-                            });
-                        } else {
-                            notificationIds.forEach(id => {
-                                const el = document.querySelector('[data-notification-id="' + id + '"]');
-                                if (el) el.remove();
-                            });
-                        }
-                    } else if (action === 'markAsRead' || action === 'markAsUnread') {
-                        notificationIds.forEach(id => {
-                            const el = document.querySelector('[data-notification-id="' + id + '"]');
-                            if (el) {
-                                // Optionally update style to indicate read/unread
-                                el.classList.toggle('bg-gray-100', action === 'markAsRead');
-                            }
-                        });
-                    }
+                    // Update UI without page reload
+                    updateUIAfterAction(action, notificationIds);
                     // Uncheck all checkboxes and update menu
                     document.querySelectorAll('.notification-checkbox').forEach(cb => cb.checked = false);
                     updateOptionsMenu();
+                    // Update badge count
+                    updateNotificationBadge();
                 }
             } catch (error) {
                 alert('An error occurred. Please try again.');
+            }
+        }
+
+        function updateUIAfterAction(action, notificationIds) {
+            if (action === 'delete' || action === 'deleteAll') {
+                if (action === 'deleteAll') {
+                    document.querySelectorAll('[data-notification-id]').forEach(el => {
+                        el.remove();
+                    });
+                } else {
+                    notificationIds.forEach(id => {
+                        const el = document.querySelector('[data-notification-id="' + id + '"]');
+                        if (el) el.remove();
+                    });
+                }
+            } else if (action === 'markAsRead' || action === 'markAsUnread') {
+                notificationIds.forEach(id => {
+                    const el = document.querySelector('[data-notification-id="' + id + '"]');
+                    if (el) {
+                        // Update visual state for read/unread
+                        if (action === 'markAsRead') {
+                            el.classList.add('opacity-75');
+                            // Remove from unread notifications tab
+                            const unreadEl = document.querySelector('#unreadNotifications [data-notification-id="' + id + '"]');
+                            if (unreadEl) unreadEl.remove();
+                        } else {
+                            el.classList.remove('opacity-75');
+                            // Add back to unread notifications tab if not already there
+                            const unreadEl = document.querySelector('#unreadNotifications [data-notification-id="' + id + '"]');
+                            if (!unreadEl) {
+                                // Clone the element from all notifications and add to unread
+                                const clonedEl = el.cloneNode(true);
+                                document.getElementById('unreadNotifications').appendChild(clonedEl);
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        function updateNotificationBadge() {
+            // Count unread notifications
+            const unreadCount = document.querySelectorAll('#unreadNotifications [data-notification-id]').length;
+            const badge = document.querySelector('.bg-red-500.rounded-full');
+            const unreadBadge = document.querySelector('#unreadTab .bg-red-500');
+            
+            if (unreadCount === 0) {
+                if (badge) badge.style.display = 'none';
+                if (unreadBadge) unreadBadge.style.display = 'none';
+            } else {
+                if (badge) badge.style.display = 'block';
+                if (unreadBadge) {
+                    unreadBadge.style.display = 'block';
+                    unreadBadge.textContent = unreadCount;
+                }
             }
         }
 
@@ -528,31 +609,19 @@
         initializeCheckboxes();
         updateOptionsMenu();
     });
-</script>
 
-<!-- Confirmation Modal -->
-<div id="confirmationModal" class="fixed inset-0 z-500 flex  hidden items-center justify-center bg-gray-900/75 w-screen min-h-screen"">
-    <div class="bg-white rounded-lg shadow-lg p-6 w-[90vw] sm:w-full sm:max-w-xs">
-        <h3 id="confirmationModalTitle" class="text-lg font-semibold mb-2 text-gray-800">Are you sure?</h3>
-        <p id="confirmationModalMessage" class="text-gray-600 mb-4 text-sm sm:text-base">Are you sure you want to proceed?</p>
-        <div class="flex justify-end space-x-2">
-            <button id="confirmationCancelBtn" class="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 w-full sm:w-auto">Cancel</button>
-            <button id="confirmationOkBtn" class="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 w-full sm:w-auto">Yes</button>
-        </div>
-    </div>
-</div>
-
-<script>
-// Confirmation Modal Logic
-let confirmAction = null;
-function showConfirmationModal(message, onConfirm, title = 'Are you sure?') {
+    function showConfirmationModal(message, onConfirm, title = 'Are you sure?') {
     document.getElementById('confirmationModalMessage').textContent = message;
     document.getElementById('confirmationModalTitle').textContent = title;
-    document.getElementById('confirmationModal').classList.remove('hidden');
+    const modal = document.getElementById('confirmationModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
     confirmAction = onConfirm;
 }
 function hideConfirmationModal() {
-    document.getElementById('confirmationModal').classList.add('hidden');
+    const modal = document.getElementById('confirmationModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
     confirmAction = null;
 }
 document.getElementById('confirmationCancelBtn').addEventListener('click', hideConfirmationModal);
@@ -561,3 +630,6 @@ document.getElementById('confirmationOkBtn').addEventListener('click', function(
     hideConfirmationModal();
 });
 </script>
+
+
+
