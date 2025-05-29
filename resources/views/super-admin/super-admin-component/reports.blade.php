@@ -52,7 +52,7 @@
         </div>
 
         <!-- Reports Table -->
-        <div class="overflow-hidden rounded-[15px]" style="height: 600px;">
+        <div class="overflow-hidden rounded-[15px] h-[700px]" >
             <table class="min-w-full  text-white rounded-t-[15px] table-fixed">
                 <thead>
                     <tr>
@@ -172,7 +172,7 @@
         <!-- Modal Header -->
         <div class="relative flex justify-between items-center p-6 border shadow">
             <h2 id="modalReportId" class="text-2xl font-bold font-[Lexend] text-[#332B2B] mx-auto text-center"></h2>
-            <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600 text-2xl absolute top-1/2 right-6 transform -translate-y-1/2">
+            <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600 text-2xl absolute top-1/2 right-6 transform -translate-y-1/2 cursor-pointer">
             &times;
             </button>
         </div>
