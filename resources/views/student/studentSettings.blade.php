@@ -3,109 +3,112 @@
 @section('content')
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    @include('components.studentNavBarComponent')
     @include('components.studentSideBarComponent')
-    <div id="main-content" class="transition-all duration-300 ml-[20%]">
-        @if (session('success'))
-            <div id="Toast"
-                class="fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-green-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
-                role="alert">
-                <div class="w-full flex justify-between">
-                    <div class="flex items-center gap-4">
-                        <img src="{{ asset('images/successful.svg') }}" alt="Success Icon" id="docTypeIcon" class="">
-                        <div>
-                            <h6 class="font-bold font-['Manrope']">Profile Updated Successfully!</h6>
-                            <p class="sm:inline inline text-sm font-['Manrope']">{{ session('success') }}
-                            </p>
-                        </div>
-                    </div>
-                    <button type="button"
-                        class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
-                        onclick="document.getElementById('Toast').style.display='none';">&times;</button>
-                </div>
-            </div>
-        @endif
-
-        <div class="p-8">
-            <!-- Profile Settings Heading -->
-            <h2 class="text-2xl font-bold mb-6 font-['Lexend']">Profile Settings</h2>
-            <!-- Profile Card -->
-            <div class="flex items-center gap-8 mb-8">
-                <div class="relative  w-36 h-36 rounded-full">
-                    @if ($user->profile_pic)
-                        <!-- Show uploaded profile image -->
-                        <div class="border-3 border-gray-300 rounded-full">
-                            <img src="{{ asset('storage/' . $user->profile_pic) }}" alt="Profile"
-                                class="w-35 h-35 rounded-full object-cover">
-                        </div>
-                    @else
-                        <!-- Default profile with initials -->
-                        <div
-                            class="w-full h-full rounded-full bg-maroon-700 flex items-center justify-center text-white text-3xl font-bold">
-                            <img src="{{ asset('images/dprofile.svg') }}" class="w-36 h-36" alt="camera icon">
-                        </div>
-                    @endif
-                    <input type="file" name="profile_image" id="profileImageInput" class="hidden" accept="image/*">
-                    <!-- Camera icon overlay -->
-                    <button onclick="openProfilePreviewModal()"
-                        class="absolute bottom-[-5px] right-2 bg-yellow-500 p-[5px] rounded-full cursor-pointer z-10">
-                        <img src="{{ asset('images/camera.svg') }}" class="w-6 h-6" alt="camera icon">
-                    </button>
-
-                </div>
-                <div>
-                    <h3 class="text-2xl font-black tracking-wider font-['Lexend']">{{ $user->username }}</h3>
-                    <p class="uppercase text-lg tracking-wider font-semibold font-['Lexend']">{{ $user->role_name }}</p>
-                    <div id="" class="mt-2 text-sm relative flex items-center gap-20">
-                        <div class="flex items-center gap-2">
-                            <img src="{{ asset('images/Smail.svg') }}" class="w-6 h-6" alt="email icon">
+    <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
+        @include('components.studentNavBarComponent')
+        <div class="flex-grow mb-10">
+            @if (session('success'))
+                <div id="Toast"
+                    class="fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-green-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+                    role="alert">
+                    <div class="w-full flex justify-between">
+                        <div class="flex items-center gap-4">
+                            <img src="{{ asset('images/successful.svg') }}" alt="Success Icon" id="docTypeIcon"
+                                class="">
                             <div>
-                                <p class="font-extrabold text-[11px]">Email</p>
-                                <p class="font-extrabold text-[12px]">{{ $user->email }}</p>
+                                <h6 class="font-bold font-['Manrope']">Profile Updated Successfully!</h6>
+                                <p class="sm:inline inline text-sm font-['Manrope']">{{ session('success') }}
+                                </p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <img src="{{ asset('images/department.svg') }}" class="w-6 h-6" alt="department icon">
-                            <div>
-                                <p class="font-extrabold text-[11px]">Department</p>
-                                <p class="font-extrabold text-[12px]">{{ $user->organization_acronym }}</p>
-                                <!-- Example department -->
+                        <button type="button"
+                            class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+                            onclick="document.getElementById('Toast').style.display='none';">&times;</button>
+                    </div>
+                </div>
+            @endif
+            <div class="p-8">
+                <!-- Profile Settings Heading -->
+                <h2 class="text-2xl font-bold mb-6 font-['Lexend']">Profile Settings</h2>
+                <!-- Profile Card -->
+                <div class="flex items-center gap-8 mb-8">
+                    <div class="relative  w-36 h-36 rounded-full">
+                        @if ($user->profile_pic)
+                            <!-- Show uploaded profile image -->
+                            <div class="border-3 border-gray-300 rounded-full">
+                                <img src="{{ asset('storage/' . $user->profile_pic) }}" alt="Profile"
+                                    class="w-35 h-35 rounded-full object-cover">
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Security Info -->
-            <div class="bg-white w-full [box-shadow:1px_2px_7px_rgba(0,0,0,0.3)] rounded-3xl ">
-                <div class="border-b w-full px-4 py-3">
-                    <h4 class="text-2xl font-bold mb-2 mt-1 font-['Lexend']">SECURITY INFO</h4>
-                    <p class="text-sm text-gray-600">Manage your password settings here to reset your password and
-                        enhance
-                        your account security.</p>
-                </div>
-                <div class="border-t-[0] w-full flex justify-between items-center px-6 py-5 ">
-                    <div class="flex items-center gap-4">
-                        <img src="{{ asset('images/dpassword.svg') }}" class="w-6 h-6" alt="password icon">
-                        <p class="font-['Lexend'] text-sm">Password</p>
-                    </div>
-                    <div class="flex flex-col items-center text-center">
-                        <p class="font-['Lexend'] text-sm">Password</p>
-                        @if ($user->password_changed_at)
-                            <p class="text-gray-400 text-xs">
-                                Last Updated: {{ \Carbon\Carbon::parse($user->password_changed_at)->diffForHumans() }}
-                            </p>
                         @else
-                            <p class="text-gray-400 text-xs">
-                                Last Updated: Never
-                            </p>
+                            <!-- Default profile with initials -->
+                            <div
+                                class="w-full h-full rounded-full bg-maroon-700 flex items-center justify-center text-white text-3xl font-bold">
+                                <img src="{{ asset('images/dprofile.svg') }}" class="w-36 h-36" alt="camera icon">
+                            </div>
                         @endif
+                        <input type="file" name="profile_image" id="profileImageInput" class="hidden" accept="image/*">
+                        <!-- Camera icon overlay -->
+                        <button onclick="openProfilePreviewModal()"
+                            class="absolute bottom-[-5px] right-2 bg-yellow-500 p-[5px] rounded-full cursor-pointer z-10">
+                            <img src="{{ asset('images/camera.svg') }}" class="w-6 h-6" alt="camera icon">
+                        </button>
+
                     </div>
-                    <button class="text-blue-600 font-bold bg-transparent border-none cursor-pointer text-sm"
-                        onclick="openChangePasswordModal()">Change</button>
+                    <div>
+                        <h3 class="text-2xl font-black tracking-wider font-['Lexend']">{{ $user->username }}</h3>
+                        <p class="uppercase text-lg tracking-wider font-semibold font-['Lexend']">{{ $user->role_name }}</p>
+                        <div id="" class="mt-2 text-sm relative flex items-center gap-20">
+                            <div class="flex items-center gap-2">
+                                <img src="{{ asset('images/Smail.svg') }}" class="w-6 h-6" alt="email icon">
+                                <div>
+                                    <p class="font-extrabold text-[11px]">Email</p>
+                                    <p class="font-extrabold text-[12px]">{{ $user->email }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <img src="{{ asset('images/department.svg') }}" class="w-6 h-6" alt="department icon">
+                                <div>
+                                    <p class="font-extrabold text-[11px]">Department</p>
+                                    <p class="font-extrabold text-[12px]">{{ $user->organization_acronym }}</p>
+                                    <!-- Example department -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Info -->
+                <div class="bg-white w-full [box-shadow:1px_2px_7px_rgba(0,0,0,0.3)] rounded-3xl ">
+                    <div class="border-b w-full px-4 py-3">
+                        <h4 class="text-2xl font-bold mb-2 mt-1 font-['Lexend']">SECURITY INFO</h4>
+                        <p class="text-sm text-gray-600">Manage your password settings here to reset your password and
+                            enhance
+                            your account security.</p>
+                    </div>
+                    <div class="border-t-[0] w-full flex justify-between items-center px-6 py-5 ">
+                        <div class="flex items-center gap-4">
+                            <img src="{{ asset('images/dpassword.svg') }}" class="w-6 h-6" alt="password icon">
+                            <p class="font-['Lexend'] text-sm">Password</p>
+                        </div>
+                        <div class="flex flex-col items-center text-center">
+                            <p class="font-['Lexend'] text-sm">Password</p>
+                            @if ($user->password_changed_at)
+                                <p class="text-gray-400 text-xs">
+                                    Last Updated: {{ \Carbon\Carbon::parse($user->password_changed_at)->diffForHumans() }}
+                                </p>
+                            @else
+                                <p class="text-gray-400 text-xs">
+                                    Last Updated: Never
+                                </p>
+                            @endif
+                        </div>
+                        <button class="text-blue-600 font-bold bg-transparent border-none cursor-pointer text-sm"
+                            onclick="openChangePasswordModal()">Change</button>
+                    </div>
                 </div>
             </div>
         </div>
+        @include('components.footer')
     </div>
     <input type="file" name="profile_image" id="profileImageInput" class="hidden" accept="image/*">
     <!-- Profile Preview Modal -->
