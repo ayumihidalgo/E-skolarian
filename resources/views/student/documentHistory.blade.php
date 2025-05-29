@@ -175,7 +175,8 @@
         </div>
 
         <!-- Pagination controls -->
-        <div class="mt-4 flex justify-center">
+        @if(count($documents) > 0)
+        <div class="mt-4 flex justify-center" id="paginationContainer">
             <nav>
                 <ul class="inline-flex items-center space-x-2">
                     <li>
@@ -203,6 +204,7 @@
                 </ul>
             </nav>
         </div>
+        @endif
     </div>
 </div>
 
@@ -256,12 +258,18 @@
             <td colspan="${headerCount}" class="px-4 py-8 text-center text-gray-500">
                 <div class="flex flex-col items-center justify-center w-full h-full">
                     <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No documents found" class="mb-4 w-40 h-40" />
-                    <span>No documents found matching your criteria.</span>
+                    <span>No documents found.</span>
                 </div>
             </td>
         `;
 
             tbody.appendChild(newRow);
+        }
+
+        // Show/hide pagination based on visible records after filtering
+        const paginationContainer = document.getElementById('paginationContainer');
+        if (paginationContainer) {
+            paginationContainer.style.display = visibleRowCount === 0 ? 'none' : '';
         }
     }
 
