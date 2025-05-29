@@ -8,6 +8,7 @@ use App\Models\SubmittedDocument;
 use Carbon\Carbon; 
 use Illuminate\Support\Facades\Auth;
 use App\Models\Review;
+use App\Models\Document; // Add this line
 
 class StudentDashboardController extends Controller
 {
@@ -54,6 +55,13 @@ class StudentDashboardController extends Controller
             ->latest()
             ->get();
 
+        // Fetch recent documents
+        $recentDocuments = \App\Models\SubmittedDocument::with(['latestVersion', 'receiver'])
+            ->where('user_id', auth()->id())
+            ->latest()
+            ->take(5)
+            ->get();
+
         return view('student.dashboard', [
             'pendingCount' => $pendingCount,
             'reviewCount' => $reviewCount,
@@ -61,6 +69,7 @@ class StudentDashboardController extends Controller
             'totalCount' => $totalCount,
             'latestAnnouncements' => $latestAnnouncements,
             'previousAnnouncements' => $previousAnnouncements,
+            'recentDocuments' => $recentDocuments, // Add recentDocuments to the view data
         ]);
     }
 }
