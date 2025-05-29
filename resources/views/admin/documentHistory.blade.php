@@ -267,16 +267,19 @@
         </div>
 
         <!-- Pagination controls -->
-        <div class="mt-4 flex justify-center">
+        @if(count($documents) > 0)
+        <div class="mt-4 flex justify-center" id="paginationContainer">
             <nav>
                 <ul class="inline-flex items-center space-x-2">
+                    <!-- Previous page button -->
                     <li>
-                        <a href="{{ $documents->url(1) }}"
-                            class="pagination-btn-first px-3 py-1 rounded-lg {{ $documents->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
-                            First
-                        </a>
+                        <a href="{{ $documents->previousPageUrl() }}"
+                            class="pagination-btn-prev px-3 py-1 rounded-lg {{ $documents->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
+                            <
+                                </a>
                     </li>
 
+                    <!-- Page numbers -->
                     @for ($i = 1; $i <= $documents->lastPage(); $i++)
                         <li>
                             <a href="{{ $documents->url($i) }}"
@@ -286,15 +289,17 @@
                         </li>
                         @endfor
 
+                        <!-- Next page button -->
                         <li>
-                            <a href="{{ $documents->url($documents->lastPage()) }}"
-                                class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
-                                Last
+                            <a href="{{ $documents->nextPageUrl() }}"
+                                class="pagination-btn-next px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
+                                >
                             </a>
                         </li>
                 </ul>
             </nav>
         </div>
+        @endif
     </div>
 
     <!-- Archive Documents Confirmation Modal -->
@@ -340,7 +345,7 @@
 
             // Get all rows in the table
             const rows = document.querySelectorAll("#documentTable tbody tr[data-id]");
-            
+
             let visibleRowCount = 0;
 
             // Loop through each row and apply filters
@@ -359,7 +364,7 @@
                 // Show or hide the row based on filter matches
                 const shouldShow = matchesSearch && matchesOrg && matchesType && matchesStatus;
                 row.style.display = shouldShow ? '' : 'none';
-                
+
                 if (shouldShow) {
                     visibleRowCount++;
                 }
@@ -370,12 +375,12 @@
 
             // Handle "No documents found" row
             let noDocRow = document.querySelector("#documentTable tbody tr:not([data-id])");
-            
+
             // If no existing "No documents found" row and no visible rows, create one
             if (!noDocRow && visibleRowCount === 0) {
                 const tbody = document.querySelector("#documentTable tbody");
                 const headerCount = document.querySelectorAll("#documentTable thead th").length;
-                
+
                 noDocRow = document.createElement('tr');
                 noDocRow.innerHTML = `
                     <td colspan="${headerCount}" class="px-4 py-8 text-center text-gray-500 align-middle">
@@ -386,10 +391,27 @@
                     </td>
                 `;
                 tbody.appendChild(noDocRow);
-            } 
+            }
             // If there is a "No documents found" row, show/hide based on visible rows
             else if (noDocRow) {
                 noDocRow.style.display = visibleRowCount === 0 ? 'table-row' : 'none';
+            }
+
+            // Handle pagination visibility
+            const paginationSection = document.querySelector('.mt-4.flex.justify-center');
+            if (paginationSection) {
+                paginationSection.style.display = visibleRowCount === 0 ? 'none' : '';
+            }
+
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                // Disable the checkbox when no documents are visible
+                selectAllCheckbox.disabled = visibleRowCount === 0;
+                
+                // Also uncheck it when disabled
+                if (visibleRowCount === 0) {
+                    selectAllCheckbox.checked = false;
+                }
             }
         }
 
@@ -434,7 +456,7 @@
                     })
                 })
                 .then(response => response.json())
-                .then(data => {
+                .then((data) => {
                     if (data.success) {
                         // Reload the page to show updated list
                         window.location.reload();
@@ -516,6 +538,78 @@
         document.getElementById("confirmArchiveBtn").addEventListener("click", function() {
             processArchiving(); // Call the function that actually does the archiving
             document.getElementById("archiveConfirmationModal").classList.add("hidden");
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add at the top of your existing DOMContentLoaded function
+            const initialVisibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.disabled = initialVisibleRows === 0;
+            }
+            
+            // Other initialization code...
+
+            // Add event delegation for pagination links
+            document.addEventListener('click', function(e) {
+                // Find closest anchor that has pagination-btn class or variations
+                const paginationLink = e.target.closest('a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
+
+                if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
+                    e.preventDefault();
+                    const url = paginationLink.getAttribute('href');
+
+                    // Show loading indicator
+                    const tableContainer = document.querySelector('#tableContainer');
+                    tableContainer.classList.add('opacity-50');
+
+                    // Fetch the new page content
+                    fetch(url, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.text())
+                        .then(html => {
+                            // Create a temporary element to parse the HTML
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+
+                            // Extract the table body content
+                            const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
+                            document.querySelector('#documentTable tbody').innerHTML = newTableBody;
+
+                            // Update pagination
+                            const newPagination = doc.querySelector('#paginationContainer');
+                            if (newPagination) {
+                                const currentPagination = document.querySelector('#paginationContainer');
+                                if (currentPagination) {
+                                    currentPagination.outerHTML = newPagination.outerHTML;
+                                }
+                            }
+
+                            // Update URL without reload
+                            window.history.pushState({}, '', url);
+
+                            // Reset filters and selections
+                            selectedItems.clear();
+                            updateSelectedCount();
+
+                            // If "select all" checkbox is checked, uncheck it
+                            const selectAllCheckbox = document.getElementById('selectAll');
+                            if (selectAllCheckbox) {
+                                selectAllCheckbox.checked = false;
+                            }
+
+                            // Remove loading state
+                            tableContainer.classList.remove('opacity-50');
+                        })
+                        .catch(error => {
+                            console.error('Error loading page:', error);
+                            tableContainer.classList.remove('opacity-50');
+                        });
+                }
+            });
         });
     </script>
 </div>

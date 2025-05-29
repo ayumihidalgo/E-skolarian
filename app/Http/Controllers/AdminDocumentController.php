@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\Document;
 
 class AdminDocumentController extends Controller
 {
@@ -128,6 +129,11 @@ class AdminDocumentController extends Controller
             'CHO' => 'text-blue-500',
         ];
 
+        // Handle AJAX requests
+        if ($request->ajax()) {
+            return view('admin.documentHistory', compact('documents', 'orgMap', 'tagColors'))->render();
+        }
+        
         return view('admin.documentHistory', compact('documents', 'orgMap', 'tagColors'));
     }
 
@@ -261,5 +267,18 @@ class AdminDocumentController extends Controller
                 'message' => 'Failed to restore documents: ' . $e->getMessage()
             ]);
         }
+    }
+
+    public function index(Request $request)
+    {
+        $documents = Document::where('archived', true)
+            ->orderBy('archived_at', 'desc')
+            ->paginate(6);
+        
+        if ($request->ajax()) {
+            return view('admin.partials.archiveTableContent', compact('documents'))->render();
+        }
+        
+        return view('admin.archivePage', compact('documents'));
     }
 }

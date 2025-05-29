@@ -194,16 +194,19 @@
         </div>
 
         <!-- Pagination controls -->
-        <div class="mt-4 flex justify-center">
+        @if(count($documents) > 0)
+        <div class="mt-4 flex justify-center" id="paginationContainer">
             <nav>
                 <ul class="inline-flex items-center space-x-2">
+                    <!-- Previous page button -->
                     <li>
-                        <a href="{{ $documents->url(1) }}"
-                            class="pagination-btn-first px-3 py-1 rounded-lg {{ $documents->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
-                            First
+                        <a href="{{ $documents->previousPageUrl() }}"
+                            class="pagination-btn-prev px-3 py-1 rounded-lg {{ $documents->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
+                            <
                         </a>
                     </li>
 
+                    <!-- Page numbers -->
                     @for ($i = 1; $i <= $documents->lastPage(); $i++)
                         <li>
                             <a href="{{ $documents->url($i) }}"
@@ -211,17 +214,19 @@
                                 {{ $i }}
                             </a>
                         </li>
-                        @endfor
+                    @endfor
 
-                        <li>
-                            <a href="{{ $documents->url($documents->lastPage()) }}"
-                                class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
-                                Last
-                            </a>
-                        </li>
+                    <!-- Next page button -->
+                    <li>
+                        <a href="{{ $documents->nextPageUrl() }}"
+                            class="pagination-btn-next px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
+                            >
+                        </a>
+                    </li>
                 </ul>
             </nav>
         </div>
+        @endif
     </div>
 </div>
 
@@ -274,6 +279,8 @@
         const typeFilter = document.getElementById("typeFilter").value;
 
         const rows = document.querySelectorAll("#documentTable tbody tr");
+        
+        let visibleRowCount = 0;
 
         rows.forEach(row => {
             // Skip the "No documents found" row
@@ -287,8 +294,48 @@
             const matchesOrg = organizationFilter === 'All' || organizationFilter === 'Organization' || orgAcronym === organizationFilter;
             const matchesType = typeFilter === 'All' || typeFilter === 'Type' || docType === typeFilter;
 
-            row.style.display = (matchesSearch && matchesOrg && matchesType) ? '' : 'none';
+            const shouldShow = (matchesSearch && matchesOrg && matchesType);
+            row.style.display = shouldShow ? '' : 'none';
+            
+            if (shouldShow) {
+                visibleRowCount++;
+            }
         });
+        
+        // Add this code to disable the "Select All" checkbox when no documents are visible
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.disabled = visibleRowCount === 0;
+            if (visibleRowCount === 0) {
+                selectAllCheckbox.checked = false;
+            }
+        }
+        
+        // Show/hide "No documents found" message
+        const noDocRow = document.querySelector("#documentTable tbody tr:not([data-id])");
+        if (!noDocRow && visibleRowCount === 0) {
+            const tbody = document.querySelector("#documentTable tbody");
+            const headerCount = document.querySelectorAll("#documentTable thead th").length;
+            
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td colspan="${headerCount}" class="px-4 py-8 text-center text-gray-500 align-middle">
+                    <div class="flex flex-col items-center justify-center min-h-[300px]">
+                        <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No documents found" class="mb-4 w-40 h-40" />
+                        <span>No documents found matching your criteria.</span>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(newRow);
+        } else if (noDocRow) {
+            noDocRow.style.display = visibleRowCount === 0 ? 'table-row' : 'none';
+        }
+        
+        // Show/hide pagination based on visible rows
+        const paginationContainer = document.getElementById('paginationContainer');
+        if (paginationContainer) {
+            paginationContainer.style.display = visibleRowCount === 0 ? 'none' : '';
+        }
     }
 
     /**
@@ -383,7 +430,7 @@
                 if (checkbox.closest('tr').style.display !== 'none') {
                     checkbox.checked = e.target.checked;
                     const id = checkbox.getAttribute('data-id');
-                    if (e.target.checked) {
+                    if (e.target.checked) { 
                         selectedItems.add(id);
                     } else {
                         selectedItems.delete(id);
@@ -434,6 +481,65 @@
             document.getElementById("restoreConfirmationModal").classList.add("hidden");
         });
 
+        // Add event delegation for pagination links
+        document.addEventListener('click', function(e) {
+            // Find closest anchor that has pagination-btn class or variations
+            const paginationLink = e.target.closest('a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
+            
+            if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
+                e.preventDefault();
+                const url = paginationLink.getAttribute('href');
+                
+                // Show loading indicator
+                const tableContainer = document.querySelector('#tableContainer');
+                tableContainer.classList.add('opacity-50');
+                
+                // Fetch the new page content
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary element to parse the HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Extract the table body content
+                    const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
+                    document.querySelector('#documentTable tbody').innerHTML = newTableBody;
+                    
+                    // Update pagination
+                    const newPagination = doc.querySelector('#paginationContainer');
+                    if (newPagination) {
+                        document.querySelector('#paginationContainer').outerHTML = newPagination.outerHTML;
+                    }
+                    
+                    // Update URL without reload
+                    window.history.pushState({}, '', url);
+                    
+                    // Reset filters and selections
+                    selectedItems.clear();
+                    updateSelectedCount();
+                    
+                    // Remove loading state
+                    tableContainer.classList.remove('opacity-50');
+                })
+                .catch(error => {
+                    console.error('Error loading page:', error);
+                    tableContainer.classList.remove('opacity-50');
+                });
+            }
+        });
+
+        // Add this at the beginning to check initial state
+        const hasDocuments = document.querySelectorAll("#documentTable tbody tr[data-id]").length > 0;
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.disabled = !hasDocuments;
+        }
+        
         // Initialize selected count
         updateSelectedCount();
     });
