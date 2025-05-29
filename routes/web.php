@@ -108,8 +108,15 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
     Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
         ->name('super-admin.reactivate-user')
         ->middleware('auth');
+        
+         // Super Admin Reports
+    Route::get('/super-admin/reports', function() {
+        return view('super-admin.super-admin-component.reports');
+    })->name('super-admin.reports');
+
 
 });
+
 Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
     // ---------------- Admin ----------------
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'showDashboard'])->name('admin.dashboard');
