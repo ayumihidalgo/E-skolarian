@@ -264,11 +264,55 @@
                 <div class="lg:col-span-2 space-y-2">
                     <h2 class="text-lg font-semibold">Recent Documents</h2>
                     <div class="bg-zinc-100 rounded-xl shadow-md p-4">
-                        <div class="text-center text-gray-500 py-8">
-                            <img src="{{ asset('images/recentdoc.png') }}" alt="No recent documents"
-                                class="w-40 mx-auto mb-2 opacity-80">
-                            <p>No recent documents at the moment</p>
-                        </div>
+                        @if($recentDocuments->count())
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-sm text-left">
+                                    <thead>
+                                        <tr class="border-b">
+                                            <th class="px-3 py-2 font-semibold">Tag</th>
+                                            <th class="px-3 py-2 font-semibold">Organization</th>
+                                            <th class="px-3 py-2 font-semibold">Title</th>
+                                            <th class="px-3 py-2 font-semibold">Date</th>
+                                            <th class="px-3 py-2 font-semibold">Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($recentDocuments as $doc)
+                                            <tr class="border-b hover:bg-zinc-200 cursor-pointer"
+                                                onclick="showAdminDocumentModal(
+                                                    '{{ $doc->user->username ?? '' }}',
+                                                    '{{ \Carbon\Carbon::parse($doc->created_at)->format('F j, Y, g:i A') }}',
+                                                    '{{ addslashes($doc->subject) }}',
+                                                    '{{ addslashes($doc->type) }}',
+                                                    '{{ addslashes($doc->summary) }}',
+                                                    '{{ $doc->latestVersion ? addslashes($doc->latestVersion->file_path) : '' }}',
+                                                    '{{ $doc->control_tag }}',
+                                                    '{{ $doc->status }}',
+                                                    '{{ $doc->reviews->contains(function($review) { return strtolower($review->status) === "under review"; }) ? "Under Review" : ucfirst($doc->status) }}'
+                                                )">
+                                                <td class="px-3 py-2 font-bold text-orange-500">{{ $doc->control_tag }}</td>
+                                                <td class="px-3 py-2 max-w-[180px] truncate" title="{{ $doc->user->username ?? '' }}">
+                                                    {{ $doc->user->username ?? '' }}
+                                                </td>
+                                                <td class="px-3 py-2 max-w-[200px] truncate" title="{{ $doc->subject }}">
+                                                    {{ $doc->subject }}
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    {{ \Carbon\Carbon::parse($doc->created_at)->format('n/j/Y') }}
+                                                </td>
+                                                <td class="px-3 py-2">{{ $doc->type }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center text-gray-500 py-8">
+                                <img src="{{ asset('images/recentdoc.png') }}" alt="No recent documents"
+                                    class="w-40 mx-auto mb-2 opacity-80">
+                                <p>No recent documents at the moment</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -437,6 +481,42 @@
         </div>
     </div>
 </div>
+
+<!-- Document Details Modal -->
+<div id="adminDocumentModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div onclick="closeAdminDocumentModal()" class="absolute inset-0 bg-black opacity-40"></div>
+    <div class="relative bg-[#4B2222] rounded-xl shadow-lg max-w-lg w-full p-6 z-10 text-white">
+        <div class="flex items-center justify-between mb-2 border-b border-[#fff2] pb-2">
+            <span class="font-semibold text-lg">Document Details</span>
+            <button onclick="closeAdminDocumentModal()" class="text-2xl text-gray-200 hover:text-white">&times;</button>
+        </div>
+        <div class="mb-2 text-sm" id="adminDocDate"></div>
+        <div class="mb-2">
+            <span class="font-bold text-lg">Title: </span>
+            <span id="adminDocTitle" class="font-semibold"></span>
+        </div>
+        <div class="mb-2">
+            <span class="font-semibold">Type: </span>
+            <span id="adminDocType"></span>
+        </div>
+        <div class="mb-2">
+            <span class="font-semibold">Summary</span>
+            <div id="adminDocSummary" class="bg-gray-100 text-gray-900 rounded-md p-3 mt-1"></div>
+        </div>
+        <div class="mb-2">
+            <span class="font-semibold">Attachment</span>
+            <div id="adminDocAttachment"></div>
+        </div>
+        <div class="flex gap-2 mb-2 text-xs">
+            <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-gray-400"></span>Pending</span>
+            <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-yellow-400"></span>Under Review</span>
+            <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>Rejected</span>
+            <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>Approved</span>
+        </div>
+        <div id="adminDocMeta" class="bg-[#3a1818] rounded-md px-3 py-2 mt-2 text-xs"></div>
+    </div>
+</div>
+
     <script>
     function showAnnouncementModal(title, content, meta = '', type = 'announcement') {
         document.getElementById('modalTitle').textContent = title;
@@ -586,6 +666,41 @@
         }
         function closeDeleteModal() {
             document.getElementById('deleteConfirmModal').classList.add('hidden');
+        }
+
+        function showAdminDocumentModal(username, date, title, type, summary, filePath, tag, status, displayStatus) {
+            document.getElementById('adminDocDate').textContent = date;
+            document.getElementById('adminDocTitle').textContent = title;
+            document.getElementById('adminDocType').textContent = type;
+            document.getElementById('adminDocSummary').textContent = summary || 'No summary';
+            if (filePath) {
+                let fileName = filePath.split('/').pop();
+                document.getElementById('adminDocAttachment').innerHTML =
+                    `<a href="${getPreviewUrl(filePath)}" target="_blank" class="bg-white text-gray-900 px-3 py-1 rounded shadow text-xs inline-block hover:bg-gray-200 transition">View: ${fileName}</a>`;
+            } else {
+                document.getElementById('adminDocAttachment').innerHTML = '<span class="text-gray-300">No attachment</span>';
+            }
+            // Status badge
+            let badge = '';
+            if (displayStatus === 'Approved') badge = `<span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span>`;
+            else if (displayStatus === 'Rejected') badge = `<span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-1"></span>`;
+            else if (displayStatus === 'Under Review') badge = `<span class="inline-block w-3 h-3 rounded-full bg-yellow-400 mr-1"></span>`;
+            else badge = `<span class="inline-block w-3 h-3 rounded-full bg-gray-400 mr-1"></span>`;
+            document.getElementById('adminDocMeta').innerHTML =
+                `<span class="font-semibold">${username}</span><br>${badge}${displayStatus}, ${date}`;
+            document.getElementById('adminDocumentModal').classList.remove('hidden');
+        }
+        function closeAdminDocumentModal() {
+            document.getElementById('adminDocumentModal').classList.add('hidden');
+        }
+        function getPreviewUrl(filePath) {
+            let fileName = filePath.split('/').pop();
+            let ext = fileName.split('.').pop().toLowerCase();
+            if (['doc', 'docx'].includes(ext)) {
+                let url = encodeURIComponent(window.location.origin + '/storage/' + filePath);
+                return `https://docs.google.com/gview?url=${url}&embedded=true`;
+            }
+            return `/storage/${filePath}`;
         }
     </script>
     

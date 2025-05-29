@@ -60,6 +60,11 @@ class AdminDashboardController extends Controller
         // Determine which tab to show
         $showArchive = $request->query('archive', false);
 
+        $recentDocuments = \App\Models\SubmittedDocument::with('user')
+            ->latest()
+            ->take(5)
+            ->get();
+
         return view('admin.dashboard', compact(
             'latestAnnouncements',
             'previousAnnouncements',
@@ -68,7 +73,8 @@ class AdminDashboardController extends Controller
             'pendingCount',
             'reviewCount',
             'approvedCount',
-            'totalCount'
+            'totalCount',
+            'recentDocuments'
         ));
     }
 }
