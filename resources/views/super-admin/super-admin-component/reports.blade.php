@@ -53,12 +53,12 @@
 
         <!-- Reports Table -->
         <div class="overflow-hidden rounded-[15px]" style="height: 600px;">
-            <table class="min-w-full bg-[#DAA520] text-white rounded-t-[15px] table-fixed">
+            <table class="min-w-full  text-white rounded-t-[15px] table-fixed">
                 <thead>
                     <tr>
                         <th class="w-[15%] px-4 py-3 text-left font-['Manrope'] text-[15px] font-bold">
                             <div class="flex items-center">
-                                <span class="whitespace-nowrap">Timestamp</span>
+                                <span class="whitespace-nowrap text-black">Timestamp</span>
                                 <div class="flex flex-col ml-2">
                                    
                                 </div>
@@ -66,13 +66,13 @@
                         </th>
                         <th class="w-[15%] px-4 py-3 text-left font-['Manrope'] text-[15px] font-bold">
                             <div class="flex items-center">
-                                <span class="whitespace-nowrap">Report ID</span>
+                                <span class="whitespace-nowrap text-black">Report ID</span>
                                 <div class="flex flex-col ml-2">
                                   
                                 </div>
                             </div>
                         </th>
-                        <th class="w-[25%] px-4 py-3 text-left font-['Manrope'] text-[15px] font-bold">
+                        <th class="w-[25%] px-4 py-3 text-left font-['Manrope'] text-[15px]  text-black font-bold ">
                             <div class="flex items-center">
                                 <span class="whitespace-nowrap">Email</span>
                                 <div class="flex flex-col ml-2">
@@ -80,97 +80,228 @@
                                 </div>
                             </div>
                         </th>
-                        <th class="w-[45%] px-4 py-3 text-left font-['Manrope'] text-[15px] font-bold">
+                        <th class="w-[45%] px-4 py-3 text-left font-['Manrope'] text-[15px]  text-black font-bold">
                             <span class="whitespace-nowrap">Problem Description</span>
                         </th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-[#7A1212]/70">
-                    <!-- Sample Data Row -->
-                    <tr class="border-y-[0.1px] border-[#7A1212] bg-[#d9c698] hover:bg-[#DAA520] transition duration-300 cursor-pointer">
-                        <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
-                            2024-01-15<br>
-                            <span class="text-[11px] text-gray-600">10:30 AM</span>
-                        </td>
-                        <td class="px-4 py-3 text-[13px] text-black font-[Lexend] font-semibold">
-                            RPT-001
-                        </td>
-                        <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
-                            user@example.com
-                        </td>
-                        <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
-                            <div class="max-w-full overflow-hidden text-ellipsis">
-                                Unable to access dashboard after login. System shows error message.
-                            </div>
-                        </td>
-                    </tr>
-                    <!-- Add more sample rows as needed -->
-                    <tr class="border-y-[0.1px] border-[#7A1212] bg-[#d9c698] hover:bg-[#DAA520] transition duration-300 cursor-pointer">
-                        <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
-                            2024-01-14<br>
-                            <span class="text-[11px] text-gray-600">02:15 PM</span>
-                        </td>
-                        <td class="px-4 py-3 text-[13px] text-black font-[Lexend] font-semibold">
-                            RPT-002
-                        </td>
-                        <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
-                            admin@school.edu
-                        </td>
-                        <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
-                            <div class="max-w-full overflow-hidden text-ellipsis">
-                                Report generation feature not working properly. CSV export fails.
-                            </div>
-                        </td>
-                    </tr>
+                <tbody class="divide-y divide-[#D9D9D9]/70">
+                    @forelse($reports as $report)
+                        <tr class="cursor-pointer hover:bg-gray-50" onclick="openReportModal({{ json_encode($report) }})">
+                            <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
+                                {{ $report->created_at->format('Y-m-d') }}<br>
+                                <span class="text-[11px] text-gray-600">{{ $report->created_at->format('h:i A') }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-[13px] text-black font-[Lexend] font-semibold">
+                                RPT-{{ str_pad($report->id, 3, '0', STR_PAD_LEFT) }}
+                            </td>
+                            <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
+                                {{ $report->email }}
+                            </td>
+                            <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
+                                <div class="max-w-full overflow-hidden text-ellipsis">
+                                    {{ Str::limit($report->description, 100) }}
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="h-96 text-center bg-white rounded-b-[15px]">
+                                <div class="flex items-center justify-center h-full">
+                                    <span class="font-['Manrope'] text-[18px] text-[#625B5BB2]">No reports found.</span>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
-              <!-- No reports message when empty -->
-            <div class="bg-[#D9D9D9] h-[200px] flex-grow flex items-center justify-center text-gray-600 rounded-b-[15px] px-6 hidden" id="noReportsMessage">
-                <span class="font-['Manrope'] text-[15px] text-[#625B5BB2]">No reports found.</span>
-            </div>
         </div>
-          <!-- Pagination - Only show when there are multiple pages -->
-        <div class="mt-6 flex justify-center" id="paginationContainer" style="display: none;">
-            <nav class="flex items-center space-x-1">
-                <!-- Previous Button -->
-                <button class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed font-[Lexend]" disabled>
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                </button>
-                
-                <!-- Page Numbers -->
-                <button class="px-3 py-2 text-sm font-medium text-white bg-[#7A1212] border border-[#7A1212] hover:bg-[#5A0E0E] font-[Lexend]">1</button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-[Lexend]">2</button>
-                <button class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-[Lexend]">3</button>
-                <span class="px-3 py-2 text-sm font-medium text-gray-700 font-[Lexend]">...</span>
-                <button class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-[Lexend]">10</button>
-                
-                <!-- Next Button -->
-                <button class="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 hover:text-gray-900 font-[Lexend]">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                    </svg>
-                </button>
+          <!-- Pagination -->
+        @if($reports->hasPages())
+            <div class="mt-6 flex justify-center">
+            <nav role="navigation" aria-label="Pagination Navigation" class="flex items-center space-x-2">
+            {{-- Previous Page Link --}}
+            @if ($reports->onFirstPage())
+            <span class="px-3 py-1  text-black rounded cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+            </span>
+            @else
+            <a href="{{ $reports->previousPageUrl() }}" class="px-3 py-1">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+            </a>
+            @endif
+
+            {{-- Pagination Elements --}}
+            @foreach ($reports->getUrlRange(1, $reports->lastPage()) as $page => $url)
+            @if ($page == $reports->currentPage())
+                <span class="px-3 py-1 text-white bg-[#7A1212] rounded">{{ $page }}</span>
+            @else
+                <a href="{{ $url }}" class="px-3 py-1 text-[#7A1212] bg-white border border-[#7A1212] rounded hover:bg-[#f5f5f5]">{{ $page }}</a>
+            @endif
+            @endforeach
+
+            {{-- Next Page Link --}}
+            @if ($reports->hasMorePages())
+            <a href="{{ $reports->nextPageUrl() }}" class="px-3 py-1 text-black ">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+            </a>
+            @else
+            <span class="px-3 py-1 rounded cursor-not-allowed">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+            </span>
+            @endif
             </nav>
+            </div>
+        
+        @endif
+       
+    </div>
+</div>
+
+<!-- Report Details Modal -->
+<div id="reportModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 hidden items-center justify-center">
+    <div class="bg-white rounded-lg w-[80%] max-h-[90vh] overflow-y-auto relative">
+        <!-- Modal Header -->
+        <div class="relative flex justify-between items-center p-6 border shadow">
+            <h2 id="modalReportId" class="text-2xl font-bold font-[Lexend] text-[#332B2B] mx-auto text-center"></h2>
+            <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600 text-2xl absolute top-1/2 right-6 transform -translate-y-1/2">
+            &times;
+            </button>
         </div>
         
-        <!-- Items per page and showing info -->
-        {{-- <div class="mt-4 flex justify-between items-center text-sm text-gray-700 font-[Lexend]">
-            <div class="flex items-center space-x-2">
-                <span>Show</span>
-                <select class="border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-                <span>entries</span>
+        <!-- Modal Content -->
+        <div class="p-6">
+            <!-- Timestamp -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 font-[Lexend] mb-1">Timestamp:</label>
+                <p id="modalTimestamp" class="text-sm text-gray-900 font-[Lexend]"></p>
             </div>
-            <div class="text-gray-600">
-                Showing 1 to 10 of 98 results
-            </div>`
-        </div> --}}
+            
+            <!-- Email -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 font-[Lexend] mb-1">Email:</label>
+                <p id="modalEmail" class="text-sm text-gray-900 font-[Lexend]"></p>
+            </div>
+            
+            <!-- Problem Description -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 font-[Lexend] mb-1">Problem Description:</label>
+                <div id="modalDescription" class="text-sm text-gray-900 font-[Lexend] bg-gray-50 p-3   rounded shadow min-h-[150px] whitespace-pre-wrap"></div>
+            </div>
+            
+            <!-- Attachment -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 font-[Lexend] mb-1">Attachment:</label>
+                <div id="modalAttachment" class="text-sm text-gray-500 font-[Lexend]">No attachment provided</div>
+            </div>
+            
+            <!-- Email Response Button -->
+            <div class="text-center">
+                <button onclick="emailResponse()" class="bg-[#28B309] text-white px-6 py-2 rounded-md hover:bg-[#5A0D0D] font-[Lexend] text-sm transition ease duration-200 cursor-pointer">
+                    Email Response
+                </button>
+            </div>
+        </div>
     </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const monthFilter = document.getElementById('monthFilter');
+    const yearFilter = document.getElementById('yearFilter');
+    
+    // Set current values from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('month')) {
+        monthFilter.value = urlParams.get('month');
+    }
+    if (urlParams.get('year')) {
+        yearFilter.value = urlParams.get('year');
+    }
+    
+    // Handle filter changes
+    function applyFilters() {
+        const month = monthFilter.value;
+        const year = yearFilter.value;
+        
+        const url = new URL(window.location);
+        url.searchParams.delete('page'); // Reset pagination
+        
+        if (month) {
+            url.searchParams.set('month', month);
+        } else {
+            url.searchParams.delete('month');
+        }
+        
+        if (year) {
+            url.searchParams.set('year', year);
+        } else {
+            url.searchParams.delete('year');
+        }
+        
+        window.location.href = url.toString();
+    }
+    
+    monthFilter.addEventListener('change', applyFilters);
+    yearFilter.addEventListener('change', applyFilters);
+});
+
+// Modal functions
+function openReportModal(report) {
+    document.getElementById('modalReportId').textContent = 'RPT-' + String(report.id).padStart(3, '0');
+    
+    const date = new Date(report.created_at);
+    document.getElementById('modalTimestamp').textContent = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    
+    document.getElementById('modalEmail').textContent = report.email;
+    document.getElementById('modalDescription').textContent = report.description;
+    
+    // Handle attachment
+    const attachmentDiv = document.getElementById('modalAttachment');
+    if (report.attachment && report.attachment !== '') {
+        attachmentDiv.innerHTML = '<a href="' + report.attachment + '" target="_blank" class="text-blue-600 hover:text-blue-800 underline">View Attachment</a>';
+    } else {
+        attachmentDiv.textContent = 'No attachment provided';
+    }
+    
+    // Show modal
+    const modal = document.getElementById('reportModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeReportModal() {
+    const modal = document.getElementById('reportModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function emailResponse() {
+    const email = document.getElementById('modalEmail').textContent;
+    const reportId = document.getElementById('modalReportId').textContent;
+    
+    // Create mailto link
+    const subject = encodeURIComponent('Response to ' + reportId);
+    const mailtoLink = 'mailto:' + email + '?subject=' + subject;
+    
+    window.location.href = mailtoLink;
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('reportModal');
+    if (event.target === modal) {
+        closeReportModal();
+    }
+});
+</script>
 
 @endsection

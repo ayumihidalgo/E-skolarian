@@ -114,6 +114,7 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
         return view('super-admin.super-admin-component.reports');
     })->name('super-admin.reports');
 
+    Route::get('/super-admin/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('super-admin.reports');
 
 });
 
