@@ -421,7 +421,7 @@
 
             if (files.length > maxFiles) {
                 hideAllToasts();
-                showToast('error', `You can only upload up to ${maxFiles} files.`);
+                showToast('error', `Upload limit reached. Please remove some files before uploading new ones.`);
                 input.value = "";
                 fileNameDisplay.textContent = "No File Chosen";
                 return;
