@@ -2,7 +2,7 @@
 @section('content')
     @include('components.adminSidebarComponent')
     <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
-        @include('components.studentNavBarComponent')
+        @include('components.adminNavBarComponent')
         <div class="flex-grow mb-10">
             <!-- Main Content -->
             <div id="mainContentArea" class="p-2 sm:p-4 md:p-6 ">

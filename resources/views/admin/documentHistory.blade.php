@@ -3,7 +3,7 @@
 @section('content')
     @include('components.adminSidebarComponent')
     <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
-        @include('components.studentNavBarComponent')
+        @include('components.adminNavBarComponent')
         <div class="flex-grow mb-10">
             <div class="w-full px-6 py-8 flex flex-col">
                 <!-- Header section with title and archive page link -->
