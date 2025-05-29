@@ -95,11 +95,12 @@ class SettingsController extends Controller
                 'min:8',
                 'max:40',
                 'confirmed',
-                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/',
                 'different:current_password', // Ensure new password is different from current password
+                // No spaces allowed, at least one number, one lowercase, one uppercase, one special character
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])([A-Za-z\d@$!%*?&#]{8,40})$/',
                 function ($attribute, $value, $fail) {
-                    if (trim($value) !== $value || preg_match('/^\s*$/', $value)) {
-                        $fail('The new password cannot contain leading or trailing spaces or be all spaces.');
+                    if (preg_match('/\s/', $value)) {
+                        $fail('The new password cannot contain spaces.');
                     }
                 },
             ],

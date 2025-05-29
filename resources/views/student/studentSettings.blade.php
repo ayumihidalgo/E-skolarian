@@ -139,11 +139,12 @@
                         @csrf
                         <input type="hidden" name="profile_image" value="{{ $user->profile_pic }}">
                     </form>
+                    <label id="removeProfileButton" onclick="openRemoveProfileModal()"
+                        class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] border-1 border-gray-300 font-[Lexend] hover:bg-gray-400 transition cursor-pointer">
+                        Remove Profile
+                    </label>
                 @endif
-                <label id="removeProfileButton" onclick="openRemoveProfileModal()"
-                    class="rounded-lg text-gray-900 font-medium px-4 py-2 text-[14px] border-1 border-gray-300 font-[Lexend] hover:bg-gray-400 transition cursor-pointer">
-                    Remove Profile
-                </label>
+
                 <label for="profileImageInput"
                     class="rounded-lg bg-red-900 px-4 py-2 text-white font-medium text-[14px] font-[Lexend] hover:bg-red-800 transition cursor-pointer">
                     Upload Profile
@@ -284,6 +285,8 @@
                         <img id="hidePass_current_password" src="{{ asset('images/hide_pass.svg') }}"
                             alt="Hide Password" class="w-5 md:w-6 hidden opacity-80" />
                     </button>
+                    <div id="currentPasswordError" class="text-red-500 text-xs mt-0.5 ml-1 absolute font-['Lexend']">
+                    </div>
                 </div>
                 <div>
                     <div class="relative">
@@ -297,6 +300,8 @@
                             <img id="hidePass_new_password" src="{{ asset('images/hide_pass.svg') }}"
                                 alt="Hide Password" class="w-5 md:w-6 hidden opacity-80" />
                         </button>
+                        <div id="newPasswordError" class="text-red-500 text-xs mt-0.5 ml-1 absolute font-['Lexend']">
+                        </div>
                     </div>
                 </div>
                 <div>
@@ -312,17 +317,35 @@
                                 alt="Hide Password" class="w-5 md:w-6 hidden opacity-80" />
                         </button>
                     </div>
-                    <div id="currentPasswordError" class="text-red-500 text-xs font-['Lexend']"></div>
-                    <div id="newPasswordError" class="text-red-500 text-xs font-['Lexend']"></div>
                     <div id="confirmPasswordError" class="text-red-500 text-xs font-['Lexend']"></div>
                 </div>
-
+                <div class="mt-3 ml-3 space-y-3" id="passwordRequirements">
+                    <div id="characterLimit" class="text-gray-600 text-xs font-light font-['Lexend']">
+                        •&nbsp; Require at least 8 characters
+                    </div>
+                    <div id="oneNumber" class="text-gray-600 text-xs font-light font-['Lexend']">
+                        •&nbsp; Require at least one number
+                    </div>
+                    <div id="lowerCase" class="text-gray-600 text-xs font-light font-['Lexend']">
+                        •&nbsp; Require at least one lower case letter
+                    </div>
+                    <div id="upperCase" class="text-gray-600 text-xs font-light font-['Lexend']">
+                        •&nbsp; Require at least one uppercase letter
+                    </div>
+                    <div id="specialCharacter" class="text-gray-600 text-xs font-light font-['Lexend']">
+                        •&nbsp; Require at least one special character
+                    </div>
+                    <div id="noSpaces" class="text-gray-600 text-xs font-light font-['Lexend']">
+                        •&nbsp; Password cannot contain spaces
+                    </div>
+                </div>
                 <div class="pt-2">
                     <button type="submit" id="changePasswordButton" disabled
                         class="w-full rounded-lg bg-red-900 px-4 py-2 text-white font-medium text-[14px] font-[Lexend] hover:bg-red-800 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
                         Change Password
                     </button>
                 </div>
+
             </form>
         </div>
     </div>
@@ -352,7 +375,7 @@
         <div class="bg-white rounded-2xl w-[545] shadow-xl relative p-6">
             <h2 class="text-lg font-semibold font-['Lexend'] mb-4">Password Changed Successfully</h2>
             <p class="text-sm text-gray-600 mb-6">Your password has been updated. Please log in again to continue.</p>
-            <form method="POST" action="{{ route('logout') }}" class="mt-4 flex justify-end">
+            <form method="POST" action="{{ route('student.logout') }}" class="mt-4 flex justify-end">
                 @csrf
                 <button type="submit"
                     class="px-4 py-2 bg-red-900 text-white font-['Lexend'] rounded-lg hover:bg-red-800 transition duration-200 cursor-pointer">
@@ -373,6 +396,131 @@
         const newPasswordInput = document.getElementById('new_password');
         const confirmPasswordInput = document.getElementById('new_password_confirmation');
 
+
+        let isDirty = false;
+        let isEditingProfileImage = false;
+
+        // Mark as dirty if any password field changes
+        [currentPasswordInput, newPasswordInput, confirmPasswordInput].forEach(input => {
+            input.addEventListener('input', () => {
+                isDirty = !!(
+                    currentPasswordInput.value.trim() ||
+                    newPasswordInput.value.trim() ||
+                    confirmPasswordInput.value.trim()
+                );
+            });
+        });
+
+        // --- Profile Image Editing State ---
+        const imagePreviewModal = document.getElementById('imagePreviewModal');
+        const profileImageInput = document.getElementById('profileImageInput');
+
+        // When opening the image preview modal
+        function openProfilePreviewModal() {
+            const profilePreviewModal = document.getElementById('profilePreviewModal');
+            profilePreviewModal.classList.remove('hidden');
+            profilePreviewModal.style.display = 'flex';
+        }
+
+        // When opening the image editing modal
+        profileImageInput.addEventListener('change', function(e) {
+            if (this.files && this.files.length > 0) {
+                isEditingProfileImage = true;
+            }
+        });
+
+        // When closing the image editing modal
+        function closeModal() {
+            isEditingProfileImage = false;
+            // ...existing closeModal code...
+            const cancelEditImageModal = document.getElementById('cancelEditImageModal');
+            cancelEditImageModal.classList.remove('hidden');
+            cancelEditImageModal.style.display = 'flex';
+
+            document.querySelector('#cancelEditImageModal button[onclick="closeModal()"]').addEventListener('click',
+                function() {
+                    modal.classList.add('hidden');
+                    modal.style.display = 'none';
+                    if (cropper) {
+                        cropper.destroy();
+                        cropper = null;
+                    }
+                    preview.src = '';
+                    input.value = '';
+                    cancelEditImageModal.classList.add('hidden');
+                    cancelEditImageModal.style.display = 'none';
+                    isEditingProfileImage = false;
+                });
+            document.querySelector('#cancelEditImageModal button[onclick="keepEditing()"]').addEventListener('click',
+                function() {
+                    const cancelEditImageModal = document.getElementById('cancelEditImageModal');
+                    cancelEditImageModal.classList.add('hidden');
+                    cancelEditImageModal.style.display = 'none';
+                });
+        }
+
+        // --- Prevent refresh/close/back when editing profile image ---
+        window.addEventListener('beforeunload', function(e) {
+            if (isEditingProfileImage) {
+                e.preventDefault();
+                e.returnValue = "You are editing your profile picture. Unsaved changes will be lost.";
+                return "You are editing your profile picture. Unsaved changes will be lost.";
+            }
+            if (isDirty) {
+                // Detect if it's a refresh (F5, Ctrl+R, etc.)
+                if (performance.getEntriesByType("navigation")[0]?.type === "reload") {
+                    e.preventDefault();
+                    e.returnValue = "You are refreshing the page. Unsaved changes will be lost.";
+                    return "You are refreshing the page. Unsaved changes will be lost.";
+                }
+                // Otherwise, generic close/tab close
+                e.preventDefault();
+                e.returnValue = "Are you sure you want to leave this page?";
+                return "Are you sure you want to leave this page?";
+            }
+        });
+
+        // --- Prevent browser back button when editing profile image ---
+        window.addEventListener('popstate', function(e) {
+            if (isEditingProfileImage) {
+                alert("You are editing your profile picture. Unsaved changes will be lost.");
+                history.pushState(null, '', location.href); // Prevent back navigation
+            }
+        });
+
+
+        const checkIcon = `<span style="color: #16a34a; font-weight: bold;">&#10003;</span>&nbsp;`;
+        const bulletIcon = `•&nbsp;`;
+
+        function updatePasswordRequirements(password) {
+            // Requirement checks
+            const hasMinLength = password.length >= 8;
+            const hasNumber = /\d/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasUpper = /[A-Z]/.test(password);
+            const hasSpecial = /[@$!%*?&#]/.test(password);
+            const noSpaces = !/\s/.test(password);
+
+            // Update checklist
+            document.getElementById('characterLimit').innerHTML = (hasMinLength ? checkIcon : bulletIcon) +
+                'Require at least 8 characters';
+            document.getElementById('oneNumber').innerHTML = (hasNumber ? checkIcon : bulletIcon) +
+                'Require at least one number';
+            document.getElementById('lowerCase').innerHTML = (hasLower ? checkIcon : bulletIcon) +
+                'Require at least one lower case letter';
+            document.getElementById('upperCase').innerHTML = (hasUpper ? checkIcon : bulletIcon) +
+                'Require at least one uppercase letter';
+            document.getElementById('specialCharacter').innerHTML = (hasSpecial ? checkIcon : bulletIcon) +
+                'Require at least one special character';
+            document.getElementById('noSpaces').innerHTML = (noSpaces ? checkIcon : bulletIcon) +
+                'Password cannot contain spaces';
+        }
+
+        // Attach event listener to new password input
+        newPasswordInput.addEventListener('input', function() {
+            updatePasswordRequirements(this.value);
+        });
+
         function togglePassword(event, inputId) {
             event.preventDefault();
             const input = document.getElementById(inputId);
@@ -388,9 +536,28 @@
                 hideIcon.classList.add('hidden');
             }
         }
-
+        // Function to check if password meets requirements
+        function passwordMeetsRequirements(password) {
+            const hasMinLength = password.length >= 8;
+            const hasNumber = /\d/.test(password);
+            const hasLower = /[a-z]/.test(password);
+            const hasUpper = /[A-Z]/.test(password);
+            const hasSpecial = /[@$!%*?&#]/.test(password);
+            const noSpaces = !/\s/.test(password);
+            return hasMinLength && hasNumber && hasLower && hasUpper && hasSpecial && noSpaces;
+        }
+        // Function to toggle the button state based on input values
         function toggleButtonState() {
-            if (currentPasswordInput.value.trim() && newPasswordInput.value.trim() && confirmPasswordInput.value.trim()) {
+            const current = currentPasswordInput.value.trim();
+            const newPass = newPasswordInput.value.trim();
+            const confirm = confirmPasswordInput.value.trim();
+
+            if (
+                current &&
+                newPass &&
+                confirm &&
+                passwordMeetsRequirements(newPass)
+            ) {
                 changePasswordButton.disabled = false;
             } else {
                 changePasswordButton.disabled = true;
@@ -454,21 +621,17 @@
                             if (data.errors) {
                                 // Display validation errors and add red border to fields with errors
                                 if (data.errors.current_password) {
-                                    document.getElementById('currentPasswordError').textContent = data
-                                        .errors.current_password[0];
+                                    // Customize the error message for current password
+                                    document.getElementById('currentPasswordError').textContent =
+                                        'Incorrect current password. Please try again.';
                                     document.getElementById('current_password').classList.add(
                                         'border-red-500');
                                 }
                                 if (data.errors.new_password) {
-                                    document.getElementById('newPasswordError').textContent = data
-                                        .errors.new_password[0];
+                                    // Customize the error message for new password
+                                    document.getElementById('newPasswordError').textContent =
+                                        'The passwords do not match. Please confirm your new password.';
                                     document.getElementById('new_password').classList.add(
-                                        'border-red-500');
-                                }
-                                if (data.errors.new_password_confirmation) {
-                                    document.getElementById('confirmPasswordError').textContent = data
-                                        .errors.new_password_confirmation[0];
-                                    document.getElementById('new_password_confirmation').classList.add(
                                         'border-red-500');
                                 }
                             }
