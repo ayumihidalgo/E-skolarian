@@ -10,7 +10,7 @@
     </button>
     <div class="p-6">
         <h3 class="text-xl font-semibold text-gray-800">ADD USER (Admin/Organization)</h3>
-        <p class="text-gray-500 text-sm mb-6">Create new user by selecting a role first</p>
+        <p class="text-gray-500 text-sm mb-6">Create new user by adding their email and role</p>
         <form id="addUserForm">
             <!-- Step 1: Role Selection -->
             <div id="step-role" class="step-container active">
@@ -143,6 +143,9 @@
                     <p id="studentEmailError" class="text-red-600 text-xs mt-1 hidden"></p>
                 </div>
                 
+                <!-- Add notification text -->
+                <p class="text-sm text-gray-500 text-center mb-4">User will be notified via email.</p>
+                
                 <div class="flex space-x-4 mt-6">
                     <button type="button"
                             id="backToRoleBtn"
@@ -181,6 +184,9 @@
                         placeholder="Enter admin email">
                     <p id="adminEmailError" class="text-red-600 text-xs mt-1 hidden"></p>
                 </div>
+                
+                <!-- Add notification text -->
+                <p class="text-sm text-gray-500 text-center mb-4">User will be notified via email.</p>
                 
                 <div class="flex space-x-4 mt-6">
                     <button type="button"

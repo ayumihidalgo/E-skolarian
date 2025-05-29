@@ -19,29 +19,40 @@
             
             <!-- User Details -->
             <div class="space-y-4">
+                <!-- Role field -->
                 <div class="block text-sm font-medium text-gray-700 mb-1">
                     <div class="flex justify-between items-center">
-                    <h4 class="text-sm font-medium text-black mb-2 font-[Lexend]">Username</h4>
-                        <!-- Edit Button - Positioned right -->
-                        <button 
-                            type="button"
-                            id="editUserBtn"
-                            class="bg-[#7A1212] px-4 py-1 mb-2 rounded-[8px] text-white font-[Lexend] hover:bg-red-800 transition duration-200 flex items-center cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Edit
-                        </button>
+                        <h4 class="text-sm font-medium text-black mb-2 font-[Lexend]">Role</h4>
+                            <!-- Edit Button - Positioned right -->
+                            <button 
+                                type="button"
+                                id="editUserBtn"
+                                class="bg-[#7A1212] px-4 py-1 mb-2 rounded-[8px] text-white font-[Lexend] hover:bg-red-800 transition duration-200 flex items-center cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Edit
+                            </button>
                     </div>
-                    <p id="userUsername" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
+                    <p id="userRole" class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
                 </div>
+
+                <!-- Role Name field -->
+                <div class="block text-sm font-medium text-gray-700 mb-2">
+                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Name</h4>
+                    <p id="userUsername" class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
+                </div>
+
+                <!-- Acronym field -->
+                <div id="acronymField" class="block text-sm font-medium text-gray-700 mb-2 hidden">
+                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Organization Acronym</h4>
+                    <p id="userAcronym" class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
+                </div>
+
+                <!-- Email field -->
                 <div class="block text-sm font-medium text-gray-700 mb-2">
                     <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Email</h4>
-                    <p id="userEmail" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
-                </div>
-                <div class="block text-sm font-medium text-gray-700 mb-2">
-                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Role</h4>
-                    <p id="userRole" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
+                    <p id="userEmail" class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] underline decoration-[#3f434a]"></p>
                 </div>
             </div>
                 <p class="text-sm text-gray-500 mt-4 text-center mb-2">Any changes made will notify the account owner via email.</p>

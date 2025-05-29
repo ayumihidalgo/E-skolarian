@@ -57,6 +57,47 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // Update the row click event handler
+    const userDetailsRows = document.querySelectorAll('tbody tr');
+    if (userDetailsRows.length > 0) {
+        userDetailsRows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                // Don't open details if clicked on the reactivate button
+                if (e.target.closest('.reactivate-btn') || e.target.closest('svg') || e.target.closest('path')) {
+                    return;
+                }
+
+                const userData = JSON.parse(this.getAttribute('data-user'));
+                
+                // Get references to elements
+                const acronymField = document.getElementById('deactivatedAcronymField');
+                const acronymEl = document.getElementById('deactivatedUserAcronym');
+                
+                // Populate basic user details
+                document.getElementById('deactivatedUserUsername').textContent = userData.username;
+                document.getElementById('deactivatedUserEmail').textContent = userData.email;
+                document.getElementById('deactivatedUserRole').textContent = userData.role_name;
+
+                // Handle acronym field visibility and content
+                if (userData.role_name.includes('Organization')) {
+                    if (acronymField) {
+                        acronymField.classList.remove('hidden');
+                    }
+                    if (acronymEl) {
+                        acronymEl.textContent = userData.organization_acronym || 'N/A';
+                    }
+                } else {
+                    if (acronymField) {
+                        acronymField.classList.add('hidden');
+                    }
+                }
+                
+                // Show the modal
+                deactivatedUserDetailsModal.classList.remove('hidden');
+            });
+        });
+    }
+
     // Close deactivated user details modal
     if (closeDeactivatedUserDetailsBtn) {
         closeDeactivatedUserDetailsBtn.addEventListener('click', function() {

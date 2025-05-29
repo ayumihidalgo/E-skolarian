@@ -267,7 +267,7 @@
         <!-- Confirmation Message -->
         <div class="text-left mb-6">
             <h3 class="text-lg font-semibold text-gray-900 font-[Lexend]">Deactivate Account Confirmation</h3>
-            <p class="text-sm text-gray-700">Are you sure you want to deactivate this account?</p>
+            <p class="text-sm text-gray-700">Are you sure you want to deactivate this account? All data will be archived for record-keeping purposes.</p>
         </div>
         
         <!-- Action Buttons -->
@@ -306,12 +306,12 @@
             <p class="text-sm text-gray-700 mb-4">Type the account email address to confirm</p>
             
             <div class="mb-4">
-                <label for="confirmEmail" class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]">Email Address</label>
+                <label for="confirmEmail" class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]"></label>
                 <input type="email" 
                     id="confirmEmail" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] transition duration-200"
                     placeholder="Enter email address">
-                <p id="emailError" class="mt-1 text-sm text-red-600 hidden">Email address does not match.</p>
+                <p id="emailError" class="mt-1 text-sm text-red-600 hidden">*Email address does not match.</p>
             </div>
             
             <!-- Action Button -->

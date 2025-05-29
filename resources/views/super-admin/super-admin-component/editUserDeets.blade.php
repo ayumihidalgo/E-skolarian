@@ -19,31 +19,42 @@
         </div>
         <!-- User Details -->
         <form id="editUserForm" class="space-y-4">
+
             <div class="block text-sm font-medium text-gray-700 mb-2">
-                <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Username</label>
+                <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Role</label>
+                <select id="editRoleName" name="role_name"
+                    class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
+                    <option value="Academic Organization" data-role="student">Academic Organization</option>
+                    <option value="Non-Academic Organization" data-role="student">Non-Academic Organization</option>
+                    <option value="Office of the Student Services" data-role="admin">Office of the Student Services</option>
+                    <option value="Office of the Academic Services" data-role="admin">Office of the Academic Services</option>
+                    <option value="Office of the Administrative Services" data-role="admin">Office of the Administrative Services</option>
+                    <option value="Office of the Campus Director" data-role="admin">Office of the Campus Director</option>
+                </select>
+                <!-- Hidden field to store the actual role value (admin/student) -->
+                <input type="hidden" id="editActualRole" name="role" value="">
+            </div>
+
+            <div class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Name</label>
                 <input type="text" id="editUsername" name="username"
-                class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
+                class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
+            </div>
+
+            <!-- Acronym field - Initially hidden -->
+            <div id="editAcronymField" class="block text-sm font-medium text-gray-700 mb-2 hidden">
+                <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Organization Acronym</label>
+                <input type="text" 
+                       id="editAcronym" 
+                       name="organization_acronym"
+                       class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"
+                       readonly>
             </div>
 
             <div class="block text-sm font-medium text-gray-700 mb-2">
                 <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Email</label>
                 <input type="email" id="editEmail" name="email"
-                    class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
-            </div>
-
-            <div class="block text-sm font-medium text-gray-700 mb-2">
-                <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Role</label>
-                <select id="editRoleName" name="role_name"
-                    class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
-                    <option value="Academic Organization" data-role="student">Academic Organization</option>
-                    <option value="Non-Academic Organization" data-role="student">Non-Academic Organization</option>
-                    <option value="Student Services" data-role="admin">Student Services</option>
-                    <option value="Academic Services" data-role="admin">Academic Services</option>
-                    <option value="Administrative Services" data-role="admin">Administrative Services</option>
-                    <option value="Campus Director" data-role="admin">Campus Director</option>
-                </select>
-                <!-- Hidden field to store the actual role value (admin/student) -->
-                <input type="hidden" id="editActualRole" name="role" value="">
+                    class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] underline decoration-[#3f434a]">
             </div>
 
             <p class="text-sm text-gray-500 mt-5 text-center">Any changes made will notify the account owner via email.</p>
