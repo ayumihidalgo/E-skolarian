@@ -36,12 +36,12 @@ class DocumentController extends Controller
             // Validate the incoming request
             $validated = $request->validate([
                 'received_by' => 'required|exists:users,id',
-                'subject' => 'required|string|max:50',
+                'subject' => 'required|string|max:100',
                 'type' => 'required|in:Event Proposal,General Plan of Activities,Calendar of Activities,Accomplishment Report,Constitution and By-Laws,Request Letter,Off Campus,Petition and Concern,Others',
                 'summary' => 'required|string|max:255',
                 'eventStartDate' => 'nullable|date|required_if:type,Event Proposal',
                 'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:type,Event Proposal',
-                'event-title' => 'nullable|string|max:50|required_if:type,Event Proposal',
+                'event-title' => 'nullable|string|max:60|required_if:type,Event Proposal',
                 'event-desc' => 'nullable|string|max:255|required_if:type,Event Proposal',
                 'file_upload' => 'required|array|max:30',
                 'file_upload.*' => 'file|mimes:pdf,doc,docx|max:5120',

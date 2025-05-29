@@ -48,7 +48,7 @@
                                 <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span
                                         class="required-indicator text-red-500"> *</span>:</span>
                                 <input type="text" id="subject" name="subject" autocomplete="off"
-                                    class="flex-1 font-semibold focus:outline-none" maxlength="50">
+                                    class="flex-1 font-semibold focus:outline-none" maxlength="100">
                             </div>
                         </div>
 
@@ -134,7 +134,7 @@
                         <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Event Title<span
                                 class="required-indicator text-red-500"> *</span>:</span>
                         <input type="text" id="event-title" name="event-title" autocomplete="off"
-                            class="flex-1 font-semibold focus:outline-none" maxlength="50">
+                            class="flex-1 font-semibold focus:outline-none" maxlength="60">
                     </div>
 
                     <!-- Event Description (Only shows for Event Proposals) -->
