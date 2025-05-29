@@ -121,11 +121,67 @@
                 <div class="md:col-span-2 space-y-2">
                     <h2 class="text-lg font-semibold">Recent Documents</h2>
                     <div class="bg-zinc-100 rounded-xl shadow-md p-4">
-                        <div class="text-center text-gray-500 py-8">
-                            <img src="{{ asset('images/recentdoc.png') }}" alt="No recent documents"
-                                class="w-40 mx-auto mb-2 opacity-80">
-                            <p>No recent documents at the moment</p>
-                        </div>
+                        @if($recentDocuments->count())
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-sm text-left">
+                                    <thead>
+                                        <tr class="border-b">
+                                            <th class="px-3 py-2 font-semibold">Tag</th>
+                                            <th class="px-3 py-2 font-semibold">Title</th>
+                                            <th class="px-3 py-2 font-semibold">Date</th>
+                                            <th class="px-3 py-2 font-semibold">Type</th>
+                                            <th class="px-3 py-2 font-semibold">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($recentDocuments as $doc)
+                                            @php
+                                                // Check if the document has any review with status 'Under Review'
+                                                $isUnderReview = $doc->reviews->contains(function($review) {
+                                                    return strtolower($review->status) === 'under review';
+                                                });
+                                                $displayStatus = $isUnderReview ? 'Under Review' : ucfirst($doc->status);
+                                                $statusColors = [
+                                                    'Approved' => 'bg-green-500 text-white',
+                                                    'Rejected' => 'bg-red-500 text-white',
+                                                    'Under Review' => 'bg-yellow-400 text-gray-800',
+                                                    'Pending' => 'bg-gray-400 text-white',
+                                                ];
+                                                $badgeClass = $statusColors[$displayStatus] ?? 'bg-gray-400 text-white';
+                                            @endphp
+                                            <tr class="border-b hover:bg-zinc-200 cursor-pointer"
+                                                onclick="showDocumentModal(
+                                                    '{{ $doc->id }}',
+                                                    '{{ \Carbon\Carbon::parse($doc->created_at)->format('F j, Y, g:i A') }}',
+                                                    '{{ addslashes($doc->subject) }}',
+                                                    '{{ addslashes($doc->type) }}',
+                                                    '{{ addslashes($doc->summary) }}',
+                                                    '{{ $doc->latestVersion ? addslashes($doc->latestVersion->file_path) : '' }}',
+                                                    '{{ addslashes(optional($doc->receiver)->username ?? '') }}',
+                                                    '{{ $displayStatus }}',
+                                                    '{{ $doc->control_tag }}'
+                                                )">
+                                                <td class="px-3 py-2 font-bold text-orange-500">{{ $doc->control_tag }}</td>
+                                                <td class="px-3 py-2 max-w-[200px] truncate" title="{{ $doc->subject }}">{{ $doc->subject }}</td>
+                                                <td class="px-3 py-2">{{ \Carbon\Carbon::parse($doc->created_at)->format('n/j/Y') }}</td>
+                                                <td class="px-3 py-2">{{ $doc->type }}</td>
+                                                <td class="px-3 py-2">
+                                                    <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $badgeClass }}">
+                                                        {{ $displayStatus }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center text-gray-500 py-8">
+                                <img src="{{ asset('images/recentdoc.png') }}" alt="No recent documents"
+                                    class="w-40 mx-auto mb-2 opacity-80">
+                                <p>No recent documents at the moment</p>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -149,6 +205,50 @@
         </div>
     </div>
 
+    <!-- Document Details Modal -->
+    <div id="documentModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div id="docModalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.4;"></div>
+        <div class="relative bg-[#4B2222] rounded-xl shadow-lg max-w-lg w-full p-6 z-10 text-white">
+            <div class="flex items-center justify-between mb-2 border-b border-[#fff2] pb-2">
+                <span class="font-semibold text-lg">Document Details</span>
+                <button onclick="closeDocumentModal()" class="text-2xl text-gray-200 hover:text-white">&times;</button>
+            </div>
+            <div class="mb-2 text-sm" id="docDate"></div>
+            <div class="mb-2">
+                <span class="font-bold text-lg">Title: </span>
+                <span id="docTitle" class="font-semibold"></span>
+            </div>
+            <div class="mb-2">
+                <span class="font-semibold">Type: </span>
+                <span id="docType"></span>
+            </div>
+            <div class="mb-2">
+                <span class="font-semibold">Summary</span>
+                <div id="docSummary" class="bg-gray-100 text-gray-900 rounded-md p-3 mt-1"></div>
+            </div>
+            <div class="mb-2">
+                <span class="font-semibold">Attachment</span>
+                <div id="docAttachment"></div>
+            </div>
+            <div class="flex gap-2 mb-2 text-xs">
+                <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-gray-400"></span>Pending</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-yellow-400"></span>Under Review</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>Rejected</span>
+                <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>Approved</span>
+            </div>
+            <div id="docMeta" class="bg-[#3a1818] rounded-md px-3 py-2 mt-2 text-xs"></div>
+        </div>
+    </div>
+
+    <!-- Document Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div onclick="closePreviewModal()" class="absolute inset-0 bg-black opacity-40"></div>
+        <div class="relative bg-white rounded-xl shadow-lg max-w-2xl w-full p-6 z-10 flex flex-col items-center">
+            <button onclick="closePreviewModal()" class="absolute top-2 right-4 text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+            <div id="previewContent" class="w-full h-[32rem] flex items-center justify-center"></div>
+        </div>
+    </div>
+
     <script>
     function showAnnouncementModal(title, content, meta = '', type = 'announcement') {
         document.getElementById('modalTitle').textContent = title;
@@ -161,5 +261,62 @@
     function closeAnnouncementModal() {
         document.getElementById('announcementModal').classList.add('hidden');
     }
+    function showDocumentModal(id, date, title, type, summary, filePath, reviewer, status, tag) {
+        document.getElementById('docDate').textContent = date;
+        document.getElementById('docTitle').textContent = title;
+        document.getElementById('docType').textContent = type;
+        document.getElementById('docSummary').textContent = summary || 'No summary';
+        if (filePath) {
+            let fileName = filePath.split('/').pop();
+            document.getElementById('docAttachment').innerHTML =
+                `<a href="${getPreviewUrl(filePath)}" target="_blank" class="bg-white text-gray-900 px-3 py-1 rounded shadow text-xs inline-block hover:bg-gray-200 transition">View: ${fileName}</a>`;
+        } else {
+            document.getElementById('docAttachment').innerHTML = '<span class="text-gray-300">No attachment</span>';
+        }
+        // Status badge
+        let badge = '';
+        if (status === 'Approved') badge = `<span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span>`;
+        else if (status === 'Rejected') badge = `<span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-1"></span>`;
+        else if (status === 'Under Review') badge = `<span class="inline-block w-3 h-3 rounded-full bg-yellow-400 mr-1"></span>`;
+        else badge = `<span class="inline-block w-3 h-3 rounded-full bg-gray-400 mr-1"></span>`;
+        document.getElementById('docMeta').innerHTML =
+            `<span class="font-semibold">${reviewer || ''}</span> <br>${badge}${status}, ${date}`;
+        document.getElementById('documentModal').classList.remove('hidden');
+    }
+    function closeDocumentModal() {
+        document.getElementById('documentModal').classList.add('hidden');
+    }
+    function showPreviewModal(filePath) {
+    let fileName = filePath.split('/').pop();
+    let ext = fileName.split('.').pop().toLowerCase();
+    let previewHtml = '';
+    if (['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'].includes(ext)) {
+        previewHtml = `<img src="/storage/${filePath}" alt="${fileName}" class="max-h-[28rem] rounded shadow mx-auto">`;
+    } else if (ext === 'pdf') {
+        previewHtml = `<iframe src="/storage/${filePath}" class="w-full h-full rounded shadow" frameborder="0"></iframe>`;
+    } else if (['doc', 'docx'].includes(ext)) {
+        // Use Google Docs Viewer for DOC/DOCX
+        let url = encodeURIComponent(window.location.origin + '/storage/' + filePath);
+        previewHtml = `<iframe src="https://docs.google.com/gview?url=${url}&embedded=true" class="w-full h-full rounded shadow" frameborder="0"></iframe>`;
+    } else {
+        previewHtml = `<div class="text-gray-500">Preview not available for this file type.</div>`;
+    }
+    document.getElementById('previewContent').innerHTML = previewHtml;
+    document.getElementById('previewModal').classList.remove('hidden');
+}
+function closePreviewModal() {
+    document.getElementById('previewModal').classList.add('hidden');
+    document.getElementById('previewContent').innerHTML = '';
+}
+function getPreviewUrl(filePath) {
+    let fileName = filePath.split('/').pop();
+    let ext = fileName.split('.').pop().toLowerCase();
+    if (['doc', 'docx'].includes(ext)) {
+        let url = encodeURIComponent(window.location.origin + '/storage/' + filePath);
+        return `https://docs.google.com/gview?url=${url}&embedded=true`;
+    }
+    // For PDFs and images, just open the file directly
+    return `/storage/${filePath}`;
+}
     </script>
 @endsection
