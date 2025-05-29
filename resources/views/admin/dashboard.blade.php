@@ -28,15 +28,34 @@
         <div class="flex-grow p-6 space-y-6">
             <!-- Stats Section -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                @foreach ([['Pending Documents', 'pendingicon.svg'], ['Under Review', 'reviewicon.svg'], ['Approved Documents', 'approvedicon.svg'], ['Total Documents', 'totaldocicon.svg']] as [$title, $icon])
-                    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500">{{ $title }}</p>
-                            <div class="text-2xl font-bold">0</div>
-                        </div>
-                        <img src="{{ asset("images/$icon") }}" class="w-10 h-10" alt="{{ $title }}">
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-500">Pending Documents</p>
+                        <div class="text-2xl font-bold">{{ $pendingCount }}</div>
                     </div>
-                @endforeach
+                    <img src="{{ asset('images/pendingicon.svg') }}" class="w-10 h-10" alt="Pending Documents">
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-500">Under Review</p>
+                        <div class="text-2xl font-bold">{{ $reviewCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/reviewicon.svg') }}" class="w-10 h-10" alt="Under Review">
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-500">Approved Documents</p>
+                        <div class="text-2xl font-bold">{{ $approvedCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/approvedicon.svg') }}" class="w-10 h-10" alt="Approved Documents">
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-500">Total Documents</p>
+                        <div class="text-2xl font-bold">{{ $totalCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/totaldocicon.svg') }}" class="w-10 h-10" alt="Total Documents">
+                </div>
             </div>
 
             <!-- Announcement and Documents Section -->
