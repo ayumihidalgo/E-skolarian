@@ -107,16 +107,52 @@
         </div>
 
     <!-- Confirmation Modal -->
-    <div id="confirmCloseModal" class="hidden text-black fixed inset-0 bg-transparent flex items-center justify-center z-60 backdrop-blur-sm">
-    <div class="bg-white p-6 rounded shadow-lg w-[90%] max-w-sm text-center">
-        <h2 class="text-xl font-semibold mb-4">Unsaved Changes</h2>
-        <p class="mb-6">You have unsaved changes. Are you sure you want to close?</p>
-        <div class="space-x-4">
-        <button id="confirmCloseYes" class="bg-[var(--secondary-color)] text-white px-4 py-2 rounded hover:bg-[var(--primary-color)]">Yes, Close</button>
-        <button id="confirmCloseNo" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">No, Keep Editing</button>
+    <div id="confirmCloseModal" class="hidden font-[Manrope] fixed inset-0 bg-transparent flex items-center justify-center z-60 backdrop-blur-sm">
+        <div class="bg-white/90 font-[Manrope] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+            <div class="w-[80%] mx-auto">
+                <h1 class="text-xl mb-4 text-[var(--secondary-color)]">Are you sure you want to cancel?</h1>
+                <p class="mb-6 font-normal text-black">You have unsaved changes. Are you sure you want to close?</p>
+                <div class="flex justify-around gap-5">
+                    <button id="confirmCloseYes" class="bg-[var(--secondary-color)] text-white px-4 py-2 w-full max-w-md rounded-full hover:brightness-75">Yes</button>
+                    <button id="confirmCloseNo" class="bg-[#D9D9D9CC] text-black px-4 py-2 rounded-full w-full max-w-md hover:bg-gray-400">Go Back</button>
+                </div>
+            </div>
         </div>
     </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="hidden font-[Manrope] fixed inset-0 bg-transparent flex items-center justify-center z-60 backdrop-blur-sm">
+        <div class="bg-white/90 font-[Manrope] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+            <div class="w-[80%] mx-auto">
+                <h1 class="text-[20px] font-[Lexend] mb-3 text-[var(--secondary-color)]">✅ Report Submitted Successfully!</h1>
+                <div class="text-center text-md">
+                    <p class="mb-3 font-normal text-black">Thank you for your feedback.</p>
+                    <p class="mb-6 font-normal text-black">Our team will review your report and get back to you if necessary. You may now close this window or return to the previous page.</p>
+                </div>
+                <div class="flex justify-center">
+                    <button onclick="closeSuccessModal()" class="bg-[var(--secondary-color)] text-white px-6 py-2 w-full max-w-md rounded-full hover:brightness-75 transition-colors duration-200">Close</button>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Error Modal -->
+    <div id="errorModal" class="hidden font-[Manrope] fixed inset-0 bg-transparent flex items-center justify-center z-60 backdrop-blur-sm">
+        <div class="bg-white/90 font-[Manrope] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+            <div class="w-[80%] mx-auto">
+                <h1 class="text-[20px] font-[Lexend] mb-3 text-[var(--secondary-color)]">❌ Report Submitted Failed!</h1>
+                <div class="text-center text-md">
+                    <p class="mb-3 font-normal text-black">Sorry for the inconvenience.</p>
+                    <p class="mb-6 font-normal text-black">Please try to submit again or provide a valid format.</p>
+                </div>
+                <div class="flex justify-center">
+                    <button onclick="closeErrorModal()" class="bg-[var(--secondary-color)] text-white px-6 py-2 w-full max-w-md rounded-full hover:brightness-75 transition-colors duration-200">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const reportBtn = document.getElementById('reportBtn');
@@ -242,12 +278,12 @@
             }
             })
             .then(data => {
-            alert('Report submitted successfully!');
+            showSuccessModal();
             closeReportModal();
             resetFormState();
             })
             .catch(error => {
-            alert('There was an error submitting your report.');
+            showErrorModal();
             console.error('Error:', error);
             })
             .finally(() => {
@@ -272,6 +308,22 @@
         fileInput.classList.add('bg-gray-300');
         }
     });
+
+    function showSuccessModal() {
+        document.getElementById('successModal').classList.remove('hidden');
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('successModal').classList.add('hidden');
+    }
+
+    function showErrorModal() {
+        document.getElementById('errorModal').classList.remove('hidden');
+    }
+
+    function closeErrorModal() {
+        document.getElementById('errorModal').classList.add('hidden');
+    }
 </script>
 </body>
 </html>

@@ -19,7 +19,7 @@
                                 <!-- Receiver Button -->
                                 <div class="relative w-full">
                                     <button type="button" id="receiverButton" aria-expanded
-                                        class="w-full text-left border-b-2 border-gray-500 py-3 relative focus:outline-none flex items-center justify-between gap-2 bg-white cursor-pointer">
+                                        class="w-full text-left border-b-2 border-gray-500 py-3 relative focus:outline-none flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
                                         <span class="font-semibold text-gray-500">
                                             To<span class="required-indicator text-red-500"> *</span>:
                                             <span id="receiverSelected" class="font-semibold text-black"></span>
@@ -279,7 +279,7 @@
     <script>
         // Auto-select receiver when selecting doc type disabled at start
         let receiverAutoSelected = false;
-        
+
         // Element references
         const docType = {
             button: document.getElementById('docTypeButton'),
@@ -681,7 +681,7 @@
 
             // Re-validate when document type is changed via your selectDocType function
             const originalSelectDocType = window.selectDocType;
-            window.selectDocType = function(value) {                
+            window.selectDocType = function(value) {
                 // Automatically select the first receiver only once if no receiver has been selected yet
                 if (!receiverAutoSelected) {
                     const firstReceiver = document.querySelector('#receiverDropdown li');
