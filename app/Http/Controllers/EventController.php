@@ -184,6 +184,7 @@ class EventController extends Controller
         return response()->json($event);
     }
 
+
     public function getApprovedProposals()
     {
         try {
@@ -209,6 +210,8 @@ class EventController extends Controller
                     'events.start_date',
                     'events.end_date',
                     'events.status as event_status',
+                    'events.created_at',
+                    'events.updated_at',
                     'users.organization_acronym',
                     'submitted_documents.summary',
                     'reviews.reviewed_by',
@@ -241,13 +244,18 @@ class EventController extends Controller
                 // Use the actual event dates from the events table
                 $startDate = \Carbon\Carbon::parse($event->start_date);
                 $endDate = $event->end_date ? \Carbon\Carbon::parse($event->end_date) : null;
+                $today = \Carbon\Carbon::today();
+                $thisWeek = \Carbon\Carbon::now()->endOfWeek();
+                
+                // Determine color for approved proposals using the same logic
+                $backgroundColor = $this->getProposalEventColor($event, $startDate, $today, $thisWeek);
                 
                 return [
                     'id' => 'proposal_' . $event->id,
                     'title' => $event->title . ' (' . ($event->organization_acronym ?? 'Unknown') . ')',
                     'start' => $startDate->format('Y-m-d H:i:s'),
                     'end' => $endDate ? $endDate->format('Y-m-d H:i:s') : null,
-                    'backgroundColor' => '#2563eb',
+                    'backgroundColor' => $backgroundColor,
                     'textColor' => '#ffffff',
                     'allDay' => $startDate->format('H:i:s') === '00:00:00' && 
                               (!$endDate || $endDate->format('H:i:s') === '00:00:00'),
@@ -259,7 +267,8 @@ class EventController extends Controller
                     'review_message' => $event->review_message ?? '',
                     'reviewer' => $event->reviewer_name ?? 'Unknown Admin',
                     'review_status' => $event->review_status ?? 'Unknown',
-                    'event_status' => $event->event_status ?? 'scheduled'
+                    'event_status' => $event->event_status ?? 'scheduled',
+                    'is_rescheduled' => \Carbon\Carbon::parse($event->updated_at) > \Carbon\Carbon::parse($event->created_at)->addMinutes(5)
                 ];
             });
     
@@ -273,6 +282,34 @@ class EventController extends Controller
             ]);
             return response()->json([]);
         }
+    }
+    
+    // Add this new private method for determining proposal event colors
+    private function getProposalEventColor($event, $startDate, $today, $thisWeek)
+    {
+        // Check if event was rescheduled (updated significantly after creation)
+        $isRescheduled = \Carbon\Carbon::parse($event->updated_at) > \Carbon\Carbon::parse($event->created_at)->addMinutes(5);
+        
+        if ($isRescheduled) {
+            return '#0085FF'; // Blue - rescheduled (using your blue font color for visibility)
+        }
+        
+        // Check if event is today (on due)
+        if ($startDate->isSameDay($today)) {
+            return '#00B244'; // Green - on due (happening today, using your green font color)
+        }
+        
+        // Get the start and end of the current calendar week (Sunday to Saturday)
+        $startOfWeek = $today->copy()->startOfWeek(\Carbon\Carbon::SUNDAY);
+        $endOfWeek = $today->copy()->endOfWeek(\Carbon\Carbon::SATURDAY);
+        
+        // Check if event is in the same calendar week (but not today)
+        if ($startDate->between($startOfWeek, $endOfWeek) && !$startDate->isSameDay($today)) {
+            return '#FF9F2D'; // Yellow - current event (this calendar week, using your yellow font color)
+        }
+        
+        // Default - Approved proposal events (distinguishable from rescheduled)
+        return '#0085FF'; // Blue - approved proposal events
     }
     
     public function getCalendarEvents()
@@ -298,19 +335,31 @@ class EventController extends Controller
                 ]);
             }
             
-            // Format manual events
+            // Format manual events with color scheme
             $formattedManualEvents = $manualEvents->map(function($event) {
+                $startDate = \Carbon\Carbon::parse($event->start_date);
+                $endDate = $event->end_date ? \Carbon\Carbon::parse($event->end_date) : null;
+                $today = \Carbon\Carbon::today();
+                $thisWeek = \Carbon\Carbon::now()->endOfWeek();
+                
+                // Determine color based on event status and date
+                $backgroundColor = $this->getEventColor($event, $startDate, $today, $thisWeek);
+                
                 return [
                     'id' => 'manual_' . $event->id,
                     'title' => $event->title,
                     'start' => $event->start_date->format('Y-m-d\TH:i:s'),
                     'end' => $event->end_date ? $event->end_date->format('Y-m-d\TH:i:s') : null,
-                    'backgroundColor' => '#7A1212',
+                    'backgroundColor' => $backgroundColor,
                     'textColor' => '#ffffff',
                     'allDay' => !$this->hasTimeComponent($event->start_date),
                     'source' => 'manual',
                     'editable' => true,
-                    'deletable' => true
+                    'deletable' => true,
+                    'description' => $event->description ?? '',
+                    'status' => $event->status ?? 'scheduled',
+                    'created_by' => $event->creator ? $event->creator->username : 'Unknown',
+                    'is_rescheduled' => $event->updated_at > $event->created_at->addMinutes(5) // If updated more than 5 minutes after creation
                 ];
             });
             
@@ -320,6 +369,34 @@ class EventController extends Controller
             \Log::error('Error fetching manual events', ['error' => $e->getMessage()]);
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+    
+    // Add this new private method for determining event colors
+        private function getEventColor($event, $startDate, $today, $thisWeek)
+    {
+        // Check if event was rescheduled (updated significantly after creation)
+        $isRescheduled = $event->updated_at > $event->created_at->addMinutes(5);
+        
+        if ($isRescheduled) {
+            return '#0085FF'; // Blue - rescheduled (using your blue font color for visibility)
+        }
+        
+        // Check if event is today (on due)
+        if ($startDate->isSameDay($today)) {
+            return '#00B244'; // Green - on due (happening today, using your green font color)
+        }
+        
+        // Get the start and end of the current calendar week (Sunday to Saturday)
+        $startOfWeek = $today->copy()->startOfWeek(\Carbon\Carbon::SUNDAY);
+        $endOfWeek = $today->copy()->endOfWeek(\Carbon\Carbon::SATURDAY);
+        
+        // Check if event is in the same calendar week (but not today)
+        if ($startDate->between($startOfWeek, $endOfWeek) && !$startDate->isSameDay($today)) {
+            return '#FF9F2D'; // Yellow - current event (this calendar week, using your yellow font color)
+        }
+        
+        // Default - Admin added event (future events)
+        return 'rgba(155, 81, 224, 1)'; // Purple - Admin added event (using your purple font color)
     }
     
     // Helper method to check if a date has a time component

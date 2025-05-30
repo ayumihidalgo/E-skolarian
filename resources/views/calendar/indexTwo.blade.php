@@ -350,6 +350,11 @@ function initCalendar() {
             },
             // Handle date clicks - for creating new events
             dateClick: function(info) {
+                // Check if the click target is an event element - if so, ignore dateClick
+                if (info.jsEvent.target.closest('.fc-event')) {
+                    return; // Don't create new event if clicking on an existing event
+                }
+                
                 const clickedDate = new Date(info.dateStr);
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -363,10 +368,11 @@ function initCalendar() {
                 openEventModal(info.dateStr);
                 @endif
             },
-            // ADD THIS MISSING EVENT CLICK HANDLER - for showing event details
+            // Handle event clicks - for showing event details
             eventClick: function(info) {
                 console.log('Event clicked:', info.event);
                 info.jsEvent.preventDefault(); // Prevent default browser action
+                info.jsEvent.stopPropagation(); // Prevent event bubbling to dateClick
                 openEventDetailsModal(info.event); // This opens the event details modal
             },
             // Display settings
@@ -819,9 +825,47 @@ function openEventDetailsModal(event) {
     const titleElement = document.getElementById('detail-title');
     const dateElement = document.getElementById('detail-date');
     
-    if (titleElement) titleElement.textContent = event.title;
+    // Add event status based on color while preserving original title
+    let eventStatus = '';
+    let statusColor = '';
     
-    // Format and display the date
+    switch(event.backgroundColor) {
+        case '#10b981':
+            eventStatus = ' (On Due - Today)';
+            statusColor = 'text-green-600';
+            break;
+        case '#3b82f6':
+            eventStatus = event.extendedProps?.source === 'proposal' ? 
+                         ' (Approved Proposal)' : ' (Rescheduled)';
+            statusColor = 'text-blue-600';
+            break;
+        case '#1e40af':
+            eventStatus = ' (Approved Proposal)';
+            statusColor = 'text-blue-800';
+            break;
+        case '#f59e0b':
+            eventStatus = ' (This Week)';
+            statusColor = 'text-yellow-600';
+            break;
+        case '#8b5cf6':
+            eventStatus = ' (Admin Event)';
+            statusColor = 'text-purple-600';
+            break;
+        default:
+            eventStatus = '';
+            statusColor = 'text-gray-600';
+    }
+    
+    if (titleElement) {
+        // Display title with status if there is one
+        if (eventStatus) {
+            titleElement.innerHTML = `${event.title}<span class="text-sm ${statusColor} block mt-1">${eventStatus}</span>`;
+        } else {
+            titleElement.textContent = event.title;
+        }
+    }
+    
+    // Format and display the date (PRESERVED ORIGINAL LOGIC)
     if (dateElement) {
         let dateStr = '';
         const startDate = event.start ? new Date(event.start) : null;
@@ -848,24 +892,24 @@ function openEventDetailsModal(event) {
         dateElement.textContent = dateStr;
     }
     
-    // Set event color indicator
+    // Set event color indicator (PRESERVED ORIGINAL LOGIC)
     const colorIndicator = document.getElementById('event-color-indicator');
     if (colorIndicator) {
         colorIndicator.style.backgroundColor = event.backgroundColor || '#7A1212';
     }
     
     @if(Auth::user()->role === 'admin')
-    // Get the container for action buttons
+    // Get the container for action buttons (PRESERVED ORIGINAL LOGIC)
     const actionContainer = document.getElementById('event-action-buttons');
     if (actionContainer) {
         actionContainer.innerHTML = '';
         actionContainer.className = 'flex justify-end space-x-2 mt-4';
         
-        // Check if this is a manual event or proposal event
+        // Check if this is a manual event or proposal event (PRESERVED ORIGINAL LOGIC)
         const isProposal = event.extendedProps && event.extendedProps.source === 'proposal';
         
         if (!isProposal) {
-            // Manual event - show edit/delete buttons
+            // Manual event - show edit/delete buttons (PRESERVED ORIGINAL LOGIC)
             const editBtn = document.createElement('button');
             editBtn.textContent = 'Edit/Reschedule Event';
             editBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600';
@@ -885,23 +929,61 @@ function openEventDetailsModal(event) {
             actionContainer.appendChild(editBtn);
             actionContainer.appendChild(deleteBtn);
         } else {
-            // Proposal event - show info message
+            // Proposal event - show reschedule button and info (ENHANCED VERSION)
+            const rescheduleBtn = document.createElement('button');
+            rescheduleBtn.textContent = 'Reschedule Event';
+            rescheduleBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mr-2';
+            rescheduleBtn.onclick = function() {
+                closeEventDetailsModal();
+                editApprovedProposal(event);
+            };
+            
             const infoDiv = document.createElement('div');
-            infoDiv.className = 'text-sm text-blue-600 bg-blue-50 p-3 rounded border border-blue-200';
+            infoDiv.className = 'text-sm text-blue-600 bg-blue-50 p-3 rounded border border-blue-200 mt-2';
             infoDiv.innerHTML = `
                 <div class="flex items-center">
                     <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
                     </svg>
-                    <span>This event is from an approved proposal${event.extendedProps.organization ? ' by ' + event.extendedProps.organization : ''}</span>
+                    <span>This event is from an approved proposal${event.extendedProps.organization ? ' by ' + event.extendedProps.organization : ''}. You can reschedule it if needed.</span>
                 </div>
             `;
+            
+            actionContainer.appendChild(rescheduleBtn);
             actionContainer.appendChild(infoDiv);
+        }
+        
+        // Add color legend info (NEW ADDITION)
+        const colorLegendDiv = document.createElement('div');
+        colorLegendDiv.className = 'text-xs text-gray-500 bg-gray-50 p-2 rounded border mt-2';
+        let colorMeaning = '';
+        
+        switch(event.backgroundColor) {
+            case '#10b981':
+                colorMeaning = '🟢 Green: Event is happening today (On Due)';
+                break;
+            case '#3b82f6':
+                colorMeaning = '🔵 Blue: Event has been rescheduled';
+                break;
+            case '#1e40af':
+                colorMeaning = '🔵 Dark Blue: Approved student proposal';
+                break;
+            case '#f59e0b':
+                colorMeaning = '🟡 Yellow: Event is happening this week';
+                break;
+            case '#8b5cf6':
+                colorMeaning = '🟣 Purple: Admin-created event';
+                break;
+        }
+        
+        if (colorMeaning) {
+            colorLegendDiv.innerHTML = `<strong>Color Code:</strong> ${colorMeaning}`;
+            actionContainer.appendChild(colorLegendDiv);
         }
     }
     @endif
     
-    // Show modal with animation
+    // Show modal with animation (PRESERVED ORIGINAL LOGIC)
     modal.classList.remove('hidden');
     setTimeout(() => {
         modalContent.classList.remove('modal-hidden');
