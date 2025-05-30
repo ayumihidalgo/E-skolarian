@@ -148,44 +148,44 @@
                     ];
                 @endphp
 
-                <!-- Main table container -->
-                <div id="tableContainer" class="bg-white rounded-[24px] shadow-md overflow-hidden p-6">
-                    <div class="h-auto">
-                        <div class="overflow-x-auto">
-                            <table class="w-full table-auto" id="documentTable">
-                                <!-- Table header -->
-                                <thead class="bg-white text-left">
-                                    <tr>
-                                        <!-- Select all checkbox column -->
-                                        <th class="px-4 py-2 whitespace-nowrap">
-                                            <input type="checkbox" id="selectAll" class="w-4 h-4 cursor-pointer">
-                                        </th>
-                                        <!-- Column headers with sort functionality -->
-                                        @php $headers = ['Tag', 'Organization', 'Subject', 'Date Submitted', 'Type', 'Status']; @endphp
-                                        @foreach ($headers as $i => $header)
-                                            <th class="px-4 py-2 whitespace-nowrap max-w-[160px] truncate">
-                                                @if ($header !== 'Status')
-                                                    <button onclick="sortTable({{ $i + 1 }})"
-                                                        class="flex items-center gap-1 group">
-                                                        <span>{{ $header }}</span>
-                                                        <img src="{{ asset('images/sortIcon.svg') }}" alt="Sort"
-                                                            class="w-3 h-3 text-gray-500 group-hover:text-black transition">
-                                                    </button>
-                                                @else
-                                                    <span>{{ $header }}</span>
-                                                @endif
-                                            </th>
-                                        @endforeach
-                                    </tr>
-                                </thead>
-                                <!-- Table body - dynamically generated rows from database -->
-                                <tbody>
-                                    @forelse ($documents as $document)
-                                        @php
-                                            // Extract organization acronym from control tag (e.g., "ACAP_001")
-                                            $parts = explode('_', $document->control_tag);
-                                            $acronym = count($parts) > 0 ? $parts[0] : '';
-                                            $orgName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
+        <!-- Main table container -->
+        <div id="tableContainer" class="bg-white rounded-[24px] shadow-md overflow-hidden p-6">
+            <div class="h-auto">
+                <div class="overflow-x-auto">
+                    <table class="w-full table-auto" id="documentTable">
+                        <!-- Table header -->
+                        <thead class="bg-white text-left">
+                            <tr>
+                                <!-- Select all checkbox column -->
+                                <th class="px-4 py-2 whitespace-nowrap">
+                                    <input type="checkbox" id="selectAll" class="w-4 h-4 cursor-pointer">
+                                </th>
+                                <!-- Column headers with sort functionality -->
+                                @php $headers = ['Tag', 'Organization', 'Title', 'Date Submitted', 'Type', 'Status']; @endphp
+                                @foreach ($headers as $i => $header)
+                                <th class="px-4 py-2 whitespace-nowrap max-w-[160px] truncate">
+                                    @if ($header !== 'Status')
+                                    <button onclick="sortTable({{ $i + 1 }})"
+                                        class="flex items-center gap-1 group">
+                                        <span>{{ $header }}</span>
+                                        <img src="{{ asset('images/sortIcon.svg') }}" alt="Sort"
+                                            class="w-3 h-3 text-gray-500 group-hover:text-black transition">
+                                    </button>
+                                    @else
+                                    <span>{{ $header }}</span>
+                                    @endif
+                                </th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <!-- Table body - dynamically generated rows from database -->
+                        <tbody>
+                            @forelse ($documents as $document)
+                            @php
+                            // Extract organization acronym from control tag (e.g., "ACAP_001")
+                            $parts = explode('_', $document->control_tag);
+                            $acronym = count($parts) > 0 ? $parts[0] : '';
+                            $orgName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
 
                                             // Map the acronym to a color key for consistent color coding
                                             $colorKey = match ($acronym) {
@@ -355,117 +355,17 @@
                 // Configuration constants
                 let selectedItems = new Set(); // Set to track selected document IDs
 
-                /**
-                 * Applies all active filters to the table data in real-time without page reload
-                 */
-                function applyFilters() {
-                    // Get filter values
-                    const statusFilter = document.getElementById("statusFilter").value;
-                    const organizationFilter = document.getElementById("organizationFilter").value;
-                    const typeFilter = document.getElementById("typeFilter").value;
-                    const searchTerm = document.querySelector('input[placeholder="Search..."]').value.toLowerCase();
+        // Updates the selected document count and button state
+        function updateSelectedCount() {
+            const count = selectedItems.size;
+            document.getElementById('selectedCount').textContent = count;
+            document.getElementById('archiveSelectedBtn').disabled = count === 0;
+        }
 
-                    // Get all rows in the table
-                    const rows = document.querySelectorAll("#documentTable tbody tr[data-id]");
+        //Archives the selected documents - ONLY called from the confirmation modal
 
-                    let visibleRowCount = 0;
-
-                    // Loop through each row and apply filters
-                    rows.forEach(row => {
-                        const orgAcronym = row.getAttribute('data-org-acronym');
-                        const docType = row.getAttribute('data-type');
-                        const docStatus = row.getAttribute('data-status');
-                        const rowText = row.textContent.toLowerCase();
-
-                        // Check if row matches all filters
-                        const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
-                        const matchesOrg = organizationFilter === 'Organization' || organizationFilter === 'All' ||
-                            orgAcronym === organizationFilter;
-                        const matchesType = typeFilter === 'Type' || typeFilter === 'All' || docType === typeFilter;
-                        const matchesStatus = statusFilter === 'Status' || statusFilter === 'All' || docStatus ===
-                            statusFilter;
-
-                        // Show or hide the row based on filter matches
-                        const shouldShow = matchesSearch && matchesOrg && matchesType && matchesStatus;
-                        row.style.display = shouldShow ? '' : 'none';
-
-                        if (shouldShow) {
-                            visibleRowCount++;
-                        }
-                    });
-
-                    // Update counts and UI
-                    updateSelectedCount();
-
-                    // Handle "No documents found" row
-                    let noDocRow = document.querySelector("#documentTable tbody tr:not([data-id])");
-
-                    // If no existing "No documents found" row and no visible rows, create one
-                    if (!noDocRow && visibleRowCount === 0) {
-                        const tbody = document.querySelector("#documentTable tbody");
-                        const headerCount = document.querySelectorAll("#documentTable thead th").length;
-
-                        noDocRow = document.createElement('tr');
-                        noDocRow.innerHTML = `
-                    <td colspan="${headerCount}" class="px-4 py-8 text-center text-gray-500 align-middle">
-                        <div class="flex flex-col items-center justify-center min-h-[300px]">
-                            <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No documents found" class="mb-4 w-40 h-40" />
-                            <span>No documents found.</span>
-                        </div>
-                    </td>
-                `;
-                        tbody.appendChild(noDocRow);
-                    }
-                    // If there is a "No documents found" row, show/hide based on visible rows
-                    else if (noDocRow) {
-                        noDocRow.style.display = visibleRowCount === 0 ? 'table-row' : 'none';
-                    }
-
-                    // Handle pagination visibility
-                    const paginationSection = document.querySelector('.mt-4.flex.justify-center');
-                    if (paginationSection) {
-                        paginationSection.style.display = visibleRowCount === 0 ? 'none' : '';
-                    }
-
-                    const selectAllCheckbox = document.getElementById('selectAll');
-                    if (selectAllCheckbox) {
-                        // Disable the checkbox when no documents are visible
-                        selectAllCheckbox.disabled = visibleRowCount === 0;
-
-                        // Also uncheck it when disabled
-                        if (visibleRowCount === 0) {
-                            selectAllCheckbox.checked = false;
-                        }
-                    }
-                }
-
-                // Add delayed event listeners for filter controls to avoid immediate reloading
-                document.getElementById("statusFilter").addEventListener("change", applyFilters);
-                document.getElementById("organizationFilter").addEventListener("change", applyFilters);
-                document.getElementById("typeFilter").addEventListener("change", applyFilters);
-
-                // For search, use debouncing to avoid too many requests
-                const searchInput = document.querySelector('input[placeholder="Search..."]');
-                let searchTimeout;
-                searchInput.addEventListener("input", function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(applyFilters, 500);
-                });
-
-                /**
-                 * Updates the selected document count and button state
-                 */
-                function updateSelectedCount() {
-                    const count = selectedItems.size;
-                    document.getElementById('selectedCount').textContent = count;
-                    document.getElementById('archiveSelectedBtn').disabled = count === 0;
-                }
-
-                /**
-                 * Archives the selected documents - ONLY called from the confirmation modal
-                 */
-                function processArchiving() {
-                    if (selectedItems.size === 0) return;
+        function processArchiving() {
+            if (selectedItems.size === 0) return;
 
                     const documentIds = Array.from(selectedItems);
 
@@ -497,30 +397,133 @@
                 // Track sort direction for each column
                 let sortDirection = [true, true, true, true, true, true];
 
-                /**
-                 * Navigate to document preview page for a specific document
-                 */
-                function viewDocument(id) {
-                    window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
-                }
+        //view document preview
+        function viewDocument(id) {
+            window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
+        }
 
-                // Event delegation for checkbox and button clicks
-                document.addEventListener('click', function(e) {
-                    // Handle "Select All" checkbox
-                    if (e.target.id === 'selectAll') {
-                        const checkboxes = document.querySelectorAll('.row-checkbox');
+        // Sorting functionality
+        function sortTable(columnIndex) {
+            const columnMap = [
+                'control_tag', // Tag - index 1
+                'organization', // Organization - index 2
+                'subject', // Subject - index 3
+                'created_at', // Date Submitted - index 4
+                'type' // Type - index 5
+            ];
 
-                        // Check/uncheck all checkboxes
-                        checkboxes.forEach(checkbox => {
-                            checkbox.checked = e.target.checked;
+            const columnName = columnMap[columnIndex - 1];
 
-                            const id = checkbox.getAttribute('data-id');
-                            if (e.target.checked) {
-                                selectedItems.add(id);
-                            } else {
-                                selectedItems.delete(id);
-                            }
-                        });
+            if (!columnName) return;
+
+            sortDirection[columnIndex] = !sortDirection[columnIndex];
+            const direction = sortDirection[columnIndex] ? 'asc' : 'desc';
+
+            const tableContainer = document.querySelector('#tableContainer');
+            tableContainer.classList.add('opacity-50');
+
+            const statusFilter = document.getElementById("statusFilter").value;
+            const orgFilter = document.getElementById("organizationFilter").value;
+            const typeFilter = document.getElementById("typeFilter").value;
+            const searchInput = document.querySelector('input[placeholder="Search..."]').value;
+
+            const params = new URLSearchParams(window.location.search);
+
+            params.set('sort_by', columnName);
+            params.set('sort_dir', direction);
+
+            if (statusFilter !== 'Status') {
+                params.set('status', statusFilter);
+            }
+
+            if (orgFilter !== 'Organization') {
+                params.set('organization', orgFilter);
+            }
+
+            if (typeFilter !== 'Type') {
+                params.set('type', typeFilter);
+            }
+
+            if (searchInput.trim() !== '') {
+                params.set('search', searchInput);
+            }
+
+            const url = `${window.location.pathname}?${params.toString()}`;
+
+            fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const newTableBody = doc.querySelector('#documentTable tbody');
+                    if (newTableBody) {
+                        document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+                    }
+
+                    const newPagination = doc.querySelector('#paginationContainer');
+                    const currentPagination = document.querySelector('#paginationContainer');
+
+                    if (newPagination && currentPagination) {
+                        currentPagination.outerHTML = newPagination.outerHTML;
+                    }
+
+                    window.history.pushState({}, '', url);
+
+                    updateSortIndicator(columnIndex);
+
+                    tableContainer.classList.remove('opacity-50');
+
+                    // Reset selections after sort
+                    selectedItems.clear();
+                    updateSelectedCount();
+
+                    // Uncheck "select all" checkbox
+                    const selectAllCheckbox = document.getElementById('selectAll');
+                    if (selectAllCheckbox) {
+                        selectAllCheckbox.checked = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error sorting table:', error);
+                    tableContainer.classList.remove('opacity-50');
+                });
+        }
+
+        function updateSortIndicator(columnIndex) {
+            const sortIcons = document.querySelectorAll('thead button img');
+            sortIcons.forEach(icon => {
+                icon.classList.remove('rotate-180');
+            });
+
+            const clickedIcon = document.querySelector(`thead th:nth-child(${columnIndex + 1}) button img`);
+            if (clickedIcon && !sortDirection[columnIndex]) {
+                clickedIcon.classList.add('rotate-180');
+            }
+        }
+        // Event delegation for checkbox and button clicks
+        document.addEventListener('click', function(e) {
+            // Handle "Select All" checkbox
+            if (e.target.id === 'selectAll') {
+                const checkboxes = document.querySelectorAll('.row-checkbox:not(:disabled)');
+
+                // Check/uncheck all visible checkboxes
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.closest('tr').style.display !== 'none') {
+                        checkbox.checked = e.target.checked;
+
+                        const id = checkbox.getAttribute('data-id');
+                        if (e.target.checked) {
+                            selectedItems.add(id);
+                        } else {
+                            selectedItems.delete(id);
+                        }
+                    }
+                });
 
                         updateSelectedCount();
                     }
@@ -551,12 +554,12 @@
                     document.getElementById("archiveConfirmationModal").classList.add("hidden");
                 });
 
-                // Show the modal when the archive button is clicked
-                document.getElementById("archiveSelectedBtn").addEventListener("click", function() {
-                    if (selectedItems.size > 0) {
-                        document.getElementById("archiveConfirmationModal").classList.remove("hidden");
-                    }
-                });
+        // Show the modal when the archive button is clicked
+        function showArchiveConfirmation() {
+            if (selectedItems.size > 0) {
+                document.getElementById("archiveConfirmationModal").classList.remove("hidden");
+            }
+        }
 
                 // ONLY THIS BUTTON SHOULD TRIGGER THE ACTUAL ARCHIVING
                 document.getElementById("confirmArchiveBtn").addEventListener("click", function() {
@@ -564,21 +567,124 @@
                     document.getElementById("archiveConfirmationModal").classList.add("hidden");
                 });
 
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Add at the top of your existing DOMContentLoaded function
-                    const initialVisibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
-                    const selectAllCheckbox = document.getElementById('selectAll');
-                    if (selectAllCheckbox) {
-                        selectAllCheckbox.disabled = initialVisibleRows === 0;
-                    }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial setup
+            const initialVisibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.disabled = initialVisibleRows === 0;
+            }
 
-                    // Other initialization code...
+            // Filter form elements
+            const statusFilter = document.getElementById("statusFilter");
+            const organizationFilter = document.getElementById("organizationFilter");
+            const typeFilter = document.getElementById("typeFilter");
+            const searchInput = document.querySelector('input[placeholder="Search..."]');
 
-                    // Add event delegation for pagination links
-                    document.addEventListener('click', function(e) {
-                        // Find closest anchor that has pagination-btn class or variations
-                        const paginationLink = e.target.closest(
-                            'a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
+            // Handle filter changes
+            function handleFilterChange() {
+                applyServerSideFilters();
+            }
+
+            // Add event listeners to filters
+            statusFilter.addEventListener("change", handleFilterChange);
+            organizationFilter.addEventListener("change", handleFilterChange);
+            typeFilter.addEventListener("change", handleFilterChange);
+
+            // For search, use debouncing
+            let searchTimeout;
+            searchInput.addEventListener("input", function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(handleFilterChange, 500);
+            });
+
+            // Function to apply server-side filters
+            function applyServerSideFilters() {
+                // Show loading state
+                const tableContainer = document.querySelector('#tableContainer');
+                tableContainer.classList.add('opacity-50');
+
+                // Reset selections
+                selectedItems.clear();
+                updateSelectedCount();
+
+                // Build the query parameters
+                const params = new URLSearchParams();
+
+                if (statusFilter.value !== 'Status') {
+                    params.append('status', statusFilter.value);
+                }
+
+                if (organizationFilter.value !== 'Organization') {
+                    params.append('organization', organizationFilter.value);
+                }
+
+                if (typeFilter.value !== 'Type') {
+                    params.append('type', typeFilter.value);
+                }
+
+                if (searchInput.value.trim() !== '') {
+                    params.append('search', searchInput.value);
+                }
+
+                // Create the URL
+                const url = `${window.location.pathname}?${params.toString()}`;
+
+                // Fetch filtered results
+                fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        // Parse the HTML response
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+
+                        // Update the table body
+                        const newTableBody = doc.querySelector('#documentTable tbody');
+                        if (newTableBody) {
+                            document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+                        }
+
+                        // Update pagination
+                        const newPagination = doc.querySelector('#paginationContainer');
+                        const currentPagination = document.querySelector('#paginationContainer');
+
+                        if (newPagination) {
+                            if (currentPagination) {
+                                currentPagination.outerHTML = newPagination.outerHTML;
+                            }
+                        } else if (currentPagination) {
+                            // If no new pagination but we had one before, hide it
+                            currentPagination.style.display = 'none';
+                        }
+
+                        // Update URL without reload for bookmarking
+                        window.history.pushState({}, '', url);
+
+                        // Uncheck "select all" checkbox
+                        if (selectAllCheckbox) {
+                            selectAllCheckbox.checked = false;
+
+                            // Disable checkbox if no results
+                            const visibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
+                            selectAllCheckbox.disabled = visibleRows === 0;
+                        }
+
+                        // Remove loading state
+                        tableContainer.classList.remove('opacity-50');
+                    })
+                    .catch(error => {
+                        console.error('Error applying filters:', error);
+                        tableContainer.classList.remove('opacity-50');
+                    });
+            }
+
+            // Handle pagination links with AJAX
+            document.addEventListener('click', function(e) {
+                const paginationLink = e.target.closest('a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
 
                         if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
                             e.preventDefault();
@@ -617,15 +723,14 @@
                                     // Update URL without reload
                                     window.history.pushState({}, '', url);
 
-                                    // Reset filters and selections
-                                    selectedItems.clear();
-                                    updateSelectedCount();
+                            // Reset selections
+                            selectedItems.clear();
+                            updateSelectedCount();
 
-                                    // If "select all" checkbox is checked, uncheck it
-                                    const selectAllCheckbox = document.getElementById('selectAll');
-                                    if (selectAllCheckbox) {
-                                        selectAllCheckbox.checked = false;
-                                    }
+                            // If "select all" checkbox is checked, uncheck it
+                            if (selectAllCheckbox) {
+                                selectAllCheckbox.checked = false;
+                            }
 
                                     // Remove loading state
                                     tableContainer.classList.remove('opacity-50');
