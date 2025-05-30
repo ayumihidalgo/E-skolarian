@@ -5,7 +5,7 @@ let echo = null;
 let isUserScrolledUp = false;
 let scrollDebounceTimer = null;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Get the document ID from URL or data attribute
     const urlParts = window.location.pathname.split('/');
     currentDocumentId = document.getElementById('record-container')?.getAttribute('data-document-id') || urlParts[urlParts.length - 1];
@@ -13,11 +13,15 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("Current document ID:", currentDocumentId);
 
     if (currentDocumentId) {
-        // Initialize Echo/Pusher
+        // Initialize Echo/Pusher only if Pusher configuration is available
         initializeEcho();
 
-        // Load comments when page loads
-        loadComments(currentDocumentId);
+        // Load comments when page loads - only if comments container exists
+        if (document.getElementById('commentsContainer')) {
+            loadComments(currentDocumentId);
+        } else {
+            console.warn("Comments container not found - comments functionality disabled");
+        }
 
         // Listen for new comments
         setupCommentListener();
@@ -30,6 +34,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeEcho() {
+    // Check if Pusher configuration is available in window object or meta tags
+    const pusherKey = window.pusherConfig?.key || document.querySelector('meta[name="pusher-key"]')?.content;
+    const pusherCluster = window.pusherConfig?.cluster || document.querySelector('meta[name="pusher-cluster"]')?.content;
+
+    if (!pusherKey || !pusherCluster) {
+        console.warn('Pusher configuration not found - real-time updates disabled');
+        return;
+    }
+
     // Import Pusher and Echo dynamically if not already available globally
     if (typeof window.Echo === 'undefined') {
         import('pusher-js').then(Pusher => {
@@ -38,8 +51,8 @@ function initializeEcho() {
         }).then(Echo => {
             window.Echo = new Echo.default({
                 broadcaster: 'pusher',
-                key: process.env.MIX_PUSHER_APP_KEY,
-                cluster: process.env.MIX_PUSHER_APP_CLUSTER,
+                key: pusherKey,
+                cluster: pusherCluster,
                 forceTLS: true,
                 encrypted: true,
                 authEndpoint: '/broadcasting/auth',
@@ -57,26 +70,31 @@ function initializeEcho() {
 function setupCommentListener() {
     if (!window.Echo || !currentDocumentId) return;
 
-    // Listen for new comments on this document's channel
-    window.Echo.private(`document.${currentDocumentId}`)
-        .listen('.comment.created', (data) => {
-            console.log('New comment received:', data);
-            appendNewComment(data.comment);
-        })
-        .listen('.comment.updated', (data) => {
-            console.log('Comment updated:', data);
-            // You might want to implement comment updates if needed
-        });
+    try {
+        // Listen for new comments on this document's channel
+        window.Echo.private(`document.${currentDocumentId}`)
+            .listen('.comment.created', (data) => {
+                console.log('New comment received:', data);
+                appendNewComment(data.comment);
+            })
+            .listen('.comment.updated', (data) => {
+                console.log('Comment updated:', data);
+                // You might want to implement comment updates if needed
+            });
+    } catch (error) {
+        console.error('Error setting up comment listener:', error);
+    }
 }
 
 function setupEventListeners() {
     const commentInput = document.getElementById('commentInput');
     const sendButton = document.getElementById('sendCommentBtn');
+    const commentForm = document.getElementById('commentForm');
     const commentsContainer = document.getElementById('commentsContainer');
 
     if (commentsContainer) {
         // Add scroll event listener to detect when user scrolls
-        commentsContainer.addEventListener('scroll', function() {
+        commentsContainer.addEventListener('scroll', function () {
             // Clear any existing debounce timer
             clearTimeout(scrollDebounceTimer);
 
@@ -93,23 +111,33 @@ function setupEventListeners() {
 
     if (commentInput) {
         // Listen for Enter key in the input field
-        commentInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
+        commentInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
                 submitComment();
             }
         });
 
         // Focus input when comments area is clicked
         if (commentsContainer) {
-            commentsContainer.addEventListener('click', function() {
+            commentsContainer.addEventListener('click', function () {
                 commentInput.focus();
             });
         }
     }
 
+    // Handle form submission
+    if (commentForm) {
+        commentForm.addEventListener('submit', function (e) {
+            e.preventDefault(); // Prevent default form submission
+            submitComment();
+        });
+    }
+
     if (sendButton) {
         // Listen for click on send button
-        sendButton.addEventListener('click', function() {
+        sendButton.addEventListener('click', function (e) {
+            e.preventDefault();
             submitComment();
         });
     }
@@ -177,7 +205,7 @@ function createCommentElement(comment) {
     const timeAgo = getTimeAgo(new Date(comment.created_at));
     const username = comment.sender ? comment.sender.username : 'Unknown User';
     const userRole = comment.sender && comment.sender.role ? comment.sender.role : '';
-    
+
     // Make sure we have a string for the comment text
     const commentText = typeof comment.comment === 'string' ? comment.comment : '';
 
@@ -211,7 +239,7 @@ function formatCommentText(text) {
     if (!text || typeof text !== 'string') {
         return ''; // Return empty string if no valid text
     }
-    
+
     // Convert URLs to clickable links
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     return text.replace(urlRegex, url => `<a href="${url}" target="_blank" class="text-blue-300 hover:underline">${url}</a>`);
@@ -242,17 +270,24 @@ function appendNewComment(commentData) {
 }
 
 function submitComment() {
+    const form = document.getElementById('commentForm');
     const input = document.getElementById('commentInput');
-    if (!input) {
-        console.error('Comment input field not found');
+    const attachmentInput = document.getElementById('commentAttachment');
+
+    if (!form || !input) {
+        console.error('Comment form or input field not found');
         return;
     }
 
     const comment = input.value.trim();
+    const hasAttachment = attachmentInput && attachmentInput.files.length > 0;
 
-    if (!comment || !currentDocumentId) {
+    // Check if we have either a comment or an attachment
+    if (!comment && !hasAttachment) {
         return;
     }
+
+    console.log('Submitting comment:', comment);
 
     // Show loading state in the input
     const oldValue = input.value;
@@ -266,50 +301,94 @@ function submitComment() {
         sendButton.classList.add('opacity-50');
     }
 
-    fetch('/comments', {
+    // Create FormData from the form
+    const formData = new FormData(form);
+
+    // Ensure we have the document ID in the form data
+    if (!formData.has('document_id') && currentDocumentId) {
+        formData.append('document_id', currentDocumentId);
+    }
+
+    // Get the correct route URL from the form action or construct it
+    let actionUrl = form.getAttribute('action');
+    if (!actionUrl) {
+        actionUrl = `/comments/${currentDocumentId}`;
+    }
+
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ||
+                     document.querySelector('input[name="_token"]')?.value;
+
+    if (!csrfToken) {
+        console.error('CSRF token not found');
+        input.value = oldValue;
+        input.disabled = false;
+        if (sendButton) {
+            sendButton.disabled = false;
+            sendButton.classList.remove('opacity-50');
+        }
+        alert('Security token not found. Please refresh the page.');
+        return;
+    }
+
+    fetch(actionUrl, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+            'X-CSRF-TOKEN': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
         },
-        body: JSON.stringify({
-            document_id: currentDocumentId,
-            comment: comment
-        })
+        body: formData
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error('Server error: ' + response.status);
-        }
-        return response.json();
-    })
-    .then(data => {
-        // Clear input field
-        input.value = '';
+        console.log('Response status:', response.status);
 
-        // Reset scroll flag to ensure we scroll to the new comment
-        isUserScrolledUp = false;
-
-        // Make sure we're passing proper comment data
-        if (data && data.comment) {
-            appendNewComment(data.comment);
+        // Handle different response types
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json().then(data => ({ data, status: response.status, ok: response.ok }));
         } else {
-            // Fallback if data structure is different
-            appendNewComment({
-                comment: comment,
-                created_at: new Date().toISOString(),
-                sender: { username: 'You' }
-            });
+            return response.text().then(text => ({ data: { message: text }, status: response.status, ok: response.ok }));
         }
+    })
+    .then(({ data, status, ok }) => {
+        console.log('Response data:', data);
 
-        // Focus back on input for continuing the conversation
-        input.focus();
+        if (ok && data.success) {
+            // Clear input field and file input
+            input.value = '';
+            if (attachmentInput) {
+                attachmentInput.value = '';
+            }
+
+            // Reset scroll flag to ensure we scroll to the new comment
+            isUserScrolledUp = false;
+
+            // Make sure we're passing proper comment data
+            if (data.comment) {
+                appendNewComment(data.comment);
+            }
+
+            // Focus back on input for continuing the conversation
+            input.focus();
+        } else {
+            // Handle validation errors (422) and other errors
+            let errorMessage = 'Failed to send comment.';
+
+            if (status === 422 && data.errors) {
+                // Laravel validation errors
+                errorMessage = Object.values(data.errors).flat().join('\n');
+            } else if (data.message) {
+                errorMessage = data.message;
+            }
+
+            throw new Error(errorMessage);
+        }
     })
     .catch(error => {
         console.error('Error submitting comment:', error);
         // Restore the original input text so the user doesn't lose their message
         input.value = oldValue;
-        alert('Failed to send comment. Please try again.');
+        alert('Failed to send comment: ' + error.message);
     })
     .finally(() => {
         // Reset states
