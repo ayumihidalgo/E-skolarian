@@ -210,7 +210,7 @@
           <!-- Report Header with close button -->
           <div class="bg-white px-6 py-4 border-b border-gray-200 flex justify-center items-center relative">
             <h2 id="modalReportId" class="text-lg font-semibold text-black font-[Lexend]">REPORT-001</h2>
-            <button onclick="closeReportModal()" class="absolute right-6 w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors">
+            <button onclick="closeReportModal()" class="absolute right-6 w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors cursor-pointer ">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
