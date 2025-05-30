@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\Document;
 
 class AdminDocumentController extends Controller
 {
@@ -64,9 +65,10 @@ class AdminDocumentController extends Controller
         // Start with base query
         $query = DB::table('submitted_documents')
             ->whereNull('archived_at')
-            ->where('received_by', $adminId); // Only documents assigned to this admin
+            ->where('received_by', $adminId) // Only documents assigned to this admin
+            ->whereIn('status', ['Approved', 'Rejected']); // Only show Approved or Rejected
 
-        // Apply filters from request parameters
+        // Apply filters from request parametersr
         if ($request->has('status') && $request->status !== 'All') {
             $query->where('status', $request->status);
         }
@@ -127,6 +129,11 @@ class AdminDocumentController extends Controller
             'CHO' => 'text-blue-500',
         ];
 
+        // Handle AJAX requests
+        if ($request->ajax()) {
+            return view('admin.documentHistory', compact('documents', 'orgMap', 'tagColors'))->render();
+        }
+        
         return view('admin.documentHistory', compact('documents', 'orgMap', 'tagColors'));
     }
 
@@ -166,7 +173,8 @@ class AdminDocumentController extends Controller
 
         $query = DB::table('submitted_documents')
             ->whereNotNull('archived_at')
-            ->where('received_by', $adminId); // Only documents assigned to this admin
+            ->where('received_by', $adminId) // Only documents assigned to this admin
+            ->whereIn('status', ['Approved', 'Rejected']); // Only show Approved or Rejected
 
         // Apply filters from request parameters
         if ($request->has('status') && $request->status !== 'All') {
@@ -259,5 +267,18 @@ class AdminDocumentController extends Controller
                 'message' => 'Failed to restore documents: ' . $e->getMessage()
             ]);
         }
+    }
+
+    public function index(Request $request)
+    {
+        $documents = Document::where('archived', true)
+            ->orderBy('archived_at', 'desc')
+            ->paginate(6);
+        
+        if ($request->ajax()) {
+            return view('admin.partials.archiveTableContent', compact('documents'))->render();
+        }
+        
+        return view('admin.archivePage', compact('documents'));
     }
 }

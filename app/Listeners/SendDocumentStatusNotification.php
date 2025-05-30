@@ -4,6 +4,8 @@ namespace App\Listeners;
 
 use App\Events\DocumentStatusUpdated;
 use App\Models\Notification;
+use App\Mail\NotificationAlertMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
 class SendDocumentStatusNotification
@@ -32,14 +34,26 @@ class SendDocumentStatusNotification
         $message = "Your document for subject \"{$doc->subject}\" (Type: {$doc->type}, ID: {$doc->id}) was {$status}.";
 
         try {
-            Notification::create([
+            $notification = Notification::create([
                 'title'   => $title,
                 'message' => $message,
-                'user_id' => $student->id, // Only this student gets the notification
+                'user_id' => $student->id,
                 'is_read' => false,
                 'url'     => route('records.show', ['id' => $doc->id]),
             ]);
             Log::info("Student notification created for user_id={$student->id}");
+
+            // Send email notification only to students
+            if ($student->role === 'student') {
+                try {
+                    Mail::to($student->email)->send(new NotificationAlertMail($notification));
+                    Log::info('Email notification sent to student: ' . $student->email);
+                } catch (\Exception $e) {
+                    Log::error('Failed to send email notification: ' . $e->getMessage());
+                }
+            } else {
+                Log::info('Email notification skipped for non-student user: ' . $student->email);
+            }
         } catch (\Exception $ex) {
             Log::error("Failed to create notification: " . $ex->getMessage());
         }

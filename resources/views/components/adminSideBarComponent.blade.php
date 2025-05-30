@@ -35,7 +35,7 @@
                 </a>
             @endforeach
         </div>
-        <form method="POST" action="{{ route('logout') }}">
+        <form method="POST" action="{{ route('admin.logout') }}">
             @csrf
             <button type="submit"
                 class="flex items-center space-x-3 text-white hover:text-yellow-400 transition duration-200 cursor-pointer">

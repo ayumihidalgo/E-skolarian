@@ -34,7 +34,7 @@
                 </a>
             @endforeach
 
-            <form method="POST" action="{{ route('logout') }}">
+            <form method="POST" action="{{ route('admin.logout') }}">
                 @csrf
                 <button type="submit" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200 mt-60">
                     <img src="{{ asset('images/logout.svg') }}" class="h-6 w-6" alt="Logout Icon">

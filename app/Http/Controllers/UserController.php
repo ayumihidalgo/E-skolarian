@@ -154,7 +154,7 @@ public function checkEmail(Request $request)
 }
 public function checkRoles()
 {
-    $restrictedRoles = ['Student Services', 'Academic Services', 'Administrative Services', 'Campus Director'];
+    $restrictedRoles = ['Office of the Student Services', 'Office of the Academic Services', 'Office of the Administrative Services', 'Office of the Campus Director'];
     $existingRoles = User::whereIn('role_name', $restrictedRoles)
                         ->pluck('role_name')
                         ->unique()
@@ -172,5 +172,28 @@ public function checkUsername(Request $request)
     return response()->json([
         'exists' => $exists
     ]);
+}
+public function checkOrganizations()
+{
+    try {
+        $existingOrganizations = User::where('role', 'student')
+            ->pluck('username')  // Using username column since it stores organization names
+            ->map(function($name) {
+                return strtolower($name);
+            })
+            ->unique()
+            ->values()
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'existingOrganizations' => $existingOrganizations
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch organizations'
+        ], 500);
+    }
 }
 }

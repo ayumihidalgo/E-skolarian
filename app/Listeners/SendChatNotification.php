@@ -16,7 +16,7 @@ public function handle(NewChatMessage $event)
     ]);
     Notification::create([
         'user_id' => $event->receiver->id,
-        'title' => 'New Chat Message',
+        'title' => 'New Message',
         'message' => 'You have a new message from ' . $event->comment->sender->username,
         'url' => $event->receiver->role === 'admin' 
             ? route('admin.documentReview', ['id' => $event->comment->document_id]) 

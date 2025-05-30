@@ -11,40 +11,31 @@ use Illuminate\Support\Str;
 use App\Models\User;
 use Carbon\Carbon;
 
-class PasswordResetLinkController extends Controller
+class AdminPasswordResetLinkController extends Controller
 {
     public function create()
     {
-        return view('auth.forgot-password');
+        return view('auth.admin-forgot-password');
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'email' => 'required|email',
-            'role' => 'required|in:student,admin', // Validate role input
+            'role' => 'required|in:admin', // Only admin allowed
         ]);
 
-        // Retrieve the role from the request
-        $role = $request->input('role');
+        // Always use admin role
+        $role = 'admin';
 
-        // Check if the email exists in the users table and matches the role
+        // Check if the email exists in the users table and is admin
         $user = User::where('email', $request->email)
-            ->where('active', 1) // Ensure the user is active
-            ->where(function ($query) use ($role) {
-                if ($role === 'student') {
-                    $query->where('role', 'student');
-                } elseif ($role === 'admin') {
-                    $query->whereIn('role', ['admin', 'super admin']);
-                }
-            })
+            ->where('active', 1)
+            ->where('role', 'admin')
             ->first();
 
         if (!$user) {
-            $errorMessage = $role === 'student'
-                ? 'We can\'t find a student with that email address.'
-                : 'We can\'t find an admin with that email address.';
-            return back()->withErrors(['email' => $errorMessage]);
+            return back()->withErrors(['email' => 'We can\'t find an admin with that email address.']);
         }
 
         $status = Password::sendResetLink($request->only('email'));
@@ -56,7 +47,29 @@ class PasswordResetLinkController extends Controller
 
     public function edit($token)
     {
-        return view('auth.reset-password', ['token' => $token]);
+       $email = request()->query('email');
+        $tokenRecord = null;
+
+        if ($email) {
+            $tokenRecord = DB::table('password_reset_tokens')
+                ->where('email', $email)
+                ->first();
+        }
+
+        $tokenExpired = false;
+        if (
+            !$tokenRecord ||
+            !Hash::check($token, $tokenRecord->token) ||
+            \Carbon\Carbon::parse($tokenRecord->created_at)->addMinutes(15)->isPast()
+        ) {
+            $tokenExpired = true;
+        }
+
+        return view('auth.admin-reset-password', [
+            'token' => $token,
+            'tokenExpired' => $tokenExpired,
+            'email' => $email,
+        ]);
     }
 
     public function update(Request $request)
@@ -79,13 +92,13 @@ class PasswordResetLinkController extends Controller
             ->where('email', $request->email)
             ->first();
 
-            if (
-                !$tokenRecord ||
-                !Hash::check($request->token, $tokenRecord->token) ||
-                Carbon::parse($tokenRecord->created_at)->addMinutes(15)->isPast()
-            ) {
-                return back()->withErrors(['token' => 'Invalid or expired token. Try to request a new password reset link.']);
-            }
+        if (
+            !$tokenRecord ||
+            !Hash::check($request->token, $tokenRecord->token) ||
+            Carbon::parse($tokenRecord->created_at)->addMinutes(15)->isPast()
+        ) {
+            return back()->withErrors(['token' => 'Invalid or expired token. Try to request a new password reset link.']);
+        }
 
         $user = User::where('email', $request->email)->first();
 
@@ -93,8 +106,8 @@ class PasswordResetLinkController extends Controller
             return back()->withErrors(['email' => 'User not found.']);
         }
 
-        // Check if user role is allowed to reset password
-        if (!in_array($user->role, ['student', 'admin', 'super admin'])) {
+        // Only allow admin role
+        if ($user->role !== 'admin') {
             return back()->withErrors(['email' => 'User role not allowed to reset password.']);
         }
 
@@ -106,13 +119,12 @@ class PasswordResetLinkController extends Controller
         }
 
         $user->password = bcrypt($request->password);
+        $user->password_changed_at = now();
         $user->save();
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        // Smart: set role for redirection based on user's real role
-        $role = $user->role === 'student' ? 'student' : 'admin';
-
-        return redirect()->route('password.reset.confirmation', ['role' => $role]);
+        // Always redirect as admin
+        return redirect()->route('admin.password.reset.confirmation');
     }
     }

@@ -1,5 +1,20 @@
-let currentDocumentId = null;
+// ------------------------GLOBAL VARIABLES------------------------------
+// Hide action toast decalred gloabally
+window.hideActionToast = hideActionToast;
+// Added to the window object so it can be called from HTML
+window.openCommentAttachmentPreview = openCommentAttachmentPreview;
+// Added this line to make sortTable accessible globally
+window.sortTable = sortTable;
 
+const MESSAGE_CHARACTER_LIMITS = {
+    'adminMessage': 500,           // For forwarding messages
+    'resubmissionMessage': 1000,   // For resubmission feedback (needs more detail)
+    'rejectionMessage': 1000,      // For rejection reasons (needs more detail)
+    'approvalMessage': 500         // For approval messages
+};
+
+// __________________________HELPER FUNCTIONS______________________________________
+let currentDocumentId = null;
 // Function to clear input fields in modals
 function clearModalInputs(modalId) {
     const modal = document.getElementById(modalId);
@@ -33,11 +48,13 @@ function setButtonLoading(buttonId, isLoading, modalId = null) {
         
         // Replace with loading spinner
         button.innerHTML = `
-            <svg class="animate-spin h-5 w-5 mx-auto cursor-not-allowed" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-5 w-5 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
         `;
+        button.classList.remove('cursor-pointer');
+        button.classList.add('cursor-not-allowed');
         button.disabled = true;
         
         // Also disable related close/cancel buttons if a modal ID is provided
@@ -67,7 +84,8 @@ function disableModalCloseButtons(modalId, disable) {
         'resubmissionModal': ['closeResubmissionModalBtn'],
         'rejectConfirmationModal': ['closeRejectConfirmationModalBtn'],
         'finalRejectConfirmationModal': ['closeFinalRejectModalBtn', 'cancelFinalRejectBtn'],
-        'finalizeConfirmationModal': ['closeFinalizeModalBtn', 'cancelFinalizeBtn']
+        'finalizeConfirmationModal': ['closeFinalizeModalBtn', 'cancelFinalizeBtn'],
+        'approvalMessageModalBtn' : ['closeApprovalMessageModalBtn']
     };
     
     // Get the button IDs for the current modal
@@ -79,6 +97,7 @@ function disableModalCloseButtons(modalId, disable) {
         if (button) {
             button.disabled = disable;
             if (disable) {
+                button.classList.remove('cursor-pointer');
                 button.classList.add('opacity-50', 'cursor-not-allowed');
                 // Store original pointer events style if not already stored
                 if (!button.getAttribute('data-original-pointer-events')) {
@@ -88,6 +107,7 @@ function disableModalCloseButtons(modalId, disable) {
                 button.style.pointerEvents = 'none';
             } else {
                 button.classList.remove('opacity-50', 'cursor-not-allowed');
+                button.classList.add('cursor-pointer');
                 // Restore original pointer events style if stored
                 const originalPointerEvents = button.getAttribute('data-original-pointer-events');
                 if (originalPointerEvents) {
@@ -100,284 +120,551 @@ function disableModalCloseButtons(modalId, disable) {
     });
 }
 
-// Function to handle document click
-document.addEventListener('DOMContentLoaded', function() {
-    const documentRows = document.querySelectorAll('tbody tr');
-    const tableView = document.getElementById('tableView');
-    const detailsView = document.getElementById('detailsView');
+// Add this function to your existing code
+function setupCharacterLimits() {
+    // For each input field that needs a character limit
+    Object.entries(MESSAGE_CHARACTER_LIMITS).forEach(([inputId, limit]) => {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        
+        // Add maxlength attribute
+        input.setAttribute('maxlength', limit);
+        
+        // Create or get counter element
+        let counter = document.getElementById(`${inputId}Counter`);
+        if (!counter) {
+            counter = document.createElement('div');
+            counter.id = `${inputId}Counter`;
+            counter.className = 'text-sm text-gray-500 mt-1 text-right';
+            input.parentNode.insertBefore(counter, input.nextSibling);
+        }
+        
+        // Initial count
+        updateCharacterCount(input, counter, limit);
+        
+        // Update count on input
+        input.addEventListener('input', function() {
+            updateCharacterCount(this, counter, limit);
+        });
+    });
+}
+
+// Helper function to update character count
+function updateCharacterCount(input, counter, limit) {
+    const remaining = limit - input.value.length;
+    counter.textContent = `${input.value.length}/${limit}`;
     
-    console.log("Found elements:", {
-        rows: documentRows.length,
-        tableView: !!tableView,
-        detailsView: !!detailsView
+    // Visual indication when approaching limit
+    if (remaining <= 50) {
+        counter.classList.add('text-orange-500');
+    } else {
+        counter.classList.remove('text-orange-500');
+    }
+    
+    if (remaining <= 10) {
+        counter.classList.add('text-red-500');
+        counter.classList.remove('text-orange-500');
+    } else {
+        counter.classList.remove('text-red-500');
+    }
+}
+
+/**
+ * Fixes the overlapping message labels in modal forms
+ */
+function fixModalLabelOverlap() {
+  // Get all message fields with floating labels
+  const messageFields = document.querySelectorAll('#adminMessage, #resubmissionMessage, #rejectionMessage');
+  
+  // Process each field
+  messageFields.forEach(field => {
+    if (!field) return;
+    
+    // Add top padding to prevent text overlap with label
+    field.style.paddingTop = '16px';
+    
+    // Find the associated label
+    const label = field.parentNode.querySelector('label[for="' + field.id + '"]');
+    if (label) {
+      // Adjust label position to ensure it's never overlapping text
+      label.style.top = '-10px';
+      label.style.left = '10px';
+      label.style.backgroundColor = 'white';
+      label.style.zIndex = '10';
+      label.style.padding = '0 5px';
+      label.style.fontWeight = '500';
+    }
+    
+    // Add focus and change handling
+    field.addEventListener('focus', function() {
+      if (label) label.classList.add('text-[#7A1212]');
     });
     
-    documentRows.forEach(row => {
-        row.addEventListener('click', function(e) {
-            e.preventDefault();
+    field.addEventListener('blur', function() {
+      if (label) label.classList.remove('text-[#7A1212]');
+    });
+  });
+  
+  // Special handling for select fields (like adminSelect)
+  const selectFields = document.querySelectorAll('select[id$="Select"]');
+  selectFields.forEach(field => {
+    if (!field) return;
+    
+    field.style.paddingTop = '10px';
+    
+    // Find the associated label
+    const label = field.parentNode.querySelector('label[for="' + field.id + '"]');
+    if (label) {
+      label.style.top = '-10px';
+      label.style.left = '10px';
+    }
+  });
+}
+
+// -------------------------------------------------------------
+// ------Document Viewer Functionality--------
+function handleRowClick(row) {
+    // Get document ID from the data attribute
+    const documentId = row.getAttribute('data-document-id');
+    
+    console.log("Row clicked, document ID:", documentId);
+    
+    if (!documentId) {
+        console.error('Document ID is missing for this row.');
+        return;
+    }
+    
+    // Store the real document ID in the global variable
+    currentDocumentId = documentId;
+    console.log("Set currentDocumentId to:", currentDocumentId);
+    
+    // Mark the document as opened first (server-side update)
+    fetch(`/admin/documents/${documentId}/mark-as-opened`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        console.log("Mark as opened result:", result);
+        if (result.success) {
+            // Update the visual appearance of this row immediately
+            row.classList.remove('border-[#7A1212]', 'bg-white');
+            row.classList.add('border-[#D9D9D9]', 'bg-[#D9ACAC33]');
             
-            // Get document ID from the data attribute - this is the actual numeric ID
-            const documentId = this.getAttribute('data-document-id');
-            
-            console.log("Row clicked, document ID:", documentId);
-            
-            if (!documentId) {
-                console.error('Document ID is missing for this row.');
-                return;
+            // Remove the red dot indicator
+            const dotIndicator = row.querySelector('td:last-child span[class*="bg-["]');
+            if (dotIndicator) {
+                dotIndicator.remove();
             }
             
-            // Store the real document ID in the global variable
-            currentDocumentId = documentId;
-            console.log("Set currentDocumentId to:", currentDocumentId);
-            
-            // Mark the document as opened first (server-side update)
-            fetch(`/admin/documents/${documentId}/mark-as-opened`, {
-                method: 'POST',
+            // Fetch document details and show them
+            return fetch(`/admin/documents/${documentId}/details`, {
                 headers: {
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
-            })
-            .then(response => response.json())
-            .then(result => {
-                console.log("Mark as opened result:", result);
-                if (result.success) {
-                    // Update the visual appearance of this row immediately
-                    this.classList.remove('border-[#7A1212]', 'bg-white');
-                    this.classList.add('border-[#D9D9D9]', 'bg-[#D9ACAC33]');
-                    
-                    // Remove the red dot indicator
-                    const dotIndicator = this.querySelector('td:last-child span[class*="bg-["]');
-                    if (dotIndicator) {
-                        dotIndicator.remove();
-                    }
-                    
-                    // Fetch document details and show them
-                    return fetch(`/admin/documents/${documentId}/details`, {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    });
-                } else {
-                    throw new Error('Failed to mark document as opened');
-                }
-            })
-            .then(response => {
-                console.log("Mark as opened response:", response);
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        console.error("Error response:", text);
-                        throw new Error('Failed to mark document as opened: ' + response.status);
-                    });
-                }
-                return response.json();
-            })
-            .then(docData => {
-                console.log("Document details received:", docData);
-                // Update the details view with document data
-                updateDocumentDetailsView(docData);
-                
-                // Add this line to load comments for the current document
-                loadComments(documentId);
-                
-                console.log("BEFORE: tableView hidden:", tableView.classList.contains('hidden'));
-                console.log("BEFORE: detailsView hidden:", detailsView.classList.contains('hidden'));
-                
-                // Show details view, hide table view
-                tableView.classList.add('hidden');
-                detailsView.classList.remove('hidden');
-                
-                console.log("AFTER: tableView hidden:", tableView.classList.contains('hidden'));
-                console.log("AFTER: detailsView hidden:", detailsView.classList.contains('hidden'));
-            })
-            .catch(error => {
-                console.error('Error:', error);
             });
+        } else {
+            throw new Error('Failed to mark document as opened');
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error("Error response:", text);
+                throw new Error('Failed to mark document as opened: ' + response.status);
+            });
+        }
+        return response.json();
+    })
+    .then(docData => {
+        // Update the details view with document data
+        updateDocumentDetailsView(docData);
+        
+        // Add this line to load comments for the current document
+        loadComments(documentId);
+        
+        // Show details view, hide table view
+        const tableView = document.getElementById('tableView');
+        const detailsView = document.getElementById('detailsView');
+        tableView.classList.add('hidden');
+        detailsView.classList.remove('hidden');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Initial loading
+document.addEventListener('DOMContentLoaded', function() {
+    const documentRows = document.querySelectorAll('tbody tr');
+    documentRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleRowClick(this);
         });
     });
 });
 
-// Viewing Document Details
-// function updateDocumentDetailsView(docData) {
-//     console.log("Document data:", docData);
+// Filter and Search Functions
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the search functionality
+    initSearchAndFilters();
     
-//     // Format date
-//     const formattedDate = new Date(docData.created_at).toLocaleDateString('en-US', {
-//         month: 'long', 
-//         day: 'numeric', 
-//         year: 'numeric'
-//     });
-    
-//     // Organization name to acronym mapping
-//     const orgMap = {
-//         'Association of Competent and Aspiring Psychologists': 'ACAP',
-//         'Association of Electronics and Communications Engineering Students': 'AECES',
-//         'Eligible League of Information Technology Enthusiasts': 'ELITE',
-//         'Guild of Imporous and Valuable Educators': 'GIVE',
-//         'Junior Executive of Human Resource Association': 'JEHRA',
-//         'Junior Marketing Association of the Philippines': 'JMAP',
-//         'Junior Philippine Institute of Accountants': 'JPIA',
-//         'Philippine Institute of Industrial Engineers': 'PIIE',
-//         'Artist Guild Dance Squad': 'AGDS',
-//         'PUP SRC Chorale': 'Chorale',
-//         'Supreme Innovators\' Guild for Mathematics Advancements': 'SIGMA',
-//         'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism': 'TAPNOTCH',
-//         'Office of the Student Council': 'OSC'
-//     };
-    
-//     // Get organization acronym if available, otherwise use full name
-//     function getOrgAcronym(fullName) {
-//         return orgMap[fullName] || fullName;
-//     }
-    
-//     try {
-//         // Update document information using direct IDs
-//         document.getElementById('documentDate').textContent = formattedDate;
-//         document.getElementById('documentOrg').innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
-//         document.getElementById('documentTitle').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject || docData.title}`;
-//         document.getElementById('documentType').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
-//         document.getElementById('documentTag').textContent = docData.control_tag || docData.tag;
-
-//         // Update summary
-//         document.getElementById('documentSummary').textContent = docData.summary || 'No summary available';
-            
-//         // Update attachment (if available)
-//         const attachmentButton = document.getElementById('documentAttachment');
-//         const attachmentSpan = document.getElementById('documentFileName');
+    // Function to initialize search and filters
+    function initSearchAndFilters() {
+        // Get form elements
+        const searchInput = document.getElementById('searchInput');
+        const organizationFilter = document.getElementById('organizationFilter');
+        const documentTypeFilter = document.getElementById('documentTypeFilter');
         
-//         if (attachmentButton && attachmentSpan && docData.file_path) {
-//             const fileName = docData.file_path.split('/').pop();
-//             attachmentSpan.textContent = fileName;
+        if (searchInput && organizationFilter && documentTypeFilter) {
+            // Remove existing event listeners first (to prevent duplicates)
+            searchInput.removeEventListener('input', handleSearchInput);
+            searchInput.removeEventListener('keydown', handleSearchKeydown);
+            organizationFilter.removeEventListener('change', handleFilterChange);
+            documentTypeFilter.removeEventListener('change', handleFilterChange);
+            
+            // Add debounced search input handler
+            let searchTimeout;
+            function handleSearchInput() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    submitAjaxSearch();
+                }, 500); // 500ms debounce
+            }
+            searchInput.addEventListener('input', handleSearchInput);
+            
+            // Handle Enter key
+            function handleSearchKeydown(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    clearTimeout(searchTimeout);
+                    
+                    if (searchInput.value.trim() === '') {
+                        // Reset filters and update URL
+                        history.pushState(null, '', window.location.pathname);
+                        
+                        // Refresh the page content with no filters
+                        fetch(window.location.pathname, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.text())
+                        .then(html => {
+                            updateTableContent(html);
+                        });
+                    } else {
+                        submitAjaxSearch();
+                    }
+                }
+            }
+            searchInput.addEventListener('keydown', handleSearchKeydown);
+            
+            // Add filter change listeners
+            function handleFilterChange() {
+                submitAjaxSearch();
+            }
+            organizationFilter.addEventListener('change', handleFilterChange);
+            documentTypeFilter.addEventListener('change', handleFilterChange);
+            
+            // Initialize event listeners for the table
+            attachRowEventListeners();
+        }
+    }
+    
+    // Function to submit search via AJAX
+    function submitAjaxSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const organizationFilter = document.getElementById('organizationFilter');
+        const documentTypeFilter = document.getElementById('documentTypeFilter');
+        const searchTerm = searchInput.value.trim();
+        
+        // Show loading indicator
+        showLoader();
+        
+        // Initialize search parameters
+        let searchParams = new URLSearchParams();
+        
+        // Check for full date format (MM/DD/YYYY)
+        const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+        const fullDateMatch = searchTerm.match(fullDatePattern);
+        
+        if (fullDateMatch) {
+            // Extract values for validation
+            const month = parseInt(fullDateMatch[1], 10);
+            const day = parseInt(fullDateMatch[2], 10);
+            const year = parseInt(fullDateMatch[3], 10);
+            
+            // Validate date values
+            if (isValidDate(month, day, year)) {
+                // Format as MM/DD/YYYY for consistency
+                searchParams.append('fullDate', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`);
+            } else {
+                // If invalid date, just use as regular search term
+                searchParams.append('search', searchTerm);
+            }
+        } else {
+            // Check for month/day pattern (M/D or MM/DD)
+            const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
+            const monthDayMatch = searchTerm.match(monthDayPattern);
+            
+            if (monthDayMatch && searchTerm.length <= 5) {
+                // Extract values for validation
+                const month = parseInt(monthDayMatch[1], 10);
+                const day = parseInt(monthDayMatch[2], 10);
                 
-//             // Set up the click handler for the attachment
-//             attachmentButton.onclick = function() {
-//                 openDocumentViewer(docData.file_path, 'application/pdf');
-//             };
-//         }
-            
-//         // Update organization info in right panel
-//         document.getElementById('orgName').textContent = getOrgAcronym(docData.organization) || 'Organization Name';
-            
-//         // Set organization initial
-//         const orgInitial = document.getElementById('orgInitial');
-//         if (orgInitial && docData.organization) {
-//             // If we have an acronym, use its first letter, otherwise use the first letter of the full name
-//             const acronym = getOrgAcronym(docData.organization);
-//             orgInitial.textContent = acronym.charAt(0).toUpperCase();
-//         }
-
-//         // Update status history with timeline style similar to the image
-//         const statusHistory = document.getElementById('statusHistory');
-//         const processedStatusIndicator = document.getElementById('processedStatusIndicator');
-//         const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+                // Validate month and day values
+                if (isValidDate(month, day, new Date().getFullYear())) {
+                    // Format as MM/DD for consistency
+                    searchParams.append('monthDayPattern', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`);
+                } else {
+                    // If invalid month/day, just use as regular search term
+                    searchParams.append('search', searchTerm);
+                }
+            } else {
+                // Not a date pattern, use as direct search term
+                searchParams.append('search', searchTerm);
+            }
+        }
         
-//         if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
-//             // Group reviews by reviewer
-//             const grouped = {};
-//             docData.reviews.forEach(r => {
-//                 if (!grouped[r.reviewer_name]) grouped[r.reviewer_name] = [];
-//                 grouped[r.reviewer_name].push(r);
-//             });
+        // Always add filter values
+        searchParams.append('organization', organizationFilter.value || 'All');
+        searchParams.append('documentType', documentTypeFilter.value || 'All');
+        
+        // Update URL without page reload
+        const newUrl = window.location.pathname + '?' + searchParams.toString();
+        history.pushState(null, '', newUrl);
+        
+        // Make AJAX request
+        fetch(newUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            updateTableContent(html);
+            hideLoader();
+        })
+        .catch(error => {
+            console.error('Error fetching results:', error);
+            hideLoader();
+        });
+    }
+    
+    // Helper function to update table content and reinitialize event listeners
+    function updateTableContent(html) {
+        // Parse the HTML response
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Extract and update the table content
+        const newTable = doc.querySelector('#tableView');
+        if (newTable) {
+            document.querySelector('#tableView').innerHTML = newTable.innerHTML;
+            
+            // Reattach all event listeners
+            attachRowEventListeners();
+        }
+        
+        // Make sure search and filter event listeners are reattached
+        initSearchAndFilters();
+    }
+    
+    // Function to attach event listeners to table rows
+    function attachRowEventListeners() {
+        const rows = document.querySelectorAll('tr[data-document-id]');
+        rows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleRowClick(this);
+            });
+        });
+        
+        // Also reattach pagination listeners if needed
+        attachPaginationEventListeners();
+    }
+    
+    // Function to attach pagination event listeners
+    function attachPaginationEventListeners() {
+        const paginationLinks = document.querySelectorAll('.pagination-btn, .pagination-btn-prev, .pagination-btn-next');
+        paginationLinks.forEach(link => {
+            if (link.getAttribute('onclick') === 'return false;') return;
+            
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.getAttribute('href');
+                if (url && url !== '#') {
+                    // Show loader
+                    showLoader();
+                    
+                    // Update URL without page reload
+                    history.pushState(null, '', url);
+                    
+                    // Make AJAX request for pagination
+                    fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        updateTableContent(html);
+                        hideLoader();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching paginated results:', error);
+                        hideLoader();
+                    });
+                }
+            });
+        });
+    }
+    
+    // Helper function for date validation
+    function isValidDate(month, day, year) {
+        // Basic range checks
+        if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+            return false;
+        }
+        
+        // Days in month validation
+        const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        // Adjust February for leap years
+        if (month === 2) {
+            const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+            if (isLeapYear) {
+                if (day > 29) return false;
+            } else {
+                if (day > 28) return false;
+            }
+        } else if (day > daysInMonth[month]) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Simple loader functions
+    function showLoader() {
+        // Remove any existing loader
+        const oldLoader = document.getElementById('search-loader');
+        if (oldLoader) oldLoader.remove();
 
-//             // Flatten into timeline steps: always start with "Under Review", then show other statuses in order
-//             let timelineSteps = [];
-//             Object.entries(grouped).forEach(([reviewer, reviews]) => {
-//                 // Sort reviews by created_at ascending
-//                 reviews.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-//                 // Always add "Under Review" as the first step (created_at)
-//                 timelineSteps.push({
-//                     reviewer_name: reviewer,
-//                     status: "Under Review",
-//                     time: reviews[0].created_at
-//                 });
-//                 // Add all other statuses for this reviewer except "Under Review"
-//                 reviews.forEach(r => {
-//                     if (r.status && r.status.toLowerCase() !== "under review") {
-//                         timelineSteps.push({
-//                             reviewer_name: reviewer,
-//                             status: r.status,
-//                             time: r.updated_at // Use updated_at for these statuses
-//                         });
-//                     }
-//                 });
-//             });
+        // Find the table container
+        const tableView = document.getElementById('tableView');
+        if (tableView) {
+            // Create loader overlay
+            const loader = document.createElement('div');
+            loader.id = 'search-loader';
+            loader.className = 'absolute inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm';
+            loader.style.minHeight = '200px';
+            loader.innerHTML = `
+                <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
+                    <svg class="animate-spin h-5 w-5 mr-3 text-[#7A1212]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Searching...</span>
+                </div>
+            `;
+            // Set position: relative to parent if not already set
+            if (getComputedStyle(tableView).position === 'static') {
+                tableView.style.position = 'relative';
+            }
+            tableView.appendChild(loader);
+        }
+    }
+    
+    function hideLoader() {
+        const loader = document.getElementById('search-loader');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+    }
+    
+    // Make functions available globally if needed
+    window.attachRowEventListeners = attachRowEventListeners;
+    window.submitAjaxSearch = submitAjaxSearch;
+});
 
-//             // Sort the timeline steps by time ascending
-//             timelineSteps.sort((a, b) => new Date(a.time) - new Date(b.time));
+// Sorting Functionality
+let currentSort = {
+    column: -1,
+    direction: 'asc'
+};
 
-//             // Build timeline HTML
-//             let timelineHTML = `<div class="relative pl-5">`;
-//             timelineSteps.forEach((step, idx) => {
-//                 // Determine colors
-//                 let dot = "bg-gray-300";
-//                 let statusColor = "text-white";
-//                 if (/approved/i.test(step.status)) {
-//                     dot = "bg-green-500";
-//                     statusColor = "text-green-400 font-semibold";
-//                 } else if (/rejected/i.test(step.status)) {
-//                     dot = "bg-red-500";
-//                     statusColor = "text-red-400 font-semibold";
-//                 } else if (/resubmission/i.test(step.status)) {
-//                     dot = "bg-yellow-400";
-//                     statusColor = "text-yellow-300 font-semibold";
-//                 } else if (/sent/i.test(step.status)) {
-//                     dot = "bg-blue-400";
-//                     statusColor = "text-blue-300 font-semibold";
-//                 }
+function sortTable(columnIndex, type) {
+    const table = document.querySelector('table');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const headers = table.querySelectorAll('th i');
 
-//                 // Format date and status
-//                 let displayStatus = step.status;
-//                 let displayTime = new Date(step.time).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+    // Update sort direction
+    if (currentSort.column === columnIndex) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.column = columnIndex;
+        currentSort.direction = 'asc';
+    }
 
-//                 // Timeline bullet and line
-//                 timelineHTML += `
-//                     <div class="flex items-start relative">
-//                         ${idx < timelineSteps.length - 1
-//                             ? `<span class="absolute left-1 top-4 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>`
-//                             : ''}
-//                         <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-1.5 mr-3"></span>
-//                         <div>
-//                             <span class="font-bold">${step.reviewer_name || 'Unknown'}</span>
-//                             <div class="ml-0">
-//                                 <span class="${statusColor}">${displayStatus}</span>
-//                                 <span class="ml-1 text-white/80">${displayTime}</span>
-//                             </div>
-//                         </div>
-//                     </div>
-//                 `;
-//             });
-//             timelineHTML += '</div>';
+    // Update sort icons
+    headers.forEach(icon => {
+        icon.className = 'fa-solid fa-sort text-[#9099A5]';
+    });
 
-//             if (timelineSteps.length === 0) {
-//                 timelineHTML = '<p class="text-gray-300">No status updates available</p>';
-//             }
+    const currentHeader = headers[columnIndex];
+    currentHeader.className = `fa-solid text-[#9099A5] fa-sort-${currentSort.direction === 'asc' ? 'up' : 'down'}`;
 
-//             statusHistory.innerHTML = timelineHTML;
+    // Sort rows
+    rows.sort((a, b) => {
+        let aValue = a.cells[columnIndex].textContent.trim();
+        let bValue = b.cells[columnIndex].textContent.trim();
 
-//             // Show or hide action buttons and processed indicator based on document status
-//             const finalDecisionExists = timelineSteps.some(step =>
-//                 step.status && (
-//                     step.status.toLowerCase() === 'approved' ||
-//                     step.status.toLowerCase() === 'rejected'
-//                 )
-//             );
-//             if (docData.has_decision || finalDecisionExists) {
-//                 if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
-//                 if (processedStatusIndicator) processedStatusIndicator.classList.remove('hidden');
-//             } else {
-//                 if (actionButtonsContainer) actionButtonsContainer.classList.remove('hidden');
-//                 if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
-//             }
-//         }
-//     } catch (error) {
-//         console.error('Error updating document details:', error);
-//     }
-// }
+        if (type === 'date') {
+            // Convert date strings to Date objects
+            aValue = new Date(aValue.split('/').map((n, i) => i === 2 ? n : n.padStart(2, '0')).join('/'));
+            bValue = new Date(bValue.split('/').map((n, i) => i === 2 ? n : n.padStart(2, '0')).join('/'));
+        }
 
+        if (type === 'text') {
+            aValue = aValue.toLowerCase();
+            bValue = bValue.toLowerCase();
+        }
+
+        if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    // Reorder table rows
+    rows.forEach(row => tbody.appendChild(row));
+
+    // Update zebra striping
+    rows.forEach((row) => {
+        // Remove just the background classes
+        row.classList.remove('bg-white', 'bg-gray-50', 'bg-[#D9ACAC33]');
+        
+        // Add proper background class based on opened status
+        const isOpened = row.classList.contains('border-[#D9D9D9]');
+        if (isOpened) {
+            row.classList.add('bg-[#D9ACAC33]');
+        } else {
+            row.classList.add('bg-white');
+        }
+    });
+}
+
+// Viewing Document Details
 function updateDocumentDetailsView(docData) {
     console.log("Document data:", docData);
     
@@ -387,28 +674,6 @@ function updateDocumentDetailsView(docData) {
         day: 'numeric', 
         year: 'numeric'
     });
-    
-    // Organization name to acronym mapping
-    const orgMap = {
-        'Association of Competent and Aspiring Psychologists': 'ACAP',
-        'Association of Electronics and Communications Engineering Students': 'AECES',
-        'Eligible League of Information Technology Enthusiasts': 'ELITE',
-        'Guild of Imporous and Valuable Educators': 'GIVE',
-        'Junior Executive of Human Resource Association': 'JEHRA',
-        'Junior Marketing Association of the Philippines': 'JMAP',
-        'Junior Philippine Institute of Accountants': 'JPIA',
-        'Philippine Institute of Industrial Engineers': 'PIIE',
-        'Artist Guild Dance Squad': 'AGDS',
-        'PUP SRC Chorale': 'Chorale',
-        'Supreme Innovators\' Guild for Mathematics Advancements': 'SIGMA',
-        'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism': 'TAPNOTCH',
-        'Office of the Student Council': 'OSC'
-    };
-    
-    // Get organization acronym if available, otherwise use full name
-    function getOrgAcronym(fullName) {
-        return orgMap[fullName] || fullName;
-    }
     
     try {
         // Update document information using direct IDs
@@ -422,8 +687,6 @@ function updateDocumentDetailsView(docData) {
         document.getElementById('documentSummary').textContent = docData.summary || 'No summary available';
             
         // Update attachment (if available)
-        const attachmentButton = document.getElementById('documentAttachment');
-        const attachmentSpan = document.getElementById('documentFileName');
         const attachmentSection = document.getElementById('attachmentSection');
 
         if (attachmentSection) {
@@ -559,16 +822,40 @@ function updateDocumentDetailsView(docData) {
         }
             
         // Update organization info in right panel
-        document.getElementById('orgName').textContent = getOrgAcronym(docData.organization) || 'Organization Name';
-            
+        document.getElementById('orgName').textContent = docData.user.organization_acronym || 'Organization Name';
+        document.getElementById('orgType').textContent = 'Academic Organization';
+
         // Set organization initial
         const orgInitial = document.getElementById('orgInitial');
-        if (orgInitial && docData.organization) {
-            // If we have an acronym, use its first letter, otherwise use the first letter of the full name
-            const acronym = getOrgAcronym(docData.organization);
-            orgInitial.textContent = acronym.charAt(0).toUpperCase();
-        }
+        const orgProfileContainer = document.getElementById('orgProfileContainer');
 
+        if (orgInitial && orgProfileContainer && docData.organization) {
+            // If the document user has a profile picture
+            if (docData.user && docData.user.profile_pic) {
+                // Replace the initial with the profile image
+                orgInitial.style.display = 'none';
+                orgProfileContainer.innerHTML = `
+                    <img src="/storage/${docData.user.profile_pic}" 
+                        alt="${docData.organization}" 
+                        class="w-full h-full object-cover">
+                `;
+            } else {
+                // Use the organization_acronym field directly from the user data
+                // Fall back to first letter of organization name if acronym is not available
+                let initial = '';
+                if (docData.user.organization_acronym) {
+                    initial = docData.user.organization_acronym.charAt(0).toUpperCase();
+                } else if (docData.organization) {
+                    initial = docData.organization.charAt(0).toUpperCase();
+                } else {
+                    initial = 'O'; // Default fallback
+                }
+                
+                orgInitial.textContent = initial;
+                orgInitial.style.display = 'block';
+            }
+        }
+        
         // Status history with timeline style 
         const statusHistory = document.getElementById('statusHistory');
         const processedStatusIndicator = document.getElementById('processedStatusIndicator');
@@ -645,48 +932,95 @@ function updateDocumentDetailsView(docData) {
             // Sort the timeline steps by time ascending
             timelineSteps.sort((a, b) => new Date(a.time) - new Date(b.time));
 
-            // Build timeline HTML
-            let timelineHTML = `<div class="relative pl-5">`;
+            // Timeline for status history
+            let timelineHTML = '';
+            let lastOrgName = null;
+
+            // Process each step in the timeline
+            // Sort the timeline steps by time ascending first
+            timelineSteps.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+            // Find the most recent step (will be used to mark as "current")
+            const latestTimeStepIndex = timelineSteps.length - 1;
+
             timelineSteps.forEach((step, idx) => {
-                // Determine colors
-                let dot = "bg-gray-300";
-                let statusColor = "text-white";
-                if (/approved/i.test(step.status)) {
-                    dot = "bg-green-500";
-                    statusColor = "text-green-400 font-semibold";
-                } else if (/rejected/i.test(step.status)) {
-                    dot = "bg-red-500";
-                    statusColor = "text-red-400 font-semibold";
-                } else if (/resubmission/i.test(step.status)) {
-                    dot = "bg-yellow-400";
-                    statusColor = "text-yellow-300 font-semibold";
-                } else if (/sent/i.test(step.status)) {
-                    dot = "bg-blue-400";
-                    statusColor = "text-blue-300 font-semibold";
+                const isNewOrg = lastOrgName !== step.reviewer_name;
+                lastOrgName = step.reviewer_name;
+                
+                // Determine if this is the current step based on index
+                const isCurrent = idx === latestTimeStepIndex;
+                
+                // Set colors based on status
+                let dot = 'bg-white';
+                let statusColor = 'text-white/90';
+                
+                // Determine colors based on status
+                if (step.status === 'Under Review') {
+                    dot = isCurrent ? 'bg-yellow-400' : 'bg-white';
+                    statusColor = isCurrent ? 'text-yellow-400' : 'text-white';
+                } else if (step.status === 'Approved') {
+                    dot = 'bg-green-400';
+                    statusColor = 'text-green-400';
+                } else if (step.status === 'Rejected') {
+                    dot = 'bg-red-500';
+                    statusColor = 'text-red-500';
+                } else if (step.status === 'Resubmit') {
+                    dot = 'bg-orange-400';
+                    statusColor = 'text-orange-400';
+                } else if (step.status === 'Forwarded') {
+                    dot = 'bg-blue-400';
+                    statusColor = 'text-blue-400';
                 }
-
-                // Format date and status
-                let displayStatus = step.status;
-                let displayTime = new Date(step.time).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
-
-                // Timeline bullet and line
+                
+                // Format the status display text
+                let displayStatus = step.status.replace(/_/g, ' ');
+                displayStatus = displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1);
+                
+                // Format timestamp
+                const displayTime = new Date(step.time).toLocaleString('en-US', { 
+                    month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true 
+                });
+                
+                // If this is a new organization and not the first one, add a spacer with a continuous line
+                if (isNewOrg && idx > 0) {
+                    timelineHTML += `
+                        <div class="flex items-start relative h-2">
+                            <span class="absolute left-1 top-0 w-px h-full bg-gray-400"></span>
+                        </div>
+                    `;
+                }
+                
+                // Generate HTML for organization/admin name (main bullet)
+                if (isNewOrg) {
+                    timelineHTML += `
+                        <div class="flex items-start relative">
+                            <span class="absolute left-1 top-4 w-px h-full bg-gray-400"></span>
+                            <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-1 mr-3"></span>
+                            <div>
+                                <span class="font-bold">${step.reviewer_name || 'Unknown'}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Generate HTML for review decision (small bullet)
                 timelineHTML += `
                     <div class="flex items-start relative">
-                        ${idx < timelineSteps.length - 1
-                            ? `<span class="absolute left-1 top-4 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>`
-                            : ''}
-                        <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-1.5 mr-3"></span>
-                        <div>
-                            <span class="font-bold">${step.reviewer_name || 'Unknown'}</span>
-                            <div class="ml-0">
-                                <span class="${statusColor}">${displayStatus}</span>
-                                <span class="ml-1 text-white/80">${displayTime}</span>
-                            </div>
+                        ${idx < timelineSteps.length - 1 ? 
+                            `<span class="absolute left-1 top-4 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>` : 
+                            ''}
+                        <span class="flex-shrink-0 h-2 w-2 rounded-full ${dot} mt-1.5 mr-3 ml-0.5"></span>
+                        <div class="flex items-center">
+                            <span class="${statusColor}">${displayStatus}, ${displayTime}</span>
+                            ${isCurrent ? `
+                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Current
+                                </span>
+                            ` : ''}
                         </div>
                     </div>
                 `;
             });
-            timelineHTML += '</div>';
 
             if (timelineSteps.length === 0) {
                 timelineHTML = '<p class="text-gray-300">No status updates available</p>';
@@ -758,6 +1092,32 @@ window.closeDetailsPanel = function() {
     tableView.classList.remove('hidden');
 }
 
+// Function to format relative time (e.g., "2 hours ago", "1 day ago")
+function timeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+    
+    if (seconds < 60) {
+        return 'just now';
+    } else if (minutes < 60) {
+        return minutes === 1 ? '1 minute ago' : `${minutes} minutes ago`;
+    } else if (hours < 24) {
+        return hours === 1 ? '1 hour ago' : `${hours} hours ago`;
+    } else if (days < 30) {
+        return days === 1 ? '1 day ago' : `${days} days ago`;
+    } else if (months < 12) {
+        return months === 1 ? '1 month ago' : `${months} months ago`;
+    } else {
+        return years === 1 ? '1 year ago' : `${years} years ago`;
+    }
+}
+
 // Comment rendering
 function loadComments(documentId) {
     fetch(`/comments/${documentId}`)
@@ -802,7 +1162,7 @@ function loadComments(documentId) {
                     }
                     
                     attachmentHTML = `
-                        <div class="mt-2 bg-gray-100 rounded p-2 inline-block">
+                        <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full">
                             <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
                                 ${icon}
                                 <span class="text-xs truncate max-w-[200px]">${fileName}</span>
@@ -810,25 +1170,47 @@ function loadComments(documentId) {
                         </div>
                     `;
                 }
+
+                // Determine profile image
+                let profileHTML = '';
+                if (comment.sender && comment.sender.profile_pic) {
+                    // Use user's profile image
+                    profileHTML = `
+                        <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border border-gray-600">
+                            <img src="/storage/${comment.sender.profile_pic}" alt="Profile" class="w-full h-full object-cover">
+                        </div>
+                    `;
+                } else {
+                    // Use default profile icon
+                    profileHTML = `
+                        <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0 border border-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-6 h-6 text-gray-600">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
+                            </svg>
+                        </div>
+                    `;
+                }
+                
+                // Format and wrap comment text to prevent overflow
+                const commentText = comment.comment || '';
+                
+                // Use timeAgo for relative timestamps
+                const relativeTime = timeAgo(comment.created_at);
                 
                 return `
-                    <div class="border-b border-[#782626] pb-4 mb-4">
+                    <div class="pb-4 mb-4">
                         <div class="flex items-start gap-3">
                             <div class="flex-shrink-0">
-                                <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                        stroke="currentColor" class="w-6 h-6 text-gray-600">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
-                                    </svg>
-                                </div>
+                                ${profileHTML}
                             </div>
-                            <div class="flex-1">
+                            <div class="flex-1 min-w-0"> <!-- Added min-w-0 to make sure flexbox respects child sizes -->
                                 <div class="flex justify-between items-center">
-                                    <h4 class="font-bold text-white text-lg">${comment.sender ? comment.sender.username : 'Unknown User'}</h4>
-                                    <span class="text-gray-300 text-sm">${new Date(comment.created_at).toLocaleString('en-US', {hour: '2-digit', minute: '2-digit'})}</span>
+                                    <h4 class="font-bold text-white text-lg truncate">${comment.sender ? comment.sender.username : 'Unknown User'}</h4>
+                                    <span class="text-white text-sm whitespace-nowrap ml-2" title="${new Date(comment.created_at).toLocaleString()}">${relativeTime}</span>
                                 </div>
-                                <p class="text-white mt-1">${comment.comment || ''}</p>
+                                <p class="text-white mt-1 break-words whitespace-pre-wrap">${commentText}</p>
                                 ${attachmentHTML}
                             </div>
                         </div>
@@ -937,16 +1319,14 @@ function openCommentAttachmentPreview(filePath, fileType, fileName) {
         previewTab.classList.remove('bg-blue-500', 'text-white');
         previewTab.classList.add('text-gray-700');
     }
-}
-
-// Add this to the window object so it can be called from HTML
-window.openCommentAttachmentPreview = openCommentAttachmentPreview;
+}   
 
 // Comment submitting
 function submitComment() {
     const input = document.getElementById('commentInput');
     const fileInput = document.getElementById('commentAttachment');
     const attachmentPreview = document.getElementById('attachmentPreview');
+    const submitBtn = document.getElementById('submitCommentBtn');
     
     if (!input || !fileInput) {
         console.error('Comment input fields not found');
@@ -977,23 +1357,10 @@ function submitComment() {
     }
     
     if (file) {
-        // Validate file size - minimum 5MB for production (using 1KB for testing)
-        if (file.size < 1024) { // 1KB minimum for testing
-            showDocumentActionToast('comment', 'Attachment must be at least 1KB', false);
-            return;
-        }
-        
-        // Validate file size - maximum 10MB
-        if (file.size > 10 * 1024 * 1024) { // 10MB maximum
-            showDocumentActionToast('comment', 'Attachment cannot exceed 10MB', false);
-            return;
-        }
-        
         formData.append('attachment', file);
     }
 
     // Create loading indicator
-    const submitBtn = document.getElementById('submitCommentBtn');
     const originalInnerHTML = submitBtn.innerHTML;
     submitBtn.innerHTML = `
         <svg class="animate-spin h-4 w-4 md:h-5 md:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -1006,16 +1373,34 @@ function submitComment() {
     fetch('/comments', {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'  // Explicitly request JSON response
         },
         body: formData
     })
     .then(response => {
+        // Check if the response is ok (status in the range 200-299)
         if (!response.ok) {
-            return response.json().then(data => {
-                throw new Error(data.errors ? Object.values(data.errors).flat().join(', ') : 'Server error: ' + response.status);
+            // Check if the response is HTML instead of JSON
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('text/html')) {
+                // Return a custom error object that won't break JSON parsing
+                return { 
+                    success: false, 
+                    message: `Server returned HTML (status ${response.status}). This might be due to a server error or session timeout.` 
+                };
+            }
+            
+            // Try to get error details from JSON response
+            return response.json().then(errorData => {
+                throw new Error(errorData.message || `Server returned ${response.status}`);
+            }).catch(jsonError => {
+                // If JSON parsing fails, throw a generic error
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
             });
         }
+        
+        // If response is OK, parse as JSON
         return response.json();
     })
     .then(data => {
@@ -1292,8 +1677,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const sendToAdminModal = document.getElementById('sendToAdminModal');
     const closeSendToAdminModalBtn = document.getElementById('closeSendToAdminModalBtn');
     const sendToAdminSubmitBtn = document.getElementById('sendToAdminSubmitBtn');
-    const adminSelect = document.getElementById('adminSelect');
-    const adminMessage = document.getElementById('adminMessage');
 
     // Load admin list when the modal is opened
     sendToAnotherAdminBtn.addEventListener('click', function () {
@@ -1343,21 +1726,96 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Setup real-time validation for admin select dropdown
+    const adminSelect = document.getElementById('adminSelect');
+    if (adminSelect) {
+        // Initial validation setup - runs once when the page loads
+        adminSelect.addEventListener('change', function() {
+            if (this.value) {
+                this.classList.remove('border-red-500');
+                const errorMsg = document.getElementById('adminSelectError');
+                if (errorMsg) errorMsg.remove();
+            }
+        });
+    }
+    
+    // Setup real-time validation for admin message textarea
+    const adminMessage = document.getElementById('adminMessage');
+    if (adminMessage) {
+        // Initial validation setup - runs once when the page loads
+        adminMessage.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('border-red-500');
+                const errorMsg = document.getElementById('adminMessageError');
+                if (errorMsg) errorMsg.remove();
+            }
+        });
+        
+        // Also add focus handler to clear error state
+        adminMessage.addEventListener('focus', function() {
+            this.classList.remove('border-red-500');
+            const errorMsg = document.getElementById('adminMessageError');
+            if (errorMsg) errorMsg.remove();
+        });
+    }
     // Handle the "SEND" button click
     if (sendToAdminSubmitBtn) {
         sendToAdminSubmitBtn.addEventListener('click', function () {
             const selectedAdmin = document.getElementById('adminSelect').value;
             const message = document.getElementById('adminMessage').value.trim();
-
+            let isValid = true;
+            
+            // Validate admin selection
             if (!selectedAdmin) {
-                showDocumentActionToast('forward', 'Please select an admin to send the document to.', false);
-                return;
+                // Show error styling for the select field
+                const selectField = document.getElementById('adminSelect');
+                selectField.classList.add('border-red-500');
+                
+                // Add error message below select if it doesn't exist already
+                let errorMsg = document.getElementById('adminSelectError');
+                if (!errorMsg) {
+                    errorMsg = document.createElement('p');
+                    errorMsg.id = 'adminSelectError';
+                    errorMsg.className = 'text-red-500 text-sm';
+                    errorMsg.textContent = 'Please select an admin to send the document to.';
+                    selectField.parentNode.appendChild(errorMsg);
+                }
+                
+                // Shake the select field to indicate error
+                selectField.classList.add('error-shake');
+                setTimeout(() => {
+                    selectField.classList.remove('error-shake');
+                }, 500);
+                
+                isValid = false;
             }
-
+            
+            // Validate message
             if (!message) {
-                showDocumentActionToast('forward', 'Please enter a message for the admin.', false);
-                return;
+                // Show error styling
+                const messageField = document.getElementById('adminMessage');
+                messageField.classList.add('border-red-500');
+                
+                // Add error message below textarea if it doesn't exist already
+                let errorMsg = document.getElementById('adminMessageError');
+                if (!errorMsg) {
+                    errorMsg = document.createElement('p');
+                    errorMsg.id = 'adminMessageError';
+                    errorMsg.className = 'text-red-500 text-sm -mt-6';
+                    errorMsg.textContent = 'Please provide a message for the admin.';
+                    messageField.parentNode.appendChild(errorMsg);
+                }
+                
+                // Shake the message field to indicate error
+                messageField.classList.add('error-shake');
+                setTimeout(() => {
+                    messageField.classList.remove('error-shake');
+                }, 500);
+                
+                isValid = false;
             }
+            
+            if (!isValid) return; // Stop execution if validation failed
             
             if (!currentDocumentId) {
                 showDocumentActionToast('forward', 'Error: Document ID is missing.', false);
@@ -1398,12 +1856,39 @@ document.addEventListener('DOMContentLoaded', function () {
                     clearModalInputs('sendToAdminModal');
                     
                     // Return to table view
-                    closeDetailsPanel();
+                    // closeDetailsPanel();
                     
-                    // Refresh the page
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 3000);
+                    // Update the UI to reflect the forwarded state
+                    // Get updated document details
+                    fetch(`/admin/documents/${currentDocumentId}/details`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(docData => { 
+                        // Update the status history and other details
+                        updateDocumentDetailsView(docData);
+                        
+                        // Reload comments to include any system-generated comments
+                        loadComments(currentDocumentId);
+                        
+                        // Hide action buttons since document is forwarded
+                        const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+                        if (actionButtonsContainer) {
+                            actionButtonsContainer.classList.add('hidden');
+                        }
+                        
+                        // Show forwarded status if applicable
+                        const forwardedStatusIndicator = document.getElementById('forwardedStatusIndicator');
+                        if (forwardedStatusIndicator && docData.forward_info) {
+                            forwardedStatusIndicator.classList.remove('hidden');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error refreshing document details:', error);
+                    });
                 } else {
                     showDocumentActionToast('forward', data.error || 'Failed to forward the document.', false);
                 }
@@ -1418,31 +1903,90 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     }
+
+    // Close approval message modal when close button is clicked
+    const closeApprovalMessageModalBtn = document.getElementById('closeApprovalMessageModalBtn');
+    if (closeApprovalMessageModalBtn) {
+        closeApprovalMessageModalBtn.addEventListener('click', function() {
+            const messageField = document.getElementById('approvalMessage');
+              
+            // Hide the modal
+            document.getElementById('finalApprovalMessageModal').classList.add('hidden');
+            
+            // Clear the input fields using the existing helper function
+            clearModalInputs('finalApprovalMessageModal');
+            
+            // Clear any validation errors
+            if (messageField) {
+                messageField.classList.remove('border-red-500');
+            }
+            
+            const errorMsg = document.getElementById('approvalMessageError');
+            if (errorMsg) {
+                errorMsg.remove();
+            }
+            
+            // Reset unsaved changes flag
+            hasUnsavedChanges = false;
+        });
+    }
 });
 
-// Handle "Finalize Approval" button click - show confirmation modal
+
+// Handle "Finalize Approval" button click - show approval message modal
 finalizeApprovalBtn.addEventListener('click', function () {
     // Hide the approval modal
     approvalModal.classList.add('hidden');
     
-    // Show the finalize confirmation modal
-    const finalizeConfirmationModal = document.getElementById('finalizeConfirmationModal');
-    finalizeConfirmationModal.classList.remove('hidden');
+    // Show the message modal directly instead of the confirmation modal
+    document.getElementById('finalApprovalMessageModal').classList.remove('hidden');
 });
 
 // Handle confirmation modal buttons
 const closeFinalizeModalBtn = document.getElementById('closeFinalizeModalBtn');
 if (closeFinalizeModalBtn) {
     closeFinalizeModalBtn.addEventListener('click', function() {
-        document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+        const approvalMessage = document.getElementById('approvalMessage');
+        // Check if there are unsaved changes in the approval message
+        if (approvalMessage && approvalMessage.value.trim() !== '') {
+            // Show confirmation dialog
+            if (confirm('You have unsaved changes. Are you sure you want to close this window?')) {
+                // User confirmed, clear the input field
+                approvalMessage.value = '';
+                // Hide the modal
+                document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+            }
+            // If user cancels, the modal stays open
+        } else {
+            // No unsaved changes, just close the modal
+            document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+        }
     });
 }
 
-// Cancel buttons
+// Finalized Approve Cancel buttons
 const cancelFinalizeBtn = document.getElementById('cancelFinalizeBtn');
 if (cancelFinalizeBtn) {
     cancelFinalizeBtn.addEventListener('click', function() {
+        // Hide confirmation modal
         document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+        
+        // Clear the approval message input field using the existing helper function
+        clearModalInputs('finalApprovalMessageModal');
+        
+        // Reset any error states that might exist
+        const approvalMessage = document.getElementById('approvalMessage');
+        if (approvalMessage) {
+            approvalMessage.classList.remove('border-red-500');
+        }
+        
+        const errorMsg = document.getElementById('approvalMessageError');
+        if (errorMsg) {
+            errorMsg.remove();
+        }
+        
+        // Reset the unsaved changes flag
+        hasUnsavedChanges = false;
     });
 }
 
@@ -1450,16 +1994,23 @@ if (cancelFinalizeBtn) {
 const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
 if (confirmFinalizeBtn) {
     confirmFinalizeBtn.addEventListener('click', function() {
+        // The existing actual approval submission code here
         // Make sure we have a valid ID
         if (!currentDocumentId) {
             showDocumentActionToast('approved', "Error: Document ID is missing. Please try again.", false);
             return;
         }
         
+        // Get the approval message from the input field
+        const message = document.getElementById('approvalMessage').value.trim();
+        
         // Show loading state
         setButtonLoading('confirmFinalizeBtn', true, 'finalizeConfirmationModal');
-
-        // Make an AJAX request to approve the document
+        
+        // Hide the confirmation modal
+        document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+        
+        // Submit the approval with the message
         fetch(`/admin/documents/${currentDocumentId}/approve`, {
             method: 'POST',
             headers: {
@@ -1467,13 +2018,13 @@ if (confirmFinalizeBtn) {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({
-                message: 'Document approved and finalized'
+                message: message || 'Document approved and finalized'
             })
         })
         .then(response => {
             if (!response.ok) {
                 return response.json().then(data => { 
-                    throw new Error(data.error || 'Failed to approve document');
+                    throw new Error(data.error || `Server returned ${response.status}: ${response.statusText}`);
                 });
             }
             return response.json();
@@ -1481,26 +2032,57 @@ if (confirmFinalizeBtn) {
         .then(data => {
             if (data.success) {
                 // Show success toast
-                showDocumentActionToast('approved');
+                showDocumentActionToast('approved', 'Document has been successfully approved and finalized.');
                 
-                // Close the modal
-                document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+                // Update UI to reflect the approved state
+                const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+                const processedStatusIndicator = document.getElementById('processedStatusIndicator');
                 
-                // Return to table view
-                closeDetailsPanel();
+                if (actionButtonsContainer) {
+                    actionButtonsContainer.classList.add('hidden');
+                }
                 
-                // Refresh the page to update the document list
-                setTimeout(() => {
-                    window.location.reload();
-                }, 3000);
+                if (processedStatusIndicator) {
+                    processedStatusIndicator.classList.remove('hidden');
+                }
+                
+                // Refresh document details to show updated status
+                fetch(`/admin/documents/${currentDocumentId}/details`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Failed to refresh document details');
+                    }
+                    return response.json();
+                })
+                .then(docData => {
+                    // Update the status history and other details
+                    updateDocumentDetailsView(docData);
+                    
+                    // Reload comments to include any system-generated comments
+                    loadComments(currentDocumentId);
+                })
+                .catch(error => {
+                    console.error('Error refreshing document details:', error);
+                });
+                
+                // Clear the approval message
+                document.getElementById('approvalMessage').value = '';
             } else {
-                // Show failure toast
-                showDocumentActionToast('approved', data.error || "An unknown error occurred during approval.", false);
+                // Show error toast with the message from the server
+                showDocumentActionToast('approved', data.message || "An unknown error occurred during approval.", false);
             }
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Approval error:', error);
             showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
+            
+            // Re-show the confirmation modal if there was an error, so the user can try again
+            document.getElementById('finalizeConfirmationModal').classList.remove('hidden');
         })
         .finally(() => {
             // Reset button state
@@ -1508,6 +2090,225 @@ if (confirmFinalizeBtn) {
         });
     });
 }
+
+// A new event handler for the "SEND" button in the approval message modal
+document.addEventListener('DOMContentLoaded', function() {
+    const sendApprovalMessageBtn = document.getElementById('sendApprovalMessageBtn');
+    if (sendApprovalMessageBtn) {
+        sendApprovalMessageBtn.addEventListener('click', function() {
+            // Get the message and trim whitespace
+            const messageField = document.getElementById('approvalMessage');
+            const message = messageField.value.trim();
+            
+            // Validate the message
+            if (!message) {
+                // Show error styling
+                messageField.classList.add('border-red-500');
+                
+                // Add error message below textarea if it doesn't exist already
+                let errorMsg = document.getElementById('approvalMessageError');
+                if (!errorMsg) {
+                    errorMsg = document.createElement('p');
+                    errorMsg.id = 'approvalMessageError';
+                    errorMsg.className = 'text-red-500 text-sm -mt-5';
+                    errorMsg.textContent = 'Please provide a message for the final approval.';
+                    messageField.parentNode.appendChild(errorMsg);
+                }
+                
+                // Shake the message field to indicate error
+                messageField.classList.add('error-shake');
+                setTimeout(() => {
+                    messageField.classList.remove('error-shake');
+                }, 500);
+                
+                return; // Stop execution
+            }
+            
+            // If validation passed, remove error styling
+            messageField.classList.remove('border-red-500');
+            const errorMsg = document.getElementById('approvalMessageError');
+            if (errorMsg) {
+                errorMsg.remove();
+            }
+            
+            // Add real-time validation to clear errors as user types
+            messageField.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('border-red-500');
+                    const errorMsg = document.getElementById('approvalMessageError');
+                    if (errorMsg) errorMsg.remove();
+                }
+            });
+            
+            // Hide the message modal
+            document.getElementById('finalApprovalMessageModal').classList.add('hidden');
+            
+            // Show the confirmation modal with the message
+            const finalizeConfirmationModal = document.getElementById('finalizeConfirmationModal');
+            
+            // Add the message to the confirmation screen so the admin can review it
+            const confirmationMessageDisplay = document.getElementById('confirmationMessage');
+            if (confirmationMessageDisplay) {
+                confirmationMessageDisplay.textContent = message;
+            }
+            
+            // Show the confirmation modal
+            finalizeConfirmationModal.classList.remove('hidden');
+        });
+    }
+
+    const approvalMessage = document.getElementById('approvalMessage');
+    if (approvalMessage) {
+        approvalMessage.addEventListener('focus', function() {
+            this.classList.remove('border-red-500');
+            const errorMsg = document.getElementById('approvalMessageError');
+            if (errorMsg) errorMsg.remove();
+        });
+        
+        // Add real-time validation
+        approvalMessage.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('border-red-500');
+                const errorMsg = document.getElementById('approvalMessageError');
+                if (errorMsg) errorMsg.remove();
+                hasUnsavedChanges = true;
+            } else {
+                // If reverted to original state
+                hasUnsavedChanges = false;
+            }
+        });
+    }
+
+    let originalApprovalMessage = '';
+    
+    // Capture the original approval message when modal is opened
+    const finalApprovalMessageModal = document.getElementById('finalApprovalMessageModal');
+    if (finalApprovalMessageModal) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    // If the modal just became visible
+                    if (!finalApprovalMessageModal.classList.contains('hidden') && approvalMessage) {
+                        // Store the original message value (usually empty)
+                        originalApprovalMessage = approvalMessage.value;
+                    }
+                }
+            });
+        });
+        
+        observer.observe(finalApprovalMessageModal, { attributes: true });
+    }
+
+    // Enhance the existing window beforeunload listener to specifically check approval message
+    const existingBeforeUnloadHandler = window.onbeforeunload;
+    
+    window.onbeforeunload = function(e) {
+        // First check specific approval message changes
+        if (approvalMessage && 
+            !finalApprovalMessageModal.classList.contains('hidden') && 
+            approvalMessage.value.trim() !== originalApprovalMessage.trim() && 
+            approvalMessage.value.trim() !== '') {
+            
+            // Standard message for beforeunload event
+            const confirmationMessage = 'You have unsaved changes in your approval message. If you leave now, your changes will be lost.';
+            e.returnValue = confirmationMessage; // Required for Chrome
+            return confirmationMessage; // For other browsers
+        }
+        
+        // Then check global unsaved changes flag
+        if (hasUnsavedChanges) {
+            const confirmationMessage = 'You have unsaved changes. If you leave now, your changes will be lost.';
+            e.returnValue = confirmationMessage;
+            return confirmationMessage;
+        }
+        
+        // Call existing handler if defined and we haven't returned yet
+        if (existingBeforeUnloadHandler) {
+            return existingBeforeUnloadHandler(e);
+        }
+    };
+    
+    // Update the original confirmation button handler to use the message from the input
+    const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
+    if (confirmFinalizeBtn) {
+        const originalClickHandler = confirmFinalizeBtn.onclick;
+        confirmFinalizeBtn.addEventListener('click', function() {
+            // Reset the flag since we're submitting the form
+            hasUnsavedChanges = false;
+
+            // Reset original message value
+            originalApprovalMessage = '';
+
+            // Make sure we have a valid ID
+            if (!currentDocumentId) {
+                showDocumentActionToast('approved', "Error: Document ID is missing. Please try again.", false);
+                return;
+            }
+            
+            // Get the approval message from the input field
+            const message = document.getElementById('approvalMessage').value.trim();
+            
+            // Show loading state
+            setButtonLoading('confirmFinalizeBtn', true, 'finalizeConfirmationModal');
+            
+            // Hide the confirmation modal
+            document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+            
+            // The rest of the Ajax call remains the same
+            fetch(`/admin/documents/${currentDocumentId}/approve`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    message: message || 'Document approved and finalized'
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => { 
+                        throw new Error(data.error || 'Failed to approve document');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Success handling (unchanged)
+                if (data.success) {
+                    showDocumentActionToast('approved');
+                    document.getElementById('actionButtonsContainer').classList.add('hidden');
+                    document.getElementById('processedStatusIndicator').classList.remove('hidden');
+                    
+                    // Refresh document details
+                    fetch(`/admin/documents/${currentDocumentId}/details`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(docData => {
+                        updateDocumentDetailsView(docData);
+                        loadComments(currentDocumentId);
+                    })
+                    .catch(error => {
+                        console.error('Error refreshing document details:', error);
+                    });
+                } else {
+                    showDocumentActionToast('approved', data.error || "An unknown error occurred during approval.", false);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
+            })
+            .finally(() => {
+                setButtonLoading('confirmFinalizeBtn', false, 'finalizeConfirmationModal');
+            });
+        });
+    }
+});       
 
 // Reject modal functionality
 document.addEventListener('DOMContentLoaded', function () {
@@ -1569,9 +2370,45 @@ document.addEventListener('DOMContentLoaded', function() {
             const message = document.getElementById('resubmissionMessage').value.trim();
     
             if (!message) {
-                showDocumentActionToast('resubmit', 'Please provide feedback for resubmission.', false);
-                return;
+                // Show error styling
+                const messageField = document.getElementById('resubmissionMessage');
+                messageField.classList.add('border-red-500');
+                
+                // Add error message below textarea if it doesn't exist already
+                let errorMsg = document.getElementById('resubmissionMessageError');
+                if (!errorMsg) {
+                    errorMsg = document.createElement('p');
+                    errorMsg.id = 'resubmissionMessageError';
+                    errorMsg.className = 'text-red-500 text-sm -mt-6';
+                    errorMsg.textContent = 'Please provide feedback for resubmission.';
+                    messageField.parentNode.appendChild(errorMsg);
+                }
+                
+                // Shake the message field to indicate error
+                messageField.classList.add('error-shake');
+                setTimeout(() => {
+                    messageField.classList.remove('error-shake');
+                }, 500);
+                
+                return; // Stop execution
             }
+            
+            // If validation passed, remove error styling
+            const messageField = document.getElementById('resubmissionMessage');
+            messageField.classList.remove('border-red-500');
+            const errorMsg = document.getElementById('resubmissionMessageError');
+            if (errorMsg) {
+                errorMsg.remove();
+            }
+            
+            // Add real-time validation to remove error styling as soon as user types
+            messageField.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.classList.remove('border-red-500');
+                    const errorMsg = document.getElementById('resubmissionMessageError');
+                    if (errorMsg) errorMsg.remove();
+                }
+            });
             
             if (!currentDocumentId) {
                 showDocumentActionToast('resubmit', 'Error: Document ID is missing.', false);
@@ -1609,12 +2446,37 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('resubmissionModal').classList.add('hidden');
                     
                     // Return to table view
-                    closeDetailsPanel();
+                    // closeDetailsPanel();
                     
-                    // Refresh the page
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 3000);
+                    // Update the UI to reflect the resubmission request
+                    fetch(`/admin/documents/${currentDocumentId}/details`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(docData => {
+                        // Update the status history and other details
+                        updateDocumentDetailsView(docData);
+                        
+                        // Reload comments to include any system-generated comments
+                        loadComments(currentDocumentId);
+                        
+                        // Update UI to show document is awaiting resubmission
+                        const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+                        if (actionButtonsContainer) {
+                            actionButtonsContainer.classList.add('hidden');
+                        }
+                        
+                        const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+                        if (processedStatusIndicator) {
+                            processedStatusIndicator.classList.remove('hidden');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error refreshing document details:', error);
+                    });
                 } else {
                     showDocumentActionToast('resubmit', data.error || 'Failed to send resubmission request.', false);
                 }
@@ -1653,12 +2515,47 @@ if (closeRejectConfirmationModalBtn) {
 // Handle "Confirm Final Reject" button click
 document.getElementById('confirmFinalRejectBtn').addEventListener('click', function() {
     // Get the rejection message
-    const rejectionMessage = document.getElementById('rejectionMessage').value.trim();
+    const messageField = document.getElementById('rejectionMessage');
+    const message = messageField.value.trim();
     
-    if (!rejectionMessage) {
-        alert('Please provide a reason for rejection.');
-        return;
+    if (!message) {
+        // Show error styling
+        messageField.classList.add('border-red-500');
+        
+        // Add error message below textarea if it doesn't exist already
+        let errorMsg = document.getElementById('rejectionMessageError');
+        if (!errorMsg) {
+            errorMsg = document.createElement('p');
+            errorMsg.id = 'rejectionMessageError';
+            errorMsg.className = 'text-red-500 text-sm -mt-6';
+            errorMsg.textContent = 'Please provide a reason for rejection.';
+            messageField.parentNode.appendChild(errorMsg);
+        }
+        
+        // Shake the message field to indicate error
+        messageField.classList.add('error-shake');
+        setTimeout(() => {
+            messageField.classList.remove('error-shake');
+        }, 500);
+        
+        return; // Stop execution
     }
+    
+    // If validation passed, remove error styling
+    messageField.classList.remove('border-red-500');
+    const errorMsg = document.getElementById('rejectionMessageError');
+    if (errorMsg) {
+        errorMsg.remove();
+    }
+    
+    // Add real-time validation to remove error styling as soon as user types
+    messageField.addEventListener('input', function() {
+        if (this.value.trim()) {
+            this.classList.remove('border-red-500');
+            const errorMsg = document.getElementById('rejectionMessageError');
+            if (errorMsg) errorMsg.remove();
+        }
+    });
     
     // Hide the rejection message modal
     document.getElementById('rejectConfirmationModal').classList.add('hidden');
@@ -1728,12 +2625,37 @@ document.getElementById('finalizeRejectionBtn').addEventListener('click', functi
             document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
             
             // Return to table view
-            closeDetailsPanel();
+            // closeDetailsPanel();
             
-            // Refresh the page
-            setTimeout(() => {
-                window.location.reload();
-            }, 3000);
+            // Update the UI to reflect the rejected state
+            fetch(`/admin/documents/${currentDocumentId}/details`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(docData => {
+                // Update the status history and other details
+                updateDocumentDetailsView(docData);
+                
+                // Reload comments to include any system-generated comments
+                loadComments(currentDocumentId);
+                
+                // Hide action buttons and show processed indicator
+                const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+                if (actionButtonsContainer) {
+                    actionButtonsContainer.classList.add('hidden');
+                }
+                
+                const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+                if (processedStatusIndicator) {
+                    processedStatusIndicator.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing document details:', error);
+            });
         } else {
             showDocumentActionToast('rejected', data.error || 'Failed to reject document.', false);
         }
@@ -1753,6 +2675,10 @@ document.getElementById('finalizeRejectionBtn').addEventListener('click', functi
 
 // Toast timeout storage
 let documentActionToastTimeout = null;
+window.ASSET_URLS = window.ASSET_URLS || {
+  successIcon: '/images/successful.svg',
+  errorIcon: '/images/error.svg'
+};
 
 /**
  * Shows a toast notification for document actions
@@ -1834,9 +2760,11 @@ function showDocumentActionToast(action, message = '', isSuccess = true) {
 // Hide action toast
 function hideActionToast() {
     const toast = document.getElementById("documentActionToast");
-    toast.classList.add("hidden");
-    if (documentActionToastTimeout) {
-        clearTimeout(documentActionToastTimeout);
+    if (toast) {
+        toast.classList.add("hidden");
+        if (documentActionToastTimeout) {
+            clearTimeout(documentActionToastTimeout);
+        }
     }
 }
 
@@ -1854,3 +2782,163 @@ function hideAllToasts() {
         hideToast('approvalFail');
     }
 }
+
+// Track unsaved changes in modals
+let hasUnsavedChanges = false;
+const formsToTrack = [
+    { inputId: 'adminMessage', modalId: 'sendToAdminModal' },
+    { inputId: 'resubmissionMessage', modalId: 'resubmissionModal' },
+    { inputId: 'rejectionMessage', modalId: 'rejectConfirmationModal' },
+    { inputId: 'approvalMessage', modalId: 'finalApprovalMessageModal' }
+];
+
+// Function to set up unsaved changes tracking
+function setupUnsavedChangesTracking() {
+    // Track changes in modal textareas and inputs
+    formsToTrack.forEach(form => {
+        const input = document.getElementById(form.inputId);
+        if (input) {
+            // Set initial state when modal opens
+            const modal = document.getElementById(form.modalId);
+            if (modal) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.attributeName === 'class' && 
+                            !modal.classList.contains('hidden')) {
+                            // Modal just opened - reset the input's original value
+                            input.setAttribute('data-original-value', input.value);
+                            checkForChanges(input);
+                        }
+                    });
+                });
+                
+                observer.observe(modal, { attributes: true });
+            }
+            
+            // Track changes while typing
+            input.addEventListener('input', () => {
+                checkForChanges(input);
+            });
+            
+            // Reset tracking when the form is submitted successfully
+            const submitButtons = getSubmitButtonsForInput(form.inputId);
+            submitButtons.forEach(buttonId => {
+                const button = document.getElementById(buttonId);
+                if (button) {
+                    button.addEventListener('click', () => {
+                        // The hasUnsavedChanges will be reset when the modal is hidden
+                        // after successful form submission
+                    });
+                }
+            });
+        }
+    });
+    
+    // Add close modal button handlers to check for unsaved changes
+    document.querySelectorAll('[id$="ModalBtn"], [id^="cancel"], [id^="close"]').forEach(button => {
+        if (button && !button.hasUnsavedChangesHandler) {
+            // Instead of modifying onclick, add a capturing event listener that runs BEFORE any other click handlers
+            button.addEventListener('click', function(e) {
+                if (hasUnsavedChanges) {
+                    if (!confirm('You have unsaved changes. Are you sure you want to close this window?')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                    // If user confirmed, reset the tracking
+                    hasUnsavedChanges = false;
+                }
+            }, true); // true means use capturing phase (runs before regular handlers)
+            
+            button.hasUnsavedChangesHandler = true;
+        }
+    });
+
+    // Add the beforeunload event listener to the window
+    window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges) {
+            // The message text is determined by the browser and can't be customized for security reasons
+            const confirmationMessage = 'You have unsaved changes. If you leave now, your changes will be lost.';
+            e.returnValue = confirmationMessage;
+            return confirmationMessage;
+        }
+    });
+    
+    // Reset tracking when modals are closed
+    document.querySelectorAll('.modal, [id$="Modal"]').forEach(modal => {
+        if (modal) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.attributeName === 'class' && 
+                        modal.classList.contains('hidden')) {
+                        // Modal was just closed - reset tracking
+                        hasUnsavedChanges = false;
+                    }
+                });
+            });
+            
+            observer.observe(modal, { attributes: true });
+        }
+    });
+}
+
+// Helper function to check if an input has unsaved changes
+function checkForChanges(input) {
+    const originalValue = input.getAttribute('data-original-value') || '';
+    const currentValue = input.value || '';
+    
+    // Only mark as having changes if the field actually has content
+    // This prevents warnings when closing empty modals
+    if (currentValue.trim() !== originalValue.trim() && currentValue.trim() !== '') {
+        hasUnsavedChanges = true;
+    } else {
+        // Check if any other tracked inputs have changes before setting to false
+        let anyOtherChanges = false;
+        formsToTrack.forEach(form => {
+            const otherInput = document.getElementById(form.inputId);
+            if (otherInput && otherInput !== input) {
+                const otherOriginal = otherInput.getAttribute('data-original-value') || '';
+                const otherCurrent = otherInput.value || '';
+                if (otherCurrent.trim() !== otherOriginal.trim() && otherCurrent.trim() !== '') {
+                    anyOtherChanges = true;
+                }
+            }
+        });
+        
+        hasUnsavedChanges = anyOtherChanges;
+    }
+}
+
+// Helper function to map input IDs to their submit button IDs
+function getSubmitButtonsForInput(inputId) {
+    const buttonMap = {
+        'adminMessage': ['sendToAdminSubmitBtn'],
+        'resubmissionMessage': ['submitResubmissionBtn'],
+        'rejectionMessage': ['confirmFinalRejectBtn', 'finalizeRejectionBtn'],
+        'approvalMessage': ['sendApprovalMessageBtn']
+    };
+    
+    return buttonMap[inputId] || [];
+}
+
+// Initialize unsaved changes tracking when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    setupUnsavedChangesTracking();
+    setupCharacterLimits();
+    fixModalLabelOverlap();
+    
+    // Reset unsaved changes flag after successful form submissions
+    const originalShowToast = window.showDocumentActionToast;
+    
+    if (typeof originalShowToast === 'function') {
+        window.showDocumentActionToast = function(action, message = '', isSuccess = true) {
+            // If the action was successful, reset the unsaved changes flag
+            if (isSuccess) {
+                hasUnsavedChanges = false;
+            }
+            
+            // Call the original function
+            return originalShowToast(action, message, isSuccess);
+        };
+    }
+});

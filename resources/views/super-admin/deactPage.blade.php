@@ -2,7 +2,7 @@
 @section('content')
 @include('components.superAdminNavigation')
 
-<div class="max-h-9/10 bg-white bg-opacity-30 p-13">
+<div class="max-h-9/10 bg-white bg-opacity-30 px-13 py-6">
     <div class="flex justify-between items-center mb-1">
         <!-- Back to Dashboard Button -->
         <a href="{{ route('super-admin.dashboard') }}" 
@@ -28,7 +28,7 @@
                     </th>
                     <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center">
-                            <span class="whitespace-nowrap">Username</span>
+                            <span class="whitespace-nowrap">Name</span>
                             <div class="flex flex-col ml-2">
                                 <a href="{{ request()->fullUrlWithQuery(['sort' => 'username', 'direction' => 'asc']) }}"
                                 class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ ($sortField === 'username' && $sortDirection === 'asc') ? 'text-yellow-300' : '' }}">
@@ -45,7 +45,7 @@
                             </div>
                         </div>
                     </th>
-                    <th class="w-[20%] px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[30%] px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center justify-center">
                             <span class="whitespace-nowrap">Role</span>
                             <div class="flex flex-col ml-2">
@@ -64,7 +64,7 @@
                             </div>
                         </div>
                     </th>
-                    <th class="w-[30%] px-6 py-3 text-right pr-4 font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[20%] px-6 py-3 text-right pr-4 font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center justify-end">
                             <span class="whitespace-nowrap">Deactivation Date</span>
                             <div class="flex flex-col ml-2">
@@ -91,16 +91,17 @@
             <tbody class="divide-y divide-[#7A1212]/70">
             @forelse ($users as $user)
             <tr class="border-y-[0.1px] border-[#7A1212] bg-[#D9D9D9] hover:bg-[#7e7f80] transition duration-300 cursor-pointer"
-                    data-user="{{ json_encode([
-                        'username' => $user->username,
-                        'email' => $user->email,
-                        'role_name' => $user->role_name,
-                        'updated_at' => $user->updated_at->format('M-d-Y')
-                    ]) }}">
+    data-user="{{ json_encode([
+        'username' => $user->username,
+        'email' => $user->email,
+        'role_name' => $user->role_name,
+        'organization_acronym' => $user->organization_acronym,
+        'updated_at' => $user->updated_at->format('M-d-Y')
+    ]) }}">
                 <!-- Profile Picture Cell -->
                 <td class="w-[10%] px-6 py-4 pl-15">
                     <div class="flex justify-center">
-                        <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
+                        <div class="w-6 h-6 rounded-full overflow-hidden bg-gray-200">
                             @if ($user->profile_pic)
                                 <img src="{{ asset('storage/' . $user->profile_pic) }}" 
                                     alt="Profile" 
@@ -121,10 +122,10 @@
                     </div>
                 </td>
                 </td>
-                <td class="w-[20%] px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
+                <td class="w-[30%] px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
                     {{ $user->role_name }}
                 </td>
-                <td class="w-[30%] px-6 py-4 text-right pr-22 text-[Lexend] text-[17px] text-black text-semibold">
+                <td class="w-[20%] px-6 py-4 text-right pr-13 text-[Lexend] text-[17px] text-black text-semibold">
                     {{ $user->updated_at->format('F j, Y') }}
                 </td>
                 <!-- Reactivation Button Cell -->
@@ -169,7 +170,7 @@
             <li>
                 <a href="{{ $users->url(1) }}"
                     class="pagination-btn-first px-3 py-1 rounded-lg {{ $users->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
-                    First
+                    <
                 </a>
             </li>
 
@@ -185,7 +186,7 @@
             <li>
                 <a href="{{ $users->url($users->lastPage()) }}"
                     class="pagination-btn-last px-3 py-1 rounded-lg {{ $users->currentPage() == $users->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
-                    Last
+                    >
                 </a>
             </li>
         </ul>
@@ -206,7 +207,7 @@
         </button>
         <div class="text-left">
         <h3 class="text-lg font-semibold text-gray-900 mb-2 font-[Lexend]">Reactivate Account Confirmation</h3>
-        <p class="text-sm text-gray-500 mb-4">Are you sure you want to reactivate this account? Reactivating this account will notify the user via email.</p>
+        <p class="text-sm text-gray-500 mb-4">Are you sure you want to reactivate this account? All the data will be retrieved in its account.</p>
         
         <!-- Action Buttons -->
         <div class="flex justify-end space-x-4">
@@ -244,12 +245,12 @@
             <p class="text-sm text-gray-700 mb-4">Type the account email address to confirm reactivation</p>
             
             <div class="mb-4">
-                <label for="confirmReactivateEmail" class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]">Email Address</label>
+                <label for="confirmReactivateEmail" class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]"></label>
                 <input type="email" 
                     id="confirmReactivateEmail" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] transition duration-200"
                     placeholder="Enter email address">
-                <p id="reactivateEmailError" class="mt-1 text-sm text-red-600 hidden">Email address does not match.</p>
+                <p id="reactivateEmailError" class="mt-1 text-sm text-red-600 hidden">*Email address does not match.</p>
             </div>
             
             <!-- Action Button -->
@@ -278,8 +279,8 @@
 
         <!-- Success Message -->
         <div class="text-center mb-6">
-            <h3 class="text-xl font-semibold text-gray-800">Account Successfully Reactivated!</h3>
-            <p class="text-sm text-gray-500 mt-2">The user account has been reactivated successfully.</p>
+            <h3 class="text-xl font-semibold text-gray-800">Account Reactivated Successfully!</h3>
+            <p class="text-sm text-gray-500 mt-2">Your changes have been saved. Account has been reactivated and the user can use the account again.</p>
         </div>
 
         <!-- Okay Button -->
@@ -317,21 +318,28 @@
             
             <!-- User Details -->
             <div class="space-y-4">
-                <div class="block text-sm font-medium text-gray-700 mb-1">
-                    <h4 class="text-sm font-medium text-black mb-2 font-[Lexend]">Username</h4>
-                    <p id="deactivatedUserUsername" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
-                </div>
-                <div class="block text-sm font-medium text-gray-700 mb-2">
-                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Email</h4>
-                    <p id="deactivatedUserEmail" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
-                </div>
+                <!-- Role field -->
                 <div class="block text-sm font-medium text-gray-700 mb-2">
                     <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Role</h4>
-                    <p id="deactivatedUserRole" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
+                    <p id="deactivatedUserRole" class="text-sm font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
                 </div>
+
+                <!-- Name field -->
+                <div class="block text-sm font-medium text-gray-700 mb-1">
+                    <h4 class="text-sm font-medium text-black mb-2 font-[Lexend]">Name</h4>
+                    <p id="deactivatedUserUsername" class="text-sm font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
+                </div>
+
+                <!-- Acronym field - Initially hidden -->
+                <div id="deactivatedAcronymField" class="block text-sm font-medium text-gray-700 mb-2 hidden">
+                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Organization Acronym</h4>
+                    <p id="deactivatedUserAcronym" class="text-sm font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
+                </div>
+
+                <!-- Email field -->
                 <div class="block text-sm font-medium text-gray-700 mb-2">
-                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Deactivation Date</h4>
-                    <p id="deactivatedUserDate" class="text-lg font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
+                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Email</h4>
+                    <p id="deactivatedUserEmail" class="text-sm font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
                 </div>
             </div>
         </div>
