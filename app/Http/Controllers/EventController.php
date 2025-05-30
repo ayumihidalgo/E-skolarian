@@ -404,7 +404,59 @@ class EventController extends Controller
     {
         return strpos($dateString, ':') !== false;
     }
+public function rescheduleApprovedProposal(Request $request)
+{
+    try {
+        \Log::info('Reschedule proposal request received', $request->all());
+        
+        $request->validate([
+            'id' => 'required',
+            'start' => 'required|date',
+            'end' => 'nullable|date'
+        ]);
 
+        // Extract numeric ID from potentially prefixed ID
+        $eventId = $request->id;
+        if (str_contains($eventId, 'proposal_')) {
+            $eventId = str_replace('proposal_', '', $eventId);
+        }
+
+        \Log::info('Looking for event with ID:', ['id' => $eventId]);
+
+        // Find the event that originated from an approved proposal
+        $event = Event::find($eventId);
+
+        if (!$event) {
+            \Log::error('Event not found', ['id' => $eventId]);
+            return response()->json(['error' => 'Event not found'], 404);
+        }
+
+        \Log::info('Found event, rescheduling...', ['event' => $event->toArray()]);
+
+        // Update the event dates
+        $event->update([
+            'start_date' => $request->start,
+            'end_date' => $request->end,
+        ]);
+
+        \Log::info('Event rescheduled successfully', ['id' => $eventId]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Proposal event rescheduled successfully'
+        ]);
+
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        \Log::error('Validation error in reschedule proposal', ['errors' => $e->errors()]);
+        return response()->json(['error' => 'Validation failed', 'details' => $e->errors()], 422);
+    } catch (\Exception $e) {
+        \Log::error('Error rescheduling approved proposal', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json(['error' => 'Internal server error: ' . $e->getMessage()], 500);
+    }
+}
 
     public function destroy(Event $event)
     {

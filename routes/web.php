@@ -177,6 +177,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::post('/calendar/update', [EventController::class, 'updateCalendarEvent'])->name('calendar.update');
     Route::post('/calendar/destroy', [EventController::class, 'destroyCalendarEvent'])->name('calendar.destroy');
     Route::get('/calendar/approved-proposals', [EventController::class, 'getApprovedProposals'])->name('calendar.approved-proposals');
+    Route::post('/calendar/reschedule-proposal', [EventController::class, 'rescheduleApprovedProposal'])->name('calendar.reschedule-proposal');
     // User
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
