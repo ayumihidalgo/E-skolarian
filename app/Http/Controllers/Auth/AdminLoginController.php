@@ -60,7 +60,7 @@ class AdminLoginController extends Controller
             $request->session()->put('user_role', Auth::user()->role);
             $request->session()->put('user_email', Auth::user()->email);
 
-            return redirect()->intended('/admin/dashboard');
+            return redirect('/admin/dashboard');
         }
 
         // Increment login attempts with 5 minutes decay time
