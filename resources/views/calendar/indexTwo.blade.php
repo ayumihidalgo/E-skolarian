@@ -150,7 +150,7 @@
 <div id="discardChangesModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center hidden">
     <div class="bg-white rounded-lg shadow-lg w-full max-w-md modal-container modal-hidden">
         <div class="p-6">
-            <div class="text-center mb-6">
+            <div class="text-center mb-6">  
                 <h3 class="text-lg font-semibold text-gray-900 mb-2">Discard Changes</h3>
                 <p class="text-gray-600">Are you sure you want to leave without saving changes?</p>
             </div>
@@ -158,7 +158,7 @@
                 <button type="button" onclick="closeDiscardModal(false)" class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
                     Cancel
                 </button>
-                <button type="button" onclick="closeDiscardModal(true)" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                <button type="button" onclick="closeDiscardModal(true)" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700">
                     Confirm
                 </button>
             </div>
@@ -1296,6 +1296,43 @@ function showSuccessConfirmation(message) {
     }, 10);
 }
 
+function showUniversalSuccess(message) {
+    const modal = document.getElementById('confirmSaveModal');
+    const titleEl = modal.querySelector('h3');
+    const messageEl = modal.querySelector('p');
+    const cancelBtn = modal.querySelector('button[onclick*="false"]');
+    const confirmBtn = modal.querySelector('button[onclick*="true"]');
+    
+    // Configure as success modal
+    titleEl.textContent = 'Success!';
+    messageEl.textContent = message;
+    cancelBtn.style.display = 'none';
+    confirmBtn.textContent = 'OK';
+    confirmBtn.className = 'w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700';
+    
+    // Clear any existing callback first
+    confirmSaveCallback = null;
+    deleteCallback = null;
+    
+    // Set callback to reset modal
+    confirmSaveCallback = function() {
+        titleEl.textContent = 'Confirm Changes';
+        messageEl.textContent = 'Are you sure you want to save these changes?';
+        cancelBtn.style.display = 'inline-flex';
+        confirmBtn.textContent = 'Confirm';
+        confirmBtn.className = 'px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700';
+        confirmSaveCallback = null;
+    };
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    const modalContent = modal.querySelector('.modal-container');
+    setTimeout(() => {
+        modalContent.classList.remove('modal-hidden');
+        modalContent.classList.add('modal-visible');
+    }, 10);
+}
+
 // Discard Changes Modal functions
 function showDiscardChangesModal(callback) {
     const modal = document.getElementById('discardChangesModal');
@@ -1552,7 +1589,7 @@ function updateEvent() {
             }, 300);
         }
 
-        alert('Event rescheduled successfully!');
+        showUniversalSuccess('Event rescheduled successfully!');
     })
     .catch(error => {
         console.error('Error updating event:', error);
@@ -1591,7 +1628,7 @@ function deleteEvent(event) {
         console.log('Event deleted successfully:', data);
         calendarObj.refetchEvents();
         closeEventDetailsModal();
-        alert('Event deleted successfully!');
+        showUniversalSuccess('Event deleted successfully!');
     })
     .catch(error => {
         console.error('Error deleting event:', error);
@@ -1896,7 +1933,7 @@ function updateApprovedProposal() {
             }, 300);
         }
 
-        alert('Proposal event rescheduled successfully!');
+        showUniversalSuccess('Event Rescheduled Successfully!');
     })
     .catch(error => {
         console.error('Error rescheduling proposal:', error);
