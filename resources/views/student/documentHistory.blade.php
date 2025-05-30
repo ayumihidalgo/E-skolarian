@@ -183,164 +183,192 @@ $types = [
                     </div>
                 </div>
 
-                <!-- Pagination controls -->
-                @if (count($documents) > 0)
-                    <div class="mt-4 flex justify-center" id="paginationContainer">
-                        <nav>
-                            <ul class="inline-flex items-center space-x-2">
-                                <li>
-                                    <a href="{{ $documents->url(1) }}"
-                                        class="pagination-btn-first px-3 py-1 rounded-lg {{ $documents->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
-                                        First
-                                    </a>
-                                </li>
+          <!-- Pagination controls -->
+        @if(count($documents) > 0)
+        <div class="mt-4 flex justify-center" id="paginationContainer">
+            <nav>
+                <ul class="inline-flex items-center space-x-2">
+                    <!-- Previous page button -->
+                    <li>
+                        <a href="{{ $documents->previousPageUrl() }}"
+                            class="pagination-btn-prev px-3 py-1 rounded-lg {{ $documents->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
+                            <
+                                </a>
+                    </li>
 
-                                @for ($i = 1; $i <= $documents->lastPage(); $i++)
-                                    <li>
-                                        <a href="{{ $documents->url($i) }}"
-                                            class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
-                                            {{ $i }}
-                                        </a>
-                                    </li>
-                                @endfor
+                    <!-- Page numbers -->
+                    @for ($i = 1; $i <= $documents->lastPage(); $i++)
+                        <li>
+                            <a href="{{ $documents->url($i) }}"
+                                class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
+                                {{ $i }}
+                            </a>
+                        </li>
+                        @endfor
 
-                                <li>
-                                    <a href="{{ $documents->url($documents->lastPage()) }}"
-                                        class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
-                                        Last
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                @endif
-            </div>
+                        <!-- Next page button -->
+                        <li>
+                            <a href="{{ $documents->nextPageUrl() }}"
+                                class="pagination-btn-next px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
+                                >
+                            </a>
+                        </li>
+                </ul>
+            </nav>
         </div>
-        @include('components.footer')
+        @endif
     </div>
+</div>
 
-    <script>
-        /**
-         * Applies all active filters to the table data in real-time without page reload
-         */
-        function applyFilters() {
-            // Get filter values
-            const statusFilter = document.getElementById("statusFilter").value;
-            const typeFilter = document.getElementById("typeFilter").value;
-            const searchTerm = document.querySelector('input[placeholder="Search..."]').value.toLowerCase();
-
-            // Get all rows in the table
-            const rows = document.querySelectorAll("#documentTable tbody tr[data-type]");
-
-            let visibleRowCount = 0;
-
-            // Loop through each row and apply filters
-            rows.forEach(row => {
-                const docType = row.getAttribute('data-type');
-                const docStatus = row.getAttribute('data-status');
-                const rowText = row.textContent.toLowerCase();
-
-                // Check if row matches all filters
-                const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
-                const matchesType = typeFilter === 'Type' || typeFilter === 'All' || docType === typeFilter;
-                const matchesStatus = statusFilter === 'Status' || statusFilter === 'All' || docStatus ===
-                    statusFilter;
-
-                // Show or hide the row based on filter matches
-                const shouldShow = matchesSearch && matchesType && matchesStatus;
-                row.style.display = shouldShow ? '' : 'none';
-
-                if (shouldShow) {
-                    visibleRowCount++;
-                }
-            });
-
-            // Handle the "No documents found" row
-            const noDocRow = document.querySelector("#documentTable tbody tr:not([data-type])");
-            if (noDocRow) {
-                // Show "No documents found" row only when no data rows are visible
-                noDocRow.style.display = visibleRowCount === 0 ? '' : 'none';
-            } else if (visibleRowCount === 0) {
-                // If no "No documents found" row exists and no rows are visible, create one
-                const tbody = document.querySelector("#documentTable tbody");
-                const newRow = document.createElement('tr');
-                const headerCount = document.querySelectorAll("#documentTable thead th").length;
-
-                newRow.innerHTML = `
-            <td colspan="${headerCount}" class="px-4 py-8 text-center text-gray-500">
-                <div class="flex flex-col items-center justify-center w-full h-full">
-                    <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No documents found" class="mb-4 w-40 h-40" />
-                    <span>No documents found.</span>
-                </div>
-            </td>
-        `;
-
-                tbody.appendChild(newRow);
-            }
-
-            // Show/hide pagination based on visible records after filtering
-            const paginationContainer = document.getElementById('paginationContainer');
-            if (paginationContainer) {
-                paginationContainer.style.display = visibleRowCount === 0 ? 'none' : '';
-            }
-        }
-
-        // Add event listeners for filter controls
-        document.getElementById("statusFilter").addEventListener("change", applyFilters);
-        document.getElementById("typeFilter").addEventListener("change", applyFilters);
-
-        // For search, use debouncing to avoid too many filtering operations
+<script>
+    // Track sort direction for each column
+    let sortDirection = [true, true, true, true, true];
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Filter form elements
+        const statusFilter = document.getElementById("statusFilter");
+        const typeFilter = document.getElementById("typeFilter");
         const searchInput = document.querySelector('input[placeholder="Search..."]');
+        
+        // Handle filter changes - immediately apply server-side filtering
+        function handleFilterChange() {
+            applyServerSideFilters();
+        }
+        
+        // Add event listeners to filters
+        statusFilter.addEventListener("change", handleFilterChange);
+        typeFilter.addEventListener("change", handleFilterChange);
+        
+        // For search, use debouncing
         let searchTimeout;
         searchInput.addEventListener("input", function() {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(applyFilters, 300);
+            searchTimeout = setTimeout(handleFilterChange, 500); // Wait for 500ms before applying filter
         });
+        
+        // Handle pagination links (AJAX navigation)
+        document.addEventListener('click', function(e) {
+            const paginationLink = e.target.closest('a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
+            
+            if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
+                e.preventDefault();
+                const url = paginationLink.getAttribute('href');
+                
+                // Show loading indicator
+                const tableContainer = document.querySelector('#tableContainer');
+                tableContainer.classList.add('opacity-50');
+                
+                // Fetch the new page content
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary element to parse the HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Extract the table body content
+                    const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
+                    document.querySelector('#documentTable tbody').innerHTML = newTableBody;
+                    
+                    // Update pagination
+                    const newPagination = doc.querySelector('#paginationContainer');
+                    if (newPagination) {
+                        const currentPagination = document.querySelector('#paginationContainer');
+                        if (currentPagination) {
+                            currentPagination.outerHTML = newPagination.outerHTML;
+                        }
+                    }
+                    
+                    // Update URL without reload
+                    window.history.pushState({}, '', url);
+                    
+                    // Remove loading state
+                    tableContainer.classList.remove('opacity-50');
+                })
+                .catch(error => {
+                    console.error('Error loading page:', error);
+                    tableContainer.classList.remove('opacity-50');
+                });
+            }
+        });
+    });
 
-        // Track sort direction for each column
-        let sortDirection = [true, true, true, true, true];
-
-        /**
-         * Sorts the table based on the selected column
-         */
-        function sortTable(columnIndex) {
-            const table = document.getElementById("documentTable");
-            const tbody = table.tBodies[0];
-            const rows = Array.from(tbody.rows).filter(row => row.hasAttribute('data-type'));
-
-            // Don't sort if there are no data rows
-            if (rows.length <= 1) return;
-
-            rows.sort((a, b) => {
-                let valA = a.cells[columnIndex].textContent.trim().toLowerCase();
-                let valB = b.cells[columnIndex].textContent.trim().toLowerCase();
-
-                // Special handling for date column (index 2)
-                if (columnIndex === 2) {
-                    // Convert date strings to Date objects for proper comparison
-                    const dateA = new Date(valA);
-                    const dateB = new Date(valB);
-                    return sortDirection[columnIndex] ? dateA - dateB : dateB - dateA;
-                }
-
-                // Normal string comparison for other columns
-                if (sortDirection[columnIndex]) {
-                    return valA.localeCompare(valB);
-                } else {
-                    return valB.localeCompare(valA);
-                }
-            });
-
-            // Toggle sort direction for next click
-            sortDirection[columnIndex] = !sortDirection[columnIndex];
-
-            // Reattach sorted rows to table
-            rows.forEach(row => tbody.appendChild(row));
-
-            // Keep the "no documents" row at the bottom if it exists
-            const noDocRow = Array.from(table.tBodies[0].rows).find(row => !row.hasAttribute('data-type'));
-            if (noDocRow) tbody.appendChild(noDocRow);
+    /**
+     * Apply server-side filters via AJAX
+     */
+    function applyServerSideFilters() {
+        // Show loading state
+        const tableContainer = document.querySelector('#tableContainer');
+        tableContainer.classList.add('opacity-50');
+        
+        // Build the query parameters
+        const params = new URLSearchParams();
+        
+        const statusFilter = document.getElementById("statusFilter").value;
+        const typeFilter = document.getElementById("typeFilter").value;
+        const searchInput = document.querySelector('input[placeholder="Search..."]').value;
+        
+        if (statusFilter !== 'Status') {
+            params.append('status', statusFilter);
         }
+        
+        if (typeFilter !== 'Type') {
+            params.append('type', typeFilter);
+        }
+        
+        if (searchInput.trim() !== '') {
+            params.append('search', searchInput);
+        }
+        
+        // Create the URL
+        const url = `${window.location.pathname}?${params.toString()}`;
+        
+        // Fetch filtered results
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Parse the HTML response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Update the table body
+            const newTableBody = doc.querySelector('#documentTable tbody');
+            if (newTableBody) {
+                document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+            }
+            
+            // Update pagination
+            const newPagination = doc.querySelector('#paginationContainer');
+            const currentPagination = document.querySelector('#paginationContainer');
+            
+            if (newPagination) {
+                if (currentPagination) {
+                    currentPagination.outerHTML = newPagination.outerHTML;
+                }
+            } else if (currentPagination) {
+                // If no new pagination but we had one before, hide it
+                currentPagination.style.display = 'none';
+            }
+            
+            // Update URL without reload for bookmarking
+            window.history.pushState({}, '', url);
+            
+            // Remove loading state
+            tableContainer.classList.remove('opacity-50');
+        })
+        .catch(error => {
+            console.error('Error applying filters:', error);
+            tableContainer.classList.remove('opacity-50');
+        });
+    }
 
         /**
          * Navigate to document preview page for a specific document
@@ -349,7 +377,104 @@ $types = [
             window.location.href = "{{ route('student.documentPreview', ['id' => ':id']) }}".replace(':id', id);
         }
 
-        // Initialize filters on page load
-        document.addEventListener("DOMContentLoaded", applyFilters);
-    </script>
+    // Server-side sorting functionality
+    function sortTable(columnIndex) {
+        const columnMap = [
+            'control_tag',   // Tag - index 0
+            'subject',       // Title - index 1
+            'created_at',    // Date Submitted - index 2
+            'type'           // Type - index 3
+        ];
+
+        const columnName = columnMap[columnIndex];
+        if (!columnName) return;
+
+        // Toggle sort direction
+        sortDirection[columnIndex] = !sortDirection[columnIndex];
+        const direction = sortDirection[columnIndex] ? 'asc' : 'desc';
+
+        // Show loading state
+        const tableContainer = document.querySelector('#tableContainer');
+        tableContainer.classList.add('opacity-50');
+
+        // Get current filter values to preserve them
+        const statusFilter = document.getElementById("statusFilter").value;
+        const typeFilter = document.getElementById("typeFilter").value;
+        const searchInput = document.querySelector('input[placeholder="Search..."]').value;
+
+        // Build query parameters
+        const params = new URLSearchParams(window.location.search);
+
+        // Add sorting parameters
+        params.set('sort_by', columnName);
+        params.set('sort_dir', direction);
+
+        // Keep filter parameters
+        if (statusFilter !== 'Status') {
+            params.set('status', statusFilter);
+        }
+
+        if (typeFilter !== 'Type') {
+            params.set('type', typeFilter);
+        }
+
+        if (searchInput.trim() !== '') {
+            params.set('search', searchInput);
+        }
+
+        const url = `${window.location.pathname}?${params.toString()}`;
+
+        // Fetch sorted results from server
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            // Update table content
+            const newTableBody = doc.querySelector('#documentTable tbody');
+            if (newTableBody) {
+                document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+            }
+
+            // Update pagination if needed
+            const newPagination = doc.querySelector('#paginationContainer');
+            const currentPagination = document.querySelector('#paginationContainer');
+
+            if (newPagination && currentPagination) {
+                currentPagination.outerHTML = newPagination.outerHTML;
+            }
+
+            // Update URL without page reload
+            window.history.pushState({}, '', url);
+
+            // Update sort indicator
+            updateSortIndicator(columnIndex);
+
+            // Remove loading state
+            tableContainer.classList.remove('opacity-50');
+        })
+        .catch(error => {
+            console.error('Error sorting table:', error);
+            tableContainer.classList.remove('opacity-50');
+        });
+    }
+
+    // Update the sort direction indicator
+    function updateSortIndicator(columnIndex) {
+        const sortIcons = document.querySelectorAll('thead button img');
+        sortIcons.forEach(icon => {
+            icon.classList.remove('rotate-180');
+        });
+
+        const clickedIcon = document.querySelector(`thead th:nth-child(${columnIndex + 1}) button img`);
+        if (clickedIcon && !sortDirection[columnIndex]) {
+            clickedIcon.classList.add('rotate-180');
+        }
+    }
+</script>
 @endsection

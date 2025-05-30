@@ -5,7 +5,7 @@
 
     <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
         @include('components.adminNavBarComponent')
-        <div id="main-content" class="transition-all duration-300 ml-[20%]">
+        <div class="w-full px-6 py-8">
             <div class="w-full min-h-screen bg-[#f2f4f7] px-6 py-8 flex flex-col">
                 <!-- Header section with title and history page link -->
                 <div class="flex justify-between items-center mb-4">
@@ -86,42 +86,42 @@
                     </div>
                 </div>
 
-                <!-- Main table container for displaying archived documents -->
-                <div id="tableContainer" class="bg-white rounded-[24px] shadow-md overflow-hidden p-6">
-                    <div class="h-auto">
-                        <div class="overflow-x-auto">
-                            <table class="w-full table-auto" id="documentTable">
-                                <!-- Table header with sortable columns -->
-                                <thead class="bg-white text-left">
-                                    <tr>
-                                        <!-- Select all checkbox column -->
-                                        <th class="px-4 py-2 whitespace-nowrap">
-                                            <input type="checkbox" id="selectAll" class="w-4 h-4 cursor-pointer">
-                                        </th>
-                                        <!-- Define column headers array -->
-                                        @php $headers = ['Tag', 'Organization', 'Title', 'Date Archived', 'Type']; @endphp
-                                        @foreach ($headers as $i => $header)
-                                            <th class="px-4 py-2 whitespace-nowrap max-w-[160px] truncate">
-                                                <!-- Sortable column headers with icons -->
-                                                <button onclick="sortTable({{ $i + 1 }})"
-                                                    class="flex items-center gap-1 group">
-                                                    <span>{{ $header }}</span>
-                                                    <img src="{{ asset('images/sortIcon.svg') }}" alt="Sort"
-                                                        class="w-3 h-3 text-gray-500 group-hover:text-black transition">
-                                                </button>
-                                            </th>
-                                        @endforeach
-                                        <!-- Remove the Action buttons column header -->
-                                    </tr>
-                                </thead>
-                                <!-- Table body - empty state shown when no archived documents exist -->
-                                <tbody>
-                                    @forelse ($documents as $document)
-                                        @php
-                                            // Extract organization acronym from control tag
-                                            $parts = explode('_', $document->control_tag);
-                                            $acronym = count($parts) > 0 ? $parts[0] : '';
-                                            $orgName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
+        <!-- Main table container for displaying archived documents -->
+        <div id="tableContainer" class="bg-white rounded-[24px] shadow-md overflow-hidden p-6">
+            <div class="h-auto">
+                <div class="overflow-x-auto">
+                    <table class="w-full table-auto" id="documentTable">
+                        <!-- Table header with sortable columns -->
+                        <thead class="bg-white text-left">
+                            <tr>
+                                <!-- Select all checkbox column -->
+                                <th class="px-4 py-2 whitespace-nowrap">
+                                    <input type="checkbox" id="selectAll" class="w-4 h-4 cursor-pointer">
+                                </th>
+                                <!-- Define column headers array -->
+                                @php $headers = ['Tag', 'Organization', 'Title', 'Date Archived', 'Type', 'Status']; @endphp
+                                @foreach ($headers as $i => $header)
+                                <th class="px-4 py-2 whitespace-nowrap max-w-[160px] truncate">
+                                    <!-- Sortable column headers with icons -->
+                                    <button onclick="sortTable({{ $i + 1 }})"
+                                        class="flex items-center gap-1 group">
+                                        <span>{{ $header }}</span>
+                                        <img src="{{ asset('images/sortIcon.svg') }}" alt="Sort"
+                                            class="w-3 h-3 text-gray-500 group-hover:text-black transition">
+                                    </button>
+                                </th>
+                                @endforeach
+                                <!-- Remove the Action buttons column header -->
+                            </tr>
+                        </thead>
+                        <!-- Table body - empty state shown when no archived documents exist -->
+                        <tbody>
+                            @forelse ($documents as $document)
+                            @php
+                            // Extract organization acronym from control tag
+                            $parts = explode('_', $document->control_tag);
+                            $acronym = count($parts) > 0 ? $parts[0] : '';
+                            $orgName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
 
                                             // Map the acronym to a color key for consistent color coding
                                             $colorKey = match ($acronym) {
@@ -144,66 +144,73 @@
                                                 ? $tagColors[$colorKey]
                                                 : 'text-gray-500';
 
-                                            // Format archive date for display
-                                            $archivedDate = \Carbon\Carbon::parse($document->archived_at)->format(
-                                                'm/d/Y',
-                                            );
-                                        @endphp
-                                        <!-- Document row with data attributes for filtering -->
-                                        <tr class="border-b border-gray-300 hover:bg-gray-100"
-                                            data-org-acronym="{{ $acronym }}" data-type="{{ $document->type }}"
-                                            data-id="{{ $document->id }}">
-                                            <!-- Checkbox for row selection -->
-                                            <td class="px-4 py-2">
-                                                <input type="checkbox" class="row-checkbox w-4 h-4 cursor-pointer"
-                                                    data-id="{{ $document->id }}">
-                                            </td>
-                                            <!-- Document tag with color coding -->
-                                            <td class="px-4 py-2 font-semibold truncate max-w-[120px] cursor-pointer"
-                                                onclick="viewDocument({{ $document->id }})">
-                                                <span class="{{ $tagColor }}">{{ $document->control_tag }}</span>
-                                            </td>
-                                            <!-- Organization name with tooltip for full name -->
-                                            <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
-                                                onclick="viewDocument({{ $document->id }})" title="{{ $orgName }}">
-                                                {{ $orgName }}
-                                            </td>
-                                            <!-- Document subject with tooltip for full text -->
-                                            <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
-                                                onclick="viewDocument({{ $document->id }})"
-                                                title="{{ $document->subject }}">
-                                                {{ $document->subject }}
-                                            </td>
-                                            <!-- Date archived -->
-                                            <td class="px-4 py-2 truncate max-w-[120px] cursor-pointer"
-                                                onclick="viewDocument({{ $document->id }})">
-                                                {{ $archivedDate }}
-                                            </td>
-                                            <!-- Document type with tooltip -->
-                                            <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
-                                                onclick="viewDocument({{ $document->id }})"
-                                                title="{{ $document->type }}">
-                                                {{ $document->type }}
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <!-- Empty state when no documents are found -->
-                                        <tr>
-                                            <td colspan="{{ count($headers) }}"
-                                                class="px-4 py-8 text-center text-gray-500 align-middle">
-                                                <div class="flex flex-col items-center justify-center min-h-[300px] pl-36">
-                                                    <img src="{{ asset('images/viewNoFileFound.svg') }}"
-                                                        alt="No documents found" class="mb-4 w-40 h-40" />
-                                                    <span>No documents found.</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                            // Format archive date for display
+                            $archivedDate = \Carbon\Carbon::parse($document->archived_at)->format('m/d/Y');
+                            @endphp
+                            <!-- Document row with data attributes for filtering -->
+                            <tr class="border-b border-gray-300 hover:bg-gray-100"
+                                data-org-acronym="{{ $acronym }}" 
+                                data-type="{{ $document->type }}" 
+                                data-status="{{ $document->status }}" 
+                                data-id="{{ $document->id }}">
+                                <!-- Checkbox for row selection -->
+                                <td class="px-4 py-2">
+                                    <input type="checkbox" class="row-checkbox w-4 h-4 cursor-pointer" data-id="{{ $document->id }}">
+                                </td>
+                                <!-- Document tag with color coding -->
+                                <td class="px-4 py-2 font-semibold truncate max-w-[120px] cursor-pointer"
+                                    onclick="viewDocument({{ $document->id }})">
+                                    <span class="{{ $tagColor }}">{{ $document->control_tag }}</span>
+                                </td>
+                                <!-- Organization name with tooltip for full name -->
+                                <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
+                                    onclick="viewDocument({{ $document->id }})"
+                                    title="{{ $orgName }}">
+                                    {{ $orgName }}
+                                </td>
+                                <!-- Document subject with tooltip for full text -->
+                                <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
+                                    onclick="viewDocument({{ $document->id }})"
+                                    title="{{ $document->subject }}">
+                                    {{ $document->subject }}
+                                </td>
+                                <!-- Date archived -->
+                                <td class="px-4 py-2 truncate max-w-[120px] cursor-pointer"
+                                    onclick="viewDocument({{ $document->id }})">
+                                    {{ $archivedDate }}
+                                </td>
+                                <!-- Document type with tooltip -->
+                                <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
+                                    onclick="viewDocument({{ $document->id }})"
+                                    title="{{ $document->type }}">
+                                    {{ $document->type }}
+                                </td>
+                                <!-- Status with color-coded badge -->
+                                <td class="px-4 py-2 cursor-pointer"
+                                    onclick="viewDocument({{ $document->id }})">
+                                    <span class="px-4 py-1 rounded-full text-white inline-block min-w-[100px] text-center 
+                                              {{ $document->status === 'Approved' ? 'bg-[#10B981]' : 
+                                               ($document->status === 'Rejected' ? 'bg-[#EF4444]' : 'bg-[#F59E0B]') }}">
+                                        {{ $document->status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            @empty
+                            <!-- Empty state when no documents are found -->
+                            <tr>
+                                <td colspan="{{ count($headers) }}" class="px-4 py-8 text-center text-gray-500 align-middle">
+                                    <div class="flex flex-col items-center justify-center min-h-[300px] pl-36">
+                                        <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No documents found" class="mb-4 w-40 h-40" />
+                                        <span>No documents found.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
+            </div>
+        </div>
 
                 <!-- Pagination controls -->
                 @if (count($documents) > 0)
@@ -274,294 +281,381 @@
         </div>
     </div>
 
-    <script>
-        // Configuration constants
-        let selectedItems = new Set(); // Set to track selected document IDs
+<script>
+    // Keep track of which documents are checked
+    let selectedItems = new Set();
 
-        /**
-         * Updates the selected document count and button state
-         */
-        function updateSelectedCount() {
-            const count = selectedItems.size;
-            document.getElementById('selectedCount').textContent = count;
-            document.getElementById('restoreSelectedBtn').disabled = count === 0;
+    // Update the counter showing how many documents are selected
+    function updateSelectedCount() {
+        const count = selectedItems.size;
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('restoreSelectedBtn').disabled = count === 0;
+    }
+
+    // Get filtered results from the server
+    function applyServerSideFilters() {
+        // Show loading effect
+        const tableContainer = document.querySelector('#tableContainer');
+        tableContainer.classList.add('opacity-50');
+        
+        // Clear any previous selections
+        selectedItems.clear();
+        updateSelectedCount();
+        
+        // Build the filter query
+        const params = new URLSearchParams();
+        
+        // Get what the user has entered in the filters
+        const searchTerm = document.querySelector('input[placeholder="Search..."]').value.trim();
+        const organizationFilter = document.getElementById("organizationFilter").value;
+        const typeFilter = document.getElementById("typeFilter").value;
+        
+        // Only include filters that are actually set
+        if (organizationFilter !== 'Organization') {
+            params.append('organization', organizationFilter);
         }
-
-        /**
-         * Apply filters to the document table
-         */
-        function applyFilters() {
-            const searchTerm = document.querySelector('input[placeholder="Search..."]').value.toLowerCase();
-            const organizationFilter = document.getElementById("organizationFilter").value;
-            const typeFilter = document.getElementById("typeFilter").value;
-
-            const rows = document.querySelectorAll("#documentTable tbody tr");
-
-            let visibleRowCount = 0;
-
-            rows.forEach(row => {
-                // Skip the "No documents found" row
-                if (!row.getAttribute('data-id')) return;
-
-                const orgAcronym = row.getAttribute('data-org-acronym');
-                const docType = row.getAttribute('data-type');
-                const rowText = row.textContent.toLowerCase();
-
-                const matchesSearch = searchTerm === '' || rowText.includes(searchTerm);
-                const matchesOrg = organizationFilter === 'All' || organizationFilter === 'Organization' ||
-                    orgAcronym === organizationFilter;
-                const matchesType = typeFilter === 'All' || typeFilter === 'Type' || docType === typeFilter;
-
-                const shouldShow = (matchesSearch && matchesOrg && matchesType);
-                row.style.display = shouldShow ? '' : 'none';
-
-                if (shouldShow) {
-                    visibleRowCount++;
+        
+        if (typeFilter !== 'Type') {
+            params.append('type', typeFilter);
+        }
+        
+        if (searchTerm) {
+            params.append('search', searchTerm);
+        }
+        
+        const url = `${window.location.pathname}?${params.toString()}`;
+        
+        // Ask the server for filtered results
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Process the server's response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Update the table with new data
+            const newTableBody = doc.querySelector('#documentTable tbody');
+            if (newTableBody) {
+                document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+            }
+            
+            // Update the page numbers
+            const newPagination = doc.querySelector('#paginationContainer');
+            const currentPagination = document.querySelector('#paginationContainer');
+            
+            if (newPagination) {
+                if (currentPagination) {
+                    currentPagination.outerHTML = newPagination.outerHTML;
                 }
-            });
-
-            // Add this code to disable the "Select All" checkbox when no documents are visible
+            } else {
+                const currentPagination = document.querySelector('#paginationContainer');
+                if (currentPagination) {
+                    currentPagination.style.display = 'none';
+                }
+            }
+            
+            // Update the URL so bookmarks work
+            window.history.pushState({}, '', url);
+            
+            // Handle the "select all" checkbox state
+            const hasDocuments = document.querySelectorAll("#documentTable tbody tr[data-id]").length > 0;
             const selectAllCheckbox = document.getElementById('selectAll');
             if (selectAllCheckbox) {
-                selectAllCheckbox.disabled = visibleRowCount === 0;
-                if (visibleRowCount === 0) {
+                selectAllCheckbox.disabled = !hasDocuments;
+                if (!hasDocuments) {
                     selectAllCheckbox.checked = false;
                 }
             }
+            
+            // Remove the loading effect
+            tableContainer.classList.remove('opacity-50');
+        })
+        .catch(error => {
+            console.error('Error applying filters:', error);
+            tableContainer.classList.remove('opacity-50');
+        });
+    }
 
-            // Show/hide "No documents found" message
-            const noDocRow = document.querySelector("#documentTable tbody tr:not([data-id])");
-            if (!noDocRow && visibleRowCount === 0) {
-                const tbody = document.querySelector("#documentTable tbody");
-                const headerCount = document.querySelectorAll("#documentTable thead th").length;
-
-                const newRow = document.createElement('tr');
-                newRow.innerHTML = `
-                <td colspan="${headerCount}" class="px-4 py-8 text-center text-gray-500 align-middle">
-                    <div class="flex flex-col items-center justify-center min-h-[300px]">
-                        <img src="{{ asset('images/viewNoFileFound.svg') }}" alt="No documents found" class="mb-4 w-40 h-40" />
-                        <span>No documents found matching your criteria.</span>
-                    </div>
-                </td>
-            `;
-                tbody.appendChild(newRow);
-            } else if (noDocRow) {
-                noDocRow.style.display = visibleRowCount === 0 ? 'table-row' : 'none';
+    // Sort the table when a column header is clicked
+    function sortTable(columnIndex) {
+        const columnMap = [
+            'control_tag',     // Tag column
+            'organization',    // Organization column
+            'subject',         // Title column
+            'archived_at',     // Date column
+            'type',            // Document type column
+            'status'           // Status column
+        ];
+        
+        const columnName = columnMap[columnIndex - 1];
+        if (!columnName) return;
+        
+        // Toggle sort direction
+        sortDirection[columnIndex] = !sortDirection[columnIndex];
+        const direction = sortDirection[columnIndex] ? 'asc' : 'desc';
+        
+        // Show loading effect
+        const tableContainer = document.querySelector('#tableContainer');
+        tableContainer.classList.add('opacity-50');
+        
+        // Keep any existing filters
+        const orgFilter = document.getElementById("organizationFilter").value;
+        const typeFilter = document.getElementById("typeFilter").value;
+        const searchInput = document.querySelector('input[placeholder="Search..."]').value;
+        
+        const params = new URLSearchParams(window.location.search);
+        
+        // Add sorting parameters
+        params.set('sort_by', columnName);
+        params.set('sort_dir', direction);
+        
+        // Keep filter parameters
+        if (orgFilter !== 'Organization') {
+            params.set('organization', orgFilter);
+        }
+        
+        if (typeFilter !== 'Type') {
+            params.set('type', typeFilter);
+        }
+        
+        if (searchInput.trim() !== '') {
+            params.set('search', searchInput);
+        }
+        
+        const url = `${window.location.pathname}?${params.toString()}`;
+        
+        // Ask the server for sorted results
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
             }
-
-            // Show/hide pagination based on visible rows
-            const paginationContainer = document.getElementById('paginationContainer');
-            if (paginationContainer) {
-                paginationContainer.style.display = visibleRowCount === 0 ? 'none' : '';
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Update the table with sorted data
+            const newTableBody = doc.querySelector('#documentTable tbody');
+            if (newTableBody) {
+                document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
             }
+            
+            // Update pagination if needed
+            const newPagination = doc.querySelector('#paginationContainer');
+            const currentPagination = document.querySelector('#paginationContainer');
+            
+            if (newPagination && currentPagination) {
+                currentPagination.outerHTML = newPagination.outerHTML;
+            }
+            
+            // Update URL
+            window.history.pushState({}, '', url);
+            
+            // Update sort arrow icon
+            updateSortIndicator(columnIndex);
+            
+            // Remove loading effect
+            tableContainer.classList.remove('opacity-50');
+            
+            // Reset selections
+            selectedItems.clear();
+            updateSelectedCount();
+            
+            // Uncheck "select all" box
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error sorting table:', error);
+            tableContainer.classList.remove('opacity-50');
+        });
+    }
+
+    // Update the arrow icon next to the sorted column
+    function updateSortIndicator(columnIndex) {
+        const sortIcons = document.querySelectorAll('thead button img');
+        sortIcons.forEach(icon => {
+            icon.classList.remove('rotate-180');
+        });
+        
+        const clickedIcon = document.querySelector(`thead th:nth-child(${columnIndex + 1}) button img`);
+        if (clickedIcon && !sortDirection[columnIndex]) {
+            clickedIcon.classList.add('rotate-180');
         }
+    }
 
-        /**
-         * Sort table by column index
-         */
-        function sortTable(columnIndex) {
-            const table = document.getElementById("documentTable");
-            const tbody = table.querySelector("tbody");
-            const rows = Array.from(tbody.querySelectorAll("tr[data-id]"));
+    // Open document details page
+    function viewDocument(id) {
+        window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
+    }
 
-            // Toggle sort direction for this column
-            sortDirection[columnIndex] = !sortDirection[columnIndex];
-            const direction = sortDirection[columnIndex] ? 1 : -1;
-
-            // Sort the rows
-            rows.sort((a, b) => {
-                const cellA = a.querySelectorAll("td")[columnIndex].textContent.trim();
-                const cellB = b.querySelectorAll("td")[columnIndex].textContent.trim();
-
-                if (isNaN(cellA) || isNaN(cellB)) {
-                    return direction * cellA.localeCompare(cellB);
-                } else {
-                    return direction * (parseFloat(cellA) - parseFloat(cellB));
-                }
-            });
-
-            // Remove all rows
-            rows.forEach(row => row.remove());
-
-            // Add sorted rows back to table
-            rows.forEach(row => tbody.appendChild(row));
-        }
-
-        /**
-         * Navigate to document preview page
-         */
-        function viewDocument(id) {
-            window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
-        }
-
-        /**
-         * Restores selected documents from archive - ONLY called from the confirmation modal
-         */
-        function processRestore() {
-            if (selectedItems.size === 0) return;
+    // Actually restore the selected documents
+    function processRestore() {
+        if (selectedItems.size === 0) return;
 
             const documentIds = Array.from(selectedItems);
 
-            fetch("{{ route('admin.restoreDocuments') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        document_ids: documentIds
-                    })
+        fetch("{{ route('admin.restoreDocuments') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    document_ids: documentIds
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Reload the page to show updated list
-                        window.location.reload();
-                    } else {
-                        alert(data.message || 'Failed to restore documents.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while restoring documents.');
-                });
-        }
-
-        /**
-         * Show the restore confirmation modal
-         */
-        function showRestoreConfirmation() {
-            if (selectedItems.size > 0) {
-                document.getElementById("restoreConfirmationModal").classList.remove("hidden");
-            }
-        }
-
-        // Track sort direction for each column
-        let sortDirection = [true, true, true, true, true, true];
-
-        // Event delegation for document interactions
-        document.addEventListener('click', function(e) {
-            // Handle checkboxes through delegation instead of direct binding
-            if (e.target.id === 'selectAll') {
-                const checkboxes = document.querySelectorAll('.row-checkbox');
-                checkboxes.forEach(checkbox => {
-                    if (checkbox.closest('tr').style.display !== 'none') {
-                        checkbox.checked = e.target.checked;
-                        const id = checkbox.getAttribute('data-id');
-                        if (e.target.checked) {
-                            selectedItems.add(id);
-                        } else {
-                            selectedItems.delete(id);
-                        }
-                    }
-                });
-                updateSelectedCount();
-            } else if (e.target.classList.contains('row-checkbox')) {
-                const id = e.target.getAttribute('data-id');
-                if (e.target.checked) {
-                    selectedItems.add(id);
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
                 } else {
-                    selectedItems.delete(id);
+                    alert(data.message || 'Failed to restore documents.');
                 }
-                updateSelectedCount();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while restoring documents.');
+            });
+    }
+
+    // Display the confirmation dialog before restoring
+    function showRestoreConfirmation() {
+        if (selectedItems.size > 0) {
+            document.getElementById("restoreConfirmationModal").classList.remove("hidden");
+        }
+    }
+
+    // Remember sort direction for each column
+    let sortDirection = [true, true, true, true, true, true];
+
+    // Handle clicks on checkboxes and other elements
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'selectAll') {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(checkbox => {
+                if (checkbox.closest('tr').style.display !== 'none') {
+                    checkbox.checked = e.target.checked;
+                    const id = checkbox.getAttribute('data-id');
+                    if (e.target.checked) { 
+                        selectedItems.add(id);
+                    } else {
+                        selectedItems.delete(id);
+                    }
+                }
+            });
+            updateSelectedCount();
+        } else if (e.target.classList.contains('row-checkbox')) {
+            const id = e.target.getAttribute('data-id');
+            if (e.target.checked) {
+                selectedItems.add(id);
+            } else {
+                selectedItems.delete(id);
             }
+            updateSelectedCount();
+        }
+    });
+
+    // Setup when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        // Setup restore button
+        document.getElementById('restoreSelectedBtn').addEventListener('click', showRestoreConfirmation);
+
+        // Setup filter dropdowns
+        document.getElementById("organizationFilter").addEventListener("change", applyServerSideFilters);
+        document.getElementById("typeFilter").addEventListener("change", applyServerSideFilters);
+
+        // Setup search with typing delay
+        const searchInput = document.querySelector('input[placeholder="Search..."]');
+        let searchTimeout;
+        searchInput.addEventListener("input", function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(applyServerSideFilters, 500);
         });
 
-        // Execute when the DOM is fully loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add event listeners for restore button
-            document.getElementById('restoreSelectedBtn').addEventListener('click', showRestoreConfirmation);
-
-            // Add event listeners for filters
-            document.getElementById("organizationFilter").addEventListener("change", applyFilters);
-            document.getElementById("typeFilter").addEventListener("change", applyFilters);
-
-            // For search, use debouncing to avoid too many requests
-            const searchInput = document.querySelector('input[placeholder="Search..."]');
-            let searchTimeout;
-            searchInput.addEventListener("input", function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(applyFilters, 500);
-            });
-
-            // Modal control event listeners
-            document.getElementById("closeRestoreModalBtn").addEventListener("click", function() {
-                document.getElementById("restoreConfirmationModal").classList.add("hidden");
-            });
+        // Setup modal buttons
+        document.getElementById("closeRestoreModalBtn").addEventListener("click", function() {
+            document.getElementById("restoreConfirmationModal").classList.add("hidden");
+        });
 
             document.getElementById("cancelRestoreBtn").addEventListener("click", function() {
                 document.getElementById("restoreConfirmationModal").classList.add("hidden");
             });
 
-            // ONLY THIS BUTTON SHOULD TRIGGER THE ACTUAL RESTORATION
-            document.getElementById("confirmRestoreBtn").addEventListener("click", function() {
-                processRestore(); // Call the function that actually does the restoring
-                document.getElementById("restoreConfirmationModal").classList.add("hidden");
-            });
-
-            // Add event delegation for pagination links
-            document.addEventListener('click', function(e) {
-                // Find closest anchor that has pagination-btn class or variations
-                const paginationLink = e.target.closest(
-                    'a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
-
-                if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
-                    e.preventDefault();
-                    const url = paginationLink.getAttribute('href');
-
-                    // Show loading indicator
-                    const tableContainer = document.querySelector('#tableContainer');
-                    tableContainer.classList.add('opacity-50');
-
-                    // Fetch the new page content
-                    fetch(url, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(response => response.text())
-                        .then(html => {
-                            // Create a temporary element to parse the HTML
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(html, 'text/html');
-
-                            // Extract the table body content
-                            const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
-                            document.querySelector('#documentTable tbody').innerHTML = newTableBody;
-
-                            // Update pagination
-                            const newPagination = doc.querySelector('#paginationContainer');
-                            if (newPagination) {
-                                document.querySelector('#paginationContainer').outerHTML = newPagination
-                                    .outerHTML;
-                            }
-
-                            // Update URL without reload
-                            window.history.pushState({}, '', url);
-
-                            // Reset filters and selections
-                            selectedItems.clear();
-                            updateSelectedCount();
-
-                            // Remove loading state
-                            tableContainer.classList.remove('opacity-50');
-                        })
-                        .catch(error => {
-                            console.error('Error loading page:', error);
-                            tableContainer.classList.remove('opacity-50');
-                        });
-                }
-            });
-
-            // Add this at the beginning to check initial state
-            const hasDocuments = document.querySelectorAll("#documentTable tbody tr[data-id]").length > 0;
-            const selectAllCheckbox = document.getElementById('selectAll');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.disabled = !hasDocuments;
-            }
-
-            // Initialize selected count
-            updateSelectedCount();
+        // ONLY THIS BUTTON SHOULD TRIGGER THE ACTUAL RESTORATION
+        document.getElementById("confirmRestoreBtn").addEventListener("click", function() {
+            processRestore(); // Call the function that actually does the restoring
+            document.getElementById("restoreConfirmationModal").classList.add("hidden");
         });
-    </script>
+
+        // Add event delegation for pagination links
+        document.addEventListener('click', function(e) {
+            // Find closest anchor that has pagination-btn class or variations
+            const paginationLink = e.target.closest('a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
+            
+            if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
+                e.preventDefault();
+                const url = paginationLink.getAttribute('href');
+                
+                // Show loading indicator
+                const tableContainer = document.querySelector('#tableContainer');
+                tableContainer.classList.add('opacity-50');
+                
+                // Fetch the new page content
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    // Create a temporary element to parse the HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    // Extract the table body content
+                    const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
+                    document.querySelector('#documentTable tbody').innerHTML = newTableBody;
+                    
+                    // Update pagination
+                    const newPagination = doc.querySelector('#paginationContainer');
+                    if (newPagination) {
+                        document.querySelector('#paginationContainer').outerHTML = newPagination.outerHTML;
+                    }
+                    
+                    // Update URL without reload
+                    window.history.pushState({}, '', url);
+                    
+                    // Reset filters and selections
+                    selectedItems.clear();
+                    updateSelectedCount();
+                    
+                    // Remove loading state
+                    tableContainer.classList.remove('opacity-50');
+                })
+                .catch(error => {
+                    console.error('Error loading page:', error);
+                    tableContainer.classList.remove('opacity-50');
+                });
+            }
+        });
+
+        // Add this at the beginning to check initial state
+        const hasDocuments = document.querySelectorAll("#documentTable tbody tr[data-id]").length > 0;
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.disabled = !hasDocuments;
+        }
+        
+        // Initialize selected count
+        updateSelectedCount();
+    });
+</script>
 @endsection
