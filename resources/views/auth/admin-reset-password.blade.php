@@ -174,9 +174,9 @@
                     </button>
                 </form>
                 <div class="mt-4 text-center">
-                    <a href="#" id="backToLogin" class="flex items-center justify-center md:text-[var(--secondary-color)] font-normal group transition-all duration-75">
+                    <a href="#" id="backToLogin" class="flex items-center justify-center md:text-[var(--forgot-color-text)] font-normal group transition-all duration-75">
                         <img class="md:h-[25px] pr-5 pt-0.5 group-hover:translate-x-1 transition-all duration-75" src="{{asset('images/arrow-left-admin.svg')}}" alt="Arrow Left Icon">
-                        <span class="border-b-2 border-transparent group-hover:border-[var(--secondary-color)] transition-all duration-75">Back to Login</span>
+                        <span class="border-b-2 border-transparent group-hover:border-[var(--forgot-color-text)] transition-all duration-75">Back to Login</span>
                     </a>
                 </div>
             </div>
