@@ -67,62 +67,103 @@ class EventController extends Controller
     }
     public function updateCalendarEvent(Request $request)
     {
-        \Log::info('Event update request received', $request->all());
-        
         try {
-            // Add validation
+            \Log::info('Update request received', $request->all());
+            
             $request->validate([
-                'id' => 'required|exists:events,id',
-                'title' => 'required|string|max:80|min:6',
+                'id' => 'required',
+                'title' => 'required|string|max:255',
                 'start' => 'required|date',
-                'end' => 'nullable|date',
+                'end' => 'nullable|date'
             ]);
-            
-            // Find the event
-            $event = Event::findOrFail($request->id);
-            
-            // Update event with the correct field names
+    
+            // Extract numeric ID from potentially prefixed ID
+            $eventId = $request->id;
+            if (str_contains($eventId, 'manual_')) {
+                $eventId = str_replace('manual_', '', $eventId);
+            }
+    
+            \Log::info('Looking for event with ID:', ['id' => $eventId]);
+    
+            $event = Event::find($eventId);
+    
+            if (!$event) {
+                \Log::error('Event not found', ['id' => $eventId]);
+                return response()->json(['error' => 'Event not found'], 404);
+            }
+    
+            \Log::info('Found event, updating...', ['event' => $event->toArray()]);
+    
             $event->update([
                 'title' => $request->title,
-                'start_date' => $request->start,  // Use start_date instead of start
-                'end_date' => $request->end,      // Use end_date instead of end
+                'start_date' => $request->start,
+                'end_date' => $request->end,
             ]);
-            
+    
+            \Log::info('Event updated successfully', ['event' => $event->fresh()->toArray()]);
+    
             return response()->json([
                 'success' => true,
                 'message' => 'Event updated successfully',
-                'id' => $event->id,
-                'title' => $event->title,
-                'start' => $event->start_date->format('Y-m-d\TH:i:s'),
-                'end' => $event->end_date ? $event->end_date->format('Y-m-d\TH:i:s') : null,
-                'backgroundColor' => '#7A1212',
-                'textColor' => '#ffffff',
-                'allDay' => $request->input('allDay', false)
+                'event' => $event
             ]);
+    
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error in update', ['errors' => $e->errors()]);
+            return response()->json(['error' => 'Validation failed', 'details' => $e->errors()], 422);
         } catch (\Exception $e) {
-            \Log::error('Event update failed', ['error' => $e->getMessage()]);
-            return response()->json(['error' => $e->getMessage()], 500);
+            \Log::error('Error updating event', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Internal server error: ' . $e->getMessage()], 500);
         }
     }
     
     public function destroyCalendarEvent(Request $request)
     {
-        \Log::info('Event delete request received', $request->all());
-        
         try {
-            // Find the event
-            $event = Event::findOrFail($request->id);
+            \Log::info('Delete request received', $request->all());
             
-            // Use your existing authorization if needed
-            // $this->authorize('delete', $event);
-            
-            // Delete the event
+            $request->validate([
+                'id' => 'required'
+            ]);
+    
+            // Extract numeric ID from potentially prefixed ID
+            $eventId = $request->id;
+            if (str_contains($eventId, 'manual_')) {
+                $eventId = str_replace('manual_', '', $eventId);
+            }
+    
+            \Log::info('Looking for event to delete with ID:', ['id' => $eventId]);
+    
+            $event = Event::find($eventId);
+    
+            if (!$event) {
+                \Log::error('Event not found for deletion', ['id' => $eventId]);
+                return response()->json(['error' => 'Event not found'], 404);
+            }
+    
+            \Log::info('Found event, deleting...', ['event' => $event->toArray()]);
+    
             $event->delete();
-            
-            return response()->json(['success' => true, 'message' => 'Event deleted successfully']);
+    
+            \Log::info('Event deleted successfully', ['id' => $eventId]);
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'Event deleted successfully'
+            ]);
+    
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation error in delete', ['errors' => $e->errors()]);
+            return response()->json(['error' => 'Validation failed', 'details' => $e->errors()], 422);
         } catch (\Exception $e) {
-            \Log::error('Event deletion failed', ['error' => $e->getMessage()]);
-            return response()->json(['error' => $e->getMessage()], 500);
+            \Log::error('Error deleting event', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Internal server error: ' . $e->getMessage()], 500);
         }
     }
 
@@ -146,24 +187,30 @@ class EventController extends Controller
     public function getApprovedProposals()
     {
         try {
-            \Log::info('Fetching ADMIN-APPROVED proposals only');
+            \Log::info('Fetching events created from approved proposals');
             
-            // Fixed query with correct column names
-            $approvedProposals = \DB::table('submitted_documents')
-                ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id') // Fixed: user_id instead of submitted_by
+            // Get events that originated from approved event proposals
+            $approvedProposalEvents = \DB::table('events')
+                ->leftJoin('users', 'events.created_by', '=', 'users.id')
+                ->leftJoin('submitted_documents', function($join) {
+                    $join->on('submitted_documents.subject', '=', 'events.title')
+                         ->where('submitted_documents.type', '=', 'Event Proposal')
+                         ->where('submitted_documents.status', '=', 'Approved');
+                })
                 ->leftJoin('reviews', 'submitted_documents.id', '=', 'reviews.document_id')
                 ->leftJoin('users as admin_users', 'reviews.reviewed_by', '=', 'admin_users.id')
-                ->where('submitted_documents.type', '=', 'Event Proposal')
-                ->where('submitted_documents.status', '=', 'Approved')
+                ->whereNotNull('submitted_documents.id') // Only events that have corresponding approved proposals
                 ->where('reviews.status', '=', 'Approved')
-                ->whereNotNull('reviews.id')
                 ->where('admin_users.role', '=', 'admin')
                 ->select(
-                    'submitted_documents.id',
-                    'submitted_documents.subject',
-                    'submitted_documents.created_at',
+                    'events.id',
+                    'events.title',
+                    'events.description',
+                    'events.start_date',
+                    'events.end_date',
+                    'events.status as event_status',
+                    'users.organization_acronym',
                     'submitted_documents.summary',
-                    'users.organization_acronym', // Now this should work
                     'reviews.reviewed_by',
                     'reviews.status as review_status',
                     'reviews.message as review_message',
@@ -173,46 +220,54 @@ class EventController extends Controller
                 ->distinct()
                 ->get();
     
-            \Log::info('Approved proposals query result', [
-                'count' => $approvedProposals->count(),
-                'raw_data' => $approvedProposals->toArray()
+            \Log::info('Approved proposal events query result', [
+                'count' => $approvedProposalEvents->count(),
+                'raw_data' => $approvedProposalEvents->toArray()
             ]);
     
-            if ($approvedProposals->isEmpty()) {
-                \Log::info('No approved event proposals found');
+            if ($approvedProposalEvents->isEmpty()) {
+                \Log::info('No events from approved proposals found');
                 return response()->json([]);
             }
     
-            $formattedEvents = $approvedProposals->map(function($proposal) {
-                \Log::info('Formatting proposal', [
-                    'id' => $proposal->id,
-                    'subject' => $proposal->subject,
-                    'organization' => $proposal->organization_acronym
+            $formattedEvents = $approvedProposalEvents->map(function($event) {
+                \Log::info('Formatting proposal event', [
+                    'id' => $event->id,
+                    'title' => $event->title,
+                    'start_date' => $event->start_date,
+                    'organization' => $event->organization_acronym
                 ]);
                 
+                // Use the actual event dates from the events table
+                $startDate = \Carbon\Carbon::parse($event->start_date);
+                $endDate = $event->end_date ? \Carbon\Carbon::parse($event->end_date) : null;
+                
                 return [
-                    'id' => 'proposal_' . $proposal->id,
-                    'title' => $proposal->subject . ' (' . ($proposal->organization_acronym ?? 'Unknown') . ')',
-                    'start' => \Carbon\Carbon::parse($proposal->created_at)->format('Y-m-d'),
+                    'id' => 'proposal_' . $event->id,
+                    'title' => $event->title . ' (' . ($event->organization_acronym ?? 'Unknown') . ')',
+                    'start' => $startDate->format('Y-m-d H:i:s'),
+                    'end' => $endDate ? $endDate->format('Y-m-d H:i:s') : null,
                     'backgroundColor' => '#2563eb',
                     'textColor' => '#ffffff',
-                    'allDay' => true,
+                    'allDay' => $startDate->format('H:i:s') === '00:00:00' && 
+                              (!$endDate || $endDate->format('H:i:s') === '00:00:00'),
                     'source' => 'proposal',
                     'editable' => false,
                     'deletable' => false,
-                    'organization' => $proposal->organization_acronym ?? 'Unknown',
-                    'summary' => $proposal->summary ?? '',
-                    'review_message' => $proposal->review_message ?? '',
-                    'reviewer' => $proposal->reviewer_name ?? 'Unknown Admin',
-                    'review_status' => $proposal->review_status ?? 'Unknown'
+                    'organization' => $event->organization_acronym ?? 'Unknown',
+                    'summary' => $event->summary ?? $event->description ?? '',
+                    'review_message' => $event->review_message ?? '',
+                    'reviewer' => $event->reviewer_name ?? 'Unknown Admin',
+                    'review_status' => $event->review_status ?? 'Unknown',
+                    'event_status' => $event->event_status ?? 'scheduled'
                 ];
             });
     
-            \Log::info('Returning formatted admin-approved events', ['count' => count($formattedEvents)]);
+            \Log::info('Returning formatted approved proposal events', ['count' => count($formattedEvents)]);
             return response()->json($formattedEvents);
             
         } catch (\Exception $e) {
-            \Log::error('Error fetching admin-approved proposals', [
+            \Log::error('Error fetching approved proposal events', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
