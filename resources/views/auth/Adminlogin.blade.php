@@ -529,8 +529,8 @@
                 <p id="descLengthWarning" class="text-red-600 mt-1 hidden">*Description must be 250 characters or less.</p>
             </div >
             <div class="mb-7">
-                <label class="pl-[9px] block font-semibold mb-1">Attach a Screenshot (optional)</label>
-                <input id="fileInput" type="file" name="screenshot" accept="image/*"
+                <label class="pl-[9px] block font-semibold mb-1">Attach a File (optional)</label>
+                <input id="fileInput" type="file" name="screenshot" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                     class="text-slate-500 text-sm rounded-lg leading-6 file:bg-[var(--secondary-color)] file:text-white file:border-none file:px-4 file:py-1 file:mr-6 file:rounded-lg hover:file:brightness-75 border bg-[#0000000c] cursor-pointer border-gray-300 transition duration-200">
                 <p class="pl-[5px] text-[8px]">Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC, PNG, JPG</p>
             </div>
