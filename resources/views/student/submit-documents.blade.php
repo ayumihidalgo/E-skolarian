@@ -276,6 +276,9 @@
     @endif
 
     <script>
+        // Auto-select receiver when selecting doc type disabled at start
+        let receiverAutoSelected = false;
+        
         // Element references
         const docType = {
             button: document.getElementById('docTypeButton'),
@@ -532,6 +535,7 @@
             receiver.selected.innerHTML = displayText; // Use innerHTML to apply styling
             receiver.input.value = id;
             receiver.dropdown.classList.add('hidden');
+            receiverAutoSelected = true; // Disables auto-select receiver
         }
 
         // Select doc type
@@ -676,7 +680,16 @@
 
             // Re-validate when document type is changed via your selectDocType function
             const originalSelectDocType = window.selectDocType;
-            window.selectDocType = function(value) {
+            window.selectDocType = function(value) {                
+                // Automatically select the first receiver only once if no receiver has been selected yet
+                if (!receiverAutoSelected) {
+                    const firstReceiver = document.querySelector('#receiverDropdown li');
+                    if (firstReceiver) {
+                        firstReceiver.click();
+                        receiverAutoSelected = true;
+                    }
+                }
+
                 originalSelectDocType(value);
                 setTimeout(validateForm, 50); // slight delay to allow DOM changes
             };
