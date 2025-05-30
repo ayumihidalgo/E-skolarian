@@ -167,18 +167,6 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between items-center pt-1">
-                        <!-- Remember Me -->
-                        <div class="flex items-center mt-0.5">
-                            <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-[var(--secondary-color)] border-gray-300 rounded focus:ring-[var(--secondary-color)]">
-                            <label for="remember" class="ml-2 block text-sm text-gray-900 font-normal">
-                                Remember Me
-                            </label>
-                        </div>
-                        <a href="{{ route('student.password.request') }}" id="forgotPasswordLink" class="inline-block font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
-                    </div>
-
-
                     <!-- Error Message -->
                     @if ($errors->any() && !$errors->has('lockout_time'))
                     <div class="status-message text-red-600 text-sm mt-1 pb-1.5 font-[Lexend] font-normal">
