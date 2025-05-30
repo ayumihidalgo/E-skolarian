@@ -726,6 +726,10 @@ function closeEventModal() {
 
 // Replace your saveEvent function with this fixed version:
 function saveEvent() {
+    console.log('saveEvent called, current callback:', confirmSaveCallback); // ADD THIS DEBUG LINE
+    console.log("saveEvent function called");
+
+    confirmSaveCallback = null;
     // Get form values
     const titleEl = document.getElementById('event-title');
     const startEl = document.getElementById('event-start');
@@ -878,8 +882,8 @@ function saveEvent() {
                 }, 300);
             }
             
-            // Show success message
-            alert('Event created successfully!');
+            // Show success message using your existing modal
+            showSuccessConfirmation('Event created successfully!');
         })
         .catch(error => {
             console.error('Error saving event:', error);
@@ -1209,6 +1213,8 @@ function showYearSelector(currentYear, titleElement) {
 }
 // Variables to track callbacks
 let confirmSaveCallback = null;
+
+let deleteCallback = null; 
 // Confirm Save Modal functions
 function showConfirmSaveModal(callback) {
     const modal = document.getElementById('confirmSaveModal');
@@ -1239,18 +1245,56 @@ function closeConfirmSaveModal(confirmed) {
     setTimeout(() => {
         modal.classList.add('hidden');
         
-        // Call the callback if it exists
+        // Call the callback if it exists and user confirmed
         if (confirmed && typeof confirmSaveCallback === 'function') {
-            confirmSaveCallback();
+            const callback = confirmSaveCallback; // Store reference
+            confirmSaveCallback = null; // Clear BEFORE calling
+            callback(); // Then call it
+        } else {
+            // Always clear the callback, even if cancelled
+            confirmSaveCallback = null;
         }
-        
-        // Reset the callback
-        confirmSaveCallback = null;
     }, 300);
 }
 let discardChangesCallback = null;
 
-
+function showSuccessConfirmation(message) {
+    const modal = document.getElementById('confirmSaveModal');
+    const titleEl = modal.querySelector('h3');
+    const messageEl = modal.querySelector('p');
+    const cancelBtn = modal.querySelector('button[onclick*="false"]');
+    const confirmBtn = modal.querySelector('button[onclick*="true"]');
+    
+    // Configure as success modal
+    titleEl.textContent = 'Success!';
+    messageEl.textContent = message;
+    cancelBtn.style.display = 'none';
+    confirmBtn.textContent = 'OK';
+    confirmBtn.className = 'w-full px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700';
+    
+    // IMPORTANT: Clear any existing callback first
+    confirmSaveCallback = null;
+    
+    // Set NEW callback to reset modal
+    confirmSaveCallback = function() {
+        titleEl.textContent = 'Confirm Changes';
+        messageEl.textContent = 'Are you sure you want to save these changes?';
+        cancelBtn.style.display = 'inline-flex';
+        confirmBtn.textContent = 'Confirm';
+        confirmBtn.className = 'px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700';
+        
+        // Clear the callback after resetting
+        confirmSaveCallback = null;
+    };
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    const modalContent = modal.querySelector('.modal-container');
+    setTimeout(() => {
+        modalContent.classList.remove('modal-hidden');
+        modalContent.classList.add('modal-visible');
+    }, 10);
+}
 
 // Discard Changes Modal functions
 function showDiscardChangesModal(callback) {
@@ -1584,14 +1628,13 @@ function resetEventForm() {
 }
 
 // Add a delete confirmation modal
-let deleteCallback = null;
+
 
 // Replace the showConfirmDeleteModal function with this improved version
 function showConfirmDeleteModal(callback) {
     deleteCallback = callback;
     
-    // Instead of reusing the save modal, create a dedicated delete confirmation dialog
-    const modal = document.getElementById('confirmSaveModal'); // We'll still use the same modal element
+    const modal = document.getElementById('confirmSaveModal');
     const modalContent = modal.querySelector('.modal-container');
     
     // Change title and text
@@ -1608,69 +1651,34 @@ function showConfirmDeleteModal(callback) {
         confirmBtn.textContent = 'Yes, Cancel Event';
     }
     
+    // IMPORTANT: Clear any existing save callback to prevent conflicts
+    confirmSaveCallback = null;
+    
+    // Set the delete callback temporarily
+    confirmSaveCallback = function() {
+        if (typeof deleteCallback === 'function') {
+            deleteCallback();
+        }
+        // Reset everything
+        if (title) title.textContent = 'Confirm Changes';
+        if (text) text.textContent = 'Are you sure you want to save these changes?';
+        if (confirmBtn) {
+            confirmBtn.className = 'px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700';
+            confirmBtn.textContent = 'Confirm';
+        }
+        deleteCallback = null;
+        confirmSaveCallback = null;
+    };
+    
     // Show modal
     modal.classList.remove('hidden');
     setTimeout(() => {
         modalContent.classList.remove('modal-hidden');
         modalContent.classList.add('modal-visible');
     }, 10);
-    
-    // Create a custom handler for this specific case
-    const handleDeleteConfirmation = function(confirmed) {
-        // Hide modal first
-        modalContent.classList.remove('modal-visible');
-        modalContent.classList.add('modal-hidden');
-        
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            
-            // Execute callback if confirmed (after modal is hidden)
-            if (confirmed && typeof deleteCallback === 'function') {
-                // Execute after a small delay to prevent visual glitches
-                setTimeout(() => {
-                    deleteCallback();
-                }, 50);
-            }
-            
-            // Reset modal appearance after it's hidden
-            setTimeout(() => {
-                // Reset button styling
-                if (confirmBtn) {
-                    confirmBtn.className = 'px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700';
-                    confirmBtn.textContent = 'Confirm';
-                }
-                
-                // Reset text
-                if (title) title.textContent = 'Confirm Changes';
-                if (text) text.textContent = 'Are you sure you want to save these changes?';
-                
-                // Reset callback
-                deleteCallback = null;
-            }, 350);
-        }, 300);
-    };
-    
-    // Store references to buttons and update their onclick handlers
-    const cancelBtn = modal.querySelector('button:first-of-type');
-    const confirmButton = modal.querySelector('button:last-child');
-    
-    // Store original onclick handlers
-    const cancelBtnOriginal = cancelBtn.onclick;
-    const confirmBtnOriginal = confirmButton.onclick;
-    
-    // Set temporary handlers for this interaction
-    cancelBtn.onclick = () => handleDeleteConfirmation(false);
-    confirmButton.onclick = () => handleDeleteConfirmation(true);
-    
-    // Add a cleanup function to reset event handlers when modal is hidden
-    const cleanup = () => {
-        cancelBtn.onclick = cancelBtnOriginal;
-        confirmButton.onclick = confirmBtnOriginal;
-        modal.removeEventListener('hidden', cleanup);
-    };
-    
-    modal.addEventListener('hidden', cleanup);
 }
+
+
 
 function refreshCalendarEvents() {
     if (calendarObj) {
