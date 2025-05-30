@@ -92,29 +92,8 @@ class DocumentReviewController extends Controller
         
         // Apply organization filter if provided
         if ($selectedOrg && $selectedOrg !== 'All') {
-            // Create a mapping between acronyms and full organization names
-            $orgMap = [
-                'ACAP' => 'Association of Competent and Aspiring Psychologists',
-                'AECES' => 'Association of Electronics and Communications Engineering Students',
-                'ELITE' => 'Eligible League of Information Technology Enthusiasts',
-                'GIVE' => 'Guild of Imporous and Valuable Educators',
-                'JEHRA' => 'Junior Executive of Human Resource Association',
-                'JMAP' => 'Junior Marketing Association of the Philippines',
-                'JPIA' => 'Junior Philippine Institute of Accountants',
-                'PIIE' => 'Philippine Institute of Industrial Engineers',
-                'AGDS' => 'Artist Guild Dance Squad',
-                'Chorale' => 'PUP SRC Chorale',
-                'SIGMA' => "Supreme Innovators' Guild for Mathematics Advancements",
-                'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
-                'OSC' => 'Office of the Student Council'
-            ];
-            
-            // Get full name of organization if acronym is selected
-            $fullOrgName = $orgMap[$selectedOrg] ?? $selectedOrg;
-            
-            $documentsQuery->whereHas('user', function($query) use ($selectedOrg, $fullOrgName) {
-                $query->where('username', 'LIKE', "%{$selectedOrg}%")
-                      ->orWhere('username', 'LIKE', "%{$fullOrgName}%");
+            $documentsQuery->whereHas('user', function($query) use ($selectedOrg) {
+            $query->where('organization_acronym', $selectedOrg);
             });
         }
 
@@ -153,8 +132,8 @@ class DocumentReviewController extends Controller
             $documentsQuery->where('type', 'LIKE', "%{$fullTypeName}%");
         }
         
-        // Order by creation date (newest first)
-        $documentsQuery->orderBy('submitted_documents.created_at', 'desc');
+        // Order by updated date (latest first)
+        $documentsQuery->orderBy('submitted_documents.updated_at', 'desc');
             
         // Paginate the results - this returns a LengthAwarePaginator
         $documents = $documentsQuery->paginate(6)->withQueryString();
@@ -211,6 +190,11 @@ class DocumentReviewController extends Controller
             'OSC' => 'text-orange-600',
             'DOC' => 'text-blue-800',
         ];
+
+        // Check if this is an AJAX request
+        if ($request->ajax()) {
+            return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType', 'organizations'));
+        }
 
         return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType', 'organizations'));
     }
@@ -632,7 +616,7 @@ class DocumentReviewController extends Controller
                 ], 404);
             }
 
-            // Find existing review or create a new one
+            // Find existing review or create a new one for current admin
             $review = Review::where('document_id', $id)
                 ->where('reviewed_by', Auth::id())
                 ->first();
@@ -662,6 +646,18 @@ class DocumentReviewController extends Controller
                 'message' => $request->input('message'),
             ]);
             $forward->save();
+
+            // ALWAYS create a new "Under Review" entry for the target admin
+            // This creates a consistent timeline entry when document is received
+            $newReview = new Review([
+                'document_id' => $id,
+                'reviewed_by' => $request->input('forward_to'),
+                'status' => 'Under Review',
+                'message' => 'Document received for review',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            $newReview->save();
 
             // Update the document's received_by field
             $document->received_by = $request->input('forward_to');
