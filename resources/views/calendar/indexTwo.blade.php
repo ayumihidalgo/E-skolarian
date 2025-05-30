@@ -1318,6 +1318,61 @@ function updateEvent() {
         return;
     }
 
+    // Add past date validation for updates
+    const eventDate = new Date(startStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to start of day
+    
+    if (eventDate < today) {
+        alert("Events cannot be rescheduled to past dates");
+        return;
+    }
+
+    // Add end date validation for updates
+    if (endStr) {
+        const endDate = new Date(endStr);
+        
+        // Check if end date is in the past
+        if (endDate < today) {
+            alert("Event cannot end in the past");
+            return;
+        }
+        
+        // Check if end date is before start date
+        if (endDate < eventDate) {
+            alert("End date cannot be before start date");
+            return;
+        }
+    }
+
+    // Check for emoji or special characters in title
+    if (containsEmoji(title) || containsSpecialChars(title)) {
+        alert('Your event title contains invalid characters. Please use only letters, numbers, spaces, and basic punctuation.');
+        return;
+    }
+    
+    // Check character limit (6-80 range)
+    const titleLength = title.length;
+    if (titleLength < 6) {
+        alert('Event title is too short. Please use at least 6 characters.');
+        return;
+    }
+    if (titleLength > 80) {
+        alert('Event title is too long. Please keep it under 80 characters.');
+        return; 
+    }
+
+    // Check for duplicate event titles (excluding current event)
+    const existingEvents = calendarObj.getEvents();
+    const duplicateEvent = existingEvents.find(event => 
+        event.title.toLowerCase() === title.toLowerCase() && event.id !== eventId
+    );
+    
+    if (duplicateEvent) {
+        alert('An event with this title already exists. Please use a different title.');
+        return;
+    }
+
     // Prepare event data for update
     const eventData = {
         id: eventId,
@@ -1539,6 +1594,8 @@ function refreshCalendarEvents() {
         initializeEventClickHandlers();
     }
 }
+
+
     
 
 
