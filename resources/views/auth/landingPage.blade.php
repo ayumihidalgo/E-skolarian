@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="admin">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -63,41 +63,48 @@
         </button>
     </footer>
          <!-- Report Problem Modal -->
-    <div id="reportModal" class="hidden text-black fixed inset-0 bg-transparent flex items-center justify-center z-50 backdrop-blur-sm">
-    <div class="bg-white p-6 rounded shadow-lg w-[90%] max-w-md">
+        <div id="reportModal" class="fixed inset-0 flex items-center z-50 backdrop-blur-sm w-full text-black hidden">
+        <div class="bg-[#ffffffe8] p-6 shadow-lg mx-auto rounded-3xl max-w-[600px]">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-20 h-20 mx-auto pb-4">
+                <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
+                    fill="transparent" stroke="black" stroke-width="2.5"/>
+                <rect x="11" y="8" width="2" height="4" fill="black" />
+                <rect x="11" y="14" width="2" height="2" fill="black" />
+            </svg>
+            <div class="mb-4 text-center mx-auto w-[75%]">
+            <h1 class="text-3xl font-[Lexend] font-bold mb-2 text-[var(--secondary-color)]">Report a Problem</h1>
+            <p class="text-black font-[Manrope] font-normal text-xs">
+                Noticed something wrong or not working as expected? Tell us what issue you encountered so we can look into it and improve your experience.
+            </p>
+            </div>
 
-        <div class="mb-4 text-center">
-        <h1 class="text-2xl font-bold mb-2 text-[var(--secondary-color)]">Report a Problem</h1>
-        <p class="text-gray-600 text-sm">
-            Noticed something wrong or not working as expected? Tell us what issue you encountered so we can look into it and improve your experience.
-        </p>
-        </div>
+            <form id="reportForm" class="mx-auto w-[75%] text-xs" method="POST" action="{{ route('report.problem.store') }}" enctype="multipart/form-data" onsubmit="submitReport(event)">
+            @csrf
+            <div class="mb-7">
+                <label class="pl-[9px] block font-semibold mb-1">PUP Webmail<span class="text-red-600">*</span></label>
+                <input id="emailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
+                <p id="webmailLengthWarning" class="text-red-600 mt-1 hidden">*Webmail must not exceed 50 characters.</p>
+            </div>
 
-        <form id="reportForm" method="POST" action="{{ route('report.problem.store') }}" enctype="multipart/form-data" onsubmit="submitReport(event)">
-        @csrf
-        <div class="mb-3">
-            <label class="block text-sm font-semibold mb-1">PUP Webmail*</label>
-            <input id="emailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border rounded-lg px-3 py-2" required maxlength="51" />
-            <p id="webmailLengthWarning" class="text-red-600 text-sm mt-1 hidden">*Webmail must not exceed 50 characters.</p>
-        </div>
+            <div class="mb-3">
+                <label class="pl-[9px] block font-semibold mb-1">Problem Description<span class="text-red-600">*</span></label>
+                <textarea name="description" placeholder="Describe the problem here..." class="w-full border rounded-lg px-3 py-2 bg-white" rows="4" required maxlength="251"></textarea>
+                <p id="descLengthWarning" class="text-red-600 mt-1 hidden">*Description must be 250 characters or less.</p>
+            </div >
+            <div class="mb-7">
+                <label class="pl-[9px] block font-semibold mb-1">Attach a Screenshot (optional)</label>
+                <input id="fileInput" type="file" name="screenshot" accept="image/*"
+                    class="text-slate-500 text-sm rounded-lg leading-6 file:bg-[var(--secondary-color)] file:text-white file:border-none file:px-4 file:py-1 file:mr-6 file:rounded-lg hover:file:brightness-75 border bg-[#0000000c] cursor-pointer border-gray-300 transition duration-200">
+                <p class="pl-[5px] text-[8px]">Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC, PNG, JPG</p>
+            </div>
 
-        <div class="mb-3">
-            <label class="block text-sm font-semibold mb-1">Problem Description*</label>
-            <textarea name="description" placeholder="Describe the problem here..." class="w-full border rounded-lg px-3 py-2" rows="4" required maxlength="251"></textarea>
-            <p id="descLengthWarning" class="text-red-600 text-sm mt-1 hidden">*Description must be 250 characters or less.</p>
+            <div class="text-[16px]">
+                <button type="submit" id="reportSubmitBtn" class="block w-full bg-[var(--secondary-color)] text-white px-4 py-2 mb-4 rounded-full hover:brightness-75">Submit</button>
+                <button type="button" id="cancelReportBtn" class="block w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-400">Cancel</button>
+            </div>
+            </form>
         </div>
-        <div class="mb-4">
-            <label class="block text-sm font-semibold mb-1">Attach a Screenshot</label>
-            <input type="file" name="screenshot" accept="image/*" class="w-full file:cursor-pointer file:bg-[var(--secondary-color)] file:text-white file:px-4 file:py-2 file:rounded-lg file:hover:bg-[var(--primary-color)]" />
         </div>
-        <div class="text-right space-x-2">
-            <button type="submit" id="reportSubmitBtn" class="bg-[var(--secondary-color)] text-white px-4 py-2 rounded-lg hover:bg-[var(--primary-color)]">Submit</button>
-            <button type="button" id="cancelReportBtn" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">Cancel</button>
-        </div>
-        </form>
-    </div>
-    </div>
-
 
     <!-- Confirmation Modal -->
     <div id="confirmCloseModal" class="hidden text-black fixed inset-0 bg-transparent flex items-center justify-center z-60 backdrop-blur-sm">
@@ -252,6 +259,18 @@
 
         // Initial state
         disableSubmit();
+    });
+
+    const fileInput = document.getElementById('fileInput');
+
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files.length > 0) {
+        fileInput.classList.remove('bg-gray-300');
+        fileInput.classList.add('bg-white');
+        } else {
+        fileInput.classList.remove('bg-white');
+        fileInput.classList.add('bg-gray-300');
+        }
     });
 </script>
 </body>

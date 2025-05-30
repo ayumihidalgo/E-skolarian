@@ -45,13 +45,15 @@ class AdminLoginController extends Controller
             ]);
         }
 
+        $remember = $request->has('remember'); // <-- Add this line
+
         // Attempt to authenticate the user (admin only)
         if (Auth::attempt([
             'email' => $credentials['email'],
             'password' => $credentials['password'],
             'role' => 'admin',
             'active' => 1,
-        ])) {
+        ], $remember)) {
             // Successful login - clear attempts
             $this->clearLoginAttempts($request);
 
