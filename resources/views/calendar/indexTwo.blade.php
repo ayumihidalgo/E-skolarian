@@ -5,6 +5,7 @@
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js" as="script">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css">
     <link rel="stylesheet" href="{{ asset('calendar.css') }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 @endpush
 
 @section('content')
@@ -87,40 +88,39 @@
 
     <!-- Event Details Modal -->
     <div id="eventDetailsModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center hidden">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-md modal-container modal-hidden">
-            <div class="p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold" id="event-details-title">Event Details</h3>
-                    <button onclick="closeEventDetailsModal()" class="text-gray-500 hover:text-gray-700">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clip-rule="evenodd"></path>
-                        </svg>
+    <div class="bg-white rounded-lg shadow-lg w-full max-w-md modal-container modal-hidden">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold" id="event-details-title">Event Details</h3>
+                <button onclick="closeEventDetailsModal()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div id="event-details-content">
+                    <div class="mb-4">
+                        <h4 class="text-gray-600 text-sm font-medium">Event Title</h4>
+                        <p id="detail-title" class="text-gray-800 font-semibold"></p>
+                    </div>
+                    <div class="mb-4">
+                        <h4 class="text-gray-600 text-sm font-medium">Date/Time</h4>
+                        <p id="detail-date" class="text-gray-800"></p>
+                    </div>
+                    <div class="mb-4">
+                        <div id="event-color-indicator" class="w-full h-2 rounded-full mb-1"></div>
+                    </div>
+                </div>
+                @if(Auth::user()->role === 'admin')
+                <div class="flex justify-end space-x-2 mt-4" id="event-action-buttons">
+                    <button type="button" id="delete-event-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
+                        Delete Event
                     </button>
                 </div>
-                <div class="space-y-4">
-                    <div id="event-details-content">
-                        <div class="mb-4">
-                            <h4 class="text-gray-600 text-sm font-medium">Event Title</h4>
-                            <p id="detail-title" class="text-gray-800 font-semibold"></p>
-                        </div>
-                        <div class="mb-4">
-                            <h4 class="text-gray-600 text-sm font-medium">Date/Time</h4>
-                            <p id="detail-date" class="text-gray-800"></p>
-                        </div>
-                        <div class="mb-4">
-                            <div id="event-color-indicator" class="w-full h-2 rounded-full mb-1"></div>
-                        </div>
-                    </div>
-                    @if(Auth::user()->role === 'admin')
-                    <div class="flex justify-end space-x-2 mt-4">
-                        <button type="button" id="delete-event-btn" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700">
-                            Delete Event
-                        </button>
-                    </div>
-                    @endif
-                </div>
+                @endif
             </div>
         </div>
     </div>
@@ -177,6 +177,7 @@
     const currentYear = now.getFullYear();
     
     document.addEventListener('DOMContentLoaded', function() {
+        
     // Check if FullCalendar is loaded
     if (typeof FullCalendar === 'undefined') {
         // If not loaded yet, wait a bit and try loading the calendar
@@ -303,116 +304,154 @@ function containsSpecialChars(text) {
     }
     
     // Initialize the calendar
-    function initCalendar() {
-        const calendarEl = document.getElementById('calendar');
-        
-        if (!calendarEl) {
-            console.error('Calendar element not found');
-            return;
-        }
-        
-        try {
-            calendarObj = new FullCalendar.Calendar(calendarEl, {
-                initialView: 'dayGridMonth',
-                initialDate: new Date(),
-                height: 'auto',
-                aspectRatio: 1.5,
-                headerToolbar: {
-                    left: '',
-                    center: 'prev title next',
-                    right: 'today'
-                },
-                buttonText: {
-                    today: 'Today'
-                },
-                dayHeaderFormat: { weekday: 'short' },
-                fixedWeekCount: false,
-                // Handle date changes
-                datesSet: function() {
-                    checkIfCurrentMonth();
-                },
-                eventClick: function(info) {
-                    openEventDetailsModal(info.event);
-                    
-                    // Prevent browser from following the link
-                    info.jsEvent.preventDefault();
-                },
-                // Handle date clicks
-                // function dateClick 
-                dateClick: function(info) {
-                    // Check if the clicked date is in the past
-                    const clickedDate = new Date(info.dateStr);
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
-                    
-                    if (clickedDate < today) {
-                        // Show message if past date is clicked
-                        alert("Events cannot be created on past dates");
-                        return; // Don't open the modal
-                    }
-                    
-                    @if(Auth::user()->role === 'admin')
-                    openEventModal(info.dateStr);
-                    @endif
-                },
-                // Display settings
-                eventDisplay: 'block',
-                eventMaxStack: 3,
-                // Handle long event titles
-                eventDidMount: function(info) {
-                    // Get the title element
-                    const titleEl = info.el.querySelector('.fc-event-title');
-                    if (!titleEl) return;
-                    
-                    // Store full title for tooltip
-                    const fullTitle = info.event.title;
-                    titleEl.setAttribute('data-full-title', fullTitle);
-                    
-                    // Handle different title lengths
-                    const titleLength = fullTitle.length;
-                    
-                    // Very long titles (60+): Use multi-line
-                    if (titleLength > 60) {
-                        info.el.classList.add('multi-line');
-                    }
-                    
-                    // Add title attribute for native browser tooltip
-                    info.el.setAttribute('title', fullTitle);
-                },
-                // Sample events (replace with your actual events)
-                events: [
-                    {
-                        title: 'School Meeting',
-                        start: '2025-05-15',
-                        backgroundColor: '#7A1212'
-                    },
-                    {
-                        title: 'Teacher Conference',
-                        start: '2025-05-22',
-                        end: '2025-05-23',
-                        backgroundColor: '#3498db'
-                    }
-                ]
-            });
-            
-            // Render calendar immediately
-            calendarObj.render();
-            
-            // Add custom buttons after calendar is visible
-            addCustomButtons();
-            // Setup year dropdown functionality
-            setupYearDropdown();
-        } catch (error) {
-            console.error('Error initializing calendar:', error);
-            document.getElementById('calendar').innerHTML = 
-                '<div class="flex items-center justify-center h-full p-8">' +
-                '<div class="text-red-600 text-center">' +
-                '<p class="text-xl font-bold">Calendar could not be loaded</p>' +
-                '<p class="mt-2">Please try refreshing the page</p>' +
-                '</div></div>';
-        }
+// Initialize the calendar
+function initCalendar() {
+    const calendarEl = document.getElementById('calendar');
+    
+    if (!calendarEl) {
+        console.error('Calendar element not found');
+        return;
     }
     
+    try {
+        calendarObj = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            initialDate: new Date(),
+            height: 'auto',
+            aspectRatio: 1.5,
+            headerToolbar: {
+                left: '',
+                center: 'prev title next',
+                right: 'today'
+            },
+            buttonText: {
+                today: 'Today'
+            },
+            dayHeaderFormat: { weekday: 'short' },
+            fixedWeekCount: false,
+            // Use multiple event sources
+            eventSources: [
+                {
+                    url: '{{ route("calendar.events") }}',
+                    failure: function(error) {
+                        console.error('Failed to fetch manual events:', error);
+                    }
+                },
+                {
+                    url: '{{ route("calendar.approved-proposals") }}',
+                    failure: function(error) {
+                        console.error('Failed to fetch approved proposals:', error);
+                    }
+                }
+            ],
+            // Handle date changes
+            datesSet: function() {
+                checkIfCurrentMonth();
+            },
+            // Handle date clicks
+            dateClick: function(info) {
+                const clickedDate = new Date(info.dateStr);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                if (clickedDate < today) {
+                    alert("Events cannot be created on past dates");
+                    return;
+                }
+                
+                @if(Auth::user()->role === 'admin')
+                openEventModal(info.dateStr);
+                @endif
+            },
+            // Display settings
+            eventDisplay: 'block',
+            eventMaxStack: 3,
+            // Handle long event titles
+            eventDidMount: function(info) {
+                const titleEl = info.el.querySelector('.fc-event-title');
+                if (!titleEl) return;
+                
+                const fullTitle = info.event.title;
+                titleEl.setAttribute('data-full-title', fullTitle);
+                
+                const titleLength = fullTitle.length;
+                
+                if (titleLength > 60) {
+                    info.el.classList.add('multi-line');
+                }
+                
+                info.el.setAttribute('title', fullTitle);
+                
+                // Add visual indicator for proposal events
+                if (info.event.extendedProps.source === 'proposal') {
+                    info.el.style.borderLeft = '4px solid #1d4ed8';
+                    info.el.setAttribute('title', fullTitle + ' (Approved Proposal)');
+                }
+            }
+        });
+        
+        // Render calendar immediately
+        calendarObj.render();
+        
+        // Initialize event click handlers ONLY ONCE
+        initializeEventClickHandlers();
+        
+        // Add custom buttons after calendar is visible
+        addCustomButtons();
+        // Setup year dropdown functionality
+        setupYearDropdown();
+    } catch (error) {
+        console.error('Error initializing calendar:', error);
+        document.getElementById('calendar').innerHTML = 
+            '<div class="flex items-center justify-center h-full p-8">' +
+            '<div class="text-red-600 text-center">' +
+            '<p class="text-xl font-bold">Calendar could not be loaded</p>' +
+            '<p class="mt-2">Please try refreshing the page</p>' +
+            '</div></div>';
+    }
+}
+
+
+
+
+function initializeEventClickHandlers() {
+    console.log("Initializing event click handlers");
+    
+    // Remove any existing delegated listeners
+    document.removeEventListener('click', documentClickHandler);
+    
+    // Add a single document-level click handler
+    document.addEventListener('click', documentClickHandler);
+}
+
+function documentClickHandler(e) {
+    // Check if we clicked on an event
+    const eventElement = e.target.closest('.fc-event');
+    if (eventElement && calendarObj) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log("Event element clicked:", eventElement);
+        
+        // Get event title from the element
+        const titleEl = eventElement.querySelector('.fc-event-title');
+        const eventTitle = titleEl ? titleEl.textContent.trim() : eventElement.textContent.trim();
+        
+        console.log("Looking for event with title:", eventTitle);
+        
+        // Find the matching event
+        const events = calendarObj.getEvents();
+        const matchingEvent = events.find(ev => ev.title.trim() === eventTitle);
+        
+        if (matchingEvent) {
+            console.log("Found matching event:", matchingEvent);
+            openEventDetailsModal(matchingEvent);
+        } else {
+            console.log("No matching event found. Available events:", events.map(e => e.title));
+        }
+    }
+}
+        
     // Add custom buttons to the calendar
     function addCustomButtons() {
         const headerRight = document.querySelector('.fc-toolbar-chunk:last-child');
@@ -450,6 +489,10 @@ function containsSpecialChars(text) {
             ? 'none' : '';
     }
     
+
+
+
+
     // Modal functions for event creation
 // Modal functions for event creation
 function openEventModal(dateStr = null) {
@@ -488,6 +531,26 @@ function openEventModal(dateStr = null) {
             const charWarning = document.getElementById('char-warning');
             if (charWarning) {
                 charWarning.remove();
+            }
+            
+            // Set up emoji validation and character counter
+            setupEmojiValidation();
+            
+            // Initialize the title field character counter
+            const titleEl = document.getElementById('event-title');
+            if (titleEl) {
+                // Make sure field is empty
+                titleEl.value = '';
+                
+                // Force update the counter
+                const charCounter = document.getElementById('char-counter');
+                if (charCounter) {
+                    charCounter.textContent = '0/80 characters';
+                    charCounter.className = 'text-gray-600 text-sm mt-1';
+                }
+                
+                // Trigger the input event to ensure all validations are applied
+                titleEl.dispatchEvent(new Event('input'));
             }
         }
         
@@ -657,31 +720,49 @@ function saveEvent() {
     
     
     
- showConfirmSaveModal(function() {
-   // Add event to calendar with properly formatted dates
-    try {
-        calendarObj.addEvent({
-            title: title,
-            start: startStr,
-            end: endStr,
-            allDay: !hasTimeComponent,
-            backgroundColor: defaultColor,
-            textColor: '#ffffff'
-        });
-        console.log('Event added successfully');
+    const eventData = {
+    title: title,
+    start: startStr,
+    end: endStr,
+    allDay: !hasTimeComponent
+};
 
-        // Reset form
-        if (document.getElementById('eventForm')) {
-            document.getElementById('eventForm').reset();
+// Show confirmation modal
+showConfirmSaveModal(function() {
+    console.log('Sending event data:', eventData);
+    
+    // Send AJAX request to save event
+    fetch('{{ route("calendar.store") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify(eventData)
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('Server error response:', text);
+                throw new Error(`Server error: ${response.status}`);
+            });
         }
+        return response.json();
+    })
+    .then(savedEvent => {
+    console.log('Event saved successfully:', savedEvent);
+    calendarObj.refetchEvents();
 
-        // Close modal
-        closeEventModal();
-    } catch (error) {
-        console.error('Error adding event to calendar:', error);
-        alert('Error creating event: ' + error.message);
-    }
+    
+    // Close modal
+    closeEventModal();
 })
+    .catch(error => {
+        console.error('Error saving event:', error);
+        alert('Error creating event: ' + error.message);
+    });
+});
 }
     function containsEmoji(text) {
     // Regex for common emoji ranges
@@ -690,40 +771,48 @@ function saveEvent() {
 }
 // Functions to handle the event details modal
 function openEventDetailsModal(event) {
+    console.log("Opening event details modal for:", event.title);
+    
     const modal = document.getElementById('eventDetailsModal');
     const modalContent = modal.querySelector('.modal-container');
     
-    if (!modal) return;
-    
-    // Populate the modal with event details
-    document.getElementById('detail-title').textContent = event.title;
-    
-    // Format and display the date
-    let dateStr = '';
-    const startDate = event.start ? new Date(event.start) : null;
-    const endDate = event.end ? new Date(event.end) : null;
-    
-    if (startDate) {
-        // Format the date nicely
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        if (event.allDay) {
-            dateStr = startDate.toLocaleDateString(undefined, options);
-            if (endDate) {
-                const endStr = endDate.toLocaleDateString(undefined, options);
-                dateStr += ' to ' + endStr;
-            }
-        } else {
-            options.hour = 'numeric';
-            options.minute = 'numeric';
-            dateStr = startDate.toLocaleString(undefined, options);
-            if (endDate) {
-                const endStr = endDate.toLocaleString(undefined, options);
-                dateStr += ' to ' + endStr;
-            }
-        }
+    if (!modal) {
+        console.error("Event details modal not found!");
+        return;
     }
     
-    document.getElementById('detail-date').textContent = dateStr;
+    // Populate the modal with event details
+    const titleElement = document.getElementById('detail-title');
+    const dateElement = document.getElementById('detail-date');
+    
+    if (titleElement) titleElement.textContent = event.title;
+    
+    // Format and display the date
+    if (dateElement) {
+        let dateStr = '';
+        const startDate = event.start ? new Date(event.start) : null;
+        const endDate = event.end ? new Date(event.end) : null;
+        
+        if (startDate) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            if (event.allDay) {
+                dateStr = startDate.toLocaleDateString(undefined, options);
+                if (endDate) {
+                    const endStr = endDate.toLocaleDateString(undefined, options);
+                    dateStr += ' to ' + endStr;
+                }
+            } else {
+                options.hour = 'numeric';
+                options.minute = 'numeric';
+                dateStr = startDate.toLocaleString(undefined, options);
+                if (endDate) {
+                    const endStr = endDate.toLocaleString(undefined, options);
+                    dateStr += ' to ' + endStr;
+                }
+            }
+        }
+        dateElement.textContent = dateStr;
+    }
     
     // Set event color indicator
     const colorIndicator = document.getElementById('event-color-indicator');
@@ -732,34 +821,54 @@ function openEventDetailsModal(event) {
     }
     
     @if(Auth::user()->role === 'admin')
-    // Get the delete button element - we'll convert it to an edit button
-    const actionBtn = document.getElementById('delete-event-btn');
-    if (actionBtn) {
-        // Remove any existing event listeners by cloning
-        const newActionBtn = actionBtn.cloneNode(true);
-        actionBtn.parentNode.replaceChild(newActionBtn, actionBtn);
+    // Get the container for action buttons
+    const actionContainer = document.getElementById('event-action-buttons');
+    if (actionContainer) {
+        actionContainer.innerHTML = '';
+        actionContainer.className = 'flex justify-end space-x-2 mt-4';
         
-        // Change button text and style to reflect it's now an edit button
-        newActionBtn.textContent = 'Edit/Reschedule Event';
-        newActionBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600';
+        // Check if this is a manual event or proposal event
+        const isProposal = event.extendedProps && event.extendedProps.source === 'proposal';
         
-        // Add event listener for editing the event
-        newActionBtn.addEventListener('click', function() {
-            console.log('Edit button clicked for event:', event.id);
-            // Close the details modal
-            closeEventDetailsModal();
+        if (!isProposal) {
+            // Manual event - show edit/delete buttons
+            const editBtn = document.createElement('button');
+            editBtn.textContent = 'Edit/Reschedule Event';
+            editBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600';
+            editBtn.onclick = function() {
+                console.log('Edit button clicked for event:', event.id);
+                closeEventDetailsModal();
+                setTimeout(() => editEvent(event), 100);
+            };
             
-            // Open the edit modal with a slight delay to ensure the first modal is closed
-            setTimeout(() => {
-                editEvent(event.id);
-            }, 100);
-        });}
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = 'Cancel Event';
+            deleteBtn.className = 'px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700';
+            deleteBtn.onclick = function() {
+                showConfirmDeleteModal(() => deleteEvent(event));
+            };
+            
+            actionContainer.appendChild(editBtn);
+            actionContainer.appendChild(deleteBtn);
+        } else {
+            // Proposal event - show info message
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'text-sm text-blue-600 bg-blue-50 p-3 rounded border border-blue-200';
+            infoDiv.innerHTML = `
+                <div class="flex items-center">
+                    <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span>This event is from an approved proposal${event.extendedProps.organization ? ' by ' + event.extendedProps.organization : ''}</span>
+                </div>
+            `;
+            actionContainer.appendChild(infoDiv);
+        }
+    }
     @endif
     
     // Show modal with animation
     modal.classList.remove('hidden');
-    
-    // Trigger animation after a small delay
     setTimeout(() => {
         modalContent.classList.remove('modal-hidden');
         modalContent.classList.add('modal-visible');
@@ -767,17 +876,23 @@ function openEventDetailsModal(event) {
 }
 
 function closeEventDetailsModal() {
+    console.log("Closing event details modal");
+    
     const modal = document.getElementById('eventDetailsModal');
     const modalContent = modal.querySelector('.modal-container');
     
     if (modal) {
-        // Hide with animation
         modalContent.classList.remove('modal-visible');
         modalContent.classList.add('modal-hidden');
         
-        // Completely hide after animation completes
         setTimeout(() => {
             modal.classList.add('hidden');
+            
+            // Reset modal content
+            document.getElementById('detail-title').textContent = '';
+            document.getElementById('detail-date').textContent = '';
+            
+            console.log("Modal closed, event handlers should still work");
         }, 300);
     }
 }
@@ -955,59 +1070,7 @@ function showDiscardChangesModal(callback) {
         modalContent.classList.add('modal-visible');
     }, 10);
 }
-function editEvent(eventId) {
-    console.log('Editing event with ID:', eventId);
-    
-    // Get event data from the calendar
-    const event = calendarObj.getEventById(eventId);
-    if (!event) {
-        console.error('Event not found with ID:', eventId);
-        return;
-    }
-    
-    console.log('Event found:', event);
-    
-    // Open your event creation/edit modal
-    const modal = document.getElementById('event_modal');
-    if (!modal) {
-        console.error('Event modal not found with ID: event_modal');
-        return;
-    }
-    
-    // Populate the modal with event data
-    document.getElementById('event_title').value = event.title;
-    document.getElementById('event_start_date').value = formatDateForInput(event.start);
-    document.getElementById('event_end_date').value = formatDateForInput(event.end || event.start);
-    
-    if (document.getElementById('event_description')) {
-        document.getElementById('event_description').value = event.extendedProps?.description || '';
-    }
-    
-    // Add event ID to form for update instead of create
-    const form = document.getElementById('event_form');
-    if (!form) {
-        console.error('Event form not found with ID: event_form');
-        return;
-    }
-    
-    let idInput = form.querySelector('input[name="event_id"]');
-    if (!idInput) {
-        idInput = document.createElement('input');
-        idInput.type = 'hidden';
-        idInput.name = 'event_id';
-        form.appendChild(idInput);
-    }
-    idInput.value = eventId;
-    
-    // Change modal title to indicate editing
-    const modalTitle = modal.querySelector('.modal-title');
-    if (modalTitle) {
-        modalTitle.textContent = 'Edit Event';
-    }
-    
-    // Show the modal
-    modal.classList.remove('hidden');
-}
+
 
 // Helper function to format date for input fields
 function formatDateForInput(date) {
@@ -1041,6 +1104,434 @@ function closeDiscardModal(confirmed) {
         discardChangesCallback = null;
     }, 300);
 }
+
+// Replace your editEvent function with this
+// Modify the editEvent function to apply validations
+// Update the editEvent function to properly initialize the character counter
+function editEvent(event) {
+    // Get the event modal
+    const modal = document.getElementById('eventModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    if (modal) {
+        // Reset form fields first
+        const eventForm = document.getElementById('eventForm');
+        if (eventForm) {
+            eventForm.reset();
+            
+            // Set the form title to indicate editing
+            const modalTitle = modal.querySelector('h3');
+            if (modalTitle) {
+                modalTitle.textContent = 'Edit Event';
+            }
+            
+            // Fill the form with event data
+            const titleEl = document.getElementById('event-title');
+            const startEl = document.getElementById('event-start');
+            const endEl = document.getElementById('event-end');
+            
+            if (titleEl) titleEl.value = event.title;
+            
+            // Format dates properly for the form
+            if (startEl) {
+                startEl.value = formatDateForInput(event.start);
+                startEl.setAttribute('type', 'datetime-local');
+            }
+            
+            if (endEl && event.end) {
+                endEl.value = formatDateForInput(event.end);
+                endEl.setAttribute('type', 'datetime-local');
+            }
+            
+            // Store the event ID in a hidden field for the update operation
+            let eventIdField = eventForm.querySelector('input[name="event_id"]');
+            if (!eventIdField) {
+                eventIdField = document.createElement('input');
+                eventIdField.type = 'hidden';
+                eventIdField.name = 'event_id';
+                eventForm.appendChild(eventIdField);
+            }
+            eventIdField.value = event.id;
+            
+            // Change save button to indicate update
+            const saveButton = eventForm.querySelector('button[onclick="saveEvent()"]');
+            if (saveButton) {
+                saveButton.textContent = 'Update Event';
+                
+                // Store original onclick to restore later
+                saveButton.setAttribute('data-original-onclick', 'saveEvent()');
+                saveButton.setAttribute('onclick', 'updateEvent()');
+            }
+            
+            // Reinitialize emoji validation on the title field
+            setupEmojiValidation();
+            
+            // Make sure the character counter shows the current length
+            if (titleEl) {
+                // Force update the counter with current value
+                const charCounter = document.getElementById('char-counter');
+                if (charCounter) {
+                    const length = titleEl.value.length;
+                    if (length < 6) {
+                        charCounter.textContent = `${length}/80 characters (minimum 6 required)`;
+                        charCounter.className = 'text-red-600 text-sm mt-1';
+                    } else if (length > 80) {
+                        charCounter.textContent = `${length}/80 characters (maximum exceeded)`;
+                        charCounter.className = 'text-red-600 text-sm mt-1';
+                    } else {
+                        charCounter.textContent = `${length}/80 characters`;
+                        charCounter.className = 'text-gray-600 text-sm mt-1';
+                    }
+                }
+                
+                
+                // Trigger the input event to ensure validation is applied
+                titleEl.dispatchEvent(new Event('input'));
+            }
+        }
+        
+        // Show modal with animation
+        modal.classList.remove('hidden');
+        
+        // Trigger animation after a small delay
+        setTimeout(() => {
+            modalContent.classList.remove('modal-hidden');
+            modalContent.classList.add('modal-visible');
+        }, 10);
+    }
+}
+
+// Add this function for updating events
+function updateEvent() {
+    console.log("updateEvent function called");
+    
+    // Get form values
+    const titleEl = document.getElementById('event-title');
+    const startEl = document.getElementById('event-start');
+    const endEl = document.getElementById('event-end');
+    const eventIdField = document.querySelector('input[name="event_id"]');
+    
+    if (!titleEl || !startEl || !eventIdField) {
+        console.error('Form elements not found!');
+        alert('Error: Form elements not found.');
+        return;
+    }
+    
+    // Apply the same validations as in saveEvent()
+    const title = titleEl.value;
+    const trimmedTitle = title.trim();
+    
+    if (title.startsWith(' ') || !trimmedTitle) {
+        alert('Event title cannot be empty or start with spaces.');
+        return;
+    }
+    
+    const startStr = startEl.value;
+    const endStr = endEl && endEl.value ? endEl.value : null;
+    const eventId = eventIdField.value;
+    
+    // Validate form first
+    if (!title || !startStr) {
+        alert('Please fill in required fields');
+        return;
+    }
+    
+    // Check if dates are valid
+    const eventDate = new Date(startStr);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (eventDate < today) {
+        alert("Events cannot be created on past dates");
+        return;
+    }
+
+    // Add end date validation
+    if (endStr) {
+        const endDate = new Date(endStr);
+        
+        if (endDate < today) {
+            alert("Event cannot end in the past");
+            return;
+        }
+        
+        if (endDate < eventDate) {
+            alert("End date cannot be before start date");
+            return;
+        }
+    }
+    
+    // Check for emoji or special characters in title
+    if (containsEmoji(title) || containsSpecialChars(title)) {
+        alert('Your event title contains invalid characters. Please use only letters, numbers, spaces, and basic punctuation.');
+        return;
+    }
+    
+    // Check character limit (6-80 range)
+    const titleLength = title.length;
+    if (titleLength < 6) {
+        alert('Event title is too short. Please use at least 6 characters.');
+        return;
+    }
+    if (titleLength > 80) {
+        alert('Event title is too long. Please keep it under 80 characters.');
+        return; 
+    }
+
+    // Check if this event should be all-day
+    const hasTimeComponent = startStr.includes('T') || (endStr && endStr.includes('T'));
+    
+    // CREATE THE EVENT DATA OBJECT
+    const eventData = {
+        id: eventId,
+        title: title,
+        start: startStr,
+        end: endStr,
+        allDay: !hasTimeComponent
+    };
+    
+    console.log('Updating event with data:', eventData);
+    
+    // Show confirmation modal before updating
+    showConfirmSaveModal(function() {
+        // Send AJAX request to update event
+        fetch('{{ route("calendar.update") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(eventData)
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            if (!response.ok) {
+                return response.text().then(text => {
+                    console.error('Server error response:', text);
+                    throw new Error(`Server error: ${response.status}`);
+                });
+            }
+            return response.json();
+        })
+        .then(result => {
+    console.log('Event updated successfully:', result);
+    
+    // Refetch events to update the calendar display
+    calendarObj.refetchEvents();
+    
+    // Clear the form first to prevent discard modal from showing
+    const eventForm = document.getElementById('eventForm');
+    if (eventForm) {
+        eventForm.reset();
+        
+        // Reset the modal title
+        const modalTitle = document.querySelector('#eventModal h3');
+        if (modalTitle) {
+            modalTitle.textContent = 'Create New Event';
+        }
+        
+        // Reset the save button
+        const saveButton = eventForm.querySelector('button[onclick*="Event"]');
+        if (saveButton) {
+            saveButton.textContent = 'Save Event';
+            saveButton.setAttribute('onclick', 'saveEvent()');
+        }
+        
+        // Remove the event ID field if it exists
+        const eventIdField = eventForm.querySelector('input[name="event_id"]');
+        if (eventIdField) {
+            eventIdField.remove();
+        }
+    }
+    
+    // Close modal directly without checking for changes
+    const modal = document.getElementById('eventModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    if (modal && modalContent) {
+        modalContent.classList.remove('modal-visible');
+        modalContent.classList.add('modal-hidden');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+    
+    // Show success message
+    alert('Event updated successfully!');
+})
+        .catch(error => {
+            console.error('Error updating event:', error);
+            alert('Error updating event: ' + error.message);
+        });
+    });
+}
+
+
+// Add this function for deleting events
+function deleteEvent(event) {
+    const eventId = event.id;
+    
+    // Send AJAX request to delete event
+    fetch('{{ route("calendar.destroy") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ id: eventId })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error('Server error response:', text);
+                throw new Error(`Server error: ${response.status}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Event deleted successfully:', data);
+        
+
+        // Refresh event handlers
+        calendarObj.refetchEvents();
+
+        // Close details modal
+        closeEventDetailsModal();
+    })
+    .catch(error => {
+        console.error('Error deleting event:', error);
+        alert('Error deleting event: ' + error.message);
+    });
+}
+
+// Add this function to reset the event form after updates
+function resetEventForm() {
+    const eventForm = document.getElementById('eventForm');
+    if (eventForm) {
+        eventForm.reset();
+        
+        // Reset the modal title
+        const modalTitle = document.querySelector('#eventModal h3');
+        if (modalTitle) {
+            modalTitle.textContent = 'Create New Event';
+        }
+        
+        // Reset the save button
+        const saveButton = eventForm.querySelector('button[onclick="updateEvent()"]');
+        if (saveButton) {
+            saveButton.textContent = 'Save Event';
+            saveButton.setAttribute('onclick', saveButton.getAttribute('data-original-onclick'));
+            saveButton.removeAttribute('data-original-onclick');
+        }
+        
+        // Remove the event ID field
+        const eventIdField = eventForm.querySelector('input[name="event_id"]');
+        if (eventIdField) {
+            eventIdField.remove();
+        }
+    }
+}
+
+// Add a delete confirmation modal
+let deleteCallback = null;
+
+// Replace the showConfirmDeleteModal function with this improved version
+function showConfirmDeleteModal(callback) {
+    deleteCallback = callback;
+    
+    // Instead of reusing the save modal, create a dedicated delete confirmation dialog
+    const modal = document.getElementById('confirmSaveModal'); // We'll still use the same modal element
+    const modalContent = modal.querySelector('.modal-container');
+    
+    // Change title and text
+    const title = modal.querySelector('h3');
+    if (title) title.textContent = 'Confirm Cancel Event';
+    
+    const text = modal.querySelector('p');
+    if (text) text.textContent = 'Are you sure you want to cancel this event? This action cannot be undone.';
+    
+    // Change button colors
+    const confirmBtn = modal.querySelector('button:last-child');
+    if (confirmBtn) {
+        confirmBtn.className = 'px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700';
+        confirmBtn.textContent = 'Yes, Cancel Event';
+    }
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modalContent.classList.remove('modal-hidden');
+        modalContent.classList.add('modal-visible');
+    }, 10);
+    
+    // Create a custom handler for this specific case
+    const handleDeleteConfirmation = function(confirmed) {
+        // Hide modal first
+        modalContent.classList.remove('modal-visible');
+        modalContent.classList.add('modal-hidden');
+        
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            
+            // Execute callback if confirmed (after modal is hidden)
+            if (confirmed && typeof deleteCallback === 'function') {
+                // Execute after a small delay to prevent visual glitches
+                setTimeout(() => {
+                    deleteCallback();
+                }, 50);
+            }
+            
+            // Reset modal appearance after it's hidden
+            setTimeout(() => {
+                // Reset button styling
+                if (confirmBtn) {
+                    confirmBtn.className = 'px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700';
+                    confirmBtn.textContent = 'Confirm';
+                }
+                
+                // Reset text
+                if (title) title.textContent = 'Confirm Changes';
+                if (text) text.textContent = 'Are you sure you want to save these changes?';
+                
+                // Reset callback
+                deleteCallback = null;
+            }, 350);
+        }, 300);
+    };
+    
+    // Store references to buttons and update their onclick handlers
+    const cancelBtn = modal.querySelector('button:first-of-type');
+    const confirmButton = modal.querySelector('button:last-child');
+    
+    // Store original onclick handlers
+    const cancelBtnOriginal = cancelBtn.onclick;
+    const confirmBtnOriginal = confirmButton.onclick;
+    
+    // Set temporary handlers for this interaction
+    cancelBtn.onclick = () => handleDeleteConfirmation(false);
+    confirmButton.onclick = () => handleDeleteConfirmation(true);
+    
+    // Add a cleanup function to reset event handlers when modal is hidden
+    const cleanup = () => {
+        cancelBtn.onclick = cancelBtnOriginal;
+        confirmButton.onclick = confirmBtnOriginal;
+        modal.removeEventListener('hidden', cleanup);
+    };
+    
+    modal.addEventListener('hidden', cleanup);
+}
+
+function refreshCalendarEvents() {
+    if (calendarObj) {
+        console.log("Refreshing calendar events...");
+        // Just reinitialize the event handlers
+        initializeEventClickHandlers();
+    }
+}
+    
+
 
 </script>
 @endpush

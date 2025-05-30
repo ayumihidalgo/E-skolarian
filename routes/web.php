@@ -170,7 +170,13 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
-
+    Route::get('/calendar-events', [EventController::class, 'getCalendarEvents'])->name('calendar.events');
+    Route::post('/calendar-events', [EventController::class, 'storeCalendarEvent'])->name('calendar.store');
+    Route::post('/calendar/store', [App\Http\Controllers\EventController::class, 'storeCalendarEvent'])->name('calendar.store');
+    Route::get('/calendar/events', [App\Http\Controllers\EventController::class, 'getCalendarEvents'])->name('calendar.events');
+    Route::post('/calendar/update', [EventController::class, 'updateCalendarEvent'])->name('calendar.update');
+    Route::post('/calendar/destroy', [EventController::class, 'destroyCalendarEvent'])->name('calendar.destroy');
+    Route::get('/calendar/approved-proposals', [EventController::class, 'getApprovedProposals'])->name('calendar.approved-proposals');
     // User
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
@@ -382,3 +388,5 @@ Route::get('/loading', function () {
 Route::get('/login', function () {
     return redirect()->route('landing');
 })->name('login');
+
+

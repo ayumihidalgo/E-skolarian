@@ -327,6 +327,7 @@ function containsSpecialChars(text) {
                 },
                 dayHeaderFormat: { weekday: 'short' },
                 fixedWeekCount: false,
+                events: '{{ route("calendar.events") }}',
                 // Handle date changes
                 datesSet: function() {
                     checkIfCurrentMonth();
@@ -372,19 +373,7 @@ function containsSpecialChars(text) {
                     info.el.setAttribute('title', fullTitle);
                 },
                 // Sample events (replace with your actual events)
-                events: [
-                    {
-                        title: 'School Meeting',
-                        start: '2025-05-15',
-                        backgroundColor: '#7A1212'
-                    },
-                    {
-                        title: 'Teacher Conference',
-                        start: '2025-05-22',
-                        end: '2025-05-23',
-                        backgroundColor: '#3498db'
-                    }
-                ]
+
             });
             
             // Render calendar immediately
