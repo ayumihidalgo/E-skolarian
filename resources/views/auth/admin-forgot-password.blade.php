@@ -259,24 +259,46 @@
             }
         });
 
-        // Intercept back to login click
-        backToLogin.addEventListener('click', (e) => {
-            if (isDirty) {
-                e.preventDefault();
-                modal.classList.remove('hidden');
-            } else {
-                window.location.href = "{{ route('admin.login') }}";
-            }
-        });
+         let isSafeExit = false;
 
-        // Modal buttons
-        confirmLeave.addEventListener('click', () => {
-            window.location.href = "{{ route('admin.login') }}";
-        });
+    // Mark exit as safe when user clicks "Back to Login"
+    document.getElementById('backToLogin').addEventListener('click', function (e) {
+    e.preventDefault();
 
-        cancelLeave.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
+    if (isDirty) {
+        // Show the modal only if there are unsaved changes
+        modal.classList.remove('hidden');
+    } else {
+        // If not dirty, navigate immediately without modal
+        isSafeExit = true; // mark as safe exit to skip beforeunload
+        window.location.href = "{{ route('admin.login') }}";
+    }
+});
+
+    // If user confirms going back
+    document.getElementById('confirmLeave').addEventListener('click', function () {
+        isSafeExit = true; // Allow leaving without beforeunload
+        window.location.href = "{{ route('admin.login') }}";
+    });
+
+    // Cancel going back
+    document.getElementById('cancelLeave').addEventListener('click', function () {
+        document.getElementById('unsavedChangesModal').classList.add('hidden');
+    });
+
+    // Trigger beforeunload only if NOT a safe exit
+    window.addEventListener('beforeunload', function (e) {
+        if (!isSafeExit) {
+            e.preventDefault();
+            e.returnValue = ''; // Needed for Chrome/Edge
+        }
+    });
+
+    // Also make sure form submission sets safe exit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function () {
+        isSafeExit = true;
+    });
 
         </script>
 

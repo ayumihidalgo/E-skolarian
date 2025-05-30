@@ -180,7 +180,7 @@
                                 Remember Me
                             </label>
                         </div>
-                        <a href="{{ route('admin.password.request') }}" class="inline-block font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
+                        <a href="{{ route('admin.password.request') }}" id="forgotPasswordLink" class="inline-block font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
                     </div>
 
 
@@ -863,6 +863,25 @@
         document.getElementById('privacyModal').classList.remove('hidden');
         document.getElementById('privacyModal').classList.add('flex');
     }
+
+     let isSafeExit = false;
+    document.getElementById('forgotPasswordLink').addEventListener('click', function () {
+    isSafeExit = true; // Prevent beforeunload
+    });
+    // Trigger beforeunload only if NOT a safe exit
+    window.addEventListener('beforeunload', function (e) {
+        if (!isSafeExit) {
+            e.preventDefault();
+            e.returnValue = ''; // Needed for Chrome/Edge
+        }
+    });
+
+    // Also make sure form submission sets safe exit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function () {
+        isSafeExit = true;
+    });
+
 </script>
 
     </body>
