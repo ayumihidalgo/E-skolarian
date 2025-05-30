@@ -551,7 +551,7 @@ function resetEventFormCompletely() {
             if (button.textContent.includes('Save') || 
                 button.textContent.includes('Update') || 
                 button.textContent.includes('Reschedule')) {
-                button.textContent = 'Save Event';
+                button.textContent = 'Save';
                 button.setAttribute('onclick', 'saveEvent()');
                 // Reset button classes to original
                 button.className = 'px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#7A1212] hover:bg-[#8A2222]';
@@ -624,7 +624,7 @@ function openEventModal(dateStr = null) {
             // Ensure modal title is correct
             const modalTitle = document.querySelector('#eventModal h3');
             if (modalTitle) {
-                modalTitle.textContent = 'Create New Event';
+                modalTitle.textContent = 'Add Event';
             }
             
             // Ensure save button is correct
@@ -998,8 +998,10 @@ function openEventDetailsModal(event) {
         if (!isProposal) {
             // Manual event - show edit/delete buttons (PRESERVED ORIGINAL LOGIC)
             const editBtn = document.createElement('button');
-            editBtn.textContent = 'Edit/Reschedule Event';
-            editBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600';
+            editBtn.textContent = 'Reschedule';
+            editBtn.className = 'px-4 py-2 text-white rounded hover:opacity-80 mr-2';
+            editBtn.style.backgroundColor = '#DAA520'; // Gold color for reschedule
+            editBtn.style.borderColor = '#DAA520';
             editBtn.onclick = function() {
                 console.log('Edit button clicked for event:', event.id);
                 closeEventDetailsModal();
@@ -1008,7 +1010,9 @@ function openEventDetailsModal(event) {
             
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = 'Cancel Event';
-            deleteBtn.className = 'px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700';
+            deleteBtn.className = 'px-4 py-2 text-white rounded hover:opacity-80';
+            deleteBtn.style.backgroundColor = '#7A1212'; 
+            deleteBtn.style.borderColor = '#7A1212';
             deleteBtn.onclick = function() {
                 showConfirmDeleteModal(() => deleteEvent(event));
             };
@@ -1019,25 +1023,18 @@ function openEventDetailsModal(event) {
             // Proposal event - show reschedule button and info (ENHANCED VERSION)
             const rescheduleBtn = document.createElement('button');
             rescheduleBtn.textContent = 'Reschedule Event';
-            rescheduleBtn.className = 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 mr-2';
+            rescheduleBtn.className = 'px-4 py-2 text-white rounded hover:opacity-80 mr-2';
+            rescheduleBtn.style.backgroundColor = '#DAA520'; // Gold color for reschedule
+            rescheduleBtn.style.borderColor = '#DAA520';
             rescheduleBtn.onclick = function() {
                 closeEventDetailsModal();
                 editApprovedProposal(event);
             };
             
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'text-sm text-blue-600 bg-blue-50 p-3 rounded border border-blue-200 mt-2';
-            infoDiv.innerHTML = `
-                <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span>This event is from an approved proposal${event.extendedProps.organization ? ' by ' + event.extendedProps.organization : ''}. You can reschedule it if needed.</span>
-                </div>
-            `;
+
             
             actionContainer.appendChild(rescheduleBtn);
-            actionContainer.appendChild(infoDiv);
+            
         }
         
         // Add color legend info (NEW ADDITION)
@@ -1794,26 +1791,12 @@ function refreshCalendarEvents() {
             // Change save button to indicate update
             const saveButton = eventForm.querySelector('button[onclick="saveEvent()"]');
             if (saveButton) {
-                saveButton.textContent = 'Reschedule Proposal';
+                saveButton.textContent = 'Save';
                 saveButton.setAttribute('onclick', 'updateApprovedProposal()');
             }
 
             // Add info message about proposal reschedule
-            const infoDiv = document.createElement('div');
-            infoDiv.className = 'text-sm text-blue-600 bg-blue-50 p-3 rounded border border-blue-200 mb-4';
-            infoDiv.id = 'proposal-info';
-            infoDiv.innerHTML = `
-                <div class="flex items-center">
-                    <svg class="w-4 h-4 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-                    </svg>
-                    <span>You're rescheduling an approved student proposal. The title cannot be changed, but you can update the dates.</span>
-                </div>
-            `;
-            
-            // Insert info div after the title field
-            const titleDiv = titleEl.parentElement;
-            titleDiv.parentNode.insertBefore(infoDiv, titleDiv.nextSibling);
+    
         }
 
         // Show modal with animation
