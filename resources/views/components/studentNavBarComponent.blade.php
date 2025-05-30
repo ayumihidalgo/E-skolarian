@@ -3,7 +3,7 @@
         <x-general-components.notification />
         <div>
             @auth
-                <a href="#" class="font-semibold">{{ Auth::user()->username }}</a>
+                <a href="#" class="font-semibold">{{ Auth::user()->organization_acronym }}</a>
             @else
                 <a href="#" class="font-semibold">Guest</a>
             @endauth

@@ -36,12 +36,12 @@ class DocumentController extends Controller
             // Validate the incoming request
             $validated = $request->validate([
                 'received_by' => 'required|exists:users,id',
-                'subject' => 'required|string|max:50',
-                'type' => 'required|in:Event Proposal,General Plan of Activities,Calendar of Activities,Accomplishment Report,Constitution and By-Laws,Request Letter,Off Campus,Petition and Concern',
+                'subject' => 'required|string|max:100',
+                'type' => 'required|in:Event Proposal,General Plan of Activities,Calendar of Activities,Accomplishment Report,Constitution and By-Laws,Request Letter,Off Campus,Petition and Concern,Others',
                 'summary' => 'required|string|max:255',
                 'eventStartDate' => 'nullable|date|required_if:type,Event Proposal',
                 'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:type,Event Proposal',
-                'event-title' => 'nullable|string|max:50|required_if:type,Event Proposal',
+                'event-title' => 'nullable|string|max:60|required_if:type,Event Proposal',
                 'event-desc' => 'nullable|string|max:255|required_if:type,Event Proposal',
                 'file_upload' => 'required|array|max:30',
                 'file_upload.*' => 'file|mimes:pdf,doc,docx|max:5120',
@@ -70,13 +70,16 @@ class DocumentController extends Controller
 
             $version = 1;   // NOTE: Version control not implemented yet
             foreach ($files as $file) {
-                $filePath = $file->store('documents', 'public');
+                $originalName = $file->getClientOriginalName();
+                // Optionally, you can prepend a unique ID or timestamp to avoid overwriting files with the same name
+                $filePath = $file->storeAs('documents', $originalName, 'public');
 
                 DocumentVersion::create([
                     'document_id' => $document->id,
                     'uploaded_by' => Auth::id(),
-                    'version' => $version, // NOTE: Version control not implemented yet
+                    'version' => $version,
                     'file_path' => $filePath,
+                    'original_name' => $originalName,
                     'comments' => $request->input('comments'),
                     'submitted_at' => now(),
                 ]);

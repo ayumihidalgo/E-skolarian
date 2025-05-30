@@ -35,12 +35,24 @@ class DocumentReviewController extends Controller
         // Base query - documents with their submitters 
         $documentsQuery = SubmittedDocument::with(['user'])
             ->select('submitted_documents.*')
-            ->where('received_by', $user->id)  // Only show documents intended for this admin
+            ->where(function($query) use ($user) {
+                // Get documents assigned to this admin or forwarded by this admin
+                $query->where('received_by', $user->id)
+                    ->orWhereHas('documentForwards', function($q) use ($user) {
+                        $q->where('forwarded_by', $user->id);
+                    });
+            })
             ->addSelect(DB::raw("
                 CASE 
                     WHEN reviews.id IS NULL THEN false
                     ELSE true
                 END as is_opened
+            "))
+            ->addSelect(DB::raw("
+                CASE 
+                    WHEN submitted_documents.received_by = " . $user->id . " THEN true
+                    ELSE false
+                END as is_current_receiver
             "))
             ->leftJoin('reviews', function($join) {
                 $join->on('submitted_documents.id', '=', 'reviews.document_id')
@@ -51,41 +63,54 @@ class DocumentReviewController extends Controller
         if ($searchTerm) {
             $documentsQuery->where(function($query) use ($searchTerm) {
                 $query->where('control_tag', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('subject', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('type', 'LIKE', "%{$searchTerm}%")
-                      ->orWhereHas('user', function($q) use ($searchTerm) {
-                          $q->where('username', 'LIKE', "%{$searchTerm}%");
-                      });
+                    ->orWhere('subject', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('type', 'LIKE', "%{$searchTerm}%")
+                    ->orWhereHas('user', function($q) use ($searchTerm) {
+                        $q->where('username', 'LIKE', "%{$searchTerm}%");
+                    });
             });
+        }
+
+        // Handle full date search (MM/DD/YYYY)
+        if ($request->filled('fullDate')) {
+            $datePattern = $request->input('fullDate');
+            list($month, $day, $year) = explode('/', $datePattern);
+            
+            $formattedDate = "{$year}-{$month}-{$day}";
+            $documentsQuery->whereDate('submitted_documents.created_at', $formattedDate);
+        }
+
+        // Handle month/day pattern search
+        elseif ($request->filled('monthDayPattern')) {
+            $pattern = $request->input('monthDayPattern');
+            list($month, $day) = explode('/', $pattern);
+            
+            // Search for the specific month and day across any year
+            $documentsQuery->whereMonth('submitted_documents.created_at', $month)
+                        ->whereDay('submitted_documents.created_at', $day);
         }
         
         // Apply organization filter if provided
         if ($selectedOrg && $selectedOrg !== 'All') {
-            // Create a mapping between acronyms and full organization names
-            $orgMap = [
-                'ACAP' => 'Association of Competent and Aspiring Psychologists',
-                'AECES' => 'Association of Electronics and Communications Engineering Students',
-                'ELITE' => 'Eligible League of Information Technology Enthusiasts',
-                'GIVE' => 'Guild of Imporous and Valuable Educators',
-                'JEHRA' => 'Junior Executive of Human Resource Association',
-                'JMAP' => 'Junior Marketing Association of the Philippines',
-                'JPIA' => 'Junior Philippine Institute of Accountants',
-                'PIIE' => 'Philippine Institute of Industrial Engineers',
-                'AGDS' => 'Artist Guild Dance Squad',
-                'Chorale' => 'PUP SRC Chorale',
-                'SIGMA' => "Supreme Innovators' Guild for Mathematics Advancements",
-                'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
-                'OSC' => 'Office of the Student Council'
-            ];
-            
-            // Get full name of organization if acronym is selected
-            $fullOrgName = $orgMap[$selectedOrg] ?? $selectedOrg;
-            
-            $documentsQuery->whereHas('user', function($query) use ($selectedOrg, $fullOrgName) {
-                $query->where('username', 'LIKE', "%{$selectedOrg}%")
-                      ->orWhere('username', 'LIKE', "%{$fullOrgName}%");
+            $documentsQuery->whereHas('user', function($query) use ($selectedOrg) {
+            $query->where('organization_acronym', $selectedOrg);
             });
         }
+
+        // Get all unique organizations from the users table
+        $organizations = User::where('role_name', '!=', 'admin')
+                            ->where(function($query) {
+                            $query->where('role_name', 'Academic Organization')
+                                ->orWhere('role_name', 'Non-Academic Organization');
+                            })
+                            ->whereNotNull('organization_acronym')
+                            ->where('active', true)
+                            ->orderBy('organization_acronym')
+                            ->distinct()
+                            ->pluck('organization_acronym')
+                            ->filter()  // Remove any null values
+                            ->unique()  // Remove duplicates
+                            ->values(); // Reset array keys
         
         // Apply document type filter if provided
         if ($selectedType && $selectedType !== 'All') {
@@ -107,14 +132,14 @@ class DocumentReviewController extends Controller
             $documentsQuery->where('type', 'LIKE', "%{$fullTypeName}%");
         }
         
-        // Order by creation date (newest first)
-        $documentsQuery->orderBy('submitted_documents.created_at', 'desc');
+        // Order by updated date (latest first)
+        $documentsQuery->orderBy('submitted_documents.updated_at', 'desc');
             
         // Paginate the results - this returns a LengthAwarePaginator
         $documents = $documentsQuery->paginate(6)->withQueryString();
         
         // Transform each document in the paginated collection
-        $documents->getCollection()->transform(function($document) {
+        $documents->getCollection()->transform(function($document) use ($user) {
             $document->tag = $document->control_tag;
             
             // Properly get the username from the users table via the relationship
@@ -125,6 +150,25 @@ class DocumentReviewController extends Controller
             
             // Add flag to indicate if document has already been reviewed with a decision
             $document->has_decision = $document->reviews()->whereIn('status', ['approved', 'rejected', 'resubmission'])->exists();
+
+            // Add flag to indicate if the current user is the receiver or just a previous forwarder
+            $document->is_current_receiver = $document->received_by == $user->id;
+            
+            // Add forwarded status information
+            if (!$document->is_current_receiver) {
+                // Find the forward record
+                $forwardRecord = DB::table('document_forwards')
+                    ->where('document_id', $document->id)
+                    ->where('forwarded_by', $user->id)
+                    ->orderBy('created_at', 'desc')
+                    ->first();
+                    
+                if ($forwardRecord) {
+                    $receiverUser = User::find($forwardRecord->forwarded_to);
+                    $document->forwarded_to = $receiverUser ? $receiverUser->username : 'Unknown Admin';
+                    $document->forwarded_at = \Carbon\Carbon::parse($forwardRecord->created_at);
+                }
+            }
             
             return $document;
         });
@@ -147,46 +191,13 @@ class DocumentReviewController extends Controller
             'DOC' => 'text-blue-800',
         ];
 
-        return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType'));
-    }
+        // Check if this is an AJAX request
+        if ($request->ajax()) {
+            return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType', 'organizations'));
+        }
 
-    // /**
-    //  * Get the details of a specific document
-    //  *
-    //  * @param int $id
-    //  * @return \Illuminate\Http\JsonResponse
-    //  */
-    // public function getDetails($id)
-    // {
-    //     $document = SubmittedDocument::with(['user', 'reviews.reviewer'])
-    //         ->where('received_by', Auth::id())  // Only allow access to documents intended for this user
-    //         ->findOrFail($id);
-            
-    //     // Transform document for the view
-    //     $documentData = [
-    //         'id' => $document->id,
-    //         'subject' => $document->subject,
-    //         'summary' => $document->summary,
-    //         'type' => $document->type,
-    //         'control_tag' => $document->control_tag,
-    //         'status' => $document->status,
-    //         'file_path' => $document->file_path,
-    //         'created_at' => $document->created_at,
-    //         'organization' => $document->user ? $document->user->username : 'Unknown',
-    //         'has_decision' => $document->reviews()->whereIn('status', ['approved', 'rejected', 'resubmission'])->exists(),
-    //         'reviews' => $document->reviews->map(function($review) {
-    //             return [
-    //                 'reviewer_name' => $review->reviewer ? $review->reviewer->username : 'Unknown',
-    //                 'status' => $review->status,
-    //                 'message' => $review->message,
-    //                 'created_at' => $review->created_at,
-    //                 'updated_at' => $review->updated_at
-    //             ];
-    //         })
-    //     ];
-        
-    //     return response()->json($documentData);
-    // }
+        return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType', 'organizations'));
+    }
 
     /**
      * Get the details of a specific document
@@ -196,15 +207,48 @@ class DocumentReviewController extends Controller
      */
     public function getDetails($id)
     {
+        $user = Auth::user();
+        
+        // Find document that was either received by or forwarded by the current admin
         $document = SubmittedDocument::with([
-            'user',
+            'user:id,username,profile_pic,role_name,organization_acronym',
             'reviews.reviewer',
             'documentVersions' => function($query) {
                 $query->orderBy('version', 'desc');
+            },
+            'documentForwards' => function($query) use ($user) {
+                $query->where('forwarded_by', $user->id)
+                    ->orWhere('forwarded_to', $user->id);
             }
         ])
-        ->where('received_by', Auth::id())  // Only allow access to documents intended for this user
+        ->where(function($query) use ($user) {
+            $query->where('received_by', $user->id)
+                ->orWhereHas('documentForwards', function($q) use ($user) {
+                    $q->where('forwarded_by', $user->id);
+                });
+        })
         ->findOrFail($id);
+            
+        // Determine if user is current receiver (for UI permission control)
+        $isCurrentReceiver = $document->received_by == $user->id;
+        $forwardInfo = null;
+
+        // If not current receiver, get forwarding details
+        if (!$isCurrentReceiver) {
+            $forwardRecord = $document->documentForwards()
+                ->where('forwarded_by', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->first();
+                
+            if ($forwardRecord) {
+                $receiverUser = User::find($forwardRecord->forwarded_to);
+                $forwardInfo = [
+                    'forwarded_to' => $receiverUser ? $receiverUser->username : 'Unknown Admin',
+                    'forwarded_at' => $forwardRecord->created_at,
+                    'message' => $forwardRecord->message
+                ];
+            }
+        }
             
         // Transform document for the view
         $documentData = [
@@ -216,7 +260,16 @@ class DocumentReviewController extends Controller
             'status' => $document->status,
             'created_at' => $document->created_at,
             'organization' => $document->user ? $document->user->username : 'Unknown',
+            'user' => $document->user ? [
+                'id' => $document->user->id,
+                'username' => $document->user->username,
+                'profile_pic' => $document->user->profile_pic,
+                'role_name' => $document->user->role_name,
+                'organization_acronym' => $document->user->organization_acronym 
+            ] : null,
             'has_decision' => $document->reviews()->whereIn('status', ['approved', 'rejected', 'resubmission'])->exists(),
+            'is_current_receiver' => $isCurrentReceiver,
+            'forward_info' => $forwardInfo,
             'reviews' => $document->reviews->map(function($review) {
                 return [
                     'reviewer_name' => $review->reviewer ? $review->reviewer->username : 'Unknown',
@@ -265,31 +318,40 @@ class DocumentReviewController extends Controller
     public function markAsOpened($id)
     {
         try {
+            $user = Auth::user();
             $document = SubmittedDocument::findOrFail($id);
             
-            // Ensure the document is intended for this admin
-            if ($document->received_by != Auth::id()) {
+            // Check if the document is either directly assigned to this admin
+            // OR if this admin has forwarded the document to someone else
+            $canAccess = ($document->received_by == $user->id) || 
+                        DocumentForward::where('document_id', $id)
+                                    ->where('forwarded_by', $user->id)
+                                    ->exists();
+            
+            if (!$canAccess) {
                 return response()->json([
                     'success' => false, 
                     'error' => 'This document is not assigned to you'
                 ], 403);
             }
             
-            // Check if a review already exists for this document by the current user
-            $existingReview = DB::table('reviews')
-                ->where('document_id', $id)
-                ->where('reviewed_by', Auth::id())
-                ->first();
-                
-            // If no review exists, create one with "Under Review" status
-            if (!$existingReview) {
-                DB::table('reviews')->insert([
-                    'document_id' => $id,
-                    'reviewed_by' => Auth::id(),
-                    'status' => 'Under Review',
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
+            // Only create a review record if this user is the current receiver
+            if ($document->received_by == $user->id) {
+                // Check if a review already exists for this document by the current user
+                $existingReview = Review::where('document_id', $id)
+                    ->where('reviewed_by', $user->id)
+                    ->first();
+                    
+                // If no review exists, create one with "Under Review" status
+                if (!$existingReview) {
+                    Review::create([
+                        'document_id' => $id,
+                        'reviewed_by' => $user->id,
+                        'status' => 'Under Review',
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
             }
             
             return response()->json(['success' => true]);
@@ -554,14 +616,27 @@ class DocumentReviewController extends Controller
                 ], 404);
             }
 
-            // Create a review record
-            $review = new Review([
-                'document_id' => $id,
-                'reviewed_by' => Auth::id(),
-                'status' => 'Forwarded',
-                'message' => 'Document forwarded to ' . $targetAdmin->username . ': ' . $request->input('message'),
-            ]);
-            $review->save();
+            // Find existing review or create a new one for current admin
+            $review = Review::where('document_id', $id)
+                ->where('reviewed_by', Auth::id())
+                ->first();
+                
+            if ($review) {
+                // Update existing review
+                $review->status = 'Forwarded';
+                $review->message = 'Document forwarded to ' . $targetAdmin->username . ': ' . $request->input('message');
+                $review->updated_at = now();
+                $review->save();
+            } else {
+                // Create a new review record
+                $review = new Review([
+                    'document_id' => $id,
+                    'reviewed_by' => Auth::id(),
+                    'status' => 'Forwarded',
+                    'message' => 'Document forwarded to ' . $targetAdmin->username . ': ' . $request->input('message'),
+                ]);
+                $review->save();
+            }
 
             // Record the forwarding action
             $forward = new DocumentForward([
@@ -571,6 +646,18 @@ class DocumentReviewController extends Controller
                 'message' => $request->input('message'),
             ]);
             $forward->save();
+
+            // ALWAYS create a new "Under Review" entry for the target admin
+            // This creates a consistent timeline entry when document is received
+            $newReview = new Review([
+                'document_id' => $id,
+                'reviewed_by' => $request->input('forward_to'),
+                'status' => 'Under Review',
+                'message' => 'Document received for review',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            $newReview->save();
 
             // Update the document's received_by field
             $document->received_by = $request->input('forward_to');

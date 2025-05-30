@@ -24,22 +24,18 @@
         <img src="{{ asset('images/toggleSidebar.svg') }}" alt="Toggle Sidebar"
             class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
     </button>
-<!-- Navigation Links -->
-    <nav class="space-y-4 text-lg font-[Manrope] mt-6">
-        @foreach ([
-            ['Dashboard', 'newDashboard.svg', route('admin.dashboard')],
-            ['Review', 'review.svg', route('admin.documentReview')],
-            ['Archive', 'archive.svg', route('admin.documentHistory')],
-            ['Calendar', 'calendar.svg', route('calendar.indexTwo')],
-            ['Settings', 'settings.svg', route('admin.settings')]
-        ] as [$label, $icon, $route])
-            <a href="{{ $route }}" class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200">
-                <img src="{{ asset("images/$icon") }}" class="h-6 w-6" alt="{{ $label }} Icon">
-                <span class="sidebar-text">{{ $label }}</span>
-            </a>
-        @endforeach
-
-        <form method="POST" action="{{ route('logout') }}" class="mt-60">
+    <!-- Navigation Links -->
+    <nav class="flex flex-col justify-between h-full mt-6">
+        <div class="space-y-6 text-lg font-[Manrope]">
+            @foreach ([['Dashboard', 'newDashboard.svg', route('admin.dashboard')], ['Review', 'review.svg', route('admin.documentReview')], ['History', 'archive.svg', route('admin.documentHistory')], ['Calendar', 'calendar.svg', route('calendar.indexTwo')], ['Settings', 'settings.svg', route('admin.settings')]] as [$label, $icon, $route])
+                <a href="{{ $route }}"
+                    class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200 sidebar-link">
+                    <img src="{{ asset("images/$icon") }}" class="h-6 w-6" alt="{{ $label }} Icon">
+                    <span class="sidebar-text">{{ $label }}</span>
+                </a>
+            @endforeach
+        </div>
+        <form method="POST" action="{{ route('admin.logout') }}">
             @csrf
             <button type="submit"
                 class="flex items-center space-x-3 text-white hover:text-yellow-400 transition duration-200 cursor-pointer">
@@ -47,7 +43,6 @@
                 <span class="sidebar-text font-[Manrope]">Logout</span>
             </button>
         </form>
-
     </nav>
 </div>
 

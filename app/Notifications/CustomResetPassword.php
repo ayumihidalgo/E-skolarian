@@ -26,7 +26,7 @@ class CustomResetPassword extends Notification
         $role = $notifiable->role; // raw, lowercase for URL
         $displayRole = ucwords($role); // capitalized for subject
 
-        $url = url(route('password.reset', [
+        $url = url(route("{$role}.password.reset", [
             'token' => $this->token,
             'email' => $notifiable->getEmailForPasswordReset(),
             'role' => $role,  // Add the role here

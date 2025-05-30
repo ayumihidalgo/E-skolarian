@@ -2,28 +2,41 @@
 
 @extends('base')
 
+<style>
+    body {
+        overflow: hidden;
+    }
+</style>
+
 @section('content')
-    @include('components.studentNavBarComponent')
     @include('components.studentSideBarComponent')
+    <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
+        @include('components.studentNavBarComponent')
+        <div class="flex-grow ">
+            <div class="p-6 ">
+                @include('student.components.titleSubmittedDocuments')
 
-    <div id="main-content" class="transition-all duration-300 ml-[20%]">
-        <div class="p-6 bg-[#f2f4f7] min-h-screen">
-            @include('student.components.titleSubmittedDocuments')
+                <!-- Search and Filters in One Line -->
+                <div class="flex justify-between items-center gap-4 mb-6">
+                    <!-- Search on the left -->
+                    <div class="flex-1">
+                        @include('student.components.viewSearch')
+                    </div>
 
-            @include('student.components.viewSearch')
+                    <!-- Filters on the right -->
+                    <div class="flex items-center gap-4">
+                        <!-- Document Type Dropdown -->
+                        @include('student.components.viewDocumentTypeDropdown')
 
-            <!-- Filters -->
-            <div class="flex flex-wrap items-center gap-4">
-                <!-- Document Type Dropdown -->
-                @include('student.components.viewDocumentTypeDropdown')
+                        <!-- Status Dropdown -->
+                        @include('student.components.viewStatusDropdownComponent')
+                    </div>
+                </div>
 
-                <!-- Status Dropdown -->
-                @include('student.components.viewStatusDropdownComponent')
+                @include('student.components.viewSubmissionTrackerTable')
             </div>
+
         </div>
-
-        @include('student.components.viewSubmissionTrackerTable')
-
-    </div>
+        @include('components.footer')
     </div>
 @endsection

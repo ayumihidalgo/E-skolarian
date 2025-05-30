@@ -1,8 +1,5 @@
-@php
-    $role = request()->query('role', 'student'); // Default to 'student' if not provided
-@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $role }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="admin">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -42,11 +39,10 @@
                 <h1 class="text-2xl md:text-3xl font-bold text-center mb-3 font-['Lexend'] uppercase text-[var(--secondary-color)]">Password Reset Successfully!</h1>
                 <p class="md:text-[var(--forgot-color-text)] text-center font-normal md:text-lg">Your password has been successfully reset. You can now log in with your new password.</p>
                 <div class="mt-6 text-center">
-                    <a href="{{ route('login') }}" class="bg-[var(--secondary-color)] px-5 py-3 rounded-full inline-block hover:bg-[var(--primary-color)] text-white font-bold transition-all duration-75">Go Back to Login Page</a>
+                    <a href="{{ route('admin.login.form') }}" class="bg-[var(--secondary-color)] px-5 py-3 rounded-full inline-block hover:bg-[var(--primary-color)] text-white font-bold transition-all duration-75">Go Back to Login Page</a>
                 </div>
             </div>
         </div>
     </div>
-
 </body>
 </html>

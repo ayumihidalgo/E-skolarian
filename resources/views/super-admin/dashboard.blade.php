@@ -3,7 +3,7 @@
 <!-- This is the main content area for the super admin dashboard -->
 @include('components.superAdminNavigation') <!-- Include the super admin navigation component -->
 <!-- Super admin word under the nav var -->
-<div class="max-h-9/10 bg-white bg-opacity-30 p-13">
+<div class="max-h-9/10 bg-white bg-opacity-30 px-13 py-6">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
     </div>
@@ -16,21 +16,22 @@
             </svg>
             ADD USER
         </button>
-
+    <div class="flex items-center gap-3">
         <a href="{{ route('deactivated.accounts') }}" 
         class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white cursor-pointer">
             DEACTIVATED ACCOUNTS
         </a>
 
     <!-- Activity Log Button -->
-    <!-- <button class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white cursor-pointer">
+    <button id="activityLogBtn" class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white cursor-pointer">
         ACTIVITY LOG
             <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor" xmlns="http://www.w3.org/2000/svg" class="ml-2 transition-colors duration-200 group-hover:fill-current">
                 <g id="radix-icons:activity-log">
                     <path id="Vector" fill-rule="evenodd" clip-rule="evenodd" d="M0 1.5C0 1.36739 0.0526784 1.24021 0.146447 1.14645C0.240215 1.05268 0.367392 1 0.5 1H2.5C2.63261 1 2.75979 1.05268 2.85355 1.14645C2.94732 1.24021 3 1.36739 3 1.5C3 1.63261 2.94732 1.75979 2.85355 1.85355C2.75979 1.94732 2.63261 2 2.5 2H0.5C0.367392 2 0.240215 1.94732 0.146447 1.85355C0.0526784 1.75979 0 1.63261 0 1.5ZM4 1.5C4 1.36739 4.05268 1.24021 4.14645 1.14645C4.24021 1.05268 4.36739 1 4.5 1H14.5C14.6326 1 14.7598 1.05268 14.8536 1.14645C14.9473 1.24021 15 1.36739 15 1.5C15 1.63261 14.9473 1.75979 14.8536 1.85355C14.7598 1.94732 14.6326 2 14.5 2H4.5C4.36739 2 4.24021 1.94732 4.14645 1.85355C4.05268 1.75979 4 1.63261 4 1.5ZM4 4.5C4 4.36739 4.05268 4.24021 4.14645 4.14645C4.24021 4.05268 4.36739 4 4.5 4H11.5C11.6326 4 11.7598 4.05268 11.8536 4.14645C11.9473 4.24021 12 4.36739 12 4.5C12 4.63261 11.9473 4.75979 11.8536 4.85355C11.7598 4.94732 11.6326 5 11.5 5H4.5C4.36739 5 4.24021 4.94732 4.14645 4.85355C4.05268 4.75979 4 4.63261 4 4.5ZM0 7.5C0 7.36739 0.0526784 7.24021 0.146447 7.14645C0.240215 7.05268 0.367392 7 0.5 7H2.5C2.63261 7 2.75979 7.05268 2.85355 7.14645C2.94732 7.24021 3 7.36739 3 7.5C3 7.63261 2.94732 7.75979 2.85355 7.85355C2.75979 7.94732 2.63261 8 2.5 8H0.5C0.367392 8 0.240215 7.94732 0.146447 7.85355C0.0526784 7.75979 0 7.63261 0 7.5ZM4 7.5C4 7.36739 4.05268 7.24021 4.14645 7.14645C4.24021 7.05268 4.36739 7 4.5 7H14.5C14.6326 7 14.7598 7.05268 14.8536 7.14645C14.9473 7.24021 15 7.36739 15 7.5C15 7.63261 14.9473 7.75979 14.8536 7.85355C14.7598 7.94732 14.6326 8 14.5 8H4.5C4.36739 8 4.24021 7.94732 4.14645 7.85355C4.05268 7.75979 4 7.63261 4 7.5ZM4 10.5C4 10.3674 4.05268 10.2402 4.14645 10.1464C4.24021 10.0527 4.36739 10 4.5 10H11.5C11.6326 10 11.7598 10.0527 11.8536 10.1464C11.9473 10.2402 12 10.3674 12 10.5C12 10.6326 11.9473 10.7598 11.8536 10.8536C11.7598 10.9473 11.6326 11 11.5 11H4.5C4.36739 11 4.24021 10.9473 4.14645 10.8536C4.05268 10.7598 4 10.6326 4 10.5ZM0 13.5C0 13.3674 0.0526784 13.2402 0.146447 13.1464C0.240215 13.0527 0.367392 13 0.5 13H2.5C2.63261 13 2.75979 13.0527 2.85355 13.1464C2.94732 13.2402 3 13.3674 3 13.5C3 13.6326 2.94732 13.7598 2.85355 13.8536C2.75979 13.9473 2.63261 14 2.5 14H0.5C0.367392 14 0.240215 13.9473 0.146447 13.8536C0.0526784 13.7598 0 13.6326 0 13.5ZM4 13.5C4 13.3674 4.05268 13.2402 4.14645 13.1464C4.24021 13.0527 4.36739 13 4.5 13H14.5C14.6326 13 14.7598 13.0527 14.8536 13.1464C14.9473 13.2402 15 13.3674 15 13.5C15 13.6326 14.9473 13.7598 14.8536 13.8536C14.7598 13.9473 14.6326 14 14.5 14H4.5C4.36739 14 4.24021 13.9473 4.14645 13.8536C4.05268 13.7598 4 13.6326 4 13.5Z" />
                 </g>
             </svg>
-    </button> -->
+    </button>
+    </div>
 </div>
 
     <!-- Table Header and Container -->
@@ -61,7 +62,7 @@
                             </div>
                         </div>
                     </th>
-                    <th class="w-[20%] px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[30%] px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center justify-center">
                             <span class="whitespace-nowrap">Role</span>
                             <div class="flex flex-col ml-2">
@@ -80,7 +81,7 @@
                             </div>
                         </div>
                     </th>
-                    <th class="w-[40%] px-6 py-3 text-right pr-40 font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[30%] px-6 py-3 text-right pr-40 font-['Manrope'] text-[17px] font-bold">
                         <div class="flex items-center justify-end">
                             <span class="whitespace-nowrap">Creation Date</span>
                             <div class="flex flex-col ml-2">
@@ -109,7 +110,7 @@
                 <!-- Profile Picture Cell -->
             <td class="w-[10%] px-6 py-4 pl-15">
                 <div class="flex justify-center">
-                    <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
+                    <div class="w-6 h-6 rounded-full overflow-hidden bg-gray-200">
                         @if ($user->profile_pic)
                             <img src="{{ asset('storage/' . $user->profile_pic) }}" 
                                  alt="Profile" 
@@ -133,7 +134,7 @@
                     <td class="px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
                         {{ $user->role_name }}
                     </td>
-                    <td class="px-6 py-4 text-right pr-40 text-[Lexend] text-[17px] text-black text-semibold">
+                    <td class="px-6 py-4 text-right pr-45 text-[Lexend] text-[17px] text-black text-semibold">
                         {{ $user->created_at->format('F j, Y') }}
                     </td>
 
@@ -151,35 +152,34 @@
     </div>
 </div>
 
-<!-- Pagination Buttons -->
-<div class="flex justify-between items-center px-15" style="width: 100%;">
-    <button
-        class="flex items-center bg-[#7A121280] px-4 py-2 rounded-[8px] hover:bg-red-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        {{ $users->onFirstPage() ? 'disabled' : '' }}
-        onclick="window.location.href='{{ $users->previousPageUrl() }}'"
-    >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 15.75 3 12m0 0 3.75-3.75M3 12h18" />
-        </svg>
-        Previous
-    </button>
-    <!-- Pagination Indicator -->
-    <div class="flex items-center space-x-2 font-[Lexend] text-black">
-        <span>Page</span>
-        <span class="border-b-4 rounded-[3px] border-[#7A1212] px-2">{{ $users->currentPage() }}</span>
-        <span>of</span>
-        <span class="border-b-4 rounded-[3px] border-[#7A1212] px-2">{{ $users->lastPage() }}</span>
-    </div>
-    <button
-        class="flex items-center bg-[#7A121280] px-4 py-2 rounded-[8px] hover:bg-red-800 text-white disabled:opacity-50 disabled:cursor-not-allowed"
-        {{ !$users->hasMorePages() ? 'disabled' : '' }}
-        onclick="window.location.href='{{ $users->nextPageUrl() }}'"
-    >
-        Next
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 ml-2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
-        </svg>
-    </button>
+<!-- Pagination controls -->
+<div class="mt-4 flex justify-center">
+    <nav>
+        <ul class="inline-flex items-center space-x-2">
+            <li>
+                <a href="{{ $users->url(1) }}"
+                    class="pagination-btn-first px-3 py-1 rounded-lg {{ $users->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
+                    <
+                </a>
+            </li>
+
+            @for ($i = 1; $i <= $users->lastPage(); $i++)
+                <li>
+                    <a href="{{ $users->url($i) }}"
+                        class="pagination-btn px-3 py-1 rounded-lg {{ $users->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
+                        {{ $i }}
+                    </a>
+                </li>
+            @endfor
+
+            <li>
+                <a href="{{ $users->url($users->lastPage()) }}"
+                    class="pagination-btn-last px-3 py-1 rounded-lg {{ $users->currentPage() == $users->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
+                    >
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <!-- Modal for Add User Button -->
@@ -267,7 +267,7 @@
         <!-- Confirmation Message -->
         <div class="text-left mb-6">
             <h3 class="text-lg font-semibold text-gray-900 font-[Lexend]">Deactivate Account Confirmation</h3>
-            <p class="text-sm text-gray-700">Are you sure you want to deactivate this account?</p>
+            <p class="text-sm text-gray-700">Are you sure you want to deactivate this account? All data will be archived for record-keeping purposes.</p>
         </div>
         
         <!-- Action Buttons -->
@@ -306,12 +306,12 @@
             <p class="text-sm text-gray-700 mb-4">Type the account email address to confirm</p>
             
             <div class="mb-4">
-                <label for="confirmEmail" class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]">Email Address</label>
+                <label for="confirmEmail" class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]"></label>
                 <input type="email" 
                     id="confirmEmail" 
                     class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] transition duration-200"
                     placeholder="Enter email address">
-                <p id="emailError" class="mt-1 text-sm text-red-600 hidden">Email address does not match.</p>
+                <p id="emailError" class="mt-1 text-sm text-red-600 hidden">*Email address does not match.</p>
             </div>
             
             <!-- Action Button -->
@@ -325,6 +325,7 @@
         </div>
     </div>
 </div>
+@include('super-admin.super-admin-component.activityLogModal')
 @vite([
     'resources/js/super-admin/modal-base.js',
     'resources/js/super-admin/main.js',
@@ -332,6 +333,7 @@
     'resources/js/super-admin/user-details.js',
     'resources/js/super-admin/edit-user.js',
     'resources/js/super-admin/deactivate-user.js',
-    'resources/js/super-admin/success-modal.js'
+    'resources/js/super-admin/success-modal.js',
+    'resources/js/super-admin/activity-log-modal.js'
 ])
 @endsection

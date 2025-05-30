@@ -3,14 +3,14 @@
 @include('components.adminNavBarComponent')
 @include('components.adminSidebarComponent')
 
-<div id="main-content" class="transition-all duration-300 ml-0 md:ml-[20%] mt-16">
+<div id="main-content" class="transition-all duration-300 ml-[20%] sm:mt-16 md:mt-0">
     <div class="flex-grow bg-gray-100">
         <!-- Main Content -->
         <div id="mainContentArea" class="p-2 sm:p-4 md:p-6 min-h-screen">
             <!-- Table View -->
             <div id="tableView" class="overflow-hidden h-full flex flex-col">
-                <div class="text-black py-2 md:py-4 px-2 md:px-6 font-semibold text-xl md:text-2xl">
-                    Admin Approval
+                <div class="text-black py-2 md:py-4 px-2 md:px-6 font-extrabold text-xl md:text-2xl">
+                    Admin Review
                 </div>
 
                 <div class="p-2 md:p-6 flex flex-col flex-grow">
@@ -28,27 +28,20 @@
                         <div class="flex gap-2 w-full md:w-auto">
                             <div class="relative flex-1 md:w-40">
                                 <select id="organizationFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-8 rounded-full leading-tight focus:outline-none hover:text-white transition-colors duration-200 truncate">
-                                    <option class="bg-white text-black truncate" value="" disabled selected>Organization</option>
+                                    <option class="bg-white text-black truncate disabled:hover:bg-white disabled:hover:text-black" value="" disabled selected>Organization</option>
                                     <option class="bg-white text-black truncate" value="">All</option>
-                                    <option class="bg-white text-black truncate" value="OSC">OSC</option>
-                                    <option class="bg-white text-black truncate" value="AECES">AECES</option>
-                                    <option class="bg-white text-black truncate" value="ACAP">ACAP</option>
-                                    <option class="bg-white text-black truncate" value="ELITE">ELITE</option>
-                                    <option class="bg-white text-black truncate" value="GIVE">GIVE</option>
-                                    <option class="bg-white text-black truncate" value="JEHRA">JEHRA</option>
-                                    <option class="bg-white text-black truncate" value="JMAP">JMAP</option>
-                                    <option class="bg-white text-black truncate" value="JPIA">JPIA</option>
-                                    <option class="bg-white text-black truncate" value="TAPNOTCH">TAPNOTCH</option>
-                                    <option class="bg-white text-black truncate" value="SIGMA">SIGMA</option>
-                                    <option class="bg-white text-black truncate" value="AGDS">AGDS</option>
-                                    <option class="bg-white text-black truncate" value="Chorale">Chorale</option>
+                                    @foreach($organizations as $org)
+                                        <option class="bg-white text-black truncate" value="{{ $org }}" {{ $selectedOrg == $org ? 'selected' : '' }}>
+                                            {{ $org }}
+                                        </option>
+                                    @endforeach
                                 </select>
                                 <div class="pointer-events-none absolute top-2 right-0 flex items-center px-3 text-white">
                                     <i class="fa-solid fa-sort-down"></i>
                                 </div>
                             </div>
                             <div class="relative flex-1 md:w-40">
-                                <select id="documentTypeFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-2 rounded-full leading-tight hover:text-white transition-colors duration-200 truncate">
+                                <select id="documentTypeFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-6 rounded-full leading-tight hover:text-white transition-colors duration-200 truncate">
                                     <option class="bg-white text-black truncate" value="" disabled selected>Document Type</option>
                                     <option class="bg-white text-black truncate" value="">All</option>
                                     <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
@@ -69,22 +62,6 @@
 
                     <!-- Organization, Tag, Document Type Array -->
                     @php
-                        $orgMap = [
-                            'ACAP' => 'Association of Competent and Aspiring Psychologists',
-                            'AECES' => 'Association of Electronics and Communications Engineering Students',
-                            'ELITE' => 'Eligible League of Information Technology Enthusiasts',
-                            'GIVE' => 'Guild of Imporous and Valuable Educators',
-                            'JEHRA' => 'Junior Executive of Human Resource Association',
-                            'JMAP' => 'Junior Marketing Association of the Philippines',
-                            'JPIA' => 'Junior Philippine Institute of Accountants',
-                            'PIIE' => 'Philippine Institute of Industrial Engineers',
-                            'AGDS' => 'Artist Guild Dance Squad',
-                            'Chorale' => 'PUP SRC Chorale',
-                            'SIGMA' => 'Supreme Innovators’ Guild for Mathematics Advancements',
-                            'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
-                            'OSC' => 'Office of the Student Council'
-                        ];
-                        $orgKeys = array_keys($orgMap);
                         $tagColors = [
                             'OSC' => 'text-blue-500',
                             'ECE' => 'text-red-500',
@@ -109,8 +86,8 @@
 
                     <!-- Table Section -->
                     @if ($documents->isNotEmpty())
-                        <div class="bg-gray-50 overflow-x-auto rounded-t-xl flex flex-col min-h-[300px] border border-gray-500">
-                            <table class="min-w-full text-sm rounded-t-xl">
+                        <div class="bg-white rounded-[24px] shadow-md overflow-hidden pt-2 flex flex-col min-h-[400px]">
+                            <table class="min-w-full text-sm rounded-[24px]">
                                 <thead class="bg-white text-black font-extrabold text-lg">
                                     <tr>
                                         <th class="px-6 py-3 text-left">
@@ -208,11 +185,13 @@
                                             </td>
 
                                             <!-- Type -->
-                                            <td class="px-6 py-4 whitespace-nowrap flex items-center">
-                                                {{ $document->type }}
-                                                @if(!$document->is_opened)
-                                                    <span class="ml-2 h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>
-                                                @endif
+                                            <td class="px-6 py-4 whitespace-nowrap relative">
+                                                <div class="flex items-center justify-between w-full">
+                                                    <span>{{ $document->type }}</span>
+                                                    @if(!$document->is_opened)
+                                                        <span class="h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -221,7 +200,7 @@
                         </div>
 
                     @else
-                        <div class="bg-gray-50 rounded-md p-8 flex flex-col items-center justify-center flex-grow">
+                        <div class="bg-white rounded-[24px] shadow-md overflow-hidden p-8 flex flex-col items-center justify-center flex-grow h-auto min-h-[500px]">
                             <img src="{{ asset('images/no_entry.svg') }}" alt="No Data" class="mb-4 opacity-50 w-40 h-40">
                             <p class="text-gray-500 text-sm">No entry found at the moment</p>
                         </div>
@@ -230,36 +209,38 @@
 
                     <div class="flex justify-center mt-4">
                         <!-- Pagination Section -->
-                        <div class="flex justify-center">
-                            <nav>
-                                <ul class="inline-flex items-center space-x-2">
-                                    <li>
-                                        <a href="{{ $documents->onFirstPage() ? '#' : $documents->url(1) }}"
-                                        class="pagination-btn-first px-3 py-1 rounded-lg {{ $documents->onFirstPage() ? 'text-gray-600 cursor-not-allowed bg-gray-200' : 'text-black hover:bg-gray-300' }}"
-                                        @if($documents->onFirstPage()) onclick="return false;" @endif>
-                                            First
-                                        </a>
-                                    </li>
-
-                                    @foreach ($documents->getUrlRange(1, $documents->lastPage()) as $page => $url)
+                        @if ($documents->isNotEmpty())
+                            <div class="flex justify-center">
+                                <nav>
+                                    <ul class="inline-flex items-center space-x-2">
                                         <li>
-                                            <a href="{{ $url }}"
-                                            class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $page ? 'bg-[#4D0F0F] text-white' : 'bg-gray-200 hover:bg-gray-300' }}">
-                                                {{ $page }}
+                                            <a href="{{ $documents->onFirstPage() ? '#' : $documents->previousPageUrl() }}"
+                                            class="pagination-btn-prev px-3 py-1 rounded-lg {{ $documents->onFirstPage() ? 'text-gray-600 cursor-not-allowed bg-gray-200' : 'text-black hover:bg-gray-300' }}"
+                                            @if($documents->onFirstPage()) onclick="return false;" @endif>
+                                                &lt;
                                             </a>
                                         </li>
-                                    @endforeach
 
-                                    <li>
-                                        <a href="{{ $documents->onLastPage() ? '#' : $documents->url($documents->lastPage()) }}"
-                                        class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->onLastPage() ? 'text-gray-600 cursor-not-allowed bg-gray-200' : 'text-black hover:bg-gray-300' }}"
-                                        @if($documents->onLastPage()) onclick="return false;" @endif>
-                                            Last
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
+                                        @foreach ($documents->getUrlRange(1, $documents->lastPage()) as $page => $url)
+                                            <li>
+                                                <a href="{{ $url }}"
+                                                class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $page ? 'bg-[#4D0F0F] text-white' : 'bg-gray-200 hover:bg-gray-300' }}">
+                                                    {{ $page }}
+                                                </a>
+                                            </li>
+                                        @endforeach
+
+                                        <li>
+                                            <a href="{{ $documents->hasMorePages() ? $documents->nextPageUrl() : '#' }}"
+                                            class="pagination-btn-next px-3 py-1 rounded-lg {{ $documents->hasMorePages() ? 'text-black hover:bg-gray-300' : 'text-gray-600 cursor-not-allowed bg-gray-200' }}"
+                                            @if(!$documents->hasMorePages()) onclick="return false;" @endif>
+                                                &gt;
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -268,10 +249,15 @@
             <div id="detailsView" class="hidden h-full text-white">
                 <!-- Header with close button -->
                 <div class="flex items-start justify-between px-3 md:px-6 mb-2 md:mb-0">
-                    <h2 class="font-semibold text-lg md:text-2xl text-black">Admin Approval</h2>
-                    <button class="bg-[#7A1212] cursor-pointer text-white font-semibold rounded-full px-4 md:px-8 py-1 md:py-2 text-sm md:text-base hover:bg-[#5d0c0c] focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50" onclick="closeDetailsPanel()">
-                        Close
-                    </button>
+                    <h2 class="font-extrabold text-lg md:text-2xl text-black">Admin Review</h2>
+                    <!-- Action Buttons -->
+                    <div class="flex justify-end space-x-2 mt-3 md:mt-4">
+                        <div id="actionButtonsContainer">
+                            <button id="rejectButton" class="bg-[#C42E2E] hover:bg-red-700 text-white font-bold py-1.5 md:py-2 px-6 md:px-10 text-sm md:text-base rounded-full cursor-pointer">Reject</button>
+                            <button id="approveButton" class="bg-[#478642] hover:bg-green-700 text-white font-bold py-1.5 md:py-2 px-5 md:px-8 text-sm md:text-base rounded-full cursor-pointer">Approve</button>
+                        </div>
+                        <button class="bg-[#7A1212] cursor-pointer text-white font-semibold rounded-full px-4 md:px-8 py-1 md:py-2 text-sm md:text-base hover:bg-[#5d0c0c] focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50" onclick="closeDetailsPanel()">Close</button>
+                    </div>
                 </div>
 
                 <!-- Mobile view - stacks vertically -->
@@ -302,18 +288,6 @@
                         </div>
 
                         <!-- Attachment -->
-                        <!-- <div>
-                            <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Attachment</h2>
-                            <div class="space-y-2 md:space-y-4">
-                                <button id="documentAttachment" class="bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-300 text-sm md:text-base max-w-full">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    </svg>
-                                    <span id="documentFileName" class="break-words truncate">File attachment</span>
-                                </button>
-                            </div>
-                        </div> -->
-
                         <div>
                             <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Attachment</h2>
                             <div class="space-y-2 md:space-y-4">
@@ -350,12 +324,22 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Action Buttons -->
-                        <div id="actionButtonsContainer" class="flex justify-end space-x-2 mt-3 md:mt-4">
-                            <button id="rejectButton" class="bg-[#C42E2E] hover:bg-red-700 text-white font-bold py-1.5 md:py-2 px-6 md:px-10 text-sm md:text-base rounded-full cursor-pointer">Reject</button>
-                            <button id="approveButton" class="bg-[#478642] hover:bg-green-700 text-white font-bold py-1.5 md:py-2 px-5 md:px-8 text-sm md:text-base rounded-full cursor-pointer">Approve</button>
+                            
+                            <!-- Forward Status -->
+                            <div id="forwardedStatusIndicator" class="hidden mt-2 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 rounded">
+                                <div class="flex">
+                                    <div class="flex-shrink-0">
+                                        <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+                                        </svg>
+                                    </div>
+                                    <div class="ml-3">
+                                        <p class="text-sm font-medium">You've forwarded this document to <strong id="forwardedToUser">another admin</strong> on <span id="forwardedDate">loading date...</span></p>
+                                        <p class="text-sm mt-1">Message: <span id="forwardedMessage" class="italic">Loading message...</span></p>
+                                        <p class="text-xs mt-2 font-medium">You can still view the document, but only the current receiver can perform actions on it.</p>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -364,20 +348,20 @@
                         <div class="space-y-4 md:space-y-6">
                             <div class="flex items-center space-x-3 md:space-x-4">
                                 <!-- Profile Picture Placeholder -->
-                                <div class="w-10 h-10 md:w-12 md:h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <span class="text-gray-600 text-lg md:text-xl font-bold" id="orgInitial">O</span>
+                                <div id="orgProfileContainer" class="w-12 h-12 bg-gray-300 rounded-full overflow-hidden flex items-center justify-center border border-gray-600">
+                                    <span id="orgInitial" class="text-gray-600 text-lg font-bold">O</span>
                                 </div>
                                 <!-- Organization Details -->
                                 <div class="overflow-hidden">
-                                    <p id="orgName" class="font-bold text-base md:text-lg break-words">Organization Name</p>
-                                    <p class="text-xs md:text-sm text-gray-300 break-words">Academic Organization</p>
+                                    <p id="orgName" class="font-bold text-base md:text-lg truncate">Organization Name</p>
+                                    <p id="orgType" class="text-xs md:text-sm text-gray-300 truncate">Academic Organization</p>
                                 </div>
                             </div>
 
-                            <hr class="border-gray-600"></hr>
+                            <hr class="border-white"></hr>
 
                             <!-- Comments section -->
-                            <div class="space-y-3 md:space-y-4 text-xs md:text-sm overflow-y-auto max-h-[200px] md:max-h-[400px]" id="commentsContainer">
+                            <div class="space-y-3 md:space-y-4 text-xs md:text-sm overflow-y-auto max-h-[200px] md:max-h-[400px]" id="commentsContainer" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;">
                                 <!-- Comments will be loaded here -->
                             </div>
                         </div>
@@ -422,7 +406,7 @@
     </div>
 
     <!-- Document Preview Modal -->
-    <div id="documentViewerModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+    <div id="documentViewerModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-11/12 h-5/6 rounded-lg flex flex-col">
             <div class="flex justify-between items-center p-4 border-b">
                 <h3 id="documentTitle" class="font-semibold text-lg truncate">Document Preview</h3>
@@ -463,7 +447,7 @@
     </div>
 
     <!-- Approval Modal -->
-    <div id="approvalModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+    <div id="approvalModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-[30rem] h-[24rem] rounded-2xl shadow-xl p-6">
             <div class="bg-white rounded-t-lg">
                 <div class="flex items-center justify-between">
@@ -502,7 +486,7 @@
     </div>
 
     <!-- Send to Another Admin Modal -->
-    <div id="sendToAdminModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+    <div id="sendToAdminModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-[30rem] rounded-2xl shadow-xl p-6">
             <div class="bg-white rounded-t-lg">
                 <div class="flex items-center justify-between">
@@ -523,10 +507,10 @@
                     <div class="relative mt-1">
                         <label for="adminSelect" class="absolute -top-2 left-6 bg-white px-1 text-xs text-black">Send to</label>
                         <select id="adminSelect" class="mt-1 block w-full border border-black rounded-md py-2 px-3 shadow-sm focus:ring-[#7A1212] focus:border-[#7A1212] text-sm cursor-pointer">
-                            <option value="" disabled selected></option>
-                            <option value="admin1">Admin 1</option>
-                            <option value="admin2">Admin 2</option>
-                            <option value="admin3">Admin 3</option>
+                            <option value="" disabled selected class="disabled:hover:text-black disabled:hover:bg-white">Select an Admin</option>
+                            <option value="admin1"></option>
+                            <option value="admin2"></option>
+                            <option value="admin3"></option>
                         </select>
                     </div>
                 </div>
@@ -551,8 +535,37 @@
         </div>
     </div>
 
+    <!-- Final Approval Message Modal -->
+    <div id="finalApprovalMessageModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
+        <div class="bg-white w-[30rem] rounded-xl shadow-xl p-6">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-lg font-bold text-black">APPROVAL</h3>
+                <button id="closeApprovalMessageModalBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <p class="text-sm text-gray-600 mb-8">FINALIZE APPROVAL</p>
+            
+            <div class="mb-6">
+                <textarea id="approvalMessage" rows="5" class="mt-1 block w-full border border-gray-300 rounded-md py-2 px-3 shadow-sm focus:ring-[#7A1212] focus:border-[#7A1212] text-sm"></textarea>
+            </div>
+            
+            <div>
+                <p class="text-xs text-gray-500 text-center mb-4">Send message for final approval.</p>
+            </div>
+
+            <div class="text-center">
+                <button id="sendApprovalMessageBtn" class="w-full bg-[#7A1212] hover:bg-[#5e0b0b] text-white py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50 text-sm font-semibold cursor-pointer">
+                    SEND
+                </button>
+            </div>
+        </div>  
+    </div>
+
     <!-- Finalize Approval Confirmation Modal -->
-    <div id="finalizeConfirmationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+    <div id="finalizeConfirmationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-[30rem] rounded-2xl shadow-xl p-6">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-lg font-semibold text-gray-800">Approval Confirmation</h3>
@@ -579,7 +592,7 @@
     </div>
 
     <!-- Reject Modal -->
-    <div id="rejectModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+    <div id="rejectModal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-[30rem] rounded-2xl shadow-xl p-6">
             <div class="bg-white rounded-t-lg">
                 <div class="flex items-center justify-between">
@@ -618,7 +631,7 @@
     </div>
 
     <!-- Request Resubmission Modal -->
-    <div id="resubmissionModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+    <div id="resubmissionModal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-[30rem] rounded-2xl shadow-xl p-6">
             <div class="bg-white rounded-t-lg">
                 <div class="flex items-center justify-between">
@@ -656,7 +669,7 @@
     </div>
 
     <!-- Reject Confirmation Modal -->
-    <div id="rejectConfirmationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+    <div id="rejectConfirmationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-[30rem] rounded-2xl shadow-xl p-6">
             <div class="bg-white rounded-t-lg">
                 <div class="flex items-center justify-between">
@@ -694,7 +707,7 @@
     </div>
 
     <!-- Final Reject Confirmation Modal -->
-    <div id="finalRejectConfirmationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background-color: rgba(0,0,0,0.3);">
+    <div id="finalRejectConfirmationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
         <div class="bg-white w-[30rem] rounded-lg shadow-xl p-6">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="text-lg font-semibold text-gray-800">Reject Confirmation</h3>
@@ -737,158 +750,8 @@
     </div>
 
     <script>
-        // Document Viewer Functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get form elements
-            const searchInput = document.getElementById('searchInput');
-            const organizationFilter = document.getElementById('organizationFilter');
-            const documentTypeFilter = document.getElementById('documentTypeFilter');
-            
-            if (searchInput && organizationFilter && documentTypeFilter) {
-                // Create the form dynamically
-                const form = document.createElement('form');
-                form.method = 'GET';
-                form.action = window.location.pathname; // Use the current URL path
-                form.style.display = 'none'; // Hide the form
-                document.body.appendChild(form);
-                
-                // Create hidden input fields
-                const searchField = document.createElement('input');
-                searchField.type = 'hidden';
-                searchField.name = 'search';
-                form.appendChild(searchField);
-                
-                const orgField = document.createElement('input');
-                orgField.type = 'hidden';
-                orgField.name = 'organization';
-                form.appendChild(orgField);
-                
-                const typeField = document.createElement('input');
-                typeField.type = 'hidden';
-                typeField.name = 'documentType';
-                form.appendChild(typeField);
-                
-                // Set initial values from URL parameters
-                const urlParams = new URLSearchParams(window.location.search);
-                searchInput.value = urlParams.get('search') || '';
-                if (urlParams.has('organization') && urlParams.get('organization') !== 'All') {
-                    organizationFilter.value = urlParams.get('organization');
-                }
-                if (urlParams.has('documentType') && urlParams.get('documentType') !== 'All') {
-                    documentTypeFilter.value = urlParams.get('documentType');
-                }
-                
-                // Add event listeners
-                let searchTimeout;
-                searchInput.addEventListener('input', function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        searchField.value = searchInput.value;
-                        orgField.value = organizationFilter.value || 'All';
-                        typeField.value = documentTypeFilter.value || 'All';
-                        form.submit();
-                    }, 500); // 500ms debounce
-                });
-                
-                organizationFilter.addEventListener('change', function() {
-                    searchField.value = searchInput.value;
-                    orgField.value = organizationFilter.value || 'All'; 
-                    typeField.value = documentTypeFilter.value || 'All';
-                    form.submit();
-                });
-                
-                documentTypeFilter.addEventListener('change', function() {
-                    searchField.value = searchInput.value;
-                    orgField.value = organizationFilter.value || 'All';
-                    typeField.value = documentTypeFilter.value || 'All';
-                    form.submit();
-                });
-            }
-        });
-
-        // Sorting Functionality
-        let currentSort = {
-            column: -1,
-            direction: 'asc'
-        };
-
-        function sortTable(columnIndex, type) {
-            const table = document.querySelector('table');
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            const headers = table.querySelectorAll('th i');
-
-            // Update sort direction
-            if (currentSort.column === columnIndex) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSort.column = columnIndex;
-                currentSort.direction = 'asc';
-            }
-
-            // Update sort icons
-            headers.forEach(icon => {
-                icon.className = 'fa-solid fa-sort text-[#9099A5]';
-            });
-
-            const currentHeader = headers[columnIndex];
-            currentHeader.className = `fa-solid text-[#9099A5] fa-sort-${currentSort.direction === 'asc' ? 'up' : 'down'}`;
-
-            // Sort rows
-            rows.sort((a, b) => {
-                let aValue = a.cells[columnIndex].textContent.trim();
-                let bValue = b.cells[columnIndex].textContent.trim();
-
-                if (type === 'date') {
-                    // Convert date strings to Date objects
-                    aValue = new Date(aValue.split('/').map((n, i) => i === 2 ? n : n.padStart(2, '0')).join('/'));
-                    bValue = new Date(bValue.split('/').map((n, i) => i === 2 ? n : n.padStart(2, '0')).join('/'));
-                }
-
-                if (type === 'text') {
-                    aValue = aValue.toLowerCase();
-                    bValue = bValue.toLowerCase();
-                }
-
-                if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
-                if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-
-            // Reorder table rows
-            rows.forEach(row => tbody.appendChild(row));
-
-            // Update zebra striping
-            rows.forEach((row) => {
-                // Remove just the background classes
-                row.classList.remove('bg-white', 'bg-gray-50', 'bg-[#D9ACAC33]');
-                
-                // Add proper background class based on opened status
-                const isOpened = row.classList.contains('border-[#D9D9D9]');
-                if (isOpened) {
-                    row.classList.add('bg-[#D9ACAC33]');
-                } else {
-                    row.classList.add('bg-white');
-                }
-            });
-        }
-
-        function closeDocumentViewer() {
-            const modal = document.getElementById('documentViewerModal');
-            const pdfViewer = document.getElementById('pdfViewer');
-            
-            // Clear the PDF viewer
-            pdfViewer.innerHTML = '';
-            
-            modal.classList.add('hidden');
-        }
-
-        // Define asset URLs so JavaScript can use them
-        const ASSET_URLS = {
-            successIcon: "{{ asset('images/successful.svg') }}",
-            errorIcon: "{{ asset('images/error.svg') }}"
-        };
-        </script>
+        
+    </script>
     @vite('resources/js/admin-review.js')
     @vite(['resources/js/app.js'])
 @endsection
