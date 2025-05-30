@@ -7,6 +7,16 @@
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
     </div>
+     <div class="flex justify-between items-center mb-1">
+        <!-- Back to Dashboard Button -->
+        <a href="{{ route('super-admin.dashboard') }}" 
+            class="bg-white hover:text-red-800 text-[#7A1212] px-4 py-2 rounded-[16px] font-sm font-[Lexend] inline-flex items-center self-start mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            Back to Dashboard
+        </a>
+</div>
     <div class = "w-[1375] h-[710] rounded  shadow-lg bg-white p-6">        <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold font-[Lexend] text-[#332B2B]">Reports</h2>
             
@@ -87,7 +97,17 @@
                 </thead>
                 <tbody class="divide-y divide-[#D9D9D9]/70">
                     @forelse($reports as $report)
-                        <tr class="cursor-pointer hover:bg-gray-50" onclick="openReportModal({{ json_encode($report) }})">
+                        <tr class="cursor-pointer hover:bg-gray-50" 
+                            onclick="openReportModal({{ 
+                                json_encode([
+                                    'id' => $report->id,
+                                    'created_at' => $report->created_at,
+                                    'email' => $report->email,
+                                    'description' => $report->description,
+                                    // Always use asset('storage/...')
+                                    'attachment' => $report->screenshot_path ? asset('storage/' . $report->screenshot_path) : ''
+                                ]) 
+                            }})">
                             <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
                                 {{ $report->created_at->format('Y-m-d') }}<br>
                                 <span class="text-[11px] text-gray-600">{{ $report->created_at->format('h:i A') }}</span>
@@ -166,51 +186,77 @@
     </div>
 </div>
 
-<!-- Report Details Modal -->
-<div id="reportModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 hidden items-center justify-center">
-    <div class="bg-white rounded-lg w-[80%] max-h-[90vh] overflow-y-auto relative">
-        <!-- Modal Header -->
-        <div class="relative flex justify-between items-center p-6 border shadow">
-            <h2 id="modalReportId" class="text-2xl font-bold font-[Lexend] text-[#332B2B] mx-auto text-center"></h2>
-            <button onclick="closeReportModal()" class="text-gray-400 hover:text-gray-600 text-2xl absolute top-1/2 right-6 transform -translate-y-1/2 cursor-pointer">
-            &times;
-            </button>
-        </div>
-        
-        <!-- Modal Content -->
-        <div class="p-6">
-            <!-- Timestamp -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 font-[Lexend] mb-1">Timestamp:</label>
-                <p id="modalTimestamp" class="text-sm text-gray-900 font-[Lexend]"></p>
-            </div>
-            
-            <!-- Email -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 font-[Lexend] mb-1">Email:</label>
-                <p id="modalEmail" class="text-sm text-gray-900 font-[Lexend]"></p>
-            </div>
-            
-            <!-- Problem Description -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 font-[Lexend] mb-1">Problem Description:</label>
-                <div id="modalDescription" class="text-sm text-gray-900 font-[Lexend] bg-gray-50 p-3   rounded shadow min-h-[150px] whitespace-pre-wrap"></div>
-            </div>
-            
-            <!-- Attachment -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 font-[Lexend] mb-1">Attachment:</label>
-                <div id="modalAttachment" class="text-sm text-gray-500 font-[Lexend]">No attachment provided</div>
-            </div>
-            
-            <!-- Email Response Button -->
-            <div class="text-center">
-                <button onclick="emailResponse()" class="bg-[#28B309] text-white px-6 py-2 rounded-md hover:bg-[#5A0D0D] font-[Lexend] text-sm transition ease duration-200 cursor-pointer">
-                    Email Response
-                </button>
-            </div>
-        </div>
+
+<div id="reportModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 hidden flex items-center justify-center">
+  <div class="bg-white w-full h-full relative flex flex-col">
+    
+    <!-- Fixed navigation header at top -->
+    <div class="sticky top-0 z-20 bg-white">
+      @include('components.superAdminNavigation')
     </div>
+
+    <!-- Main content area -->
+    <div class="flex-1 bg-gray-100 px-8 py-6 overflow-y-auto">
+      
+      <!-- SUPER ADMIN Header -->
+      <div class="mb-8">
+        <h1 class="text-2xl font-bold text-black font-[Lexend]">SUPER ADMIN</h1>
+      </div>
+
+      <!-- Report Card Container -->
+      <div class="w-full mx-auto">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          
+          <!-- Report Header with close button -->
+          <div class="bg-white px-6 py-4 border-b border-gray-200 flex justify-center items-center relative">
+            <h2 id="modalReportId" class="text-lg font-semibold text-black font-[Lexend]">REPORT-001</h2>
+            <button onclick="closeReportModal()" class="absolute right-6 w-6 h-6 bg-red-600 text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Report Content -->
+          <div class="px-6 py-6 space-y-4">
+            
+            <!-- Timestamp -->
+            <div class="text-sm text-gray-600 font-[Lexend]">
+              <span id="modalTimestamp"></span>
+            </div>
+
+            <!-- Email -->
+            <div>
+              <span class="text-sm font-semibold text-black font-[Lexend]">Email: </span>
+              <span id="modalEmail" class="text-sm text-black font-[Lexend]"></span>
+            </div>
+
+            <!-- Problem Description -->
+            <div>
+              <div class="text-sm font-semibold text-black font-[Lexend] mb-2">Problem Description:</div>
+              <div id="modalDescription" class="text-sm text-black font-[Lexend] leading-relaxed"></div>
+            </div>
+
+            <!-- Attachment -->
+            <div>
+              <div class="text-sm font-semibold text-black font-[Lexend] mb-2">Attachment:</div>
+              <span id="modalAttachment" class="text-sm text-black font-[Lexend]  font-bold bg-yellow-500 rounded p-2">No attachment provided</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Email Response Button -->
+        <div class="text-center mt-6">
+          <button onclick="emailResponse()" class="bg-green-600 text-white px-6 py-2 rounded shadow font-[Lexend] text-sm font-bold hover:bg-green-700 transition-colors curosr-pointer">
+            Email Response
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
 </div>
 
 <script>
@@ -267,7 +313,8 @@ function openReportModal(report) {
     // Handle attachment
     const attachmentDiv = document.getElementById('modalAttachment');
     if (report.attachment && report.attachment !== '') {
-        attachmentDiv.innerHTML = '<a href="' + report.attachment + '" target="_blank" class="text-blue-600 hover:text-blue-800 underline">View Attachment</a>';
+        const fileName = report.attachment.split('/').pop();
+        attachmentDiv.innerHTML = '<a href="' + report.attachment + '" target="_blank" class="text-black font-bold hover:text-gray-800">' + fileName + '</a>';
     } else {
         attachmentDiv.textContent = 'No attachment provided';
     }
