@@ -19,7 +19,7 @@
                                 <!-- Receiver Button -->
                                 <div class="relative w-full">
                                     <button type="button" id="receiverButton" aria-expanded
-                                        class="w-full text-left border-b-2 border-gray-500 py-3 relative focus:outline-none flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                        class="w-full text-left border-b-2 border-gray-500 py-3 relative focus:outline-none flex items-center justify-between gap-2 bg-white cursor-pointer">
                                         <span class="font-semibold text-gray-500">
                                             To<span class="required-indicator text-red-500"> *</span>:
                                             <span id="receiverSelected" class="font-semibold text-black"></span>
@@ -34,8 +34,8 @@
                                         @foreach ($adminUsers as $admin)
                                             <li tabindex="0" role="option"
                                                 class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                                onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->username }}', '{{ $admin->role_name }}')">
-                                                {{ $admin->username }}
+                                                onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->role_name }}')">
+                                                {{ $admin->role_name }}
                                             </li>
                                         @endforeach
                                     </ul>
@@ -48,7 +48,7 @@
                                     <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span
                                             class="required-indicator text-red-500"> *</span>:</span>
                                     <input type="text" id="subject" name="subject" autocomplete="off"
-                                        class="flex-1 font-semibold focus:outline-none" maxlength="50">
+                                        class="flex-1 font-semibold focus:outline-none" maxlength="100">
                                 </div>
                             </div>
 
@@ -57,13 +57,13 @@
                                 <!-- Document Type Button -->
                                 <button type="button" id="docTypeButton" aria-expanded
                                     class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white px-6 py-3 rounded-[12px] cursor-pointer transition">
-                                    <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document"
-                                        id="docTypeIcon" class="w-5 h-5">
+                                    <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
+                                        class="w-5 h-5">
                                     <span id="docTypeSelected">Document Type</span>
 
                                     <!-- Dropdown Arrow aligned to the right -->
-                                    <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow"
-                                        id="docTypeArrow" class="absolute right-4 w-8 h-3">
+                                    <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
+                                        class="absolute right-4 w-8 h-3">
                                 </button>
 
                                 <!-- Dropdown List -->
@@ -74,8 +74,7 @@
                                         onclick="selectDocType('Event Proposal')">Event Proposal</li>
                                     <li tabindex="0" role="option"
                                         class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('General Plan of Activities')">General Plan of Activities
-                                    </li>
+                                        onclick="selectDocType('General Plan of Activities')">General Plan of Activities</li>
                                     <li tabindex="0" role="option"
                                         class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
                                         onclick="selectDocType('Calendar of Activities')">Calendar of Activities</li>
@@ -94,6 +93,9 @@
                                     <li tabindex="0" role="option"
                                         class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
                                         onclick="selectDocType('Petition and Concern')">Petition and Concern</li>
+                                    <li tabindex="0" role="option"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                        onclick="selectDocType('Others')">Others</li>
                                 </ul>
 
                                 <!-- Hidden input for form submission -->
@@ -132,7 +134,7 @@
                             <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Event Title<span
                                     class="required-indicator text-red-500"> *</span>:</span>
                             <input type="text" id="event-title" name="event-title" autocomplete="off"
-                                class="flex-1 font-semibold focus:outline-none" maxlength="50">
+                                class="flex-1 font-semibold focus:outline-none" maxlength="60">
                         </div>
 
                         <!-- Event Description (Only shows for Event Proposals) -->
@@ -185,8 +187,7 @@
                         </div>
 
                         <!-- Confirmation Popup -->
-                        <div id="confirmPopup"
-                            class="fixed inset-0 flex items-center justify-center bg-black/50 z-50 hidden">
+                        <div id="confirmPopup" class="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 hidden">
                             <div
                                 class="bg-white rounded-xl p-6 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl shadow-lg text-gray-800">
                                 <div class="flex justify-between items-start mb-4">
@@ -195,8 +196,7 @@
                                         class="text-gray-500 hover:text-gray-700 text-3xl leading-none cursor-pointer self-center">&times;</button>
                                 </div>
 
-                                <p class="mb-6">Are you sure you want to submit this document? Once submitted, you may
-                                    not be
+                                <p class="mb-6">Are you sure you want to submit this document? Once submitted, you may not be
                                     able to make further changes.</p>
 
                                 <div class="flex justify-end space-x-2">
@@ -277,6 +277,9 @@
     @endif
 
     <script>
+        // Auto-select receiver when selecting doc type disabled at start
+        let receiverAutoSelected = false;
+        
         // Element references
         const docType = {
             button: document.getElementById('docTypeButton'),
@@ -422,7 +425,7 @@
 
             if (files.length > maxFiles) {
                 hideAllToasts();
-                showToast('error', `You can only upload up to ${maxFiles} files.`);
+                showToast('error', `Upload limit reached. Please remove some files before uploading new ones.`);
                 input.value = "";
                 fileNameDisplay.textContent = "No File Chosen";
                 return;
@@ -528,11 +531,12 @@
         }
 
         // selectReceiver() function
-        window.selectReceiver = function(id, name, role) {
-            const displayText = `${name} <span class="text-gray-400">&lsaquo;${role}&rsaquo;</span>`; // ‹ ›
+        window.selectReceiver = function(id, role) {
+            const displayText = `${role}`;
             receiver.selected.innerHTML = displayText; // Use innerHTML to apply styling
             receiver.input.value = id;
             receiver.dropdown.classList.add('hidden');
+            receiverAutoSelected = true; // Disables auto-select receiver
         }
 
         // Select doc type
@@ -677,7 +681,16 @@
 
             // Re-validate when document type is changed via your selectDocType function
             const originalSelectDocType = window.selectDocType;
-            window.selectDocType = function(value) {
+            window.selectDocType = function(value) {                
+                // Automatically select the first receiver only once if no receiver has been selected yet
+                if (!receiverAutoSelected) {
+                    const firstReceiver = document.querySelector('#receiverDropdown li');
+                    if (firstReceiver) {
+                        firstReceiver.click();
+                        receiverAutoSelected = true;
+                    }
+                }
+
                 originalSelectDocType(value);
                 setTimeout(validateForm, 50); // slight delay to allow DOM changes
             };
