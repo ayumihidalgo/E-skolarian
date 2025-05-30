@@ -175,7 +175,7 @@
                                 Remember Me
                             </label>
                         </div>
-                        <a href="{{ route('admin.password.request') }}" class="inline-block font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
+                        <a href="{{ route('student.password.request') }}" class="inline-block font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
                     </div>
 
 
