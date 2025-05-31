@@ -4,9 +4,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeActivityLogBtn = document.getElementById('closeActivityLogBtn');
     const viewAllBtn = document.querySelector('#viewAllActivities');
     
+    // Update the URL path in viewAllBtn click handler
     if (viewAllBtn) {
         viewAllBtn.addEventListener('click', function() {
-            window.location.href = '/super-admin/actLogPage';
+            window.location.href = '/super-admin/activity-logs';
+            activityLogModal.classList.add('hidden');
         });
     }
     function positionModal() {
