@@ -58,17 +58,55 @@ class StudentDocumentController extends Controller
         ]);
     }
 
-    public function documentArchive()
+    public function documentArchive(Request $request)
     {
         $userId = Auth::id();
 
-        $documents = DB::table('submitted_documents')
+        // Build the base query
+        $query = DB::table('submitted_documents')
             ->where('user_id', $userId)
             ->whereNull('archived_at') // Exclude archived documents
-            ->whereIn('status', ['Approved', 'Rejected']) // show Approved or Rejected
-            ->orderBy('created_at', 'desc')
-            ->paginate(6);
-
+            ->whereIn('status', ['Approved', 'Rejected']); // show Approved or Rejected
+        
+        // Apply type filter
+        if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {
+            $query->where('type', $request->type);
+        }
+        
+        // Apply status filter
+        if ($request->has('status') && $request->status != 'All' && $request->status != 'Status') {
+            $query->where('status', $request->status);
+        }
+        
+        // Apply search filter
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('subject', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('control_tag', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('type', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+        
+        // Apply sorting similar to admin version
+        if ($request->has('sort_by')) {
+            $column = $request->sort_by;
+            $direction = $request->has('sort_dir') ? $request->sort_dir : 'asc';
+            $query->orderBy($column, $direction);
+        } else {
+            // Default sort
+            $query->orderBy('created_at', 'desc');
+        }
+        
+        // Execute query with pagination and keep filter parameters in pagination links
+        $documents = $query->paginate(6)
+                          ->appends($request->except('page'));
+        
+        // Handle AJAX requests
+        if ($request->ajax()) {
+            return view('student.documentHistory', compact('documents'))->render();
+        }
+            
         return view('student.documentHistory', compact('documents'));
     }
 }

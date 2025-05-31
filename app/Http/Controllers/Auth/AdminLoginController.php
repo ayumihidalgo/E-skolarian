@@ -45,13 +45,15 @@ class AdminLoginController extends Controller
             ]);
         }
 
+        $remember = $request->has('remember'); // <-- Add this line
+
         // Attempt to authenticate the user (admin only)
         if (Auth::attempt([
             'email' => $credentials['email'],
             'password' => $credentials['password'],
             'role' => 'admin',
             'active' => 1,
-        ])) {
+        ], $remember)) {
             // Successful login - clear attempts
             $this->clearLoginAttempts($request);
 
@@ -60,7 +62,7 @@ class AdminLoginController extends Controller
             $request->session()->put('user_role', Auth::user()->role);
             $request->session()->put('user_email', Auth::user()->email);
 
-            return redirect()->intended('/admin/dashboard');
+            return redirect('/admin/dashboard');
         }
 
         // Increment login attempts with 5 minutes decay time

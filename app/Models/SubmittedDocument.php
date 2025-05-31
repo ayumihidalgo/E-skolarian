@@ -69,4 +69,12 @@ class SubmittedDocument extends Model
     {
         return $this->hasMany(DocumentForward::class, 'document_id');
     }
+
+     /**
+     * Get the latest version for this document
+     */
+    public function latestVersion()
+    {
+        return $this->hasOne(DocumentVersion::class, 'document_id')->latestOfMany('submitted_at');
+    }
 }

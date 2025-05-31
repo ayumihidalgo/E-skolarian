@@ -133,6 +133,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to handle close attempt
     function handleCloseAttempt() {
+        if (isProcessing) {
+            // Disable cursor and prevent closing if processing
+            document.body.style.cursor = 'not-allowed';
+            return;
+        }
+
         if (hasUnsavedChanges()) {
             closeConfirmModal.classList.remove('hidden');
         } else {
@@ -269,68 +275,63 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Step navigation handlers
     if (continueToNextBtn) {
-        continueToNextBtn.addEventListener('click', function() {
+        continueToNextBtn.addEventListener('click', async function() {
             // Get role type
             let roleType;
-            let organizationType = 'academic'; // Default to academic
             
             // Check if custom role is selected
             if (roleSelect.value === 'custom_role') {
-                // Get the role type from radio buttons
                 const checkedRadio = document.querySelector('input[name="custom_role_type"]:checked');
                 if (checkedRadio) {
                     roleType = checkedRadio.value;
                     
                     // Set the final role name to the custom role name
-                    finalRoleNameInput.value = customRoleName.value.trim();
-                    
-                    // Get organization type if this is a student custom role
-                    if (roleType === 'student') {
-                        // Update organization dropdown based on selected role
-                        const selectedRole = roleSelect.value;
-                        if (selectedRole === 'Academic Organization' || selectedRole === 'Non-Academic Organization') {
-                            updateOrganizationDropdown(selectedRole);
-                        }
-                        showStep('student');
+                    if (customRoleName) {
+                        finalRoleNameInput.value = customRoleName.value.trim();
                     }
-                } else {
-                    // Show error message if no role type is selected
-                    roleTypeError.textContent = 'Please select a role type';
-                    roleTypeError.classList.remove('hidden');
-                    return;
+                    
+                    // Show student step if student role type is selected
+                    if (roleType === 'student') {
+                        // Show new org fields, hide existing org fields
+                        const existingOrgFields = document.getElementById('existing-org-fields');
+                        const newOrgFields = document.getElementById('new-org-fields');
+                        
+                        if (existingOrgFields) existingOrgFields.classList.add('hidden');
+                        if (newOrgFields) newOrgFields.classList.remove('hidden');
+                        
+                        // Enable acronym input for new organizations
+                        if (organizationAcronymInput) {
+                            organizationAcronymInput.value = '';
+                            organizationAcronymInput.readOnly = false;
+                            organizationAcronymInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                        }
+                        
+                        showStep('student');
+                    } else if (roleType === 'admin') {
+                        showStep('admin');
+                    }
                 }
             } else {
-                // Get role type from selected option
+                // Handle existing roles...
                 const selectedOption = roleSelect.options[roleSelect.selectedIndex];
                 roleType = selectedOption.getAttribute('data-role');
-                
-                // Set the final role name to the selected role
                 finalRoleNameInput.value = roleSelect.value;
                 
-                // For predefined student roles, determine org type based on role name
                 if (roleType === 'student') {
-                    // Map predefined student roles to organization types
-                    const roleToOrgTypeMap = {
-                        'Student Services': 'academic',
-                        'Academic Services': 'academic',
-                        // Add other predefined student roles here if needed
-                    };
+                    const existingOrgFields = document.getElementById('existing-org-fields');
+                    const newOrgFields = document.getElementById('new-org-fields');
                     
-                    organizationType = roleToOrgTypeMap[roleSelect.value] || 'academic';
+                    if (existingOrgFields) existingOrgFields.classList.remove('hidden');
+                    if (newOrgFields) newOrgFields.classList.add('hidden');
+                    
+                    showStep('student');
+                } else if (roleType === 'admin') {
+                    showStep('admin');
                 }
             }
             
             // Store role value in hidden field
             actualRoleInput.value = roleType;
-            
-            // Navigate to appropriate step
-            if (roleType === 'student') {
-                // Update organization dropdown based on org type
-                updateOrganizationDropdown(organizationType);
-                showStep('student');
-            } else if (roleType === 'admin') {
-                showStep('admin');
-            }
         });
     }
 
@@ -349,37 +350,48 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Role selection change handler
     if (roleSelect) {
-        roleSelect.addEventListener('change', function () {
-            // Reset errors
-            roleError.classList.add('hidden');
-            roleSelect.classList.remove('border-red-500');
-            
-            // Check if custom role is selected
-            if (this.value === 'custom_role') {
+    roleSelect.addEventListener('change', function () {
+        // Reset errors
+        roleError.classList.add('hidden');
+        roleSelect.classList.remove('border-red-500');
+        
+        const customRoleContainer = document.getElementById('custom-role-container');
+        
+        // Check if custom role is selected
+        if (this.value === 'custom_role') {
+            if (customRoleContainer) {
                 customRoleContainer.classList.remove('hidden');
-                
-                // Validate role selection and custom role fields
-                validateRoleSelection().then(() => {
-                    validateCustomRole().then(() => {
-                        updateContinueButton();
-                    });
-                });
-            } else {
-                customRoleContainer.classList.add('hidden');
-                
-                // Clear custom role fields
-                customRoleName.value = '';
-                document.querySelectorAll('input[name="custom_role_type"]').forEach(radio => {
-                    radio.checked = false;
-                });
-                
-                // Validate role selection
-                validateRoleSelection().then(() => {
-                    updateContinueButton();
-                });
             }
-        });
-    }
+            
+            // Enable continue button only when both name and type are filled
+            updateContinueButton();
+        } else {
+            if (customRoleContainer) {
+                customRoleContainer.classList.add('hidden');
+            }
+            
+            // Clear custom role fields
+            const customRoleName = document.getElementById('custom_role_name');
+            if (customRoleName) {
+                customRoleName.value = '';
+            }
+            
+            document.querySelectorAll('input[name="custom_role_type"]').forEach(radio => {
+                radio.checked = false;
+            });
+            
+            // Update continue button state
+            updateContinueButton();
+        }
+        
+        // Update organization dropdown based on selected role
+        if (this.value === 'Academic Organization') {
+            updateOrganizationDropdown('academic');
+        } else if (this.value === 'Non-Academic Organization') {
+            updateOrganizationDropdown('non-academic');
+        }
+    });
+}
     
     // Custom role name input handler
     if (customRoleName) {
@@ -412,33 +424,11 @@ document.addEventListener('DOMContentLoaded', function () {
     
     // Custom role type radio button handlers
     customRoleTypeRadios.forEach(radio => {
-        radio.addEventListener('change', function() {
-            roleTypeError.classList.add('hidden');
-            
-            // If this is a student role type, we need organization type radios
-            if (this.value === 'student') {
-                // Check if the container for org type exists
-                const orgTypeContainer = document.getElementById('custom-org-type-container');
-                if (orgTypeContainer) {
-                    orgTypeContainer.classList.remove('hidden');
-                }
-            } else {
-                // Hide org type container if it exists
-                const orgTypeContainer = document.getElementById('custom-org-type-container');
-                if (orgTypeContainer) {
-                    orgTypeContainer.classList.add('hidden');
-                    // Clear any selected org type
-                    document.querySelectorAll('input[name="custom_org_type"]').forEach(radio => {
-                        radio.checked = false;
-                    });
-                }
-            }
-            
-            validateCustomRole().then(() => {
-                updateContinueButton();
-            });
-        });
+    radio.addEventListener('change', function() {
+        roleTypeError.classList.add('hidden');
+        updateContinueButton(); // Call updateContinueButton directly
     });
+});
     
     // Organization type radio button handlers (for custom student roles)
     const customOrgTypeRadios = document.querySelectorAll('input[name="custom_org_type"]');
@@ -462,7 +452,7 @@ document.addEventListener('DOMContentLoaded', function () {
             organizationNameError.classList.add('hidden');
             organizationNameInput.classList.remove('border-red-500');
             
-            // Auto-fill acronym based on selected organization
+            // Auto-fill acronym based on selected organization and make it read-only
             const selectedOrganization = this.value;
             if (selectedOrganization && organizationAcronymInput) {
                 // Extract acronym from the selected option text
@@ -471,9 +461,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 if (acronymMatch && acronymMatch[1]) {
                     organizationAcronymInput.value = acronymMatch[1];
-                    // Trigger validation for acronym
-                    const event = new Event('input');
-                    organizationAcronymInput.dispatchEvent(event);
+                    organizationAcronymInput.readOnly = true;
+                    organizationAcronymInput.classList.add('bg-gray-100', 'cursor-not-allowed');
                 }
             }
             
@@ -652,52 +641,87 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Function to update continue button state
     function updateContinueButton() {
-        if (!continueToNextBtn) return;
+    if (!continueToNextBtn) return;
+    
+    // Check if we can proceed to the next step
+    if (roleSelect.value === 'custom_role') {
+        // Custom role - need to check custom role fields
+        const roleNameValid = customRoleName.value.trim() !== '';
+        const roleTypeRadio = document.querySelector('input[name="custom_role_type"]:checked');
+        const roleTypeValid = roleTypeRadio !== null;
+
+        // Debug logs
+        console.log('Role name valid:', roleNameValid);
+        console.log('Role type valid:', roleTypeValid);
+        console.log('Selected role type:', roleTypeRadio?.value);
         
-        // Check if we can proceed to the next step
-        if (roleSelect.value === 'custom_role') {
-            // Custom role - need to check custom role fields
-            const customRoleValid = customRoleName.value.trim() !== '' && 
-                                   document.querySelector('input[name="custom_role_type"]:checked') !== null;
-            
-            // If it's a student custom role, also check org type selection
-            const selectedRoleType = document.querySelector('input[name="custom_role_type"]:checked');
-            let orgTypeValid = true;
-            
-            if (selectedRoleType && selectedRoleType.value === 'student') {
-                orgTypeValid = document.querySelector('input[name="custom_org_type"]:checked') !== null;
-            }
-            
-            const allValid = customRoleValid && orgTypeValid;
-            
-            continueToNextBtn.disabled = !allValid;
-            continueToNextBtn.classList.toggle('opacity-50', !allValid);
-            continueToNextBtn.classList.toggle('cursor-not-allowed', !allValid);
-        } else {
-            // Standard role - just check if a valid role is selected
-            const roleValid = roleSelect.value !== '';
-            
-            continueToNextBtn.disabled = !roleValid;
-            continueToNextBtn.classList.toggle('opacity-50', !roleValid);
-            continueToNextBtn.classList.toggle('cursor-not-allowed', !roleValid);
-        }
+        const allValid = roleNameValid && roleTypeValid;
+        
+        continueToNextBtn.disabled = !allValid;
+        continueToNextBtn.classList.toggle('opacity-50', !allValid);
+        continueToNextBtn.classList.toggle('cursor-not-allowed', !allValid);
+        
+        // Debug log
+        console.log('Continue button enabled:', allValid);
+    } else {
+        // Standard role - just check if a valid role is selected
+        const roleValid = roleSelect.value !== '';
+        
+        continueToNextBtn.disabled = !roleValid;
+        continueToNextBtn.classList.toggle('opacity-50', !roleValid);
+        continueToNextBtn.classList.toggle('cursor-not-allowed', !roleValid);
+    }
+}
+    
+    // Update the updateStudentSubmitButton function
+function updateStudentSubmitButton() {
+    if (!submitStudentBtn) return;
+    
+    const isNewRole = roleSelect.value === 'custom_role';
+    const newOrgFields = document.getElementById('new-org-fields');
+    const existingOrgFields = document.getElementById('existing-org-fields');
+    
+    let organizationField;
+    if (isNewRole && newOrgFields && !newOrgFields.classList.contains('hidden')) {
+        organizationField = document.getElementById('new_organization_name');
+    } else if (existingOrgFields && !existingOrgFields.classList.contains('hidden')) {
+        organizationField = document.getElementById('organization_name');
     }
     
-    // Function to update student submit button state
-    function updateStudentSubmitButton() {
-        if (!submitStudentBtn) return;
-        
-        const isValid = organizationNameInput.value.trim() !== '' && 
-                       organizationAcronymInput.value.trim() !== '' &&
-                       studentEmailInput.value.trim() !== '' &&
-                       !organizationNameInput.classList.contains('border-red-500') &&
-                       !organizationAcronymInput.classList.contains('border-red-500') &&
-                       !studentEmailInput.classList.contains('border-red-500');
-                       
+    // Debug logs
+    console.log('Is new role:', isNewRole);
+    console.log('Organization field:', organizationField?.value);
+    console.log('Acronym:', organizationAcronymInput?.value);
+    console.log('Email:', studentEmailInput?.value);
+    
+    const isValid = organizationField &&
+                   organizationField.value.trim() !== '' &&
+                   organizationAcronymInput &&
+                   organizationAcronymInput.value.trim() !== '' &&
+                   studentEmailInput &&
+                   studentEmailInput.value.trim() !== '' &&
+                   !organizationField.classList.contains('border-red-500') &&
+                   !organizationAcronymInput.classList.contains('border-red-500') &&
+                   !studentEmailInput.classList.contains('border-red-500');
+    
+    console.log('Form is valid:', isValid);
+    
+    if (submitStudentBtn) {
         submitStudentBtn.disabled = !isValid;
         submitStudentBtn.classList.toggle('opacity-50', !isValid);
         submitStudentBtn.classList.toggle('cursor-not-allowed', !isValid);
     }
+}
+
+// Add input event listeners for the new organization fields
+const newOrganizationNameInput = document.getElementById('new_organization_name');
+if (newOrganizationNameInput) {
+    newOrganizationNameInput.addEventListener('input', () => {
+        validateOrganizationName().then(() => {
+            updateStudentSubmitButton();
+        });
+    });
+}
     
     // Function to update admin submit button state
     function updateAdminSubmitButton() {
@@ -717,7 +741,13 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateRoleOptions(existingRoles) {
         if (!roleSelect) return;
 
-        const restrictedRoles = ['Student Services', 'Academic Services', 'Administrative Services', 'Campus Director'];
+        const restrictedRoles = [
+            'Office of the Student Services',
+            'Office of the Academic Services',
+            'Office of the Administrative Services',
+            'Office of the Campus Director'
+        ];
+
         const options = Array.from(roleSelect.options);
 
         options.forEach(option => {
@@ -807,142 +837,88 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Function to update organization dropdown options based on type
-    function updateOrganizationDropdown(orgType) {
+    async function updateOrganizationDropdown(orgType) {
         if (!organizationNameInput) return;
         
-        // Clear existing options
-        while (organizationNameInput.options.length > 1) {
-            organizationNameInput.remove(1);
-        }
-        
-        // Reset acronym field
-        if (organizationAcronymInput) {
-            organizationAcronymInput.value = '';
-        }
-
-        // Remove any existing style tag
-        const existingStyle = document.getElementById('org-select-style');
-        if (existingStyle) existingStyle.remove();
-        
-        // Add new style tag
-        const style = document.createElement('style');
-        style.id = 'org-select-style';
-        style.textContent = `
-            #organization_name {
-                width: 100%;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                overflow: hidden;
-            }
-            
-            #organization_name option {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 100%;
-                padding: 8px 12px;
-                font-size: 14px;
-                line-height: 1.4;
-            }
-            
-            /* Ensure dropdown fits container width */
-            #organization_name:focus {
-                outline: none;
-            }
-            
-            /* Additional styling for better UX */
-            #organization_name option:hover {
-                background-color: #f3f4f6;
-            }
-        `;
-        document.head.appendChild(style);
-            
-        // Define academic and non-academic organizations
-        const academicOrgs = [
-            { name: 'Eligible League of Information Technology Enthusiast', acronym: 'ELITE' },
-            { name: 'Association of Electronics and Communications Engineering Students', acronym: 'AECES' },
-            { name: 'Association of Competent and Aspiring Psychologists', acronym: 'ACAP' },
-            { name: 'Junior Marketing Association of the Philippines', acronym: 'JMAP' },
-            { name: 'Philippine Institute of Industrial Engineers', acronym: 'PIIE' },
-            { name: 'Guild of Imporous and Valuable Educators', acronym: 'GIVE' },
-            { name: 'Junior Philippine Institute of Accountants', acronym: 'JPIA' },
-            { name: 'Junior Executives of Human Resources Association', acronym: 'JEHRA' }
-        ];
-        
-        const nonAcademicOrgs = [
-            { name: 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism', acronym: 'TAPNOTCH' },
-            { name: 'PUP SRC CHORALE', acronym: 'CHORALE' },
-            { name: 'Supreme Innovators\' Guild for Mathematics Advancement', acronym: 'SIGMA' },
-            { name: 'Artist Guild Dance Squad', acronym: 'AGDS' }
-        ];
-        
-        // Determine which organizations to show based on the selected role
-        const selectedRole = roleSelect.value;
-        let orgsToShow;
-
-        if (selectedRole === 'Academic Organization') {
-            orgsToShow = academicOrgs;
-        } else if (selectedRole === 'Non-Academic Organization') {
-            orgsToShow = nonAcademicOrgs;
-        } else {
-            // Default to academic if somehow neither is selected
-            orgsToShow = academicOrgs;
-        }
-            
-        // Function to truncate text for display while preserving full value
-        function createTruncatedOption(org) {
-            const option = document.createElement('option');
-            option.value = org.name;
-            
-            // Create display text with intelligent truncation
-            const fullText = `${org.name} (${org.acronym})`;
-            const maxLength = 50; // Adjust this value based on your dropdown width
-            
-            let displayText;
-            if (fullText.length > maxLength) {
-                // Try to truncate the organization name while keeping the acronym
-                const namePartMaxLength = maxLength - org.acronym.length - 4; // Account for " (...)"
-                if (namePartMaxLength > 10) { // Ensure we have reasonable space for the name
-                    displayText = `${org.name.substring(0, namePartMaxLength).trim()}... (${org.acronym})`;
-                } else {
-                    // If name is too long, just show acronym
-                    displayText = `${org.acronym} - ${org.name.substring(0, maxLength - org.acronym.length - 3).trim()}...`;
+        try {
+            // Fetch existing organizations
+            const response = await fetch('/check-organizations', {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
                 }
-            } else {
-                displayText = fullText;
+            });
+            const data = await response.json();
+            const existingOrgs = data.existingOrganizations || [];
+
+            // Clear existing options except the first one (placeholder)
+            while (organizationNameInput.options.length > 1) {
+                organizationNameInput.remove(1);
             }
             
-            option.textContent = displayText;
-            option.title = fullText; // Show full text on hover
-            option.setAttribute('data-full-name', fullText);
+            // Define academic and non-academic organizations
+            const academicOrgs = [
+                { name: 'Association of Competent and Aspiring Psychologists', acronym: 'ACAP' },
+                { name: 'Association of Electronics and Communications Engineering Students', acronym: 'AECES' },
+                { name: 'Eligible League of Information Technology Enthusiast', acronym: 'ELITE' },
+                { name: 'Guild of Imporous and Valuable Educators', acronym: 'GIVE' },
+                { name: 'Junior Executives of Human Resources Association', acronym: 'JEHRA' },
+                { name: 'Junior Marketing Association of the Philippines', acronym: 'JMAP' },
+                { name: 'Junior Philippine Institute of Accountants', acronym: 'JPIA' },
+                { name: 'Philippine Institute of Industrial Engineers', acronym: 'PIIE' }
+            ];
             
-            return option;
-        }
-        
-        // Add organizations to dropdown with proper truncation
-        orgsToShow.forEach(org => {
-            const option = createTruncatedOption(org);
-            organizationNameInput.appendChild(option);
-        });
-        
-        // Update toggle buttons if they exist
-        const academicOrgBtn = document.getElementById('academic-org-btn');
-        const nonAcademicOrgBtn = document.getElementById('non-academic-org-btn');
-        
-        if (academicOrgBtn && nonAcademicOrgBtn) {
-            if (orgType === 'academic') {
-                academicOrgBtn.classList.add('bg-blue-600', 'text-white');
-                academicOrgBtn.classList.remove('bg-gray-200', 'text-gray-700');
-                nonAcademicOrgBtn.classList.add('bg-gray-200', 'text-gray-700');
-                nonAcademicOrgBtn.classList.remove('bg-blue-600', 'text-white');
-            } else {
-                nonAcademicOrgBtn.classList.add('bg-blue-600', 'text-white');
-                nonAcademicOrgBtn.classList.remove('bg-gray-200', 'text-gray-700');
-                academicOrgBtn.classList.add('bg-gray-200', 'text-gray-700');
-                academicOrgBtn.classList.remove('bg-blue-600', 'text-white');
+            const nonAcademicOrgs = [
+                { name: 'Artist Guild Dance Squad', acronym: 'AGDS' },
+                { name: 'Office of the Student Council', acronym: 'OSC' },
+                { name: 'PUP SRC Chorale', acronym: 'CHORALE' },
+                { name: "Supreme Innovators' Guild for Mathematics Advancement", acronym: 'SIGMA' },
+                { name: 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism', acronym: 'TAPNOTCH' }
+            ];
+
+            // Select organizations based on type
+            let orgsToShow = orgType === 'academic' ? academicOrgs : nonAcademicOrgs;
+
+            // Add filtered organizations directly to dropdown
+            orgsToShow.forEach(org => {
+                // Check if organization already exists
+                if (!existingOrgs.includes(org.name.toLowerCase())) {
+                    const option = document.createElement('option');
+                    option.value = org.name; // Keep full name as value
+                    option.textContent = truncateOrgName(org.name, org.acronym); // Truncated display text
+                    option.title = `${org.name} (${org.acronym})`; // Full name on hover
+                    organizationNameInput.appendChild(option);
+                }
+            });
+
+            // Add CSS to style the dropdown options
+            const style = document.createElement('style');
+            style.textContent = `
+                #organization_name option {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 100%;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Reset acronym field
+            if (organizationAcronymInput) {
+                organizationAcronymInput.value = '';
             }
+
+        } catch (error) {
+            console.error('Error updating organization dropdown:', error);
         }
     }
+
+    // Add this helper function to truncate text
+function truncateOrgName(name, acronym, maxLength = 55) {
+    const suffix = ` (${acronym})`;
+    if (name.length + suffix.length <= maxLength) return `${name}${suffix}`;
+    return `${name.substring(0, maxLength - suffix.length - 3)}...${suffix}`;
+}
 
     // Function to setup styled dropdown
     function setupStyledDropdown() {
@@ -963,10 +939,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const restrictedRoles = [
-            'Student Services',
-            'Academic Services',
-            'Administrative Services',
-            'Campus Director'
+            'Office of the Student Services',
+            'Office of the Academic Services',
+            'Office of the Administrative Services',
+            'Office of the Campus Director'
         ];
 
         // Check if selected role is restricted
@@ -998,7 +974,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Check if custom role name is provided
         if (customRole === '') {
-            showCustomRoleNameError('Custom role name cannot be empty');
+            showCustomRoleNameError('Role name cannot be empty');
             return false;
         }
 
@@ -1030,6 +1006,31 @@ document.addEventListener('DOMContentLoaded', function () {
         customRoleNameError.classList.remove('hidden');
         customRoleName.classList.add('border-red-500');
     }
+
+    async function validateNewRoleFields() {
+    let isValid = true;
+
+    // Validate custom role name
+    if (customRoleName) {
+        const roleName = customRoleName.value.trim();
+        if (!roleName) {
+            customRoleNameError.textContent = 'Role name is required';
+            customRoleNameError.classList.remove('hidden');
+            customRoleName.classList.add('border-red-500');
+            isValid = false;
+        }
+    }
+
+    // Validate role type
+    const roleTypeRadio = document.querySelector('input[name="custom_role_type"]:checked');
+    if (!roleTypeRadio) {
+        roleTypeError.textContent = 'Please select a role type';
+        roleTypeError.classList.remove('hidden');
+        isValid = false;
+    }
+
+    return isValid;
+}
     
     // Organization name validation
     async function validateOrganizationName() {
@@ -1279,67 +1280,77 @@ document.addEventListener('DOMContentLoaded', function () {
         submitStudentBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             
-            // Set processing flag
             if (isProcessing) return;
 
             try {
-            isProcessing = true;
-            submitStudentBtn.disabled = true;
-            submitStudentBtn.innerHTML = 'Adding...';
+                isProcessing = true;
+                document.body.style.cursor = 'not-allowed';
+                    disableFormButtons(); // Disable all buttons
+                
+                // Determine which organization name field to use
+                const isNewRole = roleSelect.value === 'custom_role';
+                const organizationName = isNewRole ? 
+                    document.getElementById('new_organization_name').value.trim() : 
+                    organizationNameInput.value.trim();
 
-            const formData = {
-                username: organizationNameInput.value.trim(),
-                email: studentEmailInput.value.trim().toLowerCase(),
-                password: Math.random().toString(36).slice(-8), // Generate random password
-                role: 'student',
-                role_name: finalRoleNameInput.value,
-                organization_acronym: organizationAcronymInput.value.trim(),
-                active: true,
-                _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            };
+                const formData = {
+                    username: organizationName, // Use the correct organization name based on role type
+                    email: studentEmailInput.value.trim().toLowerCase(),
+                    password: Math.random().toString(36).slice(-8),
+                    role: 'student',
+                    role_name: finalRoleNameInput.value,
+                    organization_acronym: organizationAcronymInput.value.trim(),
+                    active: true,
+                    is_new_organization: isNewRole, // Add flag for new organization
+                    _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                };
 
-            console.log('Sending data:', formData);
+                console.log('Sending data:', formData);
 
-            const response = await fetch('/users', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
+                // Validate required fields
+                if (!formData.username) {
+                    throw new Error('Organization name is required');
+                }
+                if (!formData.email) {
+                    throw new Error('Email is required');
+                }
+                if (!formData.organization_acronym) {
+                    throw new Error('Organization acronym is required');
+                }
 
-            const data = await response.json();
-            console.log('Response:', data);
+                const response = await fetch('/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
 
-            if (!response.ok) {
-                throw new Error(data.message || 'Failed to add user');
+                const data = await response.json();
+                console.log('Response:', data);
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to add user');
+                }
+
+                if (data.success) {
+                    resetForm();
+                    addUserModal.classList.add('hidden');
+                    showSuccessModal();
+                }
+
+            } catch (error) {
+                console.error('Error details:', error);
+                handleSubmissionError(error);
+            } finally {
+                isProcessing = false;
+                document.body.style.cursor = 'default';
+                enableFormButtons(); // Re-enable all buttons
             }
-
-            if (data.success) {
-                resetForm();
-                addUserModal.classList.add('hidden');
-                showSuccessModal();
-            }
-
-        } catch (error) {
-            console.error('Error details:', error);
-            handleSubmissionError(error);
-        } finally {
-            isProcessing = false;
-            submitStudentBtn.disabled = false;
-            submitStudentBtn.innerHTML = 'Add User';
-
-            // Re-enable close button and backdrop
-            if (closeAddUserModalBtn) {
-                closeAddUserModalBtn.disabled = false;
-                closeAddUserModalBtn.style.opacity = '1';
-                closeAddUserModalBtn.style.cursor = 'pointer';
-            }
-        }
-    });
-}
+        });
+    }
 
     // Admin form submission
     if (submitAdminBtn) {
@@ -1404,8 +1415,8 @@ document.addEventListener('DOMContentLoaded', function () {
             handleSubmissionError(error);
         } finally {
             isProcessing = false;
-            submitAdminBtn.disabled = false;
-            submitAdminBtn.innerHTML = 'Add User';
+            document.body.style.cursor = 'default';
+            enableFormButtons(); // Re-enable all buttons
         }
     });
 }
@@ -1469,6 +1480,69 @@ document.addEventListener('DOMContentLoaded', function () {
     } else {
         // Fallback to alert if error element not found
         alert(errorMessage);
+    }
+}
+
+// Add these helper functions to manage button states
+function disableFormButtons() {
+    // Disable submit buttons
+    if (submitStudentBtn) {
+        submitStudentBtn.disabled = true;
+        submitStudentBtn.innerHTML = 'Adding...';
+        submitStudentBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+    if (submitAdminBtn) {
+        submitAdminBtn.disabled = true;
+        submitAdminBtn.innerHTML = 'Adding...';
+        submitAdminBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+    
+    // Disable back buttons
+    if (backToRoleBtn) {
+        backToRoleBtn.disabled = true;
+        backToRoleBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+    if (backToRoleFromAdminBtn) {
+        backToRoleFromAdminBtn.disabled = true;
+        backToRoleFromAdminBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    }
+    
+    // Disable close button
+    if (closeAddUserModalBtn) {
+        closeAddUserModalBtn.disabled = true;
+        closeAddUserModalBtn.style.opacity = '0.5';
+        closeAddUserModalBtn.style.cursor = 'not-allowed';
+    }
+}
+
+function enableFormButtons() {
+    // Enable submit buttons
+    if (submitStudentBtn) {
+        submitStudentBtn.disabled = false;
+        submitStudentBtn.innerHTML = 'Add User';
+        submitStudentBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    if (submitAdminBtn) {
+        submitAdminBtn.disabled = false;
+        submitAdminBtn.innerHTML = 'Add User';
+        submitAdminBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    
+    // Enable back buttons
+    if (backToRoleBtn) {
+        backToRoleBtn.disabled = false;
+        backToRoleBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    if (backToRoleFromAdminBtn) {
+        backToRoleFromAdminBtn.disabled = false;
+        backToRoleFromAdminBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    
+    // Enable close button
+    if (closeAddUserModalBtn) {
+        closeAddUserModalBtn.disabled = false;
+        closeAddUserModalBtn.style.opacity = '1';
+        closeAddUserModalBtn.style.cursor = 'pointer';
     }
 }
 });

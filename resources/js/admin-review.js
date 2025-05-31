@@ -3,6 +3,8 @@
 window.hideActionToast = hideActionToast;
 // Added to the window object so it can be called from HTML
 window.openCommentAttachmentPreview = openCommentAttachmentPreview;
+// Added this line to make sortTable accessible globally
+window.sortTable = sortTable;
 
 const MESSAGE_CHARACTER_LIMITS = {
     'adminMessage': 500,           // For forwarding messages
@@ -10,6 +12,7 @@ const MESSAGE_CHARACTER_LIMITS = {
     'rejectionMessage': 1000,      // For rejection reasons (needs more detail)
     'approvalMessage': 500         // For approval messages
 };
+
 // __________________________HELPER FUNCTIONS______________________________________
 let currentDocumentId = null;
 // Function to clear input fields in modals
@@ -219,109 +222,447 @@ function fixModalLabelOverlap() {
 }
 
 // -------------------------------------------------------------
-// Function to handle document click
-document.addEventListener('DOMContentLoaded', function() {
-    const documentRows = document.querySelectorAll('tbody tr');
-    const tableView = document.getElementById('tableView');
-    const detailsView = document.getElementById('detailsView');
+// ------Document Viewer Functionality--------
+function handleRowClick(row) {
+    // Get document ID from the data attribute
+    const documentId = row.getAttribute('data-document-id');
     
-    console.log("Found elements:", {
-        rows: documentRows.length,
-        tableView: !!tableView,
-        detailsView: !!detailsView
-    });
+    console.log("Row clicked, document ID:", documentId);
     
-    documentRows.forEach(row => {
-        row.addEventListener('click', function(e) {
-            e.preventDefault();
+    if (!documentId) {
+        console.error('Document ID is missing for this row.');
+        return;
+    }
+    
+    // Store the real document ID in the global variable
+    currentDocumentId = documentId;
+    console.log("Set currentDocumentId to:", currentDocumentId);
+    
+    // Mark the document as opened first (server-side update)
+    fetch(`/admin/documents/${documentId}/mark-as-opened`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        console.log("Mark as opened result:", result);
+        if (result.success) {
+            // Update the visual appearance of this row immediately
+            row.classList.remove('border-[#7A1212]', 'bg-white');
+            row.classList.add('border-[#D9D9D9]', 'bg-[#D9ACAC33]');
             
-            // Get document ID from the data attribute - this is the actual numeric ID
-            const documentId = this.getAttribute('data-document-id');
-            
-            console.log("Row clicked, document ID:", documentId);
-            
-            if (!documentId) {
-                console.error('Document ID is missing for this row.');
-                return;
+            // Remove the red dot indicator
+            const dotIndicator = row.querySelector('td:last-child span[class*="bg-["]');
+            if (dotIndicator) {
+                dotIndicator.remove();
             }
             
-            // Store the real document ID in the global variable
-            currentDocumentId = documentId;
-            console.log("Set currentDocumentId to:", currentDocumentId);
-            
-            // Mark the document as opened first (server-side update)
-            fetch(`/admin/documents/${documentId}/mark-as-opened`, {
-                method: 'POST',
+            // Fetch document details and show them
+            return fetch(`/admin/documents/${documentId}/details`, {
                 headers: {
-                    'Content-Type': 'application/json',
                     'Accept': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
-            })
-            .then(response => response.json())
-            .then(result => {
-                console.log("Mark as opened result:", result);
-                if (result.success) {
-                    // Update the visual appearance of this row immediately
-                    this.classList.remove('border-[#7A1212]', 'bg-white');
-                    this.classList.add('border-[#D9D9D9]', 'bg-[#D9ACAC33]');
-                    
-                    // Remove the red dot indicator
-                    const dotIndicator = this.querySelector('td:last-child span[class*="bg-["]');
-                    if (dotIndicator) {
-                        dotIndicator.remove();
-                    }
-                    
-                    // Fetch document details and show them
-                    return fetch(`/admin/documents/${documentId}/details`, {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    });
-                } else {
-                    throw new Error('Failed to mark document as opened');
-                }
-            })
-            .then(response => {
-                console.log("Mark as opened response:", response);
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        console.error("Error response:", text);
-                        throw new Error('Failed to mark document as opened: ' + response.status);
-                    });
-                }
-                return response.json();
-            })
-            .then(docData => {
-                console.log("Document details received:", docData);
-                console.log("Document sender:", docData.user);
-                console.log("Document sender profile pic:", docData.user?.profile_pic);
-                
-                // Update the details view with document data
-                updateDocumentDetailsView(docData);
-                
-                // Add this line to load comments for the current document
-                loadComments(documentId);
-                
-                console.log("BEFORE: tableView hidden:", tableView.classList.contains('hidden'));
-                console.log("BEFORE: detailsView hidden:", detailsView.classList.contains('hidden'));
-                
-                // Show details view, hide table view
-                tableView.classList.add('hidden');
-                detailsView.classList.remove('hidden');
-                
-                console.log("AFTER: tableView hidden:", tableView.classList.contains('hidden'));
-                console.log("AFTER: detailsView hidden:", detailsView.classList.contains('hidden'));
-            })
-            .catch(error => {
-                console.error('Error:', error);
             });
+        } else {
+            throw new Error('Failed to mark document as opened');
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.text().then(text => {
+                console.error("Error response:", text);
+                throw new Error('Failed to mark document as opened: ' + response.status);
+            });
+        }
+        return response.json();
+    })
+    .then(docData => {
+        // Update the details view with document data
+        updateDocumentDetailsView(docData);
+        
+        // Add this line to load comments for the current document
+        loadComments(documentId);
+        
+        // Show details view, hide table view
+        const tableView = document.getElementById('tableView');
+        const detailsView = document.getElementById('detailsView');
+        tableView.classList.add('hidden');
+        detailsView.classList.remove('hidden');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+// Initial loading
+document.addEventListener('DOMContentLoaded', function() {
+    const documentRows = document.querySelectorAll('tbody tr');
+    documentRows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleRowClick(this);
         });
     });
 });
+
+// Filter and Search Functions
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the search functionality
+    initSearchAndFilters();
+    
+    // Function to initialize search and filters
+    function initSearchAndFilters() {
+        // Get form elements
+        const searchInput = document.getElementById('searchInput');
+        const organizationFilter = document.getElementById('organizationFilter');
+        const documentTypeFilter = document.getElementById('documentTypeFilter');
+        
+        if (searchInput && organizationFilter && documentTypeFilter) {
+            // Remove existing event listeners first (to prevent duplicates)
+            searchInput.removeEventListener('input', handleSearchInput);
+            searchInput.removeEventListener('keydown', handleSearchKeydown);
+            organizationFilter.removeEventListener('change', handleFilterChange);
+            documentTypeFilter.removeEventListener('change', handleFilterChange);
+            
+            // Add debounced search input handler
+            let searchTimeout;
+            function handleSearchInput() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    submitAjaxSearch();
+                }, 500); // 500ms debounce
+            }
+            searchInput.addEventListener('input', handleSearchInput);
+            
+            // Handle Enter key
+            function handleSearchKeydown(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    clearTimeout(searchTimeout);
+                    
+                    if (searchInput.value.trim() === '') {
+                        // Reset filters and update URL
+                        history.pushState(null, '', window.location.pathname);
+                        
+                        // Refresh the page content with no filters
+                        fetch(window.location.pathname, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.text())
+                        .then(html => {
+                            updateTableContent(html);
+                        });
+                    } else {
+                        submitAjaxSearch();
+                    }
+                }
+            }
+            searchInput.addEventListener('keydown', handleSearchKeydown);
+            
+            // Add filter change listeners
+            function handleFilterChange() {
+                submitAjaxSearch();
+            }
+            organizationFilter.addEventListener('change', handleFilterChange);
+            documentTypeFilter.addEventListener('change', handleFilterChange);
+            
+            // Initialize event listeners for the table
+            attachRowEventListeners();
+        }
+    }
+    
+    // Function to submit search via AJAX
+    function submitAjaxSearch() {
+        const searchInput = document.getElementById('searchInput');
+        const organizationFilter = document.getElementById('organizationFilter');
+        const documentTypeFilter = document.getElementById('documentTypeFilter');
+        const searchTerm = searchInput.value.trim();
+        
+        // Show loading indicator
+        showLoader();
+        
+        // Initialize search parameters
+        let searchParams = new URLSearchParams();
+        
+        // Check for full date format (MM/DD/YYYY)
+        const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+        const fullDateMatch = searchTerm.match(fullDatePattern);
+        
+        if (fullDateMatch) {
+            // Extract values for validation
+            const month = parseInt(fullDateMatch[1], 10);
+            const day = parseInt(fullDateMatch[2], 10);
+            const year = parseInt(fullDateMatch[3], 10);
+            
+            // Validate date values
+            if (isValidDate(month, day, year)) {
+                // Format as MM/DD/YYYY for consistency
+                searchParams.append('fullDate', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`);
+            } else {
+                // If invalid date, just use as regular search term
+                searchParams.append('search', searchTerm);
+            }
+        } else {
+            // Check for month/day pattern (M/D or MM/DD)
+            const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
+            const monthDayMatch = searchTerm.match(monthDayPattern);
+            
+            if (monthDayMatch && searchTerm.length <= 5) {
+                // Extract values for validation
+                const month = parseInt(monthDayMatch[1], 10);
+                const day = parseInt(monthDayMatch[2], 10);
+                
+                // Validate month and day values
+                if (isValidDate(month, day, new Date().getFullYear())) {
+                    // Format as MM/DD for consistency
+                    searchParams.append('monthDayPattern', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`);
+                } else {
+                    // If invalid month/day, just use as regular search term
+                    searchParams.append('search', searchTerm);
+                }
+            } else {
+                // Not a date pattern, use as direct search term
+                searchParams.append('search', searchTerm);
+            }
+        }
+        
+        // Always add filter values
+        searchParams.append('organization', organizationFilter.value || 'All');
+        searchParams.append('documentType', documentTypeFilter.value || 'All');
+        
+        // Update URL without page reload
+        const newUrl = window.location.pathname + '?' + searchParams.toString();
+        history.pushState(null, '', newUrl);
+        
+        // Make AJAX request
+        fetch(newUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            updateTableContent(html);
+            hideLoader();
+        })
+        .catch(error => {
+            console.error('Error fetching results:', error);
+            hideLoader();
+        });
+    }
+    
+    // Helper function to update table content and reinitialize event listeners
+    function updateTableContent(html) {
+        // Parse the HTML response
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        // Extract and update the table content
+        const newTable = doc.querySelector('#tableView');
+        if (newTable) {
+            document.querySelector('#tableView').innerHTML = newTable.innerHTML;
+            
+            // Reattach all event listeners
+            attachRowEventListeners();
+        }
+        
+        // Make sure search and filter event listeners are reattached
+        initSearchAndFilters();
+    }
+    
+    // Function to attach event listeners to table rows
+    function attachRowEventListeners() {
+        const rows = document.querySelectorAll('tr[data-document-id]');
+        rows.forEach(row => {
+            row.addEventListener('click', function(e) {
+                e.preventDefault();
+                handleRowClick(this);
+            });
+        });
+        
+        // Also reattach pagination listeners if needed
+        attachPaginationEventListeners();
+    }
+    
+    // Function to attach pagination event listeners
+    function attachPaginationEventListeners() {
+        const paginationLinks = document.querySelectorAll('.pagination-btn, .pagination-btn-prev, .pagination-btn-next');
+        paginationLinks.forEach(link => {
+            if (link.getAttribute('onclick') === 'return false;') return;
+            
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.getAttribute('href');
+                if (url && url !== '#') {
+                    // Show loader
+                    showLoader();
+                    
+                    // Update URL without page reload
+                    history.pushState(null, '', url);
+                    
+                    // Make AJAX request for pagination
+                    fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        updateTableContent(html);
+                        hideLoader();
+                    })
+                    .catch(error => {
+                        console.error('Error fetching paginated results:', error);
+                        hideLoader();
+                    });
+                }
+            });
+        });
+    }
+    
+    // Helper function for date validation
+    function isValidDate(month, day, year) {
+        // Basic range checks
+        if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+            return false;
+        }
+        
+        // Days in month validation
+        const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        // Adjust February for leap years
+        if (month === 2) {
+            const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+            if (isLeapYear) {
+                if (day > 29) return false;
+            } else {
+                if (day > 28) return false;
+            }
+        } else if (day > daysInMonth[month]) {
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // Simple loader functions
+    function showLoader() {
+        // Remove any existing loader
+        const oldLoader = document.getElementById('search-loader');
+        if (oldLoader) oldLoader.remove();
+
+        // Find the table container
+        const tableView = document.getElementById('tableView');
+        if (tableView) {
+            // Create loader overlay
+            const loader = document.createElement('div');
+            loader.id = 'search-loader';
+            loader.className = 'absolute inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm';
+            loader.style.minHeight = '200px';
+            loader.innerHTML = `
+                <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
+                    <svg class="animate-spin h-5 w-5 mr-3 text-[#7A1212]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Searching...</span>
+                </div>
+            `;
+            // Set position: relative to parent if not already set
+            if (getComputedStyle(tableView).position === 'static') {
+                tableView.style.position = 'relative';
+            }
+            tableView.appendChild(loader);
+        }
+    }
+    
+    function hideLoader() {
+        const loader = document.getElementById('search-loader');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+    }
+    
+    // Make functions available globally if needed
+    window.attachRowEventListeners = attachRowEventListeners;
+    window.submitAjaxSearch = submitAjaxSearch;
+});
+
+// Sorting Functionality
+let currentSort = {
+    column: -1,
+    direction: 'asc'
+};
+
+function sortTable(columnIndex, type) {
+    const table = document.querySelector('table');
+    const tbody = table.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const headers = table.querySelectorAll('th i');
+
+    // Update sort direction
+    if (currentSort.column === columnIndex) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.column = columnIndex;
+        currentSort.direction = 'asc';
+    }
+
+    // Update sort icons
+    headers.forEach(icon => {
+        icon.className = 'fa-solid fa-sort text-[#9099A5]';
+    });
+
+    const currentHeader = headers[columnIndex];
+    currentHeader.className = `fa-solid text-[#9099A5] fa-sort-${currentSort.direction === 'asc' ? 'up' : 'down'}`;
+
+    // Sort rows
+    rows.sort((a, b) => {
+        let aValue = a.cells[columnIndex].textContent.trim();
+        let bValue = b.cells[columnIndex].textContent.trim();
+
+        if (type === 'date') {
+            // Convert date strings to Date objects
+            aValue = new Date(aValue.split('/').map((n, i) => i === 2 ? n : n.padStart(2, '0')).join('/'));
+            bValue = new Date(bValue.split('/').map((n, i) => i === 2 ? n : n.padStart(2, '0')).join('/'));
+        }
+
+        if (type === 'text') {
+            aValue = aValue.toLowerCase();
+            bValue = bValue.toLowerCase();
+        }
+
+        if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    // Reorder table rows
+    rows.forEach(row => tbody.appendChild(row));
+
+    // Update zebra striping
+    rows.forEach((row) => {
+        // Remove just the background classes
+        row.classList.remove('bg-white', 'bg-gray-50', 'bg-[#D9ACAC33]');
+        
+        // Add proper background class based on opened status
+        const isOpened = row.classList.contains('border-[#D9D9D9]');
+        if (isOpened) {
+            row.classList.add('bg-[#D9ACAC33]');
+        } else {
+            row.classList.add('bg-white');
+        }
+    });
+}
 
 // Viewing Document Details
 function updateDocumentDetailsView(docData) {
@@ -591,48 +932,95 @@ function updateDocumentDetailsView(docData) {
             // Sort the timeline steps by time ascending
             timelineSteps.sort((a, b) => new Date(a.time) - new Date(b.time));
 
-            // Build timeline HTML
-            let timelineHTML = `<div class="relative pl-5">`;
+            // Timeline for status history
+            let timelineHTML = '';
+            let lastOrgName = null;
+
+            // Process each step in the timeline
+            // Sort the timeline steps by time ascending first
+            timelineSteps.sort((a, b) => new Date(a.time) - new Date(b.time));
+
+            // Find the most recent step (will be used to mark as "current")
+            const latestTimeStepIndex = timelineSteps.length - 1;
+
             timelineSteps.forEach((step, idx) => {
-                // Determine colors
-                let dot = "bg-gray-300";
-                let statusColor = "text-white";
-                if (/approved/i.test(step.status)) {
-                    dot = "bg-green-500";
-                    statusColor = "text-green-400 font-semibold";
-                } else if (/rejected/i.test(step.status)) {
-                    dot = "bg-red-500";
-                    statusColor = "text-red-400 font-semibold";
-                } else if (/resubmission/i.test(step.status)) {
-                    dot = "bg-yellow-400";
-                    statusColor = "text-yellow-300 font-semibold";
-                } else if (/sent/i.test(step.status)) {
-                    dot = "bg-blue-400";
-                    statusColor = "text-blue-300 font-semibold";
+                const isNewOrg = lastOrgName !== step.reviewer_name;
+                lastOrgName = step.reviewer_name;
+                
+                // Determine if this is the current step based on index
+                const isCurrent = idx === latestTimeStepIndex;
+                
+                // Set colors based on status
+                let dot = 'bg-white';
+                let statusColor = 'text-white/90';
+                
+                // Determine colors based on status
+                if (step.status === 'Under Review') {
+                    dot = isCurrent ? 'bg-yellow-400' : 'bg-white';
+                    statusColor = isCurrent ? 'text-yellow-400' : 'text-white';
+                } else if (step.status === 'Approved') {
+                    dot = 'bg-green-400';
+                    statusColor = 'text-green-400';
+                } else if (step.status === 'Rejected') {
+                    dot = 'bg-red-500';
+                    statusColor = 'text-red-500';
+                } else if (step.status === 'Resubmit') {
+                    dot = 'bg-orange-400';
+                    statusColor = 'text-orange-400';
+                } else if (step.status === 'Forwarded') {
+                    dot = 'bg-blue-400';
+                    statusColor = 'text-blue-400';
                 }
-
-                // Format date and status
-                let displayStatus = step.status;
-                let displayTime = new Date(step.time).toLocaleString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
-
-                // Timeline bullet and line
+                
+                // Format the status display text
+                let displayStatus = step.status.replace(/_/g, ' ');
+                displayStatus = displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1);
+                
+                // Format timestamp
+                const displayTime = new Date(step.time).toLocaleString('en-US', { 
+                    month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true 
+                });
+                
+                // If this is a new organization and not the first one, add a spacer with a continuous line
+                if (isNewOrg && idx > 0) {
+                    timelineHTML += `
+                        <div class="flex items-start relative h-2">
+                            <span class="absolute left-1 top-0 w-px h-full bg-gray-400"></span>
+                        </div>
+                    `;
+                }
+                
+                // Generate HTML for organization/admin name (main bullet)
+                if (isNewOrg) {
+                    timelineHTML += `
+                        <div class="flex items-start relative">
+                            <span class="absolute left-1 top-4 w-px h-full bg-gray-400"></span>
+                            <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-1 mr-3"></span>
+                            <div>
+                                <span class="font-bold">${step.reviewer_name || 'Unknown'}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Generate HTML for review decision (small bullet)
                 timelineHTML += `
                     <div class="flex items-start relative">
-                        ${idx < timelineSteps.length - 1
-                            ? `<span class="absolute left-1 top-4 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>`
-                            : ''}
-                        <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-1.5 mr-3"></span>
-                        <div>
-                            <span class="font-bold">${step.reviewer_name || 'Unknown'}</span>
-                            <div class="ml-0">
-                                <span class="${statusColor}">${displayStatus}</span>
-                                <span class="ml-1 text-white/80">${displayTime}</span>
-                            </div>
+                        ${idx < timelineSteps.length - 1 ? 
+                            `<span class="absolute left-1 top-4 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>` : 
+                            ''}
+                        <span class="flex-shrink-0 h-2 w-2 rounded-full ${dot} mt-1.5 mr-3 ml-0.5"></span>
+                        <div class="flex items-center">
+                            <span class="${statusColor}">${displayStatus}, ${displayTime}</span>
+                            ${isCurrent ? `
+                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Current
+                                </span>
+                            ` : ''}
                         </div>
                     </div>
                 `;
             });
-            timelineHTML += '</div>';
 
             if (timelineSteps.length === 0) {
                 timelineHTML = '<p class="text-gray-300">No status updates available</p>';

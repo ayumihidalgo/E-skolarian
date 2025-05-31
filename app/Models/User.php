@@ -42,6 +42,8 @@ class User extends Authenticatable
         'password',
         'active',
         'organization_acronym',
+        'organization_name',
+        'type'
     ];
 
     /**

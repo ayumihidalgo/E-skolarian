@@ -86,8 +86,8 @@
 
                     <!-- Table Section -->
                     @if ($documents->isNotEmpty())
-                        <div class="bg-white rounded-[24px] shadow-md overflow-hidden pt-2 flex flex-col min-h-[500px]">
-                            <table class="min-w-full text-sm rounded-t-xl">
+                        <div class="bg-white rounded-[24px] shadow-md overflow-hidden pt-2 flex flex-col min-h-[400px]">
+                            <table class="min-w-full text-sm rounded-[24px]">
                                 <thead class="bg-white text-black font-extrabold text-lg">
                                     <tr>
                                         <th class="px-6 py-3 text-left">
@@ -185,11 +185,13 @@
                                             </td>
 
                                             <!-- Type -->
-                                            <td class="px-6 py-4 whitespace-nowrap flex items-center">
-                                                {{ $document->type }}
-                                                @if(!$document->is_opened)
-                                                    <span class="ml-2 h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>
-                                                @endif
+                                            <td class="px-6 py-4 whitespace-nowrap relative">
+                                                <div class="flex items-center justify-between w-full">
+                                                    <span>{{ $document->type }}</span>
+                                                    @if(!$document->is_opened)
+                                                        <span class="h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>
+                                                    @endif
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
@@ -212,10 +214,10 @@
                                 <nav>
                                     <ul class="inline-flex items-center space-x-2">
                                         <li>
-                                            <a href="{{ $documents->onFirstPage() ? '#' : $documents->url(1) }}"
-                                            class="pagination-btn-first px-3 py-1 rounded-lg {{ $documents->onFirstPage() ? 'text-gray-600 cursor-not-allowed bg-gray-200' : 'text-black hover:bg-gray-300' }}"
+                                            <a href="{{ $documents->onFirstPage() ? '#' : $documents->previousPageUrl() }}"
+                                            class="pagination-btn-prev px-3 py-1 rounded-lg {{ $documents->onFirstPage() ? 'text-gray-600 cursor-not-allowed bg-gray-200' : 'text-black hover:bg-gray-300' }}"
                                             @if($documents->onFirstPage()) onclick="return false;" @endif>
-                                                First
+                                                &lt;
                                             </a>
                                         </li>
 
@@ -229,10 +231,10 @@
                                         @endforeach
 
                                         <li>
-                                            <a href="{{ $documents->onLastPage() ? '#' : $documents->url($documents->lastPage()) }}"
-                                            class="pagination-btn-last px-3 py-1 rounded-lg {{ $documents->onLastPage() ? 'text-gray-600 cursor-not-allowed bg-gray-200' : 'text-black hover:bg-gray-300' }}"
-                                            @if($documents->onLastPage()) onclick="return false;" @endif>
-                                                Last
+                                            <a href="{{ $documents->hasMorePages() ? $documents->nextPageUrl() : '#' }}"
+                                            class="pagination-btn-next px-3 py-1 rounded-lg {{ $documents->hasMorePages() ? 'text-black hover:bg-gray-300' : 'text-gray-600 cursor-not-allowed bg-gray-200' }}"
+                                            @if(!$documents->hasMorePages()) onclick="return false;" @endif>
+                                                &gt;
                                             </a>
                                         </li>
                                     </ul>
@@ -748,296 +750,8 @@
     </div>
 
     <script>
-        // ------Document Viewer Functionality--------
-        // Filter and Search Functions
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get form elements
-            const searchInput = document.getElementById('searchInput');
-            const organizationFilter = document.getElementById('organizationFilter');
-            const documentTypeFilter = document.getElementById('documentTypeFilter');
-            
-            // Organization name to acronym mapping
-            const orgMap = {
-                'ACAP': 'Association of Competent and Aspiring Psychologists',
-                'AECES': 'Association of Electronics and Communications Engineering Students',
-                'ELITE': 'Eligible League of Information Technology Enthusiasts',
-                'GIVE': 'Guild of Imporous and Valuable Educators',
-                'JEHRA': 'Junior Executive of Human Resource Association',
-                'JMAP': 'Junior Marketing Association of the Philippines',
-                'JPIA': 'Junior Philippine Institute of Accountants',
-                'PIIE': 'Philippine Institute of Industrial Engineers',
-                'AGDS': 'Artist Guild Dance Squad',
-                'Chorale': 'PUP SRC Chorale',
-                'SIGMA': 'Supreme Innovators\' Guild for Mathematics Advancements',
-                'TAPNOTCH': 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
-                'OSC': 'Office of the Student Council'
-            };
-            
-            if (searchInput && organizationFilter && documentTypeFilter) {
-                // Create the form dynamically
-                const form = document.createElement('form');
-                form.method = 'GET';
-                form.action = window.location.pathname; // Use the current URL path
-                form.style.display = 'none'; // Hide the form
-                document.body.appendChild(form);
-                
-                // Create hidden input fields
-                const searchField = document.createElement('input');
-                searchField.type = 'hidden';
-                searchField.name = 'search';
-                form.appendChild(searchField);
-                
-                const orgField = document.createElement('input');
-                orgField.type = 'hidden';
-                orgField.name = 'organization';
-                form.appendChild(orgField);
-                
-                const typeField = document.createElement('input');
-                typeField.type = 'hidden';
-                typeField.name = 'documentType';
-                form.appendChild(typeField);
-                
-                // New field for month/day pattern
-                const monthDayField = document.createElement('input');
-                monthDayField.type = 'hidden';
-                monthDayField.name = 'monthDayPattern';
-                form.appendChild(monthDayField);
-                
-                // New field for full date (MM/DD/YYYY)
-                const fullDateField = document.createElement('input');
-                fullDateField.type = 'hidden';
-                fullDateField.name = 'fullDate';
-                form.appendChild(fullDateField);
-                
-                // Set initial values from URL parameters
-                const urlParams = new URLSearchParams(window.location.search);
-                searchInput.value = urlParams.get('search') || '';
-                if (urlParams.has('organization') && urlParams.get('organization') !== 'All') {
-                    organizationFilter.value = urlParams.get('organization');
-                }
-                if (urlParams.has('documentType') && urlParams.get('documentType') !== 'All') {
-                    documentTypeFilter.value = urlParams.get('documentType');
-                }
-                
-                // Function to submit search form with current values
-                function submitSearch() {
-                    const searchTerm = searchInput.value.trim();
-                    
-                    // Clear all special search fields initially
-                    monthDayField.value = '';
-                    fullDateField.value = '';
-                    
-                    // Check for full date format (MM/DD/YYYY)
-                    const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-                    const fullDateMatch = searchTerm.match(fullDatePattern);
-                    
-                    if (fullDateMatch) {
-                        // Extract values for validation
-                        const month = parseInt(fullDateMatch[1], 10);
-                        const day = parseInt(fullDateMatch[2], 10);
-                        const year = parseInt(fullDateMatch[3], 10);
-                        
-                        // Validate date values
-                        if (isValidDate(month, day, year)) {
-                            // Format as MM/DD/YYYY for consistency
-                            fullDateField.value = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`;
-                            orgField.value = organizationFilter.value || 'All';
-                            typeField.value = documentTypeFilter.value || 'All';
-                            form.submit();
-                            return;
-                        }
-                    }
-                    
-                    // Check for month/day pattern (M/D or MM/DD)
-                    const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
-                    const monthDayMatch = searchTerm.match(monthDayPattern);
-                    
-                    if (monthDayMatch && searchTerm.length <= 5) {
-                        // Extract values for validation
-                        const month = parseInt(monthDayMatch[1], 10);
-                        const day = parseInt(monthDayMatch[2], 10);
-                        
-                        // Validate month and day values
-                        if (isValidDate(month, day, new Date().getFullYear())) {
-                            // Format as MM/DD for consistency
-                            monthDayField.value = `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`;
-                            orgField.value = organizationFilter.value || 'All';
-                            typeField.value = documentTypeFilter.value || 'All';
-                            form.submit();
-                            return;
-                        }
-                    }
-                    
-                    // Not a valid date pattern, check for organization acronym
-                    const searchTermUpper = searchTerm.toUpperCase();
-                    let enhancedSearchTerm = searchTerm;
-                    
-                    if (orgMap[searchTermUpper]) {
-                        enhancedSearchTerm = orgMap[searchTermUpper];
-                    }
-                    
-                    searchField.value = enhancedSearchTerm;
-                    orgField.value = organizationFilter.value || 'All';
-                    typeField.value = documentTypeFilter.value || 'All';
-                    form.submit();
-                }
-                
-                // Add event listeners
-                let searchTimeout;
-                searchInput.addEventListener('input', function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        submitSearch();
-                    }, 1000); // 1000ms debounce
-                });
-                
-                // Handle Enter key in search field
-                searchInput.addEventListener('keydown', function(event) {
-                    if (event.key === 'Enter') {
-                        event.preventDefault();
-                        if (searchInput.value.trim() === '') {
-                            // Reset all filters and redirect to base URL
-                            window.location.href = window.location.pathname;
-                            return false;
-                        } else {
-                            submitSearch();
-                        }
-                    }
-                });
-                
-                // Helper function to validate dates
-                function isValidDate(month, day, year) {
-                    // Basic range checks
-                    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
-                        return false;
-                    }
-                    
-                    // Days in month validation
-                    const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-                    
-                    // Adjust February for leap years
-                    if (month === 2) {
-                        const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
-                        if (isLeapYear) {
-                            if (day > 29) return false;
-                        } else {
-                            if (day > 28) return false;
-                        }
-                    } else if (day > daysInMonth[month]) {
-                        return false;
-                    }
-                    
-                    return true;
-                }
-                
-                // Keep the filters unchanged
-                organizationFilter.addEventListener('change', function() {
-                    // Reset date search patterns when changing filters
-                    monthDayField.value = '';
-                    fullDateField.value = '';
-                    
-                    searchField.value = searchInput.value;
-                    orgField.value = organizationFilter.value || 'All'; 
-                    typeField.value = documentTypeFilter.value || 'All';
-                    form.submit();
-                });
-                
-                documentTypeFilter.addEventListener('change', function() {
-                    // Reset date search patterns when changing filters
-                    monthDayField.value = '';
-                    fullDateField.value = '';
-                    
-                    searchField.value = searchInput.value;
-                    orgField.value = organizationFilter.value || 'All';
-                    typeField.value = documentTypeFilter.value || 'All';
-                    form.submit();
-                });
-            }
-        });
-
-        // Sorting Functionality
-        let currentSort = {
-            column: -1,
-            direction: 'asc'
-        };
-
-        function sortTable(columnIndex, type) {
-            const table = document.querySelector('table');
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            const headers = table.querySelectorAll('th i');
-
-            // Update sort direction
-            if (currentSort.column === columnIndex) {
-                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                currentSort.column = columnIndex;
-                currentSort.direction = 'asc';
-            }
-
-            // Update sort icons
-            headers.forEach(icon => {
-                icon.className = 'fa-solid fa-sort text-[#9099A5]';
-            });
-
-            const currentHeader = headers[columnIndex];
-            currentHeader.className = `fa-solid text-[#9099A5] fa-sort-${currentSort.direction === 'asc' ? 'up' : 'down'}`;
-
-            // Sort rows
-            rows.sort((a, b) => {
-                let aValue = a.cells[columnIndex].textContent.trim();
-                let bValue = b.cells[columnIndex].textContent.trim();
-
-                if (type === 'date') {
-                    // Convert date strings to Date objects
-                    aValue = new Date(aValue.split('/').map((n, i) => i === 2 ? n : n.padStart(2, '0')).join('/'));
-                    bValue = new Date(bValue.split('/').map((n, i) => i === 2 ? n : n.padStart(2, '0')).join('/'));
-                }
-
-                if (type === 'text') {
-                    aValue = aValue.toLowerCase();
-                    bValue = bValue.toLowerCase();
-                }
-
-                if (aValue < bValue) return currentSort.direction === 'asc' ? -1 : 1;
-                if (aValue > bValue) return currentSort.direction === 'asc' ? 1 : -1;
-                return 0;
-            });
-
-            // Reorder table rows
-            rows.forEach(row => tbody.appendChild(row));
-
-            // Update zebra striping
-            rows.forEach((row) => {
-                // Remove just the background classes
-                row.classList.remove('bg-white', 'bg-gray-50', 'bg-[#D9ACAC33]');
-                
-                // Add proper background class based on opened status
-                const isOpened = row.classList.contains('border-[#D9D9D9]');
-                if (isOpened) {
-                    row.classList.add('bg-[#D9ACAC33]');
-                } else {
-                    row.classList.add('bg-white');
-                }
-            });
-        }
-
-        function closeDocumentViewer() {
-            const modal = document.getElementById('documentViewerModal');
-            const pdfViewer = document.getElementById('pdfViewer');
-            
-            // Clear the PDF viewer
-            pdfViewer.innerHTML = '';
-            
-            modal.classList.add('hidden');
-        }
-
-        // Define asset URLs so JavaScript can use them
-        const ASSET_URLS = {
-            successIcon: "{{ asset('images/successful.svg') }}",
-            errorIcon: "{{ asset('images/error.svg') }}"
-        };
-        </script>
+        
+    </script>
     @vite('resources/js/admin-review.js')
     @vite(['resources/js/app.js'])
 @endsection

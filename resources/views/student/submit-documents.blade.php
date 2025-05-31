@@ -1,217 +1,221 @@
 @extends('base')
 @section('content')
-    @include('components.studentNavBarComponent')
     @include('components.studentSideBarComponent')
+    <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
+        @include('components.studentNavBarComponent')
+        <div class="flex-grow mb-10">
+            <!-- Main Content -->
+            <div class="flex-grow p-6">
+                <div class="">
+                    <h1 class="text-2xl font-['Lexend'] font-semibold mb-6">Document Submission</h1>
 
-    <div id="main-content" class="transition-all duration-300 ml-[20%]">
-        <!-- Main Content -->
-        <div class="flex-grow p-6">
-            <div class="">
-                <h1 class="text-2xl font-['Lexend'] font-semibold mb-6">Document Submission</h1>
+                    <form class="space-y-6 font-['Manrope']" action="{{ route('submit.document') }}" method="POST"
+                        enctype="multipart/form-data">
+                        @csrf
+                        <!-- Receiver, Subject, Doc Type -->
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <!-- Left Side -->
+                            <div class="flex flex-col gap-4 w-full md:w-2/3 relative">
+                                <!-- Receiver Button -->
+                                <div class="relative w-full">
+                                    <button type="button" id="receiverButton" aria-expanded
+                                        class="w-full text-left border-b-2 border-gray-500 py-3 relative focus:outline-none flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                        <span class="font-semibold text-gray-500">
+                                            To<span class="required-indicator text-red-500"> *</span>:
+                                            <span id="receiverSelected" class="font-semibold text-black"></span>
+                                        </span>
+                                        <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
+                                            id="receiverArrow" class="w-8 h-3">
+                                    </button>
 
-                <form class="space-y-6 font-['Manrope']" action="{{ route('submit.document') }}" method="POST"
-                    enctype="multipart/form-data">
-                    @csrf
-                    <!-- Receiver, Subject, Doc Type -->
-                    <div class="flex flex-col md:flex-row gap-4">
-                        <!-- Left Side -->
-                        <div class="flex flex-col gap-4 w-full md:w-2/3 relative">
-                            <!-- Receiver Button -->
-                            <div class="relative w-full">
-                                <button type="button" id="receiverButton" aria-expanded
-                                    class="w-full text-left border-b-2 border-gray-500 py-3 relative focus:outline-none flex items-center justify-between gap-2 bg-white cursor-pointer">
-                                    <span class="font-semibold text-gray-500">
-                                        To<span class="required-indicator text-red-500"> *</span>:
-                                        <span id="receiverSelected" class="font-semibold text-black"></span>
-                                    </span>
-                                    <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
-                                        id="receiverArrow" class="w-8 h-3">
+                                    <!-- Dropdown List -->
+                                    <ul role="listbox" id="receiverDropdown"
+                                        class="hidden absolute z-10 w-full bg-white text-black border border-gray-300 rounded-[11px] shadow-md mt-1">
+                                        @foreach ($adminUsers as $admin)
+                                            <li tabindex="0" role="option"
+                                                class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                                onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->role_name }}')">
+                                                {{ $admin->role_name }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
+
+                                    <input type="hidden" name="received_by" id="receiverInput">
+                                </div>
+
+                                <!-- Subject Field -->
+                                <div class="flex items-center border-b-2 border-gray-500 py-3 w-full">
+                                    <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span
+                                            class="required-indicator text-red-500"> *</span>:</span>
+                                    <input type="text" id="subject" name="subject" autocomplete="off"
+                                        class="flex-1 font-semibold focus:outline-none" maxlength="100">
+                                </div>
+                            </div>
+
+                            <!-- Right Side -->
+                            <div class="relative w-full md:w-1/3">
+                                <!-- Document Type Button -->
+                                <button type="button" id="docTypeButton" aria-expanded
+                                    class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white px-6 py-3 rounded-[12px] cursor-pointer transition">
+                                    <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
+                                        class="w-5 h-5">
+                                    <span id="docTypeSelected">Document Type</span>
+
+                                    <!-- Dropdown Arrow aligned to the right -->
+                                    <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
+                                        class="absolute right-4 w-8 h-3">
                                 </button>
 
                                 <!-- Dropdown List -->
-                                <ul role="listbox" id="receiverDropdown"
-                                    class="hidden absolute z-10 w-full bg-white text-black border border-gray-300 rounded-[11px] shadow-md mt-1">
-                                    @foreach ($adminUsers as $admin)
-                                        <li tabindex="0" role="option"
-                                            class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                            onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->username }}', '{{ $admin->role_name }}')">
-                                            {{ $admin->username }}
-                                        </li>
-                                    @endforeach
+                                <ul role="listbox" id="docTypeDropdown"
+                                    class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
+                                    <li tabindex="0" role="option"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                        onclick="selectDocType('Event Proposal')">Event Proposal</li>
+                                    <li tabindex="0" role="option"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                        onclick="selectDocType('General Plan of Activities')">General Plan of Activities</li>
+                                    <li tabindex="0" role="option"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                        onclick="selectDocType('Calendar of Activities')">Calendar of Activities</li>
+                                    <li tabindex="0" role="option"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                        onclick="selectDocType('Accomplishment Report')">Accomplishment Report</li>
+                                    <li tabindex="0" role="option"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                        onclick="selectDocType('Constitution and By-Laws')">Constitution and By-Laws</li>
+                                    <li tabindex="0" role="option"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                        onclick="selectDocType('Request Letter')">Request Letter</li>
+                                    <li tabindex="0" role="option"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                        onclick="selectDocType('Off Campus')">Off Campus</li>
+                                    <li tabindex="0" role="option"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                        onclick="selectDocType('Petition and Concern')">Petition and Concern</li>
+                                    <li tabindex="0" role="option"
+                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                        onclick="selectDocType('Others')">Others</li>
                                 </ul>
 
-                                <input type="hidden" name="received_by" id="receiverInput">
-                            </div>
-
-                            <!-- Subject Field -->
-                            <div class="flex items-center border-b-2 border-gray-500 py-3 w-full">
-                                <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span
-                                        class="required-indicator text-red-500"> *</span>:</span>
-                                <input type="text" id="subject" name="subject" autocomplete="off"
-                                    class="flex-1 font-semibold focus:outline-none" maxlength="50">
+                                <!-- Hidden input for form submission -->
+                                <input type="hidden" name="type" id="docTypeInput">
                             </div>
                         </div>
 
-                        <!-- Right Side -->
-                        <div class="relative w-full md:w-1/3">
-                            <!-- Document Type Button -->
-                            <button type="button" id="docTypeButton" aria-expanded
-                                class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white px-6 py-3 rounded-[12px] cursor-pointer transition">
-                                <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
-                                    class="w-5 h-5">
-                                <span id="docTypeSelected">Document Type</span>
+                        <!-- Summary -->
+                        <div class="flex flex-col gap-1">
+                            <label for="summary" class="font-semibold text-gray-500">Summary<span
+                                    class="required-indicator text-red-500"> *</span>:</label>
 
-                                <!-- Dropdown Arrow aligned to the right -->
-                                <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
-                                    class="absolute right-4 w-8 h-3">
-                            </button>
+                            <textarea id="summary" name="summary"
+                                class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
+                                oninput="summaryUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
 
-                            <!-- Dropdown List -->
-                            <ul role="listbox" id="docTypeDropdown"
-                                class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
-                                <li tabindex="0" role="option"
-                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectDocType('Event Proposal')">Event Proposal</li>
-                                <li tabindex="0" role="option"
-                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectDocType('General Plan of Activities')">General Plan of Activities</li>
-                                <li tabindex="0" role="option"
-                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectDocType('Calendar of Activities')">Calendar of Activities</li>
-                                <li tabindex="0" role="option"
-                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectDocType('Accomplishment Report')">Accomplishment Report</li>
-                                <li tabindex="0" role="option"
-                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectDocType('Constitution and By-Laws')">Constitution and By-Laws</li>
-                                <li tabindex="0" role="option"
-                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectDocType('Request Letter')">Request Letter</li>
-                                <li tabindex="0" role="option"
-                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectDocType('Off Campus')">Off Campus</li>
-                                <li tabindex="0" role="option"
-                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                    onclick="selectDocType('Petition and Concern')">Petition and Concern</li>
-                            </ul>
-
-                            <!-- Hidden input for form submission -->
-                            <input type="hidden" name="type" id="docTypeInput">
-                        </div>
-                    </div>
-
-                    <!-- Summary -->
-                    <div class="flex flex-col gap-1">
-                        <label for="summary" class="font-semibold text-gray-500">Summary<span
-                                class="required-indicator text-red-500"> *</span>:</label>
-
-                        <textarea id="summary" name="summary"
-                            class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
-                            oninput="summaryUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
-
-                        <div class="text-sm text-gray-500 text-right border-b-2 border-gray-500">
-                            <span id="summary-counter">0</span>/255
-                        </div>
-                    </div>
-
-                    <!-- Date Range (Only shows for Event Proposals) -->
-                    <div id="date-container" class="flex flex-col gap-2 md:flex-col w-full hidden">
-                        <div class="flex flex-col md:flex-row md:items-center gap-2 w-full">
-                            <input type="date" id="startDate" name="eventStartDate"
-                                class="border-b-2 border-gray-500 p-2 w-full focus:outline-none font-semibold text-gray-500">
-                            <span class="hidden md:inline md:px-2">—</span>
-                            <input type="date" id="endDate" name="eventEndDate"
-                                class="border-b-2 border-gray-500 p-2 w-full focus:outline-none font-semibold text-gray-500">
-                        </div>
-                    </div>
-
-                    <!-- Event Title (Only shows for Event Proposals) -->
-                    <div id="event-title-container"
-                        class="flex items-center border-b-2 border-gray-500 py-3 w-full hidden">
-                        <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Event Title<span
-                                class="required-indicator text-red-500"> *</span>:</span>
-                        <input type="text" id="event-title" name="event-title" autocomplete="off"
-                            class="flex-1 font-semibold focus:outline-none" maxlength="50">
-                    </div>
-
-                    <!-- Event Description (Only shows for Event Proposals) -->
-                    <div id="event-desc-container" class="flex flex-col gap-1 hidden">
-                        <label for="event-desc" class="font-semibold text-gray-500">Event Description<span
-                                class="required-indicator text-red-500"> *</span>:</label>
-
-                        <textarea id="event-desc" name="event-desc"
-                            class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
-                            oninput="eventDescUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
-
-                        <div class="text-sm text-gray-500 text-right border-b-2 border-gray-500">
-                            <span id="event-desc-counter">0</span>/255
-                        </div>
-                    </div>
-
-                    <!-- File Upload -->
-                    <div class="space-y-2 w-full md:w-[400px]">
-                        <div
-                            class="flex items-center w-full overflow-hidden rounded-[12px] bg-white border border-gray-400">
-                            <!-- Upload Button (Left side) -->
-                            <label tabindex="0" for="fileUpload"
-                                class="flex items-center gap-2 bg-[#7A1212] text-white font-semibold rounded-[12px] px-4 py-2 cursor-pointer hover:bg-[#a31515]">
-                                <img src="{{ asset('images/upload-icon.svg') }}" alt="Upload Icon" id="docTypeIcon"
-                                    class="w-4 h-4">
-                                Upload File
-                            </label>
-
-                            <!-- Hidden File Input -->
-                            <input type="file" id="fileUpload" name="file_upload[]" class="hidden"
-                                onchange="validateFile(this)" multiple>
-
-                            <!-- Filename Display (Right side) -->
-                            <div id="fileName" class="flex-1 px-3 py-2 text-sm text-gray-500 truncate">No File Chosen
+                            <div class="text-sm text-gray-500 text-right border-b-2 border-gray-500">
+                                <span id="summary-counter">0</span>/255
                             </div>
                         </div>
 
-                        <p class="text-sm text-gray-500">Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC</p>
-                    </div>
-
-                    <!-- Buttons -->
-                    <div class="flex flex-col md:flex-row gap-4 justify-end">
-                        <button id="mainSubmitButton" type="button" onclick="showConfirmPopup(event)"
-                            class="order-1 md:order-2 w-full font-semibold bg-gray-500 text-white px-6 py-2 rounded-[12px] md:w-auto cursor-not-allowed transition"
-                            disabled>Submit</button>
-
-                        <button type="button" onclick="window.location.href='{{ route('student.dashboard') }}'"
-                            class="order-2 md:order-1 w-full font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] md:w-auto cursor-pointer transition">Back
-                            to Home</button>
-                    </div>
-
-                    <!-- Confirmation Popup -->
-                    <div id="confirmPopup" class="fixed inset-0 flex items-center justify-center bg-black/50 z-50 hidden">
-                        <div
-                            class="bg-white rounded-xl p-6 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl shadow-lg text-gray-800">
-                            <div class="flex justify-between items-start mb-4">
-                                <h2 class="text-lg font-semibold">Document Submission Confirmation</h2>
-                                <button type="button" onclick="closeConfirmPopup()"
-                                    class="text-gray-500 hover:text-gray-700 text-3xl leading-none cursor-pointer self-center">&times;</button>
-                            </div>
-
-                            <p class="mb-6">Are you sure you want to submit this document? Once submitted, you may not be
-                                able to make further changes.</p>
-
-                            <div class="flex justify-end space-x-2">
-                                <button onclick="closeConfirmPopup()"
-                                    class="font-semibold px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer"
-                                    type="button">Cancel</button>
-                                <button id="confirmSubmitBtn" type="submit" onclick="handleConfirmSubmit(this)"
-                                    class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
-                                    Submit
-                                </button>
+                        <!-- Date Range (Only shows for Event Proposals) -->
+                        <div id="date-container" class="flex flex-col gap-2 md:flex-col w-full hidden">
+                            <div class="flex flex-col md:flex-row md:items-center gap-2 w-full">
+                                <input type="date" id="startDate" name="eventStartDate"
+                                    class="border-b-2 border-gray-500 p-2 w-full focus:outline-none font-semibold text-gray-500">
+                                <span class="hidden md:inline md:px-2">—</span>
+                                <input type="date" id="endDate" name="eventEndDate"
+                                    class="border-b-2 border-gray-500 p-2 w-full focus:outline-none font-semibold text-gray-500">
                             </div>
                         </div>
-                    </div>
-                </form>
+
+                        <!-- Event Title (Only shows for Event Proposals) -->
+                        <div id="event-title-container"
+                            class="flex items-center border-b-2 border-gray-500 py-3 w-full hidden">
+                            <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Event Title<span
+                                    class="required-indicator text-red-500"> *</span>:</span>
+                            <input type="text" id="event-title" name="event-title" autocomplete="off"
+                                class="flex-1 font-semibold focus:outline-none" maxlength="60">
+                        </div>
+
+                        <!-- Event Description (Only shows for Event Proposals) -->
+                        <div id="event-desc-container" class="flex flex-col gap-1 hidden">
+                            <label for="event-desc" class="font-semibold text-gray-500">Event Description<span
+                                    class="required-indicator text-red-500"> *</span>:</label>
+
+                            <textarea id="event-desc" name="event-desc"
+                                class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
+                                oninput="eventDescUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
+
+                            <div class="text-sm text-gray-500 text-right border-b-2 border-gray-500">
+                                <span id="event-desc-counter">0</span>/255
+                            </div>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div class="space-y-2 w-full md:w-[400px]">
+                            <div
+                                class="flex items-center w-full overflow-hidden rounded-[12px] bg-white border border-gray-400">
+                                <!-- Upload Button (Left side) -->
+                                <label tabindex="0" for="fileUpload"
+                                    class="flex items-center gap-2 bg-[#7A1212] text-white font-semibold rounded-[12px] px-4 py-2 cursor-pointer hover:bg-[#a31515]">
+                                    <img src="{{ asset('images/upload-icon.svg') }}" alt="Upload Icon" id="docTypeIcon"
+                                        class="w-4 h-4">
+                                    Upload File
+                                </label>
+
+                                <!-- Hidden File Input -->
+                                <input type="file" id="fileUpload" name="file_upload[]" class="hidden"
+                                    onchange="validateFile(this)" multiple>
+
+                                <!-- Filename Display (Right side) -->
+                                <div id="fileName" class="flex-1 px-3 py-2 text-sm text-gray-500 truncate">No File Chosen
+                                </div>
+                            </div>
+
+                            <p class="text-sm text-gray-500">Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC</p>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="flex flex-col md:flex-row gap-4 justify-end">
+                            <button id="mainSubmitButton" type="button" onclick="showConfirmPopup(event)"
+                                class="order-1 md:order-2 w-full font-semibold bg-gray-500 text-white px-6 py-2 rounded-[12px] md:w-auto cursor-not-allowed transition"
+                                disabled>Submit</button>
+
+                            <button type="button" onclick="window.location.href='{{ route('student.dashboard') }}'"
+                                class="order-2 md:order-1 w-full font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] md:w-auto cursor-pointer transition">Back
+                                to Home</button>
+                        </div>
+
+                        <!-- Confirmation Popup -->
+                        <div id="confirmPopup" class="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 hidden">
+                            <div
+                                class="bg-white rounded-xl p-6 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl shadow-lg text-gray-800">
+                                <div class="flex justify-between items-start mb-4">
+                                    <h2 class="text-lg font-semibold">Document Submission Confirmation</h2>
+                                    <button type="button" onclick="closeConfirmPopup()"
+                                        class="text-gray-500 hover:text-gray-700 text-3xl leading-none cursor-pointer self-center">&times;</button>
+                                </div>
+
+                                <p class="mb-6">Are you sure you want to submit this document? Once submitted, you may not be
+                                    able to make further changes.</p>
+
+                                <div class="flex justify-end space-x-2">
+                                    <button onclick="closeConfirmPopup()"
+                                        class="font-semibold px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer"
+                                        type="button">Cancel</button>
+                                    <button id="confirmSubmitBtn" type="submit" onclick="handleConfirmSubmit(this)"
+                                        class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
+        @include('components.footer')
     </div>
-
     <!-- Error Toast -->
     <div id="errorToast"
         class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-300 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50">
@@ -273,6 +277,9 @@
     @endif
 
     <script>
+        // Auto-select receiver when selecting doc type disabled at start
+        let receiverAutoSelected = false;
+
         // Element references
         const docType = {
             button: document.getElementById('docTypeButton'),
@@ -418,7 +425,7 @@
 
             if (files.length > maxFiles) {
                 hideAllToasts();
-                showToast('error', `You can only upload up to ${maxFiles} files.`);
+                showToast('error', `Upload limit reached. Please remove some files before uploading new ones.`);
                 input.value = "";
                 fileNameDisplay.textContent = "No File Chosen";
                 return;
@@ -524,11 +531,12 @@
         }
 
         // selectReceiver() function
-        window.selectReceiver = function(id, name, role) {
-            const displayText = `${name} <span class="text-gray-400">&lsaquo;${role}&rsaquo;</span>`; // ‹ ›
+        window.selectReceiver = function(id, role) {
+            const displayText = `${role}`;
             receiver.selected.innerHTML = displayText; // Use innerHTML to apply styling
             receiver.input.value = id;
             receiver.dropdown.classList.add('hidden');
+            receiverAutoSelected = true; // Disables auto-select receiver
         }
 
         // Select doc type
@@ -674,6 +682,15 @@
             // Re-validate when document type is changed via your selectDocType function
             const originalSelectDocType = window.selectDocType;
             window.selectDocType = function(value) {
+                // Automatically select the first receiver only once if no receiver has been selected yet
+                if (!receiverAutoSelected) {
+                    const firstReceiver = document.querySelector('#receiverDropdown li');
+                    if (firstReceiver) {
+                        firstReceiver.click();
+                        receiverAutoSelected = true;
+                    }
+                }
+
                 originalSelectDocType(value);
                 setTimeout(validateForm, 50); // slight delay to allow DOM changes
             };

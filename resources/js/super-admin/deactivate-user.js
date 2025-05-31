@@ -146,8 +146,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         userDetailsModal.classList.add('hidden');
 
                         // Show success notification
-                        document.getElementById('successTitle').textContent = 'Account Successfully Deactivated';
-                        document.getElementById('successMessage').textContent = 'The user account has been deactivated.';
+                        document.getElementById('successTitle').textContent = 'Account Deactivated Successfully!';
+                        document.getElementById('successMessage').textContent = 'Your changes have been saved. Account has been deactivated and the user can no longer use it.';
 
                         // Show success modal
                         successModal.classList.remove('hidden');

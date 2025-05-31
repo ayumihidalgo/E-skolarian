@@ -25,6 +25,7 @@ use App\Http\Middleware\IsAdmin;
 use App\Http\Middleware\IsStudent;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\ProblemReportController;
 use App\Http\Controllers\StudentDashboardController;
 
 
@@ -50,6 +51,9 @@ Route::middleware('guest')->group(function () {
     // Super Admin Login
     Route::get('/superadmin/login', [SuperAdminLoginController::class, 'showLoginForm'])->name('superadmin.login.form');
     Route::post('/superadmin/login', [SuperAdminLoginController::class, 'login'])->name('superadmin.login');
+
+
+    Route::post('/report-problem', [ProblemReportController::class, 'store'])->name('report.problem.store');
 
     // --- Student Password Reset ---
     Route::get('/student/forgot-password', [StudentPasswordResetLinkController::class, 'create'])->name('student.password.request');
@@ -104,8 +108,16 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
     Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
         ->name('super-admin.reactivate-user')
         ->middleware('auth');
+        
+         // Super Admin Reports
+    Route::get('/super-admin/reports', function() {
+        return view('super-admin.super-admin-component.reports');
+    })->name('super-admin.reports');
+
+    Route::get('/super-admin/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('super-admin.reports');
 
 });
+
 Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
     // ---------------- Admin ----------------
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'showDashboard'])->name('admin.dashboard');
@@ -185,6 +197,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::post('/check-email', [UserController::class, 'checkEmail'])->name('check.email');
     Route::get('/check-roles', [UserController::class, 'checkRoles'])->name('check.roles');
     Route::post('/check-username', [UserController::class, 'checkUsername'])->name('check-username');
+    Route::get('/check-organizations', [UserController::class, 'checkOrganizations'])->name('check.organizations');
 
     Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
 

@@ -97,9 +97,9 @@
                     </button>
                 </form>
                 <div class="mt-4 text-center">
-                        <a href="#" id="backToLogin" class="flex items-center justify-center md:text-[var(--secondary-color)] font-normal group transition-all duration-75">
+                        <a href="#" id="backToLogin" class="flex items-center justify-center md:text-[var(--forgot-color-text)] font-normal group transition-all duration-75">
                         <img class="md:h-[25px] pr-5 pt-0.5 group-hover:translate-x-1 transition-all duration-75" src="{{asset('images/arrow-left-admin.svg')}}" alt="Arrow Left Icon">
-                        <span class="border-b-2 border-transparent group-hover:border-[var(--secondary-color)] transition-all duration-75">Back to Login</span>
+                        <span class="border-b-2 border-transparent group-hover:border-[var(--forgot-color-text)] transition-all duration-75">Back to Login</span>
                     </a>
                 </div>
             </div>
@@ -107,16 +107,23 @@
     </div>
 
     <!-- Confirmation Modal -->
-<div id="unsavedChangesModal" class="fixed inset-0 flex items-center justify-center bg-black/50 hidden z-50">
-    <div class="bg-white p-6 rounded-2xl shadow-lg text-center w-80">
-        <h1 class="text-lg mb-4 font-semibold text-gray-800">Go back to Login Page?</h1>
-        <p class="text-sm mb-6 text-gray-600">You have unsaved changes. Do you wish to go back to the Login Page?</p>
-        <div class="flex justify-center space-x-4">
-            <button id="confirmLeave" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Back to Login Page</button>
-            <button id="cancelLeave" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+<div id="unsavedChangesModal" class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 hidden z-50">
+    <div class="flex items-center justify-center gap-4 pb-3">
+        <img class="h-[80px]" src="{{asset('images/e-skolarianIcon.svg')}}">
+        <img class="h-[35px]" src="{{asset('images/E-skolarianWhite.svg')}}">
+    </div>
+    <div class="bg-white/90 font-[Manrope] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+        <div class="w-[80%] mx-auto">
+            <h1 class="text-xl mb-4 text-[var(--secondary-color)]">Go back to Login Page?</h1>
+            <p class="mb-6 font-normal text-black">You have unsaved changes. Do you wish to go back to the Login Page?</p>
+            <div class="flex justify-around gap-5">
+                <button id="confirmLeave" class="bg-[var(--secondary-color)] text-white px-4 py-2 rounded-full hover:brightness-75">Back to Login Page</button>
+                <button id="cancelLeave" class="bg-[#D9D9D9CC] text-black px-4 py-2 rounded-full hover:bg-gray-400">Cancel</button>
+            </div>
         </div>
     </div>
 </div>
+
 
     <script>
         const hasFormErrors = {{ $errors->any() ? 'true' : 'false' }};
@@ -259,24 +266,46 @@
             }
         });
 
-        // Intercept back to login click
-        backToLogin.addEventListener('click', (e) => {
-            if (isDirty) {
-                e.preventDefault();
-                modal.classList.remove('hidden');
-            } else {
-                window.location.href = "{{ route('admin.login') }}";
-            }
-        });
+         let isSafeExit = false;
 
-        // Modal buttons
-        confirmLeave.addEventListener('click', () => {
-            window.location.href = "{{ route('admin.login') }}";
-        });
+    // Mark exit as safe when user clicks "Back to Login"
+    document.getElementById('backToLogin').addEventListener('click', function (e) {
+    e.preventDefault();
 
-        cancelLeave.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
+    if (isDirty) {
+        // Show the modal only if there are unsaved changes
+        modal.classList.remove('hidden');
+    } else {
+        // If not dirty, navigate immediately without modal
+        isSafeExit = true; // mark as safe exit to skip beforeunload
+        window.location.href = "{{ route('admin.login') }}";
+    }
+});
+
+    // If user confirms going back
+    document.getElementById('confirmLeave').addEventListener('click', function () {
+        isSafeExit = true; // Allow leaving without beforeunload
+        window.location.href = "{{ route('admin.login') }}";
+    });
+
+    // Cancel going back
+    document.getElementById('cancelLeave').addEventListener('click', function () {
+        document.getElementById('unsavedChangesModal').classList.add('hidden');
+    });
+
+    // Trigger beforeunload only if NOT a safe exit
+    window.addEventListener('beforeunload', function (e) {
+        if (!isSafeExit) {
+            e.preventDefault();
+            e.returnValue = ''; // Needed for Chrome/Edge
+        }
+    });
+
+    // Also make sure form submission sets safe exit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function () {
+        isSafeExit = true;
+    });
 
         </script>
 

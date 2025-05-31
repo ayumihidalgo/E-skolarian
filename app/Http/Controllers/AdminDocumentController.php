@@ -22,6 +22,34 @@ class AdminDocumentController extends Controller
             abort(404, 'Document not found');
         }
 
+        // Get all document versions and their attachments, ordered by version (newest first)
+        $documentVersions = DB::table('document_versions')
+            ->where('document_id', $id)
+            ->orderBy('version', 'desc')
+            ->get();
+        
+        // Initialize attachments array
+        $attachments = [];
+        $filePath = null;
+        
+        // Process all versions into attachments array
+        if ($documentVersions && count($documentVersions) > 0) {
+            foreach ($documentVersions as $version) {
+                $attachments[] = [
+                    'id' => $version->id,
+                    'version' => $version->version,
+                    'file_path' => $version->file_path,
+                    'comments' => $version->comments ?? null,
+                    'submitted_at' => $version->submitted_at,
+                    'is_latest' => ($version === $documentVersions->first())
+                ];
+            }
+            
+            // Get latest version's file path for display
+            $latestVersion = $documentVersions->first();
+            $filePath = $latestVersion->file_path;
+        }
+
         // Organization mapping
         $orgMap = [
             'ACAP' => 'Association of Competent and Aspiring Psychologists',
@@ -44,6 +72,12 @@ class AdminDocumentController extends Controller
         $acronym = count($parts) > 0 ? $parts[0] : '';
         $organizationName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
 
+        // Check if document is archived
+        $isArchived = DB::table('submitted_documents')
+            ->where('id', $id)
+            ->whereNotNull('archived_at')
+            ->exists();
+
         return view('admin.documentPreview', [
             'document' => [
                 'id' => $document->id,
@@ -54,87 +88,72 @@ class AdminDocumentController extends Controller
                 'type' => $document->type,
                 'status' => $document->status,
                 'organization' => $organizationName,
+                'file_path' => $filePath,
+                'attachments' => $attachments, // Add the array of all attachments
+                'remarks' => $document->remarks ?? null,
+                'is_archived' => $isArchived // Add this line
             ]
         ]);
     }
 
     public function documentHistory(Request $request)
     {
-        $adminId = auth()->id(); // Get current admin's user ID
-
-        // Start with base query
+        // Start with a base query
         $query = DB::table('submitted_documents')
-            ->whereNull('archived_at')
-            ->where('received_by', $adminId) // Only documents assigned to this admin
-            ->whereIn('status', ['Approved', 'Rejected']); // Only show Approved or Rejected
-
-        // Apply filters from request parametersr
-        if ($request->has('status') && $request->status !== 'All') {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->has('organization') && $request->organization !== 'All') {
-            // Filter by organization prefix in control_tag
-            $query->where('control_tag', 'like', $request->organization . '_%');
-        }
-
-        if ($request->has('type') && $request->type !== 'All') {
-            $query->where('type', $request->type);
-        }
-
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('subject', 'like', "%{$search}%")
-                  ->orWhere('control_tag', 'like', "%{$search}%")
-                  ->orWhere('type', 'like', "%{$search}%");
-            });
-        }
-
-        // Fetch documents with pagination
-        $documents = $query->orderBy('created_at', 'desc')
-                          ->paginate(6)
-                          ->appends($request->except('page')); // Important: maintain filters across pagination
-
-        // Get organization mapping for display purposes (your existing code)
-        $orgMap = [
-            'ACAP' => 'Association of Competent and Aspiring Psychologists',
-            'AECES' => 'Association of Electronics and Communications Engineering Students',
-            'ELITE' => 'Eligible League of Information Technology Enthusiasts',
-            'GIVE' => 'Guild of Imporous and Valuable Educators',
-            'JEHRA' => 'Junior Executive of Human Resource Association',
-            'JMAP' => 'Junior Marketing Association of the Philippines',
-            'JPIA' => 'Junior Philippine Institute of Accountants',
-            'PIIE' => 'Philippine Institute of Industrial Engineers',
-            'AGDS' => 'Artist Guild Dance Squad',
-            'Chorale' => 'PUP SRC Chorale',
-            'SIGMA' => 'Supreme Innovators Guild for Mathematics Advancements',
-            'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
-            'OSC' => 'Office of the Student Council',
-        ];
-
-        $tagColors = [
-            'OSC' => 'text-blue-500',
-            'ECE' => 'text-red-500',
-            'PSY' => 'text-purple-500',
-            'IT' => 'text-orange-500',
-            'HR' => 'text-pink-400',
-            'ACC' => 'text-pink-400',
-            'EDU' => 'text-blue-500',
-            'MAR' => 'text-yellow-500',
-            'IE' => 'text-green-500',
-            'TAP' => 'text-green-500',
-            'SIGMA' => 'text-yellow-900',
-            'AGDS' => 'text-yellow-900',
-            'CHO' => 'text-blue-500',
-        ];
-
-        // Handle AJAX requests
-        if ($request->ajax()) {
-            return view('admin.documentHistory', compact('documents', 'orgMap', 'tagColors'))->render();
+            ->whereNull('archived_at');
+        
+        // Apply organization filter
+        if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
+            $query->where('control_tag', 'LIKE', $request->organization . '_%');
         }
         
-        return view('admin.documentHistory', compact('documents', 'orgMap', 'tagColors'));
+        // Apply type filter
+        if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {
+            $query->where('type', $request->type);
+        }
+        
+        // Apply status filter
+        if ($request->has('status') && $request->status != 'All' && $request->status != 'Status') {
+            $query->where('status', $request->status);
+        }
+        
+        // Apply search filter
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('subject', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('control_tag', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('type', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+        
+        // Apply sorting with special handling for derived fields
+        if ($request->has('sort_by')) {
+            $column = $request->sort_by;
+            $direction = $request->has('sort_dir') ? $request->sort_dir : 'asc';
+            
+            if ($column === 'organization') {
+                // Sort by the organization part of control_tag
+                // This uses a substring before the underscore
+                $query->orderByRaw("SUBSTRING_INDEX(control_tag, '_', 1) $direction");
+            } else {
+                // Normal column sort
+                $query->orderBy($column, $direction);
+            }
+        } else {
+            // Default sort
+            $query->orderBy('created_at', 'desc');
+        }
+        
+        // Execute query with pagination and append all query parameters for pagination links
+        $documents = $query->paginate(6)->appends($request->all());
+        
+        // Return appropriate response based on request type
+        if ($request->ajax()) {
+            return view('admin.documentHistory', compact('documents'))->render();
+        }
+        
+        return view('admin.documentHistory', compact('documents'));
     }
 
     public function archiveDocuments(Request $request)
@@ -173,19 +192,14 @@ class AdminDocumentController extends Controller
 
         $query = DB::table('submitted_documents')
             ->whereNotNull('archived_at')
-            ->where('received_by', $adminId) // Only documents assigned to this admin
-            ->whereIn('status', ['Approved', 'Rejected']); // Only show Approved or Rejected
+            ->where('received_by', $adminId);
 
         // Apply filters from request parameters
-        if ($request->has('status') && $request->status !== 'All') {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->has('organization') && $request->organization !== 'All') {
+        if ($request->has('organization') && $request->organization !== 'All' && $request->organization !== 'Organization') {
             $query->where('control_tag', 'like', $request->organization . '_%');
         }
 
-        if ($request->has('type') && $request->type !== 'All') {
+        if ($request->has('type') && $request->type !== 'All' && $request->type !== 'Type') {
             $query->where('type', $request->type);
         }
 
@@ -198,10 +212,26 @@ class AdminDocumentController extends Controller
             });
         }
 
+        // Apply sorting with special handling for derived fields
+        if ($request->has('sort_by')) {
+            $column = $request->sort_by;
+            $direction = $request->has('sort_dir') ? $request->sort_dir : 'asc';
+            
+            if ($column === 'organization') {
+                // Sort by the organization part of control_tag
+                $query->orderByRaw("SUBSTRING_INDEX(control_tag, '_', 1) $direction");
+            } else {
+                // Normal column sort
+                $query->orderBy($column, $direction);
+            }
+        } else {
+            // Default sort
+            $query->orderBy('archived_at', 'desc');
+        }
+
         // Fetch archived documents with pagination
-        $documents = $query->orderBy('archived_at', 'desc')
-                          ->paginate(6)
-                          ->appends($request->except('page')); // Maintain filters across pagination
+        $documents = $query->paginate(6)
+                          ->appends($request->except('page'));
 
         // Your existing organization mapping code
         $orgMap = [
@@ -235,6 +265,11 @@ class AdminDocumentController extends Controller
             'AGDS' => 'text-yellow-900',
             'CHO' => 'text-blue-500',
         ];
+
+        // Handle AJAX requests
+        if ($request->ajax()) {
+            return view('admin.archivePage', compact('documents', 'orgMap', 'tagColors'))->render();
+        }
 
         return view('admin.archivePage', compact('documents', 'orgMap', 'tagColors'));
     }

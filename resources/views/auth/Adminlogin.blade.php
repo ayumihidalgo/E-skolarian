@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="admin">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
 
     <link rel="icon" href="{{ asset('images/officialLogo.svg') }}" type="image/svg+xml">
@@ -17,282 +18,6 @@
     @vite('resources/css/app.css')
 
     <script>
-        (function () {
-          const chosenType = localStorage.getItem('activeLoginRole') || 'student';
-
-          // Apply theme before CSS loads
-          document.documentElement.setAttribute('data-theme', chosenType);
-
-          // Pre-set form role value if needed
-          document.addEventListener('DOMContentLoaded', function () {
-              saveInputs(chosenType);
-              setRole(chosenType);
-              visibilityRememberMe(chosenType);
-              changeRadiusPanel(chosenType);
-              slidePanel(chosenType, false);
-
-              // Unhide form container after everything is ready
-              const form = document.getElementById('formContainer');
-              if (form) form.classList.remove('opacity-0');
-          });
-
-        })();
-
-        const currentRole = localStorage.getItem('activeLoginRole') || 'student';
-
-        /* Temporary fix for translate */
-        window.addEventListener('resize', function () {
-            changeRole('student');
-        });
-
-        function changeRole(role) {
-            resetErrorStates(role, document.getElementById('lockout-message'));
-
-            document.documentElement.setAttribute('data-theme', role);
-            saveInputs(role);
-            setRole(role);
-            visibilityRememberMe(role);
-            changeRadiusPanel(role);
-            slidePanel(role, true);
-
-            handleLockoutError({!! json_encode($errors->has('lockout_time')) !!}, currentRole);
-        }
-
-        // Store error state per role
-        let errorStates = {
-            student: { email: false, password: false, message: null },
-            admin: { email: false, password: false, message: null }
-        };
-
-        let errorFadeTimeout = null;
-
-        function resetErrorStates(role, hasLockout) {
-            if (!hasLockout) {
-                // Save current error state for the role being switched away from
-                const emailLabel = document.getElementById('emailLabel');
-                const passwordLabel = document.getElementById('passwordLabel');
-                const statusMsg = document.querySelector('.status-message');
-
-                // Save remaining fade time for the current role
-                if (errorStates[role].fadeTimeoutId) {
-                    clearTimeout(errorStates[role].fadeTimeoutId);
-                    errorStates[role].remainingFadeTime = Math.max(0, errorStates[role].fadeEndTime - Date.now());
-                } else {
-                    errorStates[role].remainingFadeTime = 3000;
-                }
-
-                errorStates[role] = {
-                    ...errorStates[role],
-                    email: emailLabel.classList.contains('!ring-red-600'),
-                    password: passwordLabel.classList.contains('!ring-red-600'),
-                    message: statusMsg ? statusMsg.outerHTML : null
-                };
-
-                // Remove error rings and messages for current role
-                emailLabel.classList.remove('ring-3', '!ring-red-600');
-                passwordLabel.classList.remove('ring-3', '!ring-red-600');
-                document.querySelectorAll('.status-message').forEach((msg) => {
-                    msg.remove();
-                });
-
-                // Restore error state for the new role
-                const newRole = role === 'admin' ? 'student' : 'admin';
-                if (errorStates[newRole].email) {
-                    emailLabel.classList.add('ring-3', '!ring-red-600');
-                }
-                if (errorStates[newRole].password) {
-                    passwordLabel.classList.add('ring-3', '!ring-red-600');
-                }
-                if (errorStates[newRole].message) {
-                // Insert error message after password field
-                const passwordDiv = passwordLabel.parentElement;
-                passwordDiv.insertAdjacentHTML('afterend', errorStates[newRole].message);
-
-                // Fade out message after remaining time
-                if (errorFadeTimeout) clearTimeout(errorFadeTimeout);
-
-                let fadeTime = errorStates[newRole].remainingFadeTime ?? 3000;
-                errorStates[newRole].fadeEndTime = Date.now() + fadeTime;
-
-                errorStates[newRole].fadeTimeoutId = setTimeout(function () {
-                    const msg = document.querySelector('.status-message');
-                        if (msg) {
-                            msg.classList.add('opacity-0', 'transition-opacity');
-                            setTimeout(() => msg.remove(), 500);
-                        }
-                        errorStates[newRole].fadeTimeoutId = null;
-                    }, fadeTime);
-                }
-            }
-        }
-
-       function handleLockoutError(hasLockoutError) {
-            if (!hasLockoutError) return;
-
-            const emailLabel = document.getElementById('emailLabel');
-            const emailInput = document.getElementById('emailInput');
-            const passwordLabel = document.getElementById('passwordLabel');
-            const passwordInput = document.getElementById('password');
-            const lockoutMsg = document.getElementById('lockout-message');
-
-            if (!emailLabel || !passwordLabel || !emailInput || !passwordInput || !lockoutMsg) return;
-
-            const isLockoutExpiredMessage = lockoutMsg.innerText.includes('You can now try logging in again.');
-            const isHidden = window.getComputedStyle(lockoutMsg).display === 'none';
-
-            emailLabel.classList.add('ring-3', '!ring-red-600');
-            passwordLabel.classList.add('ring-3', '!ring-red-600');
-            lockoutMsg.style.display = '';
-
-            if (!isLockoutExpiredMessage) {
-                emailInput.disabled = true;
-                passwordInput.disabled = true;
-            } else {
-                emailInput.disabled = false;
-                passwordInput.disabled = false;
-
-                function removeMsg(e) {
-                    const parent = lockoutMsg.closest('div');
-                    if (parent) {
-                        parent.classList.add('opacity-0', 'transition-opacity');
-                        setTimeout(() => parent.remove(), 500);
-                    }
-                    emailLabel.classList.remove('ring-3', '!ring-red-600');
-                    passwordLabel.classList.remove('ring-3', '!ring-red-600');
-                }
-
-                emailInput.addEventListener('focus', removeMsg, { once: true });
-                passwordInput.addEventListener('focus', removeMsg, { once: true });
-            }
-        }
-
-       let emailInputs = {
-            student: '',
-            admin: ''
-        };
-
-        function saveInputs(role) {
-            const emailInput = document.getElementById('emailInput');
-            const passwordInput = document.getElementById('password');
-
-            // Check if the emailInputs object exists and initialize if not
-            if (!emailInputs[role]) {
-                emailInputs[role] = '';
-            }
-
-            // Save the current role's email before switching
-            const otherRole = role === 'admin' ? 'student' : 'admin';
-            emailInputs[otherRole] = emailInput.value;
-
-            // Restore email for selected role
-            emailInput.value = emailInputs[role];
-
-            // Always clear password on switch
-            passwordInput.value = '';
-
-            localStorage.setItem('activeLoginRole', role);
-        }
-
-
-        function setRole(role) {
-             // Update Forgot Password Links with Role
-             document.querySelectorAll('.forgot-password-link').forEach(link => {
-                if (role === 'admin') {
-                    link.href = '/admin/forgot-password';
-                } else if (role === 'student') {
-                    link.href = '/student/forgot-password';
-                }
-            });
-
-            // Set role value
-            const roleInput = document.getElementById('role');
-            if (roleInput) {
-                roleInput.value = role; // Set role to either 'admin' or 'student'
-            }
-
-            // Toggle button styles
-            const studentBtn = document.getElementById('studentBtn');
-            const studentIcon = document.getElementById('studentIcon');
-
-            const adminBtn = document.getElementById('adminBtn');
-            const adminIcon = document.getElementById('adminIcon');
-
-            if (studentBtn && adminBtn) {
-                studentBtn.classList.remove('bg-[var(--primary-color)]', 'text-white');
-                studentIcon.classList.remove('invert');
-
-                adminBtn.classList.remove('bg-[var(--primary-color)]', 'text-white');
-                adminIcon.classList.remove('invert');
-
-                const roleButton = document.getElementById(role + 'Btn');
-                const roleIcon = document.querySelector(`#${role}Btn div`);
-
-                if (roleButton) {
-                    if (role === 'student') roleButton.classList.add('bg-[var(--primary-color)]', 'text-white');
-                    else if (role === 'admin') roleButton.classList.add('bg-[var(--primary-color)]', 'text-white');
-                    roleIcon.classList.add('invert');
-                }
-            }
-        }
-
-
-        function visibilityRememberMe(role) {
-            const formContainer = document.getElementById('formContainer');
-            const rememberMeContainer = document.getElementById('rememberMeContainer');
-            if (rememberMeContainer) {
-                if (role === 'student') {
-                    rememberMeContainer.classList.remove('invisible');
-                } else {
-                    rememberMeContainer.classList.add('invisible');
-                }
-            }
-        }
-
-        function changeRadiusPanel(role) {
-            const panel = document.getElementById('formContainer');
-            if (!panel) return;
-
-            // Remove both variations
-            panel.classList.remove(
-                'md:rounded-tl-none', 'md:rounded-bl-none',
-                'md:rounded-tr-[100px]', 'md:rounded-br-[100px]',
-                'md:rounded-tr-none', 'md:rounded-br-none',
-                'md:rounded-tl-[100px]', 'md:rounded-bl-[100px]'
-            );
-
-            // Apply based on role
-            if (role === 'student') {
-                panel.classList.add(
-                    'md:rounded-tl-none', 'md:rounded-bl-none',
-                    'md:rounded-tr-[100px]', 'md:rounded-br-[100px]'
-                );
-            } else if (role === 'admin') {
-                panel.classList.add(
-                    'md:rounded-tr-none', 'md:rounded-br-none',
-                    'md:rounded-tl-[100px]', 'md:rounded-bl-[100px]'
-                );
-            }
-        }
-
-        /* Slide to the left/right with animation */
-        function slidePanel(role, isSlide) {
-            const panel = document.getElementById('formContainer');
-            if (!panel) return;
-
-            !isSlide ? panel.classList.remove('md:transition-all', 'md:duration-1000') : panel.classList.add('md:transition-all', 'md:duration-1000');
-
-            const panelWidth = panel.offsetWidth;
-            const windowWidth = window.innerWidth;
-
-            // Apply the transform for animation
-            if (role === 'admin' && windowWidth >= 768) {
-                panel.style.transform = `translateX(${windowWidth - panelWidth}px)`;
-            } else if (role === 'student' && windowWidth >= 768) {
-                panel.style.transform = `translateX(0)`;
-            }
-        }
-
-
        /* To carousel set of images */
        const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
@@ -300,7 +25,9 @@
             "{{ asset('images/PUP_Bg3.jpg') }}",
             "{{ asset('images/PUP_Bg4.jpg') }}",
             "{{ asset('images/PUP_Bg5.jpg') }}",
-            "{{ asset('images/PUP_Bg6.jpg') }}"
+            "{{ asset('images/PUP_Bg6.jpg') }}",
+            "{{ asset('images/PUP_Bg7.jpg') }}",
+            "{{ asset('images/PUP_Bg8.jpg') }}"
         ];
 
         const preloadImages = images.map(src => {
@@ -316,7 +43,7 @@
             element.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url(${url})`;
             element.style.backgroundRepeat = 'no-repeat';
             element.style.backgroundSize = 'cover';
-            element.style.backgroundPosition = 'bottom';
+            element.style.backgroundPosition = 'center';
         }
 
         function transitionBackground() {
@@ -347,6 +74,11 @@
 
         window.addEventListener('load', () => {
             setInterval(transitionBackground, 10000); // Change image every 10s
+
+
+            // Unhide form container after everything is ready
+            const form = document.getElementById('formContainer');
+            if (form) form.classList.remove('opacity-0');
         });
 
         /* Toggle Show/Hide Password */
@@ -383,25 +115,32 @@
                 }, 3000);
             });
         });
+        document.addEventListener('DOMContentLoaded', () => {
+        const reportBtn = document.getElementById('reportBtn');
+        const reportModal = document.getElementById('reportModal');
+
+        reportBtn.addEventListener('click', () => {
+          reportModal.classList.remove('hidden');
+        });
+      });
     </script>
     @php
-        $randomIndex = rand(1, 6);
+        $randomIndex = rand(1, 8);
         $randomImage = asset("images/PUP_Bg$randomIndex.jpg");
     @endphp
 </head>
 
 @include('loading');
 <body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] md:bg-[var(--secondary-color)] font-['Manrope'] font-bold">
-    <div id="bgA" class="absolute inset-0 transition-all duration-1000 ease-in-out opacity-100 max-md:hidden" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: bottom;"></div>
+    <div id="bgA" class="absolute inset-0 transition-all duration-1000 ease-in-out opacity-100 max-md:hidden" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: center;"></div>
     <div id="bgB" class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-0 max-md:hidden"></div>
-    <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md  md:absolute md:right-0 md:top-0 md:bottom-0">
-        <div id="formContainer" class="opacity-0 flex flex-col items-center justify-center h-full px-6 bg-[#D9D9D9]/70 p-4 rounded-3xl md:w-[50%] md:max-w-[600px] md:rounded-tl-none md:rounded-bl-none md:rounded-tr-[100px] md:rounded-br-[100px] md:backdrop-blur-xs md:bg-white/70 md:transition-all md:duration-1000">
+    <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md md:absolute relative">
+        <div id="formContainer" class="opacity-0 flex flex-col items-center justify-center h-full px-6 bg-[#D9D9D9]/70 p-4 md:w-[50%] md:max-w-[600px] md:rounded-l-[100px] md:backdrop-blur-xs md:bg-white/80 md:transition-all md:duration-1000 md:absolute md:right-0 md:top-0 md:bottom-0">
             <div class="h-35 flex items-center">
                 <img class="mx-auto h-19 md:h-22" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
             </div>
-            <!-- Role Switch Buttons (REMOVED) -->
-
-            <div class="w-full max-w-[400px] mx-auto pt-14 md:pt-5">
+            <h1 class="font-[Lexend] text-[#7A1212] text-3xl md:pt-6">ADMIN LOGIN</h1>
+            <div class="w-full max-w-[400px] mx-auto pt-14 md:pt-10">
                 <form method="POST" action="{{ route('admin.login') }}" class="space-y-4 md:space-y-2">
                     @csrf
                     <input type="hidden" name="role" id="role" value="admin">
@@ -432,6 +171,7 @@
                             <p>*Password must not exceed 50 characters.</p>
                         </div>
                     </div>
+
 
                     <!-- Error Message -->
                     @if ($errors->any() && !$errors->has('lockout_time'))
@@ -540,21 +280,328 @@
                     });
                     </script>
 
-                    <!-- Remember Me (REMOVED) -->
+                    <div class="flex justify-between items-center pt-1">
+                        <!-- Remember Me -->
+                        <div class="flex items-center mt-0.5">
+                            <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-[var(--secondary-color)] border-gray-300 rounded focus:ring-[var(--secondary-color)]">
+                            <label for="remember" class="ml-2 block text-sm text-gray-900 font-normal">
+                                Remember Me
+                            </label>
+                        </div>
+                        <a href="{{ route('admin.password.request') }}" class="inline-block font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
+                    </div>
+
 
                     <!-- Submit -->
-                    <div class="pt-4 flex justify-center">
+                    <div class="pt-8 flex justify-center">
                         <button type="submit" id="signInButton"
                             class="opacity-50 w-full rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-2 md:py-4  hover:bg-[var(--primary-color)] transition font-semibold">
                             Sign In
                         </button>
                     </div>
-                    <div class="pb-7 flex justify-center">
-                        <a href="{{ route('admin.password.request') }}" class="forgot-password-link font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>                    </div>
+                    <!-- Terms & Privacy Buttons -->
+                    <div class="flex justify-center text-[14px] text-[#00000066] gap-x-[30px]">
+                        <button onclick="termModal()" id="termsBtn" type="button" class="cursor-pointer">
+                            Terms & Conditions
+                        </button>
+                        <button onclick="privacyModal()" id="privacyBtn" type="button" class="cursor-pointer">
+                            Privacy Policy
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
+
+<!-- Terms & Conditions Modal -->
+<div id="termsModal" class="fixed inset-0 bg-black/60 backdrop-blur-[3px] hidden items-center justify-center z-50">
+    <div
+        class="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-xs sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-hidden relative flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center mb-4 px-2 sm:px-4">
+            <img src="{{ asset('images/terms.svg') }}" alt="Terms Icon" class="h-10 w-auto sm:h-12 mr-2 sm:mr-4">
+            <h2 class="flex-1 font-bold text-lg sm:text-2xl text-[#7A1212]" style="font-family: 'Roboto', sans-serif;">
+                Terms and Conditions
+            </h2>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="text-xs sm:text-sm overflow-y-auto px-2 sm:px-4 pr-1 sm:pr-2 space-y-4 leading-relaxed text-[#6B6B6B]"
+            style="font-family: 'Roboto Flex', sans-serif; max-height: 50vh; sm:max-height: 60vh;">
+
+            <div>
+                <h3 class="font-semibold">1. Acceptance of Terms</h3><br>
+                <p>By accessing or using the E-SKOLARIAN Document Management System (the "System"), you agree to be
+                    bound by these Terms and Conditions ("Terms"). If you do not agree with these Terms, you should
+                    immediately cease using the System.</p>
+            </div>
+
+            <div>
+                <h3 class="font-semibold">2. Use of the System</h3><br>
+                <p>The E-SKOLARIAN Document Management System is intended for the secure management, storage, and
+                    sharing of documents related to educational purposes. You are granted a limited, non-exclusive, and
+                    non-transferable license to access and use the System in accordance with these Terms.</p>
+            </div>
+
+            <div>
+                <h3 class="font-semibold">3. User Responsibilities</h3><br>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li>You agree to provide accurate, current, and complete information during the registration
+                        process.</li>
+                    <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
+                    <li>You agree to use the System only for lawful purposes and will not engage in any activities that
+                        could harm, disrupt, or interfere with the System's operation.</li>
+                    <li>You are responsible for backing up your own documents stored in the System. The provider is not
+                        responsible for data loss due to technical issues.</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="font-semibold">4. Prohibited Activities</h3><br>
+                <ul class="list-disc ml-6 space-y-1">
+                    <li>Uploading or sharing illegal, offensive, or harmful content.</li>
+                    <li>Attempting to hack, modify, or gain unauthorized access to the System.</li>
+                    <li>Engaging in activities that may damage or impair the functionality of the System.</li>
+                </ul>
+            </div>
+
+            <div>
+                <h3 class="font-semibold">5. Account Termination</h3><br>
+                <p>We reserve the right to suspend or terminate your account if you violate these Terms. Upon
+                    termination, you will no longer have access to your account, and any stored documents may be
+                    deleted.</p>
+            </div>
+
+            <div>
+                <h3 class="font-semibold">6. Limitation of Liability</h3><br>
+                <p>The E-SKOLARIAN Document Management System is provided "as is" without any warranty of any kind. The
+                    provider is not liable for any direct, indirect, incidental, or consequential damages arising from
+                    the use or inability to use the System.</p>
+            </div>
+
+            <div>
+                <h3 class="font-semibold">7. Changes to the Terms</h3><br>
+                <p>We may update or modify these Terms at any time. Any changes will be effective immediately upon
+                    posting to this page. You are encouraged to review these Terms periodically.</p>
+            </div>
+
+            <div>
+                <h3 class="font-semibold">8. Governing Law</h3><br>
+                <p>These Terms are governed by the laws of the Philippines, and any disputes shall be resolved in the
+                    courts of [Insert Jurisdiction].</p>
+            </div>
+        </div>
+        <div class="flex justify-end pt-6 sm:pt-10">
+            <button
+                class="px-3 sm:px-4 py-1 bg-red-900 text-white rounded-xl hover:bg-red-600 w-28 sm:w-40 cursor-pointer hover:text-white transition-colors duration-200 text-xs sm:text-base"
+                onclick="document.getElementById('termsModal').classList.add('hidden')">
+                Close
+            </button>
+        </div>
     </div>
+</div>
+<!-- Privacy Policy Modal -->
+<div id="privacyModal" class="fixed inset-0 bg-black/60 backdrop-blur-[3px] items-center justify-center z-50 hidden">
+    <div
+        class="bg-white rounded-2xl p-4 sm:p-6 w-full max-w-xs sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-hidden relative flex flex-col">
+        <!-- Header -->
+        <div class="flex items-center mb-4 px-2 sm:px-4">
+            <img src="{{ asset('images/privacy.svg') }}" alt="Privacy Icon" class="h-10 w-auto sm:h-12 mr-2 sm:mr-4">
+            <h2 class="flex-1 font-bold text-lg sm:text-2xl text-[#7A1212]" style="font-family: 'Roboto', sans-serif;">
+                Privacy Policy
+            </h2>
+        </div>
+
+        <!-- Scrollable Content -->
+        <div class="text-xs sm:text-sm overflow-y-auto px-2 sm:px-4 pr-1 sm:pr-2 space-y-4 leading-relaxed text-[#6B6B6B]"
+            style="font-family: 'Roboto Flex', sans-serif; max-height: 50vh; sm:max-height: 60vh;">
+
+            <div>
+                <p class="font-semibold">1. Information Collection</p><br>
+                <p>We collect personal information when you register for an account or use certain features of the
+                    E-SKOLARIAN Document Management System. This information may include your name, email address,
+                    institution, and other information necessary to provide our services.</p>
+            </div>
+            <div>
+                <p class="font-semibold">2. Use of Information</p><br>
+                <p>The information we collect is used to:</p>
+                <ul class="list-disc list-inside ml-4">
+                    <li>Provide and improve the System’s features and functionality.</li>
+                    <li>Communicate with you regarding updates, maintenance, or other important notices related to the
+                        System.</li>
+                    <li>Comply with legal obligations and enforce our Terms and Conditions.</li>
+                </ul>
+            </div>
+            <div>
+                <p class="font-semibold">3. Document Storage</p><br>
+                <p>Documents you upload to the System are stored securely. We do not share your documents with third
+                    parties unless required by law or as stated in this Privacy Policy.</p>
+            </div>
+            <div>
+                <p class="font-semibold">4. Data Security</p><br>
+                <p>We employ reasonable technical and organizational measures to protect your personal information from
+                    unauthorized access, use, alteration, or disclosure. However, no security system is completely
+                    foolproof, and we cannot guarantee the absolute security of your information.</p>
+            </div>
+            <div>
+                <p class="font-semibold">5. Sharing of Information</p><br>
+                <p>We do not sell, rent, or share your personal information with third parties except as described in
+                    this Privacy Policy or as required by law.</p>
+            </div>
+            <div>
+                <p class="font-semibold">6. Cookies and Tracking Technologies</p><br>
+                <p>The System may use cookies and similar technologies to enhance your user experience. These
+                    technologies help us analyze usage patterns and improve the functionality of the System. You can
+                    control cookies through your browser settings.</p>
+            </div>
+            <div>
+                <p class="font-semibold">7. Retention of Data</p><br>
+                <p>We retain personal information and documents for as long as necessary to fulfill the purposes
+                    outlined in this Privacy Policy, unless a longer retention period is required by law.</p>
+            </div>
+            <div>
+                <p class="font-semibold">8. Your Rights</p><br>
+                <p>You have the right to:</p>
+                <ul class="list-disc list-inside ml-4">
+                    <li>Access the personal information we hold about you.</li>
+                    <li>Correct or update your personal information.</li>
+                    <li>Request the deletion of your personal information, subject to certain legal restrictions.</li>
+                </ul>
+                <p>To exercise your rights, please contact us at [Insert Contact Information].</p>
+            </div>
+            <div>
+                <p class="font-semibold">9. Changes to the Privacy Policy</p><br>
+                <p>We may update this Privacy Policy from time to time. Any changes will be posted on this page, and the
+                    "Effective Date" will be updated accordingly. We encourage you to review this Privacy Policy
+                    periodically.</p>
+            </div>
+            <div>
+                <p class="font-semibold">10. Contact Information</p><br>
+                <p>If you have any questions about these Terms and Conditions or our Privacy Policy, please contact us
+                    at:</p>
+                <ul class="list-none ml-4">
+                    <li><span class="font-semibold">Email:</span>
+                        {{ \App\Models\User::where('role', 'super_admin')->first()?->email ?? '[Not Available]' }}
+                    </li>
+                    <li><span class="font-semibold">Address:</span> Polytechnic University of the Philippines Santa Rosa
+                        City</li>
+                    <li>Arambulo St, Barangay Kanluran, Santa Rosa, 4026 Laguna, Sta. Rosa</li>
+                </ul>
+            </div>
+        </div>
+        <div class="flex justify-end pt-6 sm:pt-10">
+            <button
+                class="px-3 sm:px-4 py-1 bg-red-900 text-white rounded-xl hover:bg-red-600 w-28 sm:w-40 cursor-pointer hover:text-white transition-colors duration-200 text-xs sm:text-base"
+                onclick="document.getElementById('privacyModal').classList.add('hidden')">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+
+        <!-- Report Problem Modal -->
+        <div id="reportModal" class="fixed inset-0 flex items-center z-50 backdrop-blur-sm w-full hidden">
+        <div class="bg-[#ffffffe8] p-6 shadow-lg mx-auto rounded-3xl max-w-[600px]">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-20 h-20 mx-auto pb-4">
+                <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
+                    fill="transparent" stroke="black" stroke-width="2.5"/>
+                <rect x="11" y="8" width="2" height="4" fill="black" />
+                <rect x="11" y="14" width="2" height="2" fill="black" />
+            </svg>
+            <div class="mb-4 text-center mx-auto w-[75%]">
+            <h1 class="text-3xl font-[Lexend] font-bold mb-2 text-[var(--secondary-color)]">Report a Problem</h1>
+            <p class="text-black font-[Manrope] font-normal text-xs">
+                Noticed something wrong or not working as expected? Tell us what issue you encountered so we can look into it and improve your experience.
+            </p>
+            </div>
+
+            <form id="reportForm" class="mx-auto w-[75%] text-xs" method="POST" action="{{ route('report.problem.store') }}" enctype="multipart/form-data" onsubmit="submitReport(event)">
+            @csrf
+            <div class="mb-7">
+                <label class="pl-[9px] block font-semibold mb-1">PUP Webmail<span class="text-red-600">*</span></label>
+                <input id="emailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
+                <p id="webmailLengthWarning" class="text-red-600 mt-1 hidden">*Webmail must not exceed 50 characters.</p>
+            </div>
+
+            <div class="mb-3">
+                <label class="pl-[9px] block font-semibold mb-1">Problem Description<span class="text-red-600">*</span></label>
+                <textarea name="description" placeholder="Describe the problem here..." class="w-full border rounded-lg px-3 py-2 bg-white" rows="4" required maxlength="251"></textarea>
+                <p id="descLengthWarning" class="text-red-600 mt-1 hidden">*Description must be 250 characters or less.</p>
+            </div >
+            <div class="mb-7">
+                <label class="pl-[9px] block font-semibold mb-1">Attach a File (optional)</label>
+                <input id="fileInput" type="file" name="screenshot" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                    class="text-slate-500 text-sm rounded-lg leading-6 file:bg-[var(--secondary-color)] file:text-white file:border-none file:px-4 file:py-1 file:mr-6 file:rounded-lg hover:file:brightness-75 border bg-[#0000000c] cursor-pointer border-gray-300 transition duration-200">
+                <p class="pl-[5px] text-[8px]">Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC, PNG, JPG</p>
+            </div>
+
+            <div class="text-[16px]">
+                <button type="submit" id="reportSubmitBtn" class="block w-full bg-[var(--secondary-color)] text-white px-4 py-2 mb-4 rounded-full hover:brightness-75">Submit</button>
+                <button type="button" id="cancelReportBtn" class="block w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-full hover:bg-gray-400">Cancel</button>
+            </div>
+            </form>
+        </div>
+        </div>
+
+
+<!-- Confirmation Modal -->
+<div id="confirmCloseModal" class="hidden font-[Manrope] fixed inset-0 bg-transparent flex items-center justify-center z-60 backdrop-blur-sm">
+    <div class="bg-white/90 font-[Manrope] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+        <div class="w-[80%] mx-auto">
+            <h1 class="text-xl mb-4 text-[var(--secondary-color)]">Are you sure you want to cancel?</h1>
+            <p class="mb-6 font-normal text-black">You have unsaved changes. Are you sure you want to close?</p>
+            <div class="flex justify-around gap-5">
+                <button id="confirmCloseYes" class="bg-[var(--secondary-color)] text-white px-4 py-2 w-full max-w-md rounded-full hover:brightness-75">Yes</button>
+                <button id="confirmCloseNo" class="bg-[#D9D9D9CC] text-black px-4 py-2 rounded-full w-full max-w-md hover:bg-gray-400">Go Back</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="hidden font-[Manrope] fixed inset-0 bg-transparent flex items-center justify-center z-60 backdrop-blur-sm">
+    <div class="bg-white/90 font-[Manrope] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+        <div class="w-[80%] mx-auto">
+            <h1 class="text-[20px] font-[Lexend] mb-3 text-[var(--secondary-color)]">✅ Report Submitted Successfully!</h1>
+            <div class="text-center text-md">
+                <p class="mb-3 font-normal text-black">Thank you for your feedback.</p>
+                <p class="mb-6 font-normal text-black">Our team will review your report and get back to you if necessary. You may now close this window or return to the previous page.</p>
+            </div>
+            <div class="flex justify-center">
+                <button onclick="closeSuccessModal()" class="bg-[var(--secondary-color)] text-white px-6 py-2 w-full max-w-md rounded-full hover:brightness-75 transition-colors duration-200">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="hidden font-[Manrope] fixed inset-0 bg-transparent flex items-center justify-center z-60 backdrop-blur-sm">
+    <div class="bg-white/90 font-[Manrope] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+        <div class="w-[80%] mx-auto">
+            <h1 class="text-[20px] font-[Lexend] mb-3 text-[var(--secondary-color)]">❌ Report Submitted Failed!</h1>
+            <div class="text-center text-md">
+                <p class="mb-3 font-normal text-black">Sorry for the inconvenience.</p>
+                <p class="mb-6 font-normal text-black">Please try to submit again or provide a valid format.</p>
+            </div>
+            <div class="flex justify-center">
+                <button onclick="closeErrorModal()" class="bg-[var(--secondary-color)] text-white px-6 py-2 w-full max-w-md rounded-full hover:brightness-75 transition-colors duration-200">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Report Button -->
+<button id="reportBtn"
+  class="fixed bottom-4 right-4 bg-transparent rounded-full w-9 h-9 shadow-none focus:outline-none z-50 flex items-center justify-center cursor-pointer"
+  title="Report a Problem">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-full h-full">
+    <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
+          fill="transparent" stroke="black" stroke-width="2.5"/>
+    <rect x="11" y="8" width="2" height="4" fill="black" />
+    <rect x="11" y="14" width="2" height="2" fill="black" />
+  </svg>
+</button>
+
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const hasFormErrors = {!! json_encode($errors->any()) !!};
@@ -685,7 +732,207 @@
         // Initial validation on page load
         validateInputs();
     });
-    </script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const reportBtn = document.getElementById('reportBtn');
+    const reportModal = document.getElementById('reportModal');
+    const reportForm = document.getElementById('reportForm');
+    const cancelReportBtn = document.getElementById('cancelReportBtn');
+    const submitBtn = document.getElementById('reportSubmitBtn');
+
+    let isDirty = false;
+
+    // Disable submit button initially with styles
+    function disableSubmit() {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('brightness-75', 'cursor-not-allowed');
+    }
+
+    // Enable submit button with styles removed
+    function enableSubmit() {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('brightness-75', 'cursor-not-allowed');
+    }
+
+    // Validate inputs and enable/disable submit button accordingly
+    function validateInputs() {
+    const email = reportForm.email.value.trim();
+    const desc = reportForm.description.value.trim();
+
+    const maxEmailLength = 50;
+    const maxDescLength = 250;
+
+    const isEmailTooLong = email.length > maxEmailLength;
+    const isDescTooLong = desc.length > maxDescLength;
+
+    const isEmailValid = email.length > 0 && !isEmailTooLong;
+    const isDescValid = desc.length > 0 && !isDescTooLong;
+
+    // Show warnings only if too long
+    document.getElementById('webmailLengthWarning').classList.toggle('hidden', !isEmailTooLong);
+    document.getElementById('descLengthWarning').classList.toggle('hidden', !isDescTooLong);
+
+    const shouldEnableSubmit = isEmailValid && isDescValid;
+
+    if (shouldEnableSubmit) {
+        enableSubmit();
+    } else {
+        disableSubmit();
+    }
+    }
+
+
+    // On modal open: reset form, reset flags, disable submit and validate inputs
+    reportBtn.addEventListener('click', () => {
+        reportModal.classList.remove('hidden');
+        reportForm.reset();
+        isDirty = false;
+        disableSubmit();
+        validateInputs();
+    });
+
+    // Listen for input on required fields
+    reportForm.email.addEventListener('input', () => {
+        isDirty = true;
+        validateInputs();
+    });
+
+    reportForm.description.addEventListener('input', () => {
+        isDirty = true;
+        validateInputs();
+    });
+
+    // Cancel button logic with confirmation if dirty
+    cancelReportBtn.addEventListener('click', () => {
+        if (isDirty) {
+        document.getElementById('confirmCloseModal').classList.remove('hidden');
+        } else {
+        closeReportModal();
+        }
+    });
+
+    // Confirmation modal buttons
+    document.getElementById('confirmCloseYes').addEventListener('click', () => {
+        closeReportModal();
+        document.getElementById('confirmCloseModal').classList.add('hidden');
+        resetFormState();
+    });
+
+    document.getElementById('confirmCloseNo').addEventListener('click', () => {
+        document.getElementById('confirmCloseModal').classList.add('hidden');
+    });
+
+    function closeReportModal() {
+        reportModal.classList.add('hidden');
+    }
+
+    function resetFormState() {
+        reportForm.reset();
+        isDirty = false;
+        disableSubmit();
+    }
+
+    // Submit report function with fetch
+    window.submitReport = function(event) {
+        event.preventDefault();
+
+        disableSubmit();
+        submitBtn.innerText = 'Submitting...';
+
+        const formData = new FormData(reportForm);
+
+        fetch(reportForm.action, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: formData
+        })
+        .then(response => {
+        const contentType = response.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+            return response.json();
+        } else {
+            return response.text();
+        }
+        })
+        .then(data => {
+        showSuccessModal();
+        closeReportModal();
+        resetFormState();
+        })
+        .catch(error => {
+        showErrorModal();
+        console.error('Error:', error);
+        })
+        .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerText = 'Submit';
+        validateInputs();
+        });
+    };
+
+    // Initial state
+    disableSubmit();
+    });
+
+    const fileInput = document.getElementById('fileInput');
+
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files.length > 0) {
+        fileInput.classList.remove('bg-gray-300');
+        fileInput.classList.add('bg-white');
+        } else {
+        fileInput.classList.remove('bg-white');
+        fileInput.classList.add('bg-gray-300');
+        }
+    });
+
+    function termModal() {
+        document.getElementById('termsModal').classList.remove('hidden');
+        document.getElementById('termsModal').classList.add('flex');
+    }
+
+    function privacyModal() {
+        document.getElementById('privacyModal').classList.remove('hidden');
+        document.getElementById('privacyModal').classList.add('flex');
+    }
+
+     let isSafeExit = false;
+    document.getElementById('forgotPasswordLink').addEventListener('click', function () {
+    isSafeExit = true; // Prevent beforeunload
+    });
+    // Trigger beforeunload only if NOT a safe exit
+    window.addEventListener('beforeunload', function (e) {
+        if (!isSafeExit) {
+            e.preventDefault();
+            e.returnValue = ''; // Needed for Chrome/Edge
+        }
+    });
+
+    // Also make sure form submission sets safe exit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function () {
+        isSafeExit = true;
+    });
+
+
+    function showSuccessModal() {
+        document.getElementById('successModal').classList.remove('hidden');
+    }
+
+    function closeSuccessModal() {
+        document.getElementById('successModal').classList.add('hidden');
+    }
+
+    function showErrorModal() {
+        document.getElementById('errorModal').classList.remove('hidden');
+    }
+
+    function closeErrorModal() {
+        document.getElementById('errorModal').classList.add('hidden');
+    }
+</script>
 
     </body>
 </body>

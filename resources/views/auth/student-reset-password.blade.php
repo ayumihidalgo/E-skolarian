@@ -93,11 +93,17 @@
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
     {{-- Modal for expired token --}}
     @if (!empty($tokenExpired) && $tokenExpired)
-        <div id="expiredModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-            <div class="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center">
-                <h2 class="text-xl font-bold mb-4 text-red-600">Token Expired</h2>
-                <p class="mb-6">Your password reset link has expired or is invalid. Please request a new one.</p>
-                <a href="{{ route('student.login.form') }}" class="inline-block px-6 py-2 bg-[var(--secondary-color)] text-white rounded-full font-bold hover:bg-[var(--primary-color)] transition">Back to Login</a>
+        <div id="expiredModal" class="fixed inset-0 flex items-center flex-col justify-center bg-black/80 z-50">
+            <div class="flex items-center justify-center gap-4 pb-5">
+                <img class="h-[80px]" src="{{asset('images/e-skolarianIcon.svg')}}">
+                <img class="h-[35px]" src="{{asset('images/E-skolarianWhite.svg')}}">
+            </div>
+            <div class="bg-white/80 rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+                <div class="w-[80%] mx-auto">
+                    <h2 class="text-xl font-[Lexend] mb-4 text-[var(--secondary-color)]">RESET TOKEN EXPIRED</h2>
+                    <p class="mb-6 font-[Manrope] font-normal">Your password reset link has expired or is invalid. Please request a new one.</p>
+                    <a href="{{ route('student.login.form') }}" class="inline-block px-6 py-2 bg-[var(--secondary-color)] text-white rounded-full font-bold hover:bg-[var(--primary-color)] transition">Back to Login</a>
+                </div>
             </div>
         </div>
         <script>
@@ -171,25 +177,32 @@
                     </button>
                 </form>
                 <div class="mt-4 text-center">
-                    <a href="#" id="backToLogin" class="flex items-center justify-center md:text-[var(--secondary-color)] font-normal group transition-all duration-75">
+                    <a href="#" id="backToLogin" class="flex items-center justify-center md:text-[var(--forgot-color-text)] font-normal group transition-all duration-75">
                         <img class="md:h-[25px] pr-5 pt-0.5 group-hover:translate-x-1 transition-all duration-75" src="{{asset('images/arrow-left-admin.svg')}}" alt="Arrow Left Icon">
-                        <span class="border-b-2 border-transparent group-hover:border-[var(--secondary-color)] transition-all duration-75">Back to Login</span>
+                        <span class="border-b-2 border-transparent group-hover:border-[var(--forgot-color-text)] transition-all duration-75">Back to Login</span>
                     </a>
                 </div>
             </div>
         </div>
     </div>
      <!-- Confirmation Modal -->
-<div id="unsavedChangesModal" class="fixed inset-0 flex items-center justify-center bg-black/50 hidden z-50">
-    <div class="bg-white p-6 rounded-2xl shadow-lg text-center w-80">
-        <h1 class="text-lg mb-4 font-semibold text-gray-800">Go back to Login Page?</h1>
-        <p class="text-sm mb-6 text-gray-600">You have unsaved changes. Do you wish to go back to the Login Page?</p>
-        <div class="flex justify-center space-x-4">
-            <button id="confirmLeave" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Back to Login Page</button>
-            <button id="cancelLeave" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">Cancel</button>
+<div id="unsavedChangesModal" class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 hidden z-50">
+    <div class="flex items-center justify-center gap-4 pb-3">
+        <img class="h-[80px]" src="{{asset('images/e-skolarianIcon.svg')}}">
+        <img class="h-[35px]" src="{{asset('images/E-skolarianWhite.svg')}}">
+    </div>
+    <div class="bg-white/90 font-[Manrope] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+        <div class="w-[80%] mx-auto">
+            <h1 class="text-xl mb-4 text-[var(--secondary-color)]">Go back to Login Page?</h1>
+            <p class="mb-6 font-normal text-black">You have unsaved changes. Do you wish to go back to the Login Page?</p>
+            <div class="flex justify-around gap-5">
+                <button id="confirmLeave" class="bg-[var(--secondary-color)] text-white px-4 py-2 rounded-full hover:brightness-75">Back to Login Page</button>
+                <button id="cancelLeave" class="bg-[#D9D9D9CC] text-black px-4 py-2 rounded-full hover:bg-gray-400">Cancel</button>
+            </div>
         </div>
     </div>
 </div>
+
     <script>
         const hasFormErrors = {{ $errors->any() ? 'true' : 'false' }};
     </script>
@@ -342,24 +355,46 @@
             }
         });
 
-        // Intercept back to login click
-        backToLogin.addEventListener('click', function (e) {
-            if (isDirty) {
-                e.preventDefault();
-                modal.classList.remove('hidden');
-            } else {
-                window.location.href = "{{ route('student.login') }}";
-            }
-        });
+         let isSafeExit = false;
 
-        // Modal button events
-        confirmLeave.addEventListener('click', () => {
-            window.location.href = "{{ route('student.login') }}";
-        });
+    // Mark exit as safe when user clicks "Back to Login"
+    document.getElementById('backToLogin').addEventListener('click', function (e) {
+    e.preventDefault();
 
-        cancelLeave.addEventListener('click', () => {
-            modal.classList.add('hidden');
-        });
+    if (isDirty) {
+        // Show the modal only if there are unsaved changes
+        modal.classList.remove('hidden');
+    } else {
+        // If not dirty, navigate immediately without modal
+        isSafeExit = true; // mark as safe exit to skip beforeunload
+        window.location.href = "{{ route('student.login') }}";
+    }
+});
+
+    // If user confirms going back
+    document.getElementById('confirmLeave').addEventListener('click', function () {
+        isSafeExit = true; // Allow leaving without beforeunload
+        window.location.href = "{{ route('student.login.form') }}";
+    });
+
+    // Cancel going back
+    document.getElementById('cancelLeave').addEventListener('click', function () {
+        document.getElementById('unsavedChangesModal').classList.add('hidden');
+    });
+
+    // Trigger beforeunload only if NOT a safe exit
+    window.addEventListener('beforeunload', function (e) {
+        if (!isSafeExit) {
+            e.preventDefault();
+            e.returnValue = ''; // Needed for Chrome/Edge
+        }
+    });
+
+    // Also make sure form submission sets safe exit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function () {
+        isSafeExit = true;
+    });
 
         </script>
 
