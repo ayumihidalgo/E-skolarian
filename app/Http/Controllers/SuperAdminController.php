@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\ActivityLog; // Import ActivityLog model
 use Illuminate\Http\Request;
 use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Activitylog\Models\Activity;
 
 class SuperAdminController extends Controller
 {
@@ -172,4 +174,12 @@ class SuperAdminController extends Controller
     }
 }
 
+public function activityLogs()
+{
+    $logs = Activity::with('causer')
+                    ->orderBy('created_at', 'desc')
+                    ->paginate(10);
+    
+    return view('super-admin.actLogPage', compact('logs'));
+}
 }

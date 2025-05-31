@@ -116,6 +116,11 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
 
     Route::get('/super-admin/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('super-admin.reports');
 
+    Route::get('/super-admin/activity-logs', function() {
+        $logs = collect([]); // Create empty collection
+        return view('super-admin.actLogPage', compact('logs'));
+    })->name('super-admin.activity-logs');
+
 });
 
 Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
