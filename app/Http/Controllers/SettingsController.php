@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use App\LogsActivity;
 use Storage;
 
 
@@ -14,6 +15,7 @@ class SettingsController extends Controller
     /**
      * Show the settings page with current user data.
      */
+    use LogsActivity;
     public function viewSettings()
     {
         $user = Auth::user();
@@ -67,6 +69,12 @@ class SettingsController extends Controller
         $user->profile_pic = $path;
         $user->save();
 
+        $this->logActivity(
+            'Updated',
+            'Profile Picture',
+            "{$user->username} updated their profile picture."
+        );
+
         return back()->with('success', 'Your profile picture has been updated successfully.');
     }
     public function removeProfilePicture(Request $request)
@@ -80,7 +88,11 @@ class SettingsController extends Controller
             $user->profile_pic = null;
             $user->save();
         }
-
+        $this->logActivity(
+            'Removed',
+            'Profile Picture',
+            "{$user->username} removed their profile picture."
+        );
         return back()->with('success', 'Your profile picture has been removed successfully.');
     }
     /**
@@ -116,6 +128,11 @@ class SettingsController extends Controller
         $user->password_changed_at = now();
         $user->save();
 
+        $this->logActivity(
+            'Changed',
+            'Password',
+            "{$user->username} changed their password."
+        );
         return response()->json(['message' => 'Password changed successfully.']);
     }
 }

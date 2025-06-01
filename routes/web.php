@@ -71,7 +71,7 @@ Route::middleware('guest')->group(function () {
         return view('auth.student-password-reset-confirmation');
     })->name('student.password.reset.confirmation');
 
-      Route::get('admin-password-reset-confirmation', function () {
+    Route::get('admin-password-reset-confirmation', function () {
         return view('auth.admin-password-reset-confirmation');
     })->name('admin.password.reset.confirmation');
 
@@ -108,18 +108,15 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
     Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
         ->name('super-admin.reactivate-user')
         ->middleware('auth');
-        
-         // Super Admin Reports
-    Route::get('/super-admin/reports', function() {
+
+    // Super Admin Reports
+    Route::get('/super-admin/reports', function () {
         return view('super-admin.super-admin-component.reports');
     })->name('super-admin.reports');
 
     Route::get('/super-admin/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('super-admin.reports');
 
-    Route::get('/super-admin/activity-logs', function() {
-        $logs = collect([]); // Create empty collection
-        return view('super-admin.actLogPage', compact('logs'));
-    })->name('super-admin.activity-logs');
+    Route::get('/super-admin/activity-logs', [App\Http\Controllers\SuperAdminController::class, 'activityLogs'])->name('super-admin.activity-logs');
 
 });
 
@@ -187,10 +184,8 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
-    Route::get('/calendar-events', [EventController::class, 'getCalendarEvents'])->name('calendar.events');
-    Route::post('/calendar-events', [EventController::class, 'storeCalendarEvent'])->name('calendar.store');
-    Route::post('/calendar/store', [App\Http\Controllers\EventController::class, 'storeCalendarEvent'])->name('calendar.store');
-    Route::get('/calendar/events', [App\Http\Controllers\EventController::class, 'getCalendarEvents'])->name('calendar.events');
+    Route::post('/calendar/store', [EventController::class, 'storeCalendarEvent'])->name('calendar.store');
+    Route::get('/calendar/events', [EventController::class, 'getCalendarEvents'])->name('calendar.events');
     Route::post('/calendar/update', [EventController::class, 'updateCalendarEvent'])->name('calendar.update');
     Route::post('/calendar/destroy', [EventController::class, 'destroyCalendarEvent'])->name('calendar.destroy');
     Route::get('/calendar/approved-proposals', [EventController::class, 'getApprovedProposals'])->name('calendar.approved-proposals');

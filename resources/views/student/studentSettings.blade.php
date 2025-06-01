@@ -399,98 +399,36 @@
         const newPasswordInput = document.getElementById('new_password');
         const confirmPasswordInput = document.getElementById('new_password_confirmation');
 
+        let isFormDirty = false;
+        let isSubmitting = false;
 
-        let isDirty = false;
-        let isEditingProfileImage = false;
-
-        // Mark as dirty if any password field changes
+        // Mark form as dirty if any field is changed
         [currentPasswordInput, newPasswordInput, confirmPasswordInput].forEach(input => {
             input.addEventListener('input', () => {
-                isDirty = !!(
-                    currentPasswordInput.value.trim() ||
-                    newPasswordInput.value.trim() ||
-                    confirmPasswordInput.value.trim()
-                );
+                isFormDirty = currentPasswordInput.value !== '' ||
+                    newPasswordInput.value !== '' ||
+                    confirmPasswordInput.value !== '';
             });
         });
 
-        // --- Profile Image Editing State ---
-        const imagePreviewModal = document.getElementById('imagePreviewModal');
-        const profileImageInput = document.getElementById('profileImageInput');
-
-        // When opening the image preview modal
-        function openProfilePreviewModal() {
-            const profilePreviewModal = document.getElementById('profilePreviewModal');
-            profilePreviewModal.classList.remove('hidden');
-            profilePreviewModal.style.display = 'flex';
-        }
-
-        // When opening the image editing modal
-        profileImageInput.addEventListener('change', function(e) {
-            if (this.files && this.files.length > 0) {
-                isEditingProfileImage = true;
-            }
+        // Mark as submitting when form is submitted
+        document.getElementById('changePasswordForm').addEventListener('submit', () => {
+            isSubmitting = true;
         });
 
-        // When closing the image editing modal
-        function closeModal() {
-            isEditingProfileImage = false;
-            // ...existing closeModal code...
-            const cancelEditImageModal = document.getElementById('cancelEditImageModal');
-            cancelEditImageModal.classList.remove('hidden');
-            cancelEditImageModal.style.display = 'flex';
-
-            document.querySelector('#cancelEditImageModal button[onclick="closeModal()"]').addEventListener('click',
-                function() {
-                    modal.classList.add('hidden');
-                    modal.style.display = 'none';
-                    if (cropper) {
-                        cropper.destroy();
-                        cropper = null;
-                    }
-                    preview.src = '';
-                    input.value = '';
-                    cancelEditImageModal.classList.add('hidden');
-                    cancelEditImageModal.style.display = 'none';
-                    isEditingProfileImage = false;
-                });
-            document.querySelector('#cancelEditImageModal button[onclick="keepEditing()"]').addEventListener('click',
-                function() {
-                    const cancelEditImageModal = document.getElementById('cancelEditImageModal');
-                    cancelEditImageModal.classList.add('hidden');
-                    cancelEditImageModal.style.display = 'none';
-                });
-        }
-
-        // --- Prevent refresh/close/back when editing profile image ---
+        // Warn user if trying to leave with unsaved changes
         window.addEventListener('beforeunload', function(e) {
-            if (isEditingProfileImage) {
+            if (isFormDirty && !isSubmitting) {
                 e.preventDefault();
-                e.returnValue = "You are editing your profile picture. Unsaved changes will be lost.";
-                return "You are editing your profile picture. Unsaved changes will be lost.";
-            }
-            if (isDirty) {
-                // Detect if it's a refresh (F5, Ctrl+R, etc.)
-                if (performance.getEntriesByType("navigation")[0]?.type === "reload") {
-                    e.preventDefault();
-                    e.returnValue = "You are refreshing the page. Unsaved changes will be lost.";
-                    return "You are refreshing the page. Unsaved changes will be lost.";
-                }
-                // Otherwise, generic close/tab close
-                e.preventDefault();
-                e.returnValue = "Are you sure you want to leave this page?";
-                return "Are you sure you want to leave this page?";
+                e.returnValue = ''; // Required for Chrome and modern browsers
             }
         });
 
-        // --- Prevent browser back button when editing profile image ---
-        window.addEventListener('popstate', function(e) {
-            if (isEditingProfileImage) {
-                alert("You are editing your profile picture. Unsaved changes will be lost.");
-                history.pushState(null, '', location.href); // Prevent back navigation
-            }
-        });
-
+        // Optional: Reset flags after modal closes
+        function resetDirtyFlags() {
+            isFormDirty = false;
+            isSubmitting = false;
+        }
 
         const checkIcon = `<span style="color: #16a34a; font-weight: bold;">&#10003;</span>&nbsp;`;
         const bulletIcon = `•&nbsp;`;
@@ -651,6 +589,7 @@
                     changePasswordModal.style.display = 'none';
                     successModal.classList.remove('hidden');
                     successModal.style.display = 'flex';
+                    resetDirtyFlags()
 
                 })
                 .catch(error => {
@@ -693,6 +632,7 @@
                 document.getElementById('new_password_confirmation').value === '') {
                 changePasswordModal.classList.add('hidden');
                 changePasswordModal.style.display = 'none';
+                resetDirtyFlags();
             } else {
                 leaveWithoutSavingModal.classList.remove('hidden');
                 leaveWithoutSavingModal.style.display = 'flex';
@@ -721,7 +661,7 @@
                 const errorDiv = document.getElementById(errorId);
                 if (errorDiv) errorDiv.textContent = '';
             });
-
+            resetDirtyFlags();
         }
 
         function keepEditing() {
@@ -752,6 +692,17 @@
         const toFiletype = document.getElementById('toFiletype');
         let cropper;
 
+        let isEditing = false;
+
+        window.onbeforeunload = function(e) {
+            if (isEditing) {
+                e.preventDefault();
+                // Required for Chrome to show alert
+                e.returnValue = '';
+                return '';
+            }
+        };
+
         input.addEventListener('change', function(e) {
             const file = e.target.files[0];
             // Hide all error/info messages first
@@ -778,6 +729,7 @@
                 document.getElementById('toLargefile').classList.add('hidden');
                 document.getElementById('toFiletype').classList.add('hidden');
 
+                isEditing = true;
 
                 const reader = new FileReader();
                 reader.onload = function(event) {
@@ -872,7 +824,6 @@
                 reader.readAsDataURL(file);
             }
         });
-
         zoomSlider.addEventListener('input', function() {
             if (cropper) cropper.zoomTo(parseFloat(this.value));
         });
@@ -914,7 +865,10 @@
                     saveChangesModal.classList.add('hidden');
                     saveChangesModal.style.display = 'none';
                     // Submit the form
+                    isEditing = false;
+                    window.onbeforeunload = null;
                     document.getElementById('uploadForm').submit();
+
                 });
 
             document.querySelector('#saveChangesModal button[onclick="closeChangesModal()"]').addEventListener(
