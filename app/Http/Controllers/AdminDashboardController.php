@@ -61,6 +61,7 @@ class AdminDashboardController extends Controller
         $showArchive = $request->query('archive', false);
 
         $recentDocuments = \App\Models\SubmittedDocument::with('user')
+            ->where('received_by', Auth::id()) 
             ->latest()
             ->take(5)
             ->get();
