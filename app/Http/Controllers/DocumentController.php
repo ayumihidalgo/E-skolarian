@@ -39,8 +39,6 @@ class DocumentController extends Controller
                 'subject' => 'required|string|max:100',
                 'type' => 'required|in:Event Proposal,General Plan of Activities,Calendar of Activities,Accomplishment Report,Constitution and By-Laws,Request Letter,Off Campus,Petition and Concern,Others',
                 'summary' => 'required|string|max:255',
-                'eventStartDate' => 'nullable|date|required_if:type,Event Proposal',
-                'eventEndDate' => 'nullable|date|after_or_equal:eventStartDate|required_if:type,Event Proposal',
                 'event-title' => 'nullable|string|max:60|required_if:type,Event Proposal',
                 'event-desc' => 'nullable|string|max:255|required_if:type,Event Proposal',
                 'file_upload' => 'required|array|max:30',
@@ -94,8 +92,6 @@ class DocumentController extends Controller
                 Event::create([
                     'title' => $validated['event-title'],
                     'description' => $validated['event-desc'],
-                    'start_date' => $validated['eventStartDate'],
-                    'end_date' => $validated['eventEndDate'],
                     'created_by' => Auth::id(),
                 ]);
             }

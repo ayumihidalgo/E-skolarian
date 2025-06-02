@@ -117,17 +117,6 @@
                             </div>
                         </div>
 
-                        <!-- Date Range (Only shows for Event Proposals) -->
-                        <div id="date-container" class="flex flex-col gap-2 md:flex-col w-full hidden">
-                            <div class="flex flex-col md:flex-row md:items-center gap-2 w-full">
-                                <input type="date" id="startDate" name="eventStartDate"
-                                    class="border-b-2 border-gray-500 p-2 w-full focus:outline-none font-semibold text-gray-500">
-                                <span class="hidden md:inline md:px-2">—</span>
-                                <input type="date" id="endDate" name="eventEndDate"
-                                    class="border-b-2 border-gray-500 p-2 w-full focus:outline-none font-semibold text-gray-500">
-                            </div>
-                        </div>
-
                         <!-- Event Title (Only shows for Event Proposals) -->
                         <div id="event-title-container"
                             class="flex items-center border-b-2 border-gray-500 py-3 w-full hidden">
@@ -296,7 +285,6 @@
             input: document.getElementById('receiverInput')
         };
 
-        const dateContainer = document.getElementById('date-container');
         const eventTitleContainer = document.getElementById('event-title-container');
         const eventDescContainer = document.getElementById('event-desc-container');
         const summaryInput = document.getElementById('summary');
@@ -304,27 +292,6 @@
         const eventDescInput = document.getElementById('event-desc');
         const eventDescCounter = document.getElementById('event-desc-counter');
         const fileNameDisplay = document.getElementById('fileName');
-        const startDateInput = document.getElementById('startDate');
-        const endDateInput = document.getElementById('endDate');
-
-        // Set today's date as the minimum for both fields
-        const today = new Date().toISOString().split('T')[0];
-        startDateInput.min = today;
-        endDateInput.min = today;
-
-        // Ensure start date is not after end date
-        startDateInput.addEventListener('change', () => {
-            if (startDateInput.value > endDateInput.value) {
-                endDateInput.value = startDateInput.value;
-            }
-            endDateInput.min = startDateInput.value;
-        });
-
-        endDateInput.addEventListener('change', () => {
-            if (endDateInput.value < startDateInput.value) {
-                startDateInput.value = endDateInput.value;
-            }
-        });
 
         // Arrow keys navigation for dropdowns
         function setupAccessibleDropdown(button, dropdown, onSelect) {
@@ -463,6 +430,11 @@
             }
         }
 
+        // Show file name
+        window.showFileName = function(input) {
+            fileNameDisplay.textContent = input.files.length > 0 ? input.files[0].name : 'No File Chosen';
+        }
+
         // Dynamic Toast Message
         let errorToastTimeout = null;
         let successToastTimeout = null;
@@ -530,7 +502,7 @@
             hideToast('fail');
         }
 
-        // selectReceiver() function
+        // Show receiver name in the dropdown
         window.selectReceiver = function(id, role) {
             const displayText = `${role}`;
             receiver.selected.innerHTML = displayText; // Use innerHTML to apply styling
@@ -549,11 +521,9 @@
             if (value === 'Event Proposal') {
                 eventTitleContainer.classList.remove('hidden');
                 eventDescContainer.classList.remove('hidden');
-                dateContainer.classList.remove('hidden');
             } else {
                 eventTitleContainer.classList.add('hidden');
                 eventDescContainer.classList.add('hidden');
-                dateContainer.classList.add('hidden');
             }
         }
 
@@ -575,11 +545,6 @@
         // Event description character counter
         window.eventDescUpdateCounter = function() {
             eventDescCounter.textContent = eventDescInput.value.length;
-        }
-
-        // Show file name
-        window.showFileName = function(input) {
-            fileNameDisplay.textContent = input.files.length > 0 ? input.files[0].name : 'No File Chosen';
         }
 
         // Confirming Submission Toast Message
@@ -638,8 +603,6 @@
                 file: () => document.getElementById('fileUpload').files.length > 0,
                 eventTitle: () => document.getElementById('event-title').value.trim() !== '',
                 eventDesc: () => document.getElementById('event-desc').value.trim() !== '',
-                startDate: () => document.getElementById('startDate').value.trim() !== '',
-                endDate: () => document.getElementById('endDate').value.trim() !== '',
             };
 
             const submitButton = document.getElementById('mainSubmitButton');
@@ -650,8 +613,7 @@
                 const baseValid = requiredFields.receiver() && requiredFields.subject() &&
                     requiredFields.docType() && requiredFields.summary() && requiredFields.file();
                 const eventValid = !isEventProposal || (
-                    requiredFields.eventTitle() && requiredFields.eventDesc() &&
-                    requiredFields.startDate() && requiredFields.endDate()
+                    requiredFields.eventTitle() && requiredFields.eventDesc()
                 );
 
                 const allValid = baseValid && eventValid;
@@ -668,7 +630,7 @@
 
             const inputsToWatch = [
                 'receiverInput', 'subject', 'docTypeInput', 'summary',
-                'event-title', 'event-desc', 'startDate', 'endDate', 'fileUpload'
+                'event-title', 'event-desc', 'fileUpload'
             ];
 
             inputsToWatch.forEach(id => {
