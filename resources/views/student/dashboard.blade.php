@@ -59,7 +59,7 @@
                                                 ? mb_substr($announcement->content, 0, $maxLength) . '...'
                                                 : $announcement->content;
                                         @endphp
-                                        <span class="text-gray-700 whitespace-pre-line">{{ $preview }}</span>
+                                        <span class="text-gray-700 whitespace-pre-line break-words">{{ $preview }}</span>
                                         @if ($isLong)
                                             <button class="text-indigo-600 hover:underline ml-2 text-sm"
                                                 onclick="showAnnouncementModal(
@@ -98,7 +98,7 @@
                                                 ? mb_substr($announcement->content, 0, $maxLength) . '...'
                                                 : $announcement->content;
                                         @endphp
-                                        <span class="text-gray-700 whitespace-pre-line">{{ $preview }}</span>
+                                        <span class="text-gray-700 whitespace-pre-line break-words">{{ $preview }}</span>
                                         @if ($isLong)
                                             <button class="text-indigo-600 hover:underline ml-2 text-sm"
                                                 onclick="showAnnouncementModal(
@@ -214,7 +214,7 @@
             </div>
             <h3 id="modalTitle" class="text-lg font-bold mt-3 mb-1"></h3>
             <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
-            <div id="modalContent" class="text-gray-700 whitespace-pre-line"></div>
+            <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words"></div>
         </div>
     </div>
 

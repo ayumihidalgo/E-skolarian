@@ -126,7 +126,7 @@
     'F j, Y',
 )}";
                                             @endphp
-                                            <span>{{ $preview }}</span>
+                                            <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                             @if ($isLong)
                                                 <button class="text-indigo-600 hover:underline ml-2 text-sm"
                                                     onclick="showAnnouncementModal(
@@ -243,7 +243,7 @@
                                                     ? mb_substr($announcement->content, 0, $maxLength) . '...'
                                                     : $announcement->content;
                                             @endphp
-                                            <span>{{ $preview }}</span>
+                                            <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                             @if ($isLong)
                                                 <button class="text-indigo-600 hover:underline ml-2 text-sm"
                                                     onclick="showAnnouncementModal(
@@ -330,7 +330,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                                <textarea name="content" id="contentInput" rows="4" maxlength="5000"
+                                <textarea name="content" id="contentInput" rows="4" maxlength="1000"
                                     class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                                     placeholder="Enter announcement content"></textarea>
                                 <p id="contentError" class="text-red-500 text-sm mt-1" style="display: none;">Content is
@@ -364,7 +364,7 @@
             </div>
             <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
             <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
-            <div id="modalContent" class="text-gray-700 whitespace-pre-line"></div>
+            <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words"></div>
         </div>
     </div>
 
@@ -390,7 +390,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                    <textarea id="editContent" name="content" rows="4" maxlength="5000"
+                    <textarea id="editContent" name="content" rows="4" maxlength="1000"
                         class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" required></textarea>
                 </div>
                 <div class="text-right">

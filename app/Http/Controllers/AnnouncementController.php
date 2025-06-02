@@ -12,7 +12,7 @@ class AnnouncementController extends Controller
     {
         $request->validate([
             'title'   => 'required|string|max:60',
-            'content' => 'required|string|max:5000',
+            'content' => 'required|string|max:1000',
         ]);
 
         Announcement::create([
@@ -30,7 +30,7 @@ class AnnouncementController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:60',
-            'content' => 'required|string|max:5000',
+            'content' => 'required|string|max:1000',
         ]);
 
         $announcement->title = $request->input('title');
