@@ -24,7 +24,7 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
 
-    @vite('resources/css/app.css')
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body>
@@ -32,6 +32,7 @@
         @yield('content')
     </main>
     @stack('scripts')
+    <script src="{{ asset('js/super-admin/admin-dropdown.js') }}"></script>
 </body>
 
 </html>

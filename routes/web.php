@@ -27,6 +27,7 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\ProblemReportController;
 use App\Http\Controllers\StudentDashboardController;
+use App\Http\Controllers\SuperAdmin\SuperAdminSettingsController;
 
 
 // Redirect /login to landing page
@@ -403,4 +404,10 @@ Route::get('/login', function () {
     return redirect()->route('landing');
 })->name('login');
 
-
+// Super Admin Settings Routes
+Route::middleware(['auth', 'role:super-admin'])->group(function () {
+    Route::get('/super-admin/settings', [SuperAdminSettingsController::class, 'index'])->name('super-admin.settings');
+    Route::post('/super-admin/settings/update-profile', [SuperAdminSettingsController::class, 'updateProfile'])->name('super-admin.settings.update-profile');
+    Route::post('/super-admin/settings/change-password', [SuperAdminSettingsController::class, 'changePassword'])->name('super-admin.settings.change-password');
+    Route::post('/super-admin/settings/change-email', [SuperAdminSettingsController::class, 'changeEmail'])->name('super-admin.settings.change-email');
+});
