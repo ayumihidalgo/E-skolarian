@@ -19,42 +19,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.log('Row clicked');
 
                 try {
-                    // Get user data from the row attribute
                     const userData = JSON.parse(this.getAttribute('data-user'));
                     
-                    // Fill user details in the modal
                     const usernameEl = document.getElementById('userUsername');
                     const emailEl = document.getElementById('userEmail');
                     const roleEl = document.getElementById('userRole');
                     const acronymField = document.getElementById('acronymField');
                     const acronymEl = document.getElementById('userAcronym');
 
-                    if (userData.role === 'student') {
-                        // Show acronym field for student organizations
+                    if (userData.role === 'admin') {
+                        // For admin users: show role in Role field and role_name in Name field
+                        if (roleEl) roleEl.textContent = ucfirst(userData.role);
+                        if (usernameEl) usernameEl.textContent = userData.role_name;
+                        if (acronymField) acronymField.classList.add('hidden');
+                    } else if (userData.role === 'student') {
+                        // For student users: show existing behavior
                         if (acronymField) acronymField.classList.remove('hidden');
-                        
-                        // Use organization_acronym from database
-                        if (acronymEl) {
-                            acronymEl.textContent = userData.organization_acronym || 'N/A';
-                        }
-                        
-                        // Display organization name
-                        if (usernameEl) {
-                            usernameEl.textContent = userData.username;
-                        }
+                        if (acronymEl) acronymEl.textContent = userData.organization_acronym || 'N/A';
+                        if (usernameEl) usernameEl.textContent = userData.username;
+                        if (roleEl) roleEl.textContent = userData.role_name;
                     } else {
-                        // Hide acronym field for non-student roles
+                        // For other roles: show existing behavior
                         if (acronymField) acronymField.classList.add('hidden');
                         if (usernameEl) usernameEl.textContent = userData.username;
+                        if (roleEl) roleEl.textContent = userData.role_name;
                     }
 
                     if (emailEl) emailEl.textContent = userData.email;
-                    if (roleEl) roleEl.textContent = userData.role_name;
 
                     // Store user ID for edit/deactivate operations
                     currentUserId = userData.id;
-
-                    // Store the current user ID in a global variable for other modules to access
                     window.currentUserId = currentUserId;
 
                     // Show the modal
@@ -96,3 +90,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 });
+
+// Helper function to capitalize first letter
+function ucfirst(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}

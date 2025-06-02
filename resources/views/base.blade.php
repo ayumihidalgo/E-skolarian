@@ -33,6 +33,34 @@
     </main>
     @stack('scripts')
     <script src="{{ asset('js/super-admin/admin-dropdown.js') }}"></script>
+
+    <!-- Logout Warning Modal -->
+    <div id="logoutWarningModal" class="fixed inset-0 flex items-center justify-center z-[100] hidden">
+        <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+        
+        <div class="bg-white rounded-[16px] shadow-xl w-full max-w-md relative z-[110] p-6">
+            <div class="text-center mb-6">
+                <h3 class="text-xl font-semibold text-gray-800 font-[Lexend] mb-2">Session Timeout Warning</h3>
+                <p class="text-sm text-gray-600">
+                    Your session is about to expire due to inactivity. You will be automatically logged out in 1 minute.
+                </p>
+                <p class="text-sm text-gray-600 mt-2">
+                    Click "Stay Logged In" to continue your session.
+                </p>
+            </div>
+
+            <div class="flex justify-center space-x-4">
+                <button onclick="window.location.href='/logout'" 
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-5 py-2 rounded-[14px] font-semibold font-[Lexend] transition duration-200">
+                    Logout Now
+                </button>
+                <button onclick="document.getElementById('logoutWarningModal').classList.add('hidden'); resetTimer();" 
+                        class="bg-[#7A1212] hover:bg-red-800 text-white px-5 py-2 rounded-[14px] font-semibold font-[Lexend] transition duration-200">
+                    Stay Logged In
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
