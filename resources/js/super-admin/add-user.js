@@ -727,9 +727,7 @@ if (newOrganizationNameInput) {
     function updateAdminSubmitButton() {
         if (!submitAdminBtn) return;
         
-        const isValid = usernameInput.value.trim() !== '' && 
-                       adminEmailInput.value.trim() !== '' &&
-                       !usernameInput.classList.contains('border-red-500') &&
+        const isValid = adminEmailInput.value.trim() !== '' &&
                        !adminEmailInput.classList.contains('border-red-500');
                        
         submitAdminBtn.disabled = !isValid;
@@ -1357,69 +1355,65 @@ function truncateOrgName(name, acronym, maxLength = 55) {
         submitAdminBtn.addEventListener('click', async function(e) {
             e.preventDefault();
             
-            // Set processing flag
-            isProcessing = true;
-
-             isProcessing = true;
-            submitAdminBtn.disabled = true;
-            submitAdminBtn.innerHTML = 'Adding...';
-            
-            // Disable close buttons and backdrop click
-            if (closeAddUserModalBtn) {
-                closeAddUserModalBtn.disabled = true;
-                closeAddUserModalBtn.style.opacity = '0.5';
-                closeAddUserModalBtn.style.cursor = 'not-allowed';
-            }
-
-            // Prevent escape key and backdrop click during processing
-            const modalBackdrop = document.querySelector('.add-user-backdrop');
-            if (modalBackdrop) {
-                modalBackdrop.style.pointerEvents = 'none';
-            }
+            if (isProcessing) return;
 
             try {
-            // Get form data
-            const formData = {
-                username: usernameInput.value.trim(),
-                email: adminEmailInput.value.trim().toLowerCase(),
-                password: Math.random().toString(36).slice(-10), // Generate random password
-                role_name: finalRoleNameInput.value,
-                role: 'admin',
-                _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            };
+                isProcessing = true;
+                submitAdminBtn.disabled = true;
+                submitAdminBtn.innerHTML = 'Adding...';
+                
+                const email = adminEmailInput.value.trim().toLowerCase();
+                // Extract username from email (remove @gmail.com and capitalize first letter)
+                const username = email.split('@')[0]
+                    .split(/[._-]/)
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+                
+                const formData = {
+                    username: username, // Use extracted username
+                    email: email,
+                    password: Math.random().toString(36).slice(-10),
+                    role: 'admin',
+                    role_name: finalRoleNameInput.value,
+                    active: true,
+                    _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                };
 
-            const response = await fetch('/users', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
+                const response = await fetch('/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': formData._token,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
 
-            if (!response.ok) {
-                throw new Error('Failed to add user');
-            }
+                const result = await response.json();
 
-            const data = await response.json();
-            
-            if (data.success) {
+                if (!response.ok) {
+                    throw new Error(result.message || 'Failed to create user');
+                }
+
+                // Show success modal
                 resetForm();
                 addUserModal.classList.add('hidden');
                 showSuccessModal();
-            }
 
-        } catch (error) {
-            console.error('Error:', error);
-            handleSubmissionError(error);
-        } finally {
-            isProcessing = false;
-            document.body.style.cursor = 'default';
-            enableFormButtons(); // Re-enable all buttons
-        }
-    });
-}
+            } catch (error) {
+                console.error('Error:', error);
+                const adminEmailError = document.getElementById('adminEmailError');
+                if (adminEmailError) {
+                    adminEmailError.textContent = error.message;
+                    adminEmailError.classList.remove('hidden');
+                }
+            } finally {
+                isProcessing = false;
+                submitAdminBtn.disabled = false;
+                submitAdminBtn.innerHTML = 'Add User';
+            }
+        });
+    }
 
     // Helper functions for form submission
     function showSuccessModal() {

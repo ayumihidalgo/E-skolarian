@@ -168,26 +168,44 @@
     <nav>
         <ul class="inline-flex items-center space-x-2">
             <li>
-                <a href="{{ $users->url(1) }}"
-                    class="pagination-btn-first px-3 py-1 rounded-lg {{ $users->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
-                    <
-                </a>
+                @if ($users->currentPage() == 1)
+                    <span class="pagination-btn-first px-3 py-1 rounded-lg cursor-not-allowed opacity-50">
+                        <
+                    </span>
+                @else
+                    <a href="{{ $users->url(1) }}"
+                        class="pagination-btn-first px-3 py-1 rounded-lg hover:bg-gray-100">
+                        <
+                    </a>
+                @endif
             </li>
 
             @for ($i = 1; $i <= $users->lastPage(); $i++)
                 <li>
-                    <a href="{{ $users->url($i) }}"
-                        class="pagination-btn px-3 py-1 rounded-lg {{ $users->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
-                        {{ $i }}
-                    </a>
+                    @if ($users->currentPage() == $i)
+                        <span class="pagination-btn px-3 py-1 rounded-lg bg-[#7A1212] text-white">
+                            {{ $i }}
+                        </span>
+                    @else
+                        <a href="{{ $users->url($i) }}"
+                            class="pagination-btn px-3 py-1 rounded-lg hover:bg-gray-100">
+                            {{ $i }}
+                        </a>
+                    @endif
                 </li>
             @endfor
 
             <li>
-                <a href="{{ $users->url($users->lastPage()) }}"
-                    class="pagination-btn-last px-3 py-1 rounded-lg {{ $users->currentPage() == $users->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
-                    >
-                </a>
+                @if ($users->currentPage() == $users->lastPage())
+                    <span class="pagination-btn-last px-3 py-1 rounded-lg cursor-not-allowed opacity-50">
+                        >
+                    </span>
+                @else
+                    <a href="{{ $users->url($users->lastPage()) }}"
+                        class="pagination-btn-last px-3 py-1 rounded-lg hover:bg-gray-100">
+                        >
+                    </a>
+                @endif
             </li>
         </ul>
     </nav>
