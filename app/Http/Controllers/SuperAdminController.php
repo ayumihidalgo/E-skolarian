@@ -10,9 +10,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use App\LogsActivity;
 
 class SuperAdminController extends Controller
 {
+
+    use LogsActivity;
     public function showDashboard(Request $request)
     {
         // Get sort parameters
@@ -78,6 +81,16 @@ class SuperAdminController extends Controller
                 Log::error('Failed to send deactivation email notification: ' . $e->getMessage());
             }
 
+            // Log the deactivation activity
+            $this->logActivity(
+                'Deactivated',
+                'User',
+                ($user->role === 'admin' ? 
+                "{$user->role_name} has been deactivated." : 
+                "{$user->organization_acronym} has been deactivated."
+                )
+            );
+
             // Return success response
             return response()->json([
                 'success' => true,
@@ -141,6 +154,16 @@ class SuperAdminController extends Controller
             $user->password = Hash::make($newPassword);
             $user->active = true;
             $user->save();
+
+            // Log the reactivation activity
+            $this->logActivity(
+                'Reactivated',
+                'User',
+                ($user->role === 'admin' ? 
+                "{$user->role_name} has been reactivated." : 
+                "{$user->organization_acronym} has been reactivated."
+            )
+            );
 
             // Send reactivation notification email
             try {
