@@ -32,7 +32,7 @@
     }
 </style>
 <footer
-    class="w-full bg-white h-auto p-4 text-black border-t border-black flex flex-col md:flex-row justify-center items-center">
+    class="w-full bg-[#F2F4F7] h-auto p-4 text-black border-t border-black/30 flex flex-col md:flex-row justify-center items-center">
     <div class="flex flex-col md:flex-row justify-between items-center w-full px-2 md:px-4 gap-2 md:gap-0">
         <div class="flex items-center mb-2 md:mb-0">
             <img src="{{ asset('images/isko.svg') }}" alt="Isko Logo" class="h-6 w-20 md:w-30">
@@ -139,7 +139,7 @@
             </button>
         </div>
     </div>
-</div>  
+</div>
 <!-- Privacy Policy Modal -->
 <div id="privacyModal" class="fixed inset-0 bg-black/60 backdrop-blur-[3px] items-center justify-center z-50 hidden">
     <div

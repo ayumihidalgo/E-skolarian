@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use App\LogsActivity;
 use Storage;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\RecoveryCodeMail;
 
 
 class SettingsController extends Controller
@@ -134,5 +137,81 @@ class SettingsController extends Controller
             "{$user->username} changed their password."
         );
         return response()->json(['message' => 'Password changed successfully.']);
+    }
+    public function sendRecoveryCode(Request $request)
+    {
+        $request->validate([
+            'recovery_email' => 'required|email',
+        ], [
+            'recovery_email.required' => 'The recovery email is required.',
+            'recovery_email.email' => 'Please enter a valid email address.',
+        ]);
+
+        $code = rand(100000, 999999);
+        session(['recovery_code' => $code, 'pending_recovery_email' => $request->input('recovery_email')]); // Store code and email in session
+
+        \Log::info("Sent code $code to {$request->recovery_email}");
+        // Send the recovery code via email
+        Mail::to($request->input('recovery_email'))->send(new RecoveryCodeMail($code));
+        \Log::info("Recovery code sent to {$request->recovery_email}");
+        // return proper response
+        return response()->json(['success' => true]);
+    }
+
+    public function verifyRecoveryCode(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|digits:6',
+        ], [
+            'code.required' => 'The verification code is required.',
+            'code.digits' => 'The verification code must be 6 digits.',
+        ]);
+
+        $code = $request->input('code');
+        $storedCode = session('recovery_code'); // retrieve session code
+        $pendingEmail = session('pending_recovery_email'); // retrieve pending email
+
+        \Log::info("Verifying code", ['entered' => $code, 'stored' => $storedCode]);
+        if ($code == $storedCode && $pendingEmail) {
+            $user = Auth::user();
+            $user->recovery_email = $pendingEmail;
+            $user->save();
+
+            // Optionally clear session values
+            session()->forget(['recovery_code', 'pending_recovery_email']);
+
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Invalid verification code']);
+    }
+    public function removeRecoveryEmail(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|digits:6',
+        ], [
+            'code.required' => 'The verification code is required.',
+            'code.digits' => 'The verification code must be 6 digits.',
+        ]);
+
+        $code = $request->input('code');
+        $storedCode = session('recovery_code');
+        $user = Auth::user();
+
+        if ($code == $storedCode && $user->recovery_email) {
+            $removedEmail = $user->recovery_email;
+            $user->recovery_email = null;
+            $user->save();
+
+            // Optionally clear session value
+            session()->forget('recovery_code');
+
+            // Notify the email
+            Mail::to($removedEmail)->send(new \App\Mail\RecoveryEmailRemovedMail($user));
+
+            return response()->json(['success' => true]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Invalid verification code']);
     }
 }

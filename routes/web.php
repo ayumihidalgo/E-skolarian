@@ -138,7 +138,9 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(functio
     Route::post('admin/settings/change-password', [SettingsController::class, 'changePassword'])->name('admin.settings.change-password');
     Route::post('admin/settings/remove-profile', [SettingsController::class, 'removeProfilePicture'])->name('admin.settings.remove-profile-picture');
     Route::get('/admin/archivePage', action: [AdminDocumentController::class, 'archivePage'])->name('admin.archivePage');
-
+    Route::post('admin/settings/send-recovery-code', [SettingsController::class, 'sendRecoveryCode'])->name('admin.settings.sendRecoveryCode');
+    Route::post('admin/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('admin.settings.verifyRecoveryCode');
+    Route::post('admin/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('admin.settings.removeRecoveryEmail');
 
     // Document processing
     Route::get('/admin/documents', [DocumentReviewController::class, 'index'])->name('admin.documents');
@@ -164,7 +166,9 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(funct
     Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('student.settings.update-profile-picture');
     Route::post('student/settings/change-password', [SettingsController::class, 'changePassword'])->name('student.settings.change-password');
     Route::post('student/settings/remove-profile', [SettingsController::class, 'removeProfilePicture'])->name('student.settings.remove-profile-picture');
-
+    Route::post('student/settings/send-recovery-code', [SettingsController::class, 'sendRecoveryCode'])->name('student.settings.sendRecoveryCode');
+    Route::post('student/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('student.settings.verifyRecoveryCode');
+    Route::post('student/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('student.settings.removeRecoveryEmail');
 });
 
 Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(function () {
