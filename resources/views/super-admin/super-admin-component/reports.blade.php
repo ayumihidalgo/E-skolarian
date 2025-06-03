@@ -105,7 +105,7 @@
                                     'email' => $report->email,
                                     'description' => $report->description,
                                     // Always use asset('storage/...')
-                                    'attachment' => $report->file_path ? asset('storage/' . $report->file_path) : ''
+                                    'attachment' => $report->screenshot_path ? asset('storage/' . $report->screenshot_path) : ''
                                 ])
                             }})">
                             <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
