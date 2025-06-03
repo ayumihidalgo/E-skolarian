@@ -9,7 +9,7 @@
     </div>
      <div class="flex justify-between items-center mb-1">
         <!-- Back to Dashboard Button -->
-        <a href="{{ route('super-admin.dashboard') }}" 
+        <a href="{{ route('super-admin.dashboard') }}"
             class="bg-white hover:text-red-800 text-[#7A1212] px-4 py-2 rounded-[16px] font-sm font-[Lexend] inline-flex items-center self-start mb-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
@@ -19,7 +19,7 @@
 </div>
     <div class = "w-[1375] h-[710] rounded  shadow-lg bg-white p-6">        <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold font-[Lexend] text-[#332B2B]">Reports</h2>
-            
+
             <!-- Separate Month and Year Filter Dropdowns -->
             <div class="flex items-center gap-4">                <div class="flex items-center">
                     <label for="monthFilter" class="mr-2 text-sm font-medium text-gray-700 font-[Lexend]">Month:</label>
@@ -70,7 +70,7 @@
                             <div class="flex items-center">
                                 <span class="whitespace-nowrap text-black">Timestamp</span>
                                 <div class="flex flex-col ml-2">
-                                   
+
                                 </div>
                             </div>
                         </th>
@@ -78,7 +78,7 @@
                             <div class="flex items-center">
                                 <span class="whitespace-nowrap text-black">Report ID</span>
                                 <div class="flex flex-col ml-2">
-                                  
+
                                 </div>
                             </div>
                         </th>
@@ -86,7 +86,7 @@
                             <div class="flex items-center">
                                 <span class="whitespace-nowrap">Email</span>
                                 <div class="flex flex-col ml-2">
-                                 
+
                                 </div>
                             </div>
                         </th>
@@ -97,16 +97,16 @@
                 </thead>
                 <tbody class="divide-y divide-[#D9D9D9]/70">
                     @forelse($reports as $report)
-                        <tr class="cursor-pointer hover:bg-gray-50" 
-                            onclick="openReportModal({{ 
+                        <tr class="cursor-pointer hover:bg-gray-50"
+                            onclick="openReportModal({{
                                 json_encode([
                                     'id' => $report->id,
                                     'created_at' => $report->created_at,
                                     'email' => $report->email,
                                     'description' => $report->description,
                                     // Always use asset('storage/...')
-                                    'attachment' => $report->screenshot_path ? asset('storage/' . $report->screenshot_path) : ''
-                                ]) 
+                                    'attachment' => $report->file_path ? asset('storage/' . $report->file_path) : ''
+                                ])
                             }})">
                             <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
                                 {{ $report->created_at->format('Y-m-d') }}<br>
@@ -180,16 +180,16 @@
             @endif
             </nav>
             </div>
-        
+
         @endif
-       
+
     </div>
 </div>
 
 
 <div id="reportModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 hidden flex items-center justify-center">
   <div class="bg-white w-full h-full relative flex flex-col">
-    
+
     <!-- Fixed navigation header at top -->
     <div class="sticky top-0 z-20 bg-white">
       @include('components.superAdminNavigation')
@@ -197,7 +197,7 @@
 
     <!-- Main content area -->
     <div class="flex-1 bg-gray-100 px-8 py-6 overflow-y-auto">
-      
+
       <!-- SUPER ADMIN Header -->
       <div class="mb-8">
         <h1 class="text-2xl font-bold text-black font-[Lexend]">SUPER ADMIN</h1>
@@ -206,7 +206,7 @@
       <!-- Report Card Container -->
       <div class="w-full mx-auto">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          
+
           <!-- Report Header with close button -->
           <div class="bg-white px-6 py-4 border-b border-gray-200 flex justify-center items-center relative">
             <h2 id="modalReportId" class="text-lg font-semibold text-black font-[Lexend]">REPORT-001</h2>
@@ -219,7 +219,7 @@
 
           <!-- Report Content -->
           <div class="px-6 py-6 space-y-4">
-            
+
             <!-- Timestamp -->
             <div class="text-sm text-gray-600 font-[Lexend]">
               <span id="modalTimestamp"></span>
@@ -263,7 +263,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const monthFilter = document.getElementById('monthFilter');
     const yearFilter = document.getElementById('yearFilter');
-    
+
     // Set current values from URL parameters
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('month')) {
@@ -272,30 +272,30 @@ document.addEventListener('DOMContentLoaded', function() {
     if (urlParams.get('year')) {
         yearFilter.value = urlParams.get('year');
     }
-    
+
     // Handle filter changes
     function applyFilters() {
         const month = monthFilter.value;
         const year = yearFilter.value;
-        
+
         const url = new URL(window.location);
         url.searchParams.delete('page'); // Reset pagination
-        
+
         if (month) {
             url.searchParams.set('month', month);
         } else {
             url.searchParams.delete('month');
         }
-        
+
         if (year) {
             url.searchParams.set('year', year);
         } else {
             url.searchParams.delete('year');
         }
-        
+
         window.location.href = url.toString();
     }
-    
+
     monthFilter.addEventListener('change', applyFilters);
     yearFilter.addEventListener('change', applyFilters);
 });
@@ -303,13 +303,13 @@ document.addEventListener('DOMContentLoaded', function() {
 // Modal functions
 function openReportModal(report) {
     document.getElementById('modalReportId').textContent = 'RPT-' + String(report.id).padStart(3, '0');
-    
+
     const date = new Date(report.created_at);
     document.getElementById('modalTimestamp').textContent = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-    
+
     document.getElementById('modalEmail').textContent = report.email;
     document.getElementById('modalDescription').textContent = report.description;
-    
+
     // Handle attachment
     const attachmentDiv = document.getElementById('modalAttachment');
     if (report.attachment && report.attachment !== '') {
@@ -318,7 +318,7 @@ function openReportModal(report) {
     } else {
         attachmentDiv.textContent = 'No attachment provided';
     }
-    
+
     // Show modal
     const modal = document.getElementById('reportModal');
     modal.classList.remove('hidden');
@@ -334,11 +334,11 @@ function closeReportModal() {
 function emailResponse() {
     const email = document.getElementById('modalEmail').textContent;
     const reportId = document.getElementById('modalReportId').textContent;
-    
+
     // Create mailto link
     const subject = encodeURIComponent('Response to ' + reportId);
     const mailtoLink = 'mailto:' + email + '?subject=' + subject;
-    
+
     window.location.href = mailtoLink;
 }
 
