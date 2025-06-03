@@ -10,6 +10,7 @@ use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\LogsActivity;
 
 class UserController extends Controller
 {
@@ -19,6 +20,7 @@ class UserController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
+    use LogsActivity;
     public function store(Request $request)
 {
     try {
@@ -50,6 +52,15 @@ class UserController extends Controller
         } catch (\Exception $e) {
             \Log::error('Failed to send account creation email: ' . $e->getMessage());
         }
+
+        $this->logActivity(
+            'Created',
+            'User',
+            ($user->role === 'admin' ? 
+            "{$user->role_name} account has been created." : 
+            "{$user->organization_acronym} account has been created."
+        )
+        );
 
         return response()->json([
             'success' => true,
@@ -130,6 +141,13 @@ class UserController extends Controller
         }
 
         // For normal form submissions, redirect with a success message
+        $this->logActivity(
+        'Updated',
+        'User',
+        ($user->role === 'admin' ? 
+        "{$user->role_name} account has been updated." : 
+        "{$user->organization_acronym} account has been updated."
+    ));
         return redirect()->route('super-admin.dashboard')->with('success', 'User updated successfully!');
     }
     public function deactivatedUsers(Request $request)

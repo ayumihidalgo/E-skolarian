@@ -22,23 +22,21 @@
 
             <div class="block text-sm font-medium text-gray-700 mb-2">
                 <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Role</label>
-                <select id="editRoleName" name="role_name"
-                    class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
-                    <option value="Academic Organization" data-role="student">Academic Organization</option>
-                    <option value="Non-Academic Organization" data-role="student">Non-Academic Organization</option>
-                    <option value="Office of the Student Services" data-role="admin">Office of the Student Services</option>
-                    <option value="Office of the Academic Services" data-role="admin">Office of the Academic Services</option>
-                    <option value="Office of the Administrative Services" data-role="admin">Office of the Administrative Services</option>
-                    <option value="Office of the Campus Director" data-role="admin">Office of the Campus Director</option>
-                </select>
-                <!-- Hidden field to store the actual role value (admin/student) -->
+                <input type="text" 
+                       id="editRoleName" 
+                       name="role_name"
+                       readonly
+                       class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] bg-gray-100 cursor-not-allowed">
+                <!-- Keep the hidden input for actual role -->
                 <input type="hidden" id="editActualRole" name="role" value="">
             </div>
 
             <div class="block text-sm font-medium text-gray-700 mb-2">
                 <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Name</label>
-                <input type="text" id="editUsername" name="username"
-                class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
+                <input type="text" 
+                       id="editUsername" 
+                       name="username"
+                       class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
             </div>
 
             <!-- Acronym field - Initially hidden -->
@@ -47,7 +45,7 @@
                 <input type="text" 
                        id="editAcronym" 
                        name="organization_acronym"
-                       class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"
+                       class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] cursor-not-allowed"
                        readonly>
             </div>
 

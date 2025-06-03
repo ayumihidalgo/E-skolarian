@@ -126,7 +126,7 @@
     'F j, Y',
 )}";
                                             @endphp
-                                            <span>{{ $preview }}</span>
+                                            <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                             @if ($isLong)
                                                 <button class="text-indigo-600 hover:underline ml-2 text-sm"
                                                     onclick="showAnnouncementModal(
@@ -243,7 +243,7 @@
                                                     ? mb_substr($announcement->content, 0, $maxLength) . '...'
                                                     : $announcement->content;
                                             @endphp
-                                            <span>{{ $preview }}</span>
+                                            <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                             @if ($isLong)
                                                 <button class="text-indigo-600 hover:underline ml-2 text-sm"
                                                     onclick="showAnnouncementModal(
@@ -268,17 +268,51 @@
                         </div>
                     </div>
 
-                    <!-- Recent Documents -->
-                    <div class="lg:col-span-2 space-y-2">
-                        <h2 class="text-lg font-semibold">Recent Documents</h2>
-                        <div class="bg-zinc-100 rounded-xl shadow-md p-4">
+                
+                <!-- Recent Documents -->
+                <div class="lg:col-span-2 space-y-2">
+                    <h2 class="text-lg font-semibold">Recent Documents</h2>
+                    <div class="bg-zinc-100 rounded-xl shadow-md p-4">
+                        @if($recentDocuments->count())
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-sm text-left">
+                                    <thead>
+                                        <tr class="border-b">
+                                            <th class="px-3 py-2 font-semibold">Tag</th>
+                                            <th class="px-3 py-2 font-semibold">Organization</th>
+                                            <th class="px-3 py-2 font-semibold">Title</th>
+                                            <th class="px-3 py-2 font-semibold">Date</th>
+                                            <th class="px-3 py-2 font-semibold">Type</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($recentDocuments as $doc)
+                                            <tr class="border-b hover:bg-zinc-200">
+                                                <td class="px-3 py-2 font-bold text-orange-500">{{ $doc->control_tag }}</td>
+                                                <td class="px-3 py-2 max-w-[180px] truncate" title="{{ $doc->user->username ?? '' }}">
+                                                    {{ $doc->user->username ?? '' }}
+                                                </td>
+                                                <td class="px-3 py-2 max-w-[200px] truncate" title="{{ $doc->subject }}">
+                                                    {{ $doc->subject }}
+                                                </td>
+                                                <td class="px-3 py-2">
+                                                    {{ \Carbon\Carbon::parse($doc->created_at)->format('n/j/Y') }}
+                                                </td>
+                                                <td class="px-3 py-2">{{ $doc->type }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
                             <div class="text-center text-gray-500 py-8">
                                 <img src="{{ asset('images/recentdoc.png') }}" alt="No recent documents"
                                     class="w-40 mx-auto mb-2 opacity-80">
                                 <p>No recent documents at the moment</p>
                             </div>
-                        </div>
+                        @endif
                     </div>
+                </div>
 
                     <!-- Post New Announcements -->
                     <div class="bg-white p-6 rounded-xl shadow">
@@ -296,7 +330,7 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                                <textarea name="content" id="contentInput" rows="4" maxlength="5000"
+                                <textarea name="content" id="contentInput" rows="4" maxlength="1000"
                                     class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
                                     placeholder="Enter announcement content"></textarea>
                                 <p id="contentError" class="text-red-500 text-sm mt-1" style="display: none;">Content is
@@ -315,6 +349,7 @@
         </div>
         @include('components.footer')
     </div>
+   
     {{-- Modal for full announcement --}}
     <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
         <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
@@ -329,7 +364,7 @@
             </div>
             <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
             <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
-            <div id="modalContent" class="text-gray-700 whitespace-pre-line"></div>
+            <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words"></div>
         </div>
     </div>
 
@@ -355,7 +390,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                    <textarea id="editContent" name="content" rows="4" maxlength="5000"
+                    <textarea id="editContent" name="content" rows="4" maxlength="1000"
                         class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" required></textarea>
                 </div>
                 <div class="text-right">
