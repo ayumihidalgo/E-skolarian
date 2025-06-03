@@ -136,21 +136,14 @@
                             </td>
 
                             <!-- Username Cell -->
-                             <td class="w-[30%] px-6 py-4 text-left pl-4">
-                                <div class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[17px] text-black text-semibold">
-                                    @if ($user->role === 'admin')
-                                        {{ $user->role_name }}
-                                    @else
-                                        {{ $user->username }}
-                                    @endif
+                            <td class="w-[30%] px-6 py-4 text-left pl-4">
+                                <div
+                                    class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[17px] text-black text-semibold">
+                                    {{ $user->role === 'admin' ? $user->role_name : $user->username }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
-                                @if ($user->role === 'admin')
-                                    {{ ucfirst($user->role) }}
-                                @else
-                                    {{ $user->role_name }}
-                                @endif
+                                {{ $user-> role === "admin" ? $user->role : $user->role_name }}
                             </td>
                             <td class="px-6 py-4 text-right pr-45 text-[Lexend] text-[17px] text-black text-semibold">
                                 {{ $user->created_at->format('F j, Y') }}
@@ -182,7 +175,7 @@
                         </span>
                     @else
                         <a href="{{ $users->url(1) }}"
-                            class="pagination-btn-first px-3 py-1 rounded-lg">
+                            class="pagination-btn-first px-3 py-1 rounded-lg hover:bg-gray-100">
                             <
                         </a>
                     @endif
@@ -190,10 +183,16 @@
 
                 @for ($i = 1; $i <= $users->lastPage(); $i++)
                     <li>
-                        <a href="{{ $users->url($i) }}"
-                            class="pagination-btn px-3 py-1 rounded-lg {{ $users->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
-                            {{ $i }}
-                        </a>
+                        @if ($users->currentPage() == $i)
+                            <span class="pagination-btn px-3 py-1 rounded-lg bg-[#7A1212] text-white">
+                                {{ $i }}
+                            </span>
+                        @else
+                            <a href="{{ $users->url($i) }}"
+                                class="pagination-btn px-3 py-1 rounded-lg hover:bg-gray-100">
+                                {{ $i }}
+                            </a>
+                        @endif
                     </li>
                 @endfor
 
@@ -204,7 +203,7 @@
                         </span>
                     @else
                         <a href="{{ $users->url($users->lastPage()) }}"
-                            class="pagination-btn-last px-3 py-1 rounded-lg">
+                            class="pagination-btn-last px-3 py-1 rounded-lg hover:bg-gray-100">
                             >
                         </a>
                     @endif
@@ -356,15 +355,5 @@
         </div>
     </div>
     @include('super-admin.super-admin-component.activityLogModal')
-    @vite([
-        'resources/js/super-admin/modal-base.js',
-        'resources/js/super-admin/main.js',
-        'resources/js/super-admin/add-user.js',
-        'resources/js/super-admin/user-details.js',
-        'resources/js/super-admin/edit-user.js',
-        'resources/js/super-admin/deactivate-user.js',
-        'resources/js/super-admin/success-modal.js',
-        'resources/js/super-admin/activity-log-modal.js',
-        'resources/js/super-admin/auto-logout.js'
-    ])
+    @vite(['resources/js/super-admin/modal-base.js', 'resources/js/super-admin/main.js', 'resources/js/super-admin/add-user.js', 'resources/js/super-admin/user-details.js', 'resources/js/super-admin/edit-user.js', 'resources/js/super-admin/deactivate-user.js', 'resources/js/super-admin/success-modal.js', 'resources/js/super-admin/activity-log-modal.js'])
 @endsection

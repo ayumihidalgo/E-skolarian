@@ -72,7 +72,10 @@ class SettingsController extends Controller
         $this->logActivity(
             'Updated',
             'Profile Picture',
-            "{$user->username} updated their profile picture."
+            ($user->role === 'admin' ? 
+                "{$user->role_name} updated their profile picture." : 
+                "{$user->organization_acronym} updated their profile picture."
+                )
         );
 
         return back()->with('success', 'Your profile picture has been updated successfully.');
@@ -91,7 +94,10 @@ class SettingsController extends Controller
         $this->logActivity(
             'Removed',
             'Profile Picture',
-            "{$user->username} removed their profile picture."
+            ($user->role === 'admin' ? 
+                "{$user->role_name} removed their profile picture." :
+                "{$user->organization_acronym} removed their profile picture."
+            )
         );
         return back()->with('success', 'Your profile picture has been removed successfully.');
     }
@@ -131,7 +137,10 @@ class SettingsController extends Controller
         $this->logActivity(
             'Changed',
             'Password',
-            "{$user->username} changed their password."
+            ($user->role === 'admin' ? 
+                "{$user->role_name} changed their password." : 
+                "{$user->organization_acronym} changed their password."
+                )
         );
         return response()->json(['message' => 'Password changed successfully.']);
     }
