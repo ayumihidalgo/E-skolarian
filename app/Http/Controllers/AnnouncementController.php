@@ -13,15 +13,40 @@ class AnnouncementController extends Controller
         $request->validate([
             'title'   => 'required|string|max:60',
             'content' => 'required|string|max:1000',
+            'audience' => 'required|in:all,custom',
+            'audience_students.*' => 'exists:users,id',
+            'schedule_date' => 'nullable|date',
+            'schedule_time' => 'nullable'
         ]);
 
-        Announcement::create([
-            'user_id' => Auth::id(), // assumes user is authenticated
-            'title'   => $request->title,
-            'content' => $request->content,
-        ]);
+        $announcement = new Announcement();
+        $announcement->title = $request->title;
+        $announcement->content = $request->content;
+        $announcement->user_id = auth()->id();
+        $announcement->audience = $request->audience;
 
-        return redirect()->back()->with('success', 'Announcement posted successfully!');
+        if ($request->audience === 'custom') {
+            $announcement->audience_students = json_encode($request->audience_students);
+        } else {
+            $announcement->audience_students = null;
+        }
+
+        // Save deadline if scheduled
+        if ($request->schedule && $request->schedule_date) {
+            $deadline = $request->schedule_date;
+            if ($request->schedule_time) {
+                $deadline .= ' ' . $request->schedule_time;
+            } else {
+                $deadline .= ' 00:00:00';
+            }
+            $announcement->deadline = $deadline;
+        } else {
+            $announcement->deadline = null;
+        }
+
+        $announcement->save();
+
+        return redirect()->route('admin.dashboard')->with('success', 'Announcement posted!');
     }
 
     public function update(Request $request, $id)
@@ -31,13 +56,37 @@ class AnnouncementController extends Controller
         $request->validate([
             'title' => 'required|string|max:60',
             'content' => 'required|string|max:1000',
+            'audience' => 'required|in:all,custom',
+            'audience_students.*' => 'exists:users,id',
+            'schedule_date' => 'nullable|date',
+            'schedule_time' => 'nullable'
         ]);
 
         $announcement->title = $request->input('title');
         $announcement->content = $request->input('content');
+        $announcement->audience = $request->input('audience');
+
+        if ($request->audience === 'custom') {
+            $announcement->audience_students = json_encode($request->audience_students);
+        } else {
+            $announcement->audience_students = null;
+        }
+
+        // Save deadline if scheduled
+        if ($request->schedule && $request->schedule_date) {
+            $deadline = $request->schedule_date;
+            if ($request->schedule_time) {
+                $deadline .= ' ' . $request->schedule_time;
+            } else {
+                $deadline .= ' 00:00:00';
+            }
+            $announcement->deadline = $deadline;
+        } else {
+            $announcement->deadline = null;
+        }
+
         $announcement->save();
 
-        // Set a specific session message for editing
         return redirect()->back()->with('success', 'Announcement changed successfully!');
     }
 
