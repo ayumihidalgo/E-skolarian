@@ -3,7 +3,7 @@
 <!-- This is the main content area for the super admin dashboard -->
 @include('components.superAdminNavigation')
 
-<div class="max-h-9/10 bg-white bg-opacity-30 p-13">
+<div class="max-h-9/10 bg-white bg-opacity-30 p-4 sm:p-6 md:p-13">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
     </div>
@@ -17,96 +17,122 @@
             Back to Dashboard
         </a>
 </div>
-    <div class = "w-[1375] h-[710] rounded  shadow-lg bg-white p-6">        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-xl font-bold font-[Lexend] text-[#332B2B]">Reports</h2>
+    <div class="w-full max-w-full md:max-w-[1375px] h-auto rounded shadow-lg bg-white p-4 md:p-6">
+        <!-- Header with title and filters -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between mb-4">
+            <h2 class="text-xl font-bold font-[Lexend] text-[#332B2B] mb-4 md:mb-0">Reports</h2>
+            <!-- Filter Controls: stack vertically on mobile/tablet -->
+            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
+            <!-- Month Filter -->
+            <div class="flex items-center">
 
-            <!-- Separate Month and Year Filter Dropdowns -->
-            <div class="flex items-center gap-4">                <div class="flex items-center">
-                    <label for="monthFilter" class="mr-2 text-sm font-medium text-gray-700 font-[Lexend]">Month:</label>
-                    <select id="monthFilter" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#7A1212] font-[Lexend]">
-                        <option value="">All Months</option>
-                        @php
-                            $months = [
-                                '01' => 'January', '02' => 'February', '03' => 'March', '04' => 'April',
-                                '05' => 'May', '06' => 'June', '07' => 'July', '08' => 'August',
-                                '09' => 'September', '10' => 'October', '11' => 'November', '12' => 'December'
-                            ];
-                            $currentYear = date('Y');
-                            $currentMonth = date('n'); // Current month without leading zeros
-                        @endphp
-                        @foreach($months as $value => $name)
-                            @php
-                                $monthNumber = (int)$value;
-                                // Show month if current year hasn't started yet (2025+) or if it's current/past month in current year
-                                $showMonth = $currentYear < 2025 || $monthNumber <= $currentMonth;
-                            @endphp
-                            @if($showMonth)
-                                <option value="{{ $value }}">{{ $name }}</option>
-                            @endif
-                        @endforeach
-                    </select>
-                </div><div class="flex items-center">
-                    <label for="yearFilter" class="mr-2 text-sm font-medium text-gray-700 font-[Lexend]">Year:</label>
-                    <select id="yearFilter" class="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#7A1212] font-[Lexend]">
-                        <option value="">All Years</option>                        @php
-                            $currentYear = date('Y');
-                            $startYear = 2025;
-                            $endYear = max($currentYear, $startYear); // Only show up to current year, minimum 2025
-                        @endphp
-                        @for ($year = $startYear; $year <= $endYear; $year++)
-                            <option value="{{ $year }}">{{ $year }}</option>
-                        @endfor
-                    </select>
+                <div class="flex items-center ">
+                <button id="prevMonth" class="px-2 py-2 focus:outline-none">
+                   <svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11.1667 21.4167L0.75 11L11.1667 0.583374V21.4167Z" fill="#1D1B20"/>
+</svg>
+
+                </button>
+                <select id="monthFilter"
+  class="block w-[160px] text-[24px] focus:outline-none focus:ring-2 focus:ring-[#7A1212] font-[Lexend] font-bold appearance-none text-center">
+
+
+                    <option value="">All Months</option>
+                    @php
+                    $months = [
+                        '01' => 'January', '02' => 'February', '03' => 'March', '04' => 'April',
+                        '05' => 'May', '06' => 'June', '07' => 'July', '08' => 'August',
+                        '09' => 'September', '10' => 'October', '11' => 'November', '12' => 'December'
+                    ];
+                    @endphp
+                    @foreach($months as $value => $name)
+                    <option value="{{ $value }}">{{ $name }}</option>
+                    @endforeach
+                </select>
+                <button id="nextMonth" class="px-2 py-2 focus:outline-none">
+                   <svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0.833374 21.4167L11.25 11L0.833374 0.583374V21.4167Z" fill="#1D1B20"/>
+</svg>
+
+                </button>
                 </div>
             </div>
+            <!-- Year Filter -->
+            <div class="flex items-center">
+                <div class="flex items-center">
+                <button id="prevYear" class="px-2 py-2 focus:outline-none">
+                     <svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M11.1667 21.4167L0.75 11L11.1667 0.583374V21.4167Z" fill="#1D1B20"/>
+</svg>
+                </button>
+                <select id="yearFilter" class="block w-[160px] text-[24px] focus:outline-none focus:ring-2 focus:ring-[#7A1212] font-[Lexend] font-bold appearance-none text-center"
+                    <option value="">All Years</option>
+                    @php
+                    $currentYear = date('Y');
+                    $startYear = 2025;
+                    $endYear = max($currentYear, $startYear);
+                    @endphp
+                    @for ($year = $startYear; $year <= $endYear; $year++)
+                    <option value="{{ $year }}">{{ $year }}</option>
+                    @endfor
+                </select>
+                <button id="nextYear" class="px-2 py-2 focus:outline-none">
+                     <svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0.833374 21.4167L11.25 11L0.833374 0.583374V21.4167Z" fill="#1D1B20"/>
+</svg>
+                </button>
+                </div>
+            </div>
+            </div>
         </div>
+        <!-- Reports Table Container with vertical scrollbar -->
+        <div class="overflow-x-auto rounded-md mx-auto">
+            <!-- Reports Table -->
+            <div class="overflow-y-scroll rounded-[15px] max-h-[700px]">
+                <table class="min-w-full  text-white rounded-t-[15px] table-fixed">
+                    <thead>
+                        <tr>
+                            <th class="w-[15%] px-4 py-3 text-left font-['Manrope'] text-[15px] font-bold">
+                                <div class="flex items-center">
+                                    <span class="whitespace-nowrap text-black">Timestamp</span>
+                                    <div class="flex flex-col ml-2">
 
-        <!-- Reports Table -->
-        <div class="overflow-hidden rounded-[15px] h-[700px]" >
-            <table class="min-w-full  text-white rounded-t-[15px] table-fixed">
-                <thead>
-                    <tr>
-                        <th class="w-[15%] px-4 py-3 text-left font-['Manrope'] text-[15px] font-bold">
-                            <div class="flex items-center">
-                                <span class="whitespace-nowrap text-black">Timestamp</span>
-                                <div class="flex flex-col ml-2">
-
+                                    </div>
                                 </div>
-                            </div>
-                        </th>
-                        <th class="w-[15%] px-4 py-3 text-left font-['Manrope'] text-[15px] font-bold">
-                            <div class="flex items-center">
-                                <span class="whitespace-nowrap text-black">Report ID</span>
-                                <div class="flex flex-col ml-2">
+                            </th>
+                            <th class="w-[15%] px-4 py-3 text-left font-['Manrope'] text-[15px] font-bold">
+                                <div class="flex items-center">
+                                    <span class="whitespace-nowrap text-black">Report ID</span>
+                                    <div class="flex flex-col ml-2">
 
+                                    </div>
                                 </div>
-                            </div>
-                        </th>
-                        <th class="w-[25%] px-4 py-3 text-left font-['Manrope'] text-[15px]  text-black font-bold ">
-                            <div class="flex items-center">
-                                <span class="whitespace-nowrap">Email</span>
-                                <div class="flex flex-col ml-2">
+                            </th>
+                            <th class="w-[25%] px-4 py-3 text-left font-['Manrope'] text-[15px]  text-black font-bold ">
+                                <div class="flex items-center">
+                                    <span class="whitespace-nowrap">Email</span>
+                                    <div class="flex flex-col ml-2">
 
+                                    </div>
                                 </div>
-                            </div>
-                        </th>
-                        <th class="w-[45%] px-4 py-3 text-left font-['Manrope'] text-[15px]  text-black font-bold">
-                            <span class="whitespace-nowrap">Problem Description</span>
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-[#D9D9D9]/70">
-                    @forelse($reports as $report)
-                        <tr class="cursor-pointer hover:bg-gray-50"
-                            onclick="openReportModal({{
-                                json_encode([
-                                    'id' => $report->id,
-                                    'created_at' => $report->created_at,
-                                    'email' => $report->email,
-                                    'description' => $report->description,
-                                    // Always use asset('storage/...')
-                                    'attachment' => $report->screenshot_path ? asset('storage/' . $report->screenshot_path) : ''
-                                ])
+                            </th>
+                            <th class="w-[45%] px-4 py-3 text-left font-['Manrope'] text-[15px]  text-black font-bold">
+                                <span class="whitespace-nowrap">Problem Description</span>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#D9D9D9]/70">
+                        @forelse($reports as $report)
+                            <tr class="cursor-pointer hover:bg-gray-50"
+                                onclick="openReportModal({{
+                                    json_encode([
+                                        'id' => $report->id,
+                                        'created_at' => $report->created_at,
+                                        'email' => $report->email,
+                                        'description' => $report->description,
+                                        // Use Storage::url() for correct file path
+                                        'attachment' => $report->screenshot_path ? Storage::url($report->screenshot_path) : ''
+                                    ])
                             }})">
                             <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
                                 {{ $report->created_at->format('Y-m-d') }}<br>
@@ -133,56 +159,56 @@
                             </td>
                         </tr>
                     @endforelse
-                </tbody>
-            </table>
-        </div>
-          <!-- Pagination -->
-        @if($reports->hasPages())
-            <div class="mt-6 flex justify-center">
-            <nav role="navigation" aria-label="Pagination Navigation" class="flex items-center space-x-2">
-            {{-- Previous Page Link --}}
-            @if ($reports->onFirstPage())
-            <span class="px-3 py-1  text-black rounded cursor-not-allowed">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-            </span>
-            @else
-            <a href="{{ $reports->previousPageUrl() }}" class="px-3 py-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-            </a>
-            @endif
-
-            {{-- Pagination Elements --}}
-            @foreach ($reports->getUrlRange(1, $reports->lastPage()) as $page => $url)
-            @if ($page == $reports->currentPage())
-                <span class="px-3 py-1 text-white bg-[#7A1212] rounded">{{ $page }}</span>
-            @else
-                <a href="{{ $url }}" class="px-3 py-1 text-[#7A1212] bg-white border border-[#7A1212] rounded hover:bg-[#f5f5f5]">{{ $page }}</a>
-            @endif
-            @endforeach
-
-            {{-- Next Page Link --}}
-            @if ($reports->hasMorePages())
-            <a href="{{ $reports->nextPageUrl() }}" class="px-3 py-1 text-black ">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-            </a>
-            @else
-            <span class="px-3 py-1 rounded cursor-not-allowed">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-            </span>
-            @endif
-            </nav>
+                    </tbody>
+                </table>
             </div>
+              <!-- Pagination always visible -->
+                <div class="mt-6 flex justify-center">
+                <nav role="navigation" aria-label="Pagination Navigation" class="flex items-center space-x-2">
+                {{-- Previous Page Link --}}
+                @if ($reports->onFirstPage())
+                <span class="px-3 py-1  text-black rounded cursor-not-allowed">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </span>
+                @else
+                <a href="{{ $reports->previousPageUrl() }}" class="px-3 py-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </a>
+                @endif
 
-        @endif
+                {{-- Pagination Elements --}}
+                @foreach ($reports->getUrlRange(1, $reports->lastPage()) as $page => $url)
+                @if ($page == $reports->currentPage())
+                    <span class="px-3 py-1 text-white bg-[#7A1212] rounded">{{ $page }}</span>
+                @else
+                    <a href="{{ $url }}" class="px-3 py-1 text-[#7A1212] bg-white border border-[#7A1212] rounded hover:bg-[#f5f5f5]">{{ $page }}</a>
+                @endif
+                @endforeach
 
+                {{-- Next Page Link --}}
+                @if ($reports->hasMorePages())
+                <a href="{{ $reports->nextPageUrl() }}" class="px-3 py-1 text-black ">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+                @else
+                <span class="px-3 py-1 rounded cursor-not-allowed">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </span>
+                @endif
+                </nav>
+                </div>
+
+
+
+        </div>
     </div>
 </div>
 
@@ -348,6 +374,48 @@ document.addEventListener('click', function(event) {
     if (event.target === modal) {
         closeReportModal();
     }
+});
+
+
+
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const monthFilter = document.getElementById('monthFilter');
+    const yearFilter = document.getElementById('yearFilter');
+    const prevMonth = document.getElementById('prevMonth');
+    const nextMonth = document.getElementById('nextMonth');
+    const prevYear = document.getElementById('prevYear');
+    const nextYear = document.getElementById('nextYear');
+
+    prevMonth.addEventListener('click', function() {
+        if (monthFilter.selectedIndex > 0) {
+            monthFilter.selectedIndex--;
+            monthFilter.dispatchEvent(new Event('change'));
+        }
+    });
+
+    nextMonth.addEventListener('click', function() {
+        if (monthFilter.selectedIndex < monthFilter.options.length - 1) {
+            monthFilter.selectedIndex++;
+            monthFilter.dispatchEvent(new Event('change'));
+        }
+    });
+
+    prevYear.addEventListener('click', function() {
+        if (yearFilter.selectedIndex > 0) {
+            yearFilter.selectedIndex--;
+            yearFilter.dispatchEvent(new Event('change'));
+        }
+    });
+
+    nextYear.addEventListener('click', function() {
+        if (yearFilter.selectedIndex < yearFilter.options.length - 1) {
+            yearFilter.selectedIndex++;
+            yearFilter.dispatchEvent(new Event('change'));
+        }
+    });
 });
 </script>
 
