@@ -4,15 +4,15 @@
     <!-- This is the main content area for the super admin dashboard -->
     @include('components.superAdminNavigation') <!-- Include the super admin navigation component -->
     <!-- Super admin word under the nav var -->
-    <div class="max-h-9/10 bg-white bg-opacity-30 px-13 py-6">
+    <div class="max-h-screen bg-white bg-opacity-30 px-15 py-8">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-2xl font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
+            <h1 class="text-[35px] font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
         </div>
 
         <!-- Add User Button -->
         <div class="mb-4 flex justify-between items-center">
             <button id="addUserBtn"
-                class="bg-[#7A1212] hover:bg-red-800 text-white px-4 py-2 rounded-[16px] font-semibold font-[Lexend] inline-flex items-center cursor-pointer">
+                class="bg-[#7A1212] hover:bg-red-800 text-white text-[20px] px-4 py-2 rounded-[16px] font-semibold font-[Lexend] inline-flex items-center cursor-pointer">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 20 20" fill="none"
                     stroke="currentColor" class="mr-2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M10 5v10m5-5H5" stroke-width="2" />
@@ -21,15 +21,15 @@
             </button>
             <div class="flex items-center gap-3">
                 <a href="{{ route('deactivated.accounts') }}"
-                    class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white cursor-pointer">
+                    class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-[18px] font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white cursor-pointer">
                     DEACTIVATED ACCOUNTS
                 </a>
 
                 <!-- Activity Log Button -->
                 <button id="activityLogBtn"
-                    class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-sm font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white cursor-pointer">
+                    class="group flex items-center bg-white border border-[#4D0F0F] px-3 py-2 rounded-[10px] shadow-sm text-[18px] font-bold text-[#4D0F0F] hover:bg-red-800 hover:text-white cursor-pointer">
                     ACTIVITY LOG
-                    <svg width="15" height="15" viewBox="0 0 15 15" fill="currentColor"
+                    <svg width="20" height="20" viewBox="0 0 15 15" fill="currentColor"
                         xmlns="http://www.w3.org/2000/svg"
                         class="ml-2 transition-colors duration-200 group-hover:fill-current">
                         <g id="radix-icons:activity-log">
@@ -42,7 +42,7 @@
         </div>
 
         <!-- Table Header and Container -->
-        <div class="overflow-hidden rounded-[25px] shadow bg-[#D9D9D9]" style="width: 100%; height: 400px; flex-shrink:0;">
+        <div class="overflow-hidden rounded-[25px] shadow bg-[#D9D9D9]" style="width: 100%; height: 540px; flex-shrink:0;">
             <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
                 <thead>
                     <tr>
@@ -50,9 +50,9 @@
                         <th class="w-[10%] px-6 py-3">
                             <!-- Empty header for profile picture -->
                         </th>
-                        <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] text-[17px] font-bold">
+                        <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] text-[25px] font-bold">
                             <div class="flex items-center">
-                                <span class="whitespace-nowrap">Username</span>
+                                <span class="whitespace-nowrap">Name</span>
                                 <div class="flex flex-col ml-2">
                                     <a href="{{ request()->fullUrlWithQuery(['sort' => 'username', 'direction' => 'asc']) }}"
                                         class="focus:outline-none hover:bg-gray-100/20 rounded-sm p-0.5 {{ $sortField === 'username' && $sortDirection === 'asc' ? 'text-yellow-300' : '' }}">
@@ -71,7 +71,7 @@
                                 </div>
                             </div>
                         </th>
-                        <th class="w-[30%] px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
+                        <th class="w-[30%] px-6 py-3 text-center font-['Manrope'] text-[25px] font-bold">
                             <div class="flex items-center justify-center">
                                 <span class="whitespace-nowrap">Role</span>
                                 <div class="flex flex-col ml-2">
@@ -92,7 +92,7 @@
                                 </div>
                             </div>
                         </th>
-                        <th class="w-[30%] px-6 py-3 text-right pr-40 font-['Manrope'] text-[17px] font-bold">
+                        <th class="w-[30%] px-6 py-3 text-right pr-40 font-['Manrope'] text-[25px] font-bold">
                             <div class="flex items-center justify-end">
                                 <span class="whitespace-nowrap">Creation Date</span>
                                 <div class="flex flex-col ml-2">
@@ -118,12 +118,12 @@
                 <!-- For fetching table contents from database -->
                 <tbody class="divide-y divide-[#7A1212]/70">
                     @forelse ($users as $user)
-                        <tr class="border-y-[0.1px] border-[#7A1212] bg-[#d9c698] hover:bg-[#DAA520] transition duration-300 cursor-pointer user-details-row"
+                        <tr class="border-y-[0.1px] border-[#7A1212] bg-[#d9c698] hover:bg-[#DAA520] transition duration-300 cursor-pointer user-details-row h-20"
                             data-user="{{ $user->toJson() }}">
                             <!-- Profile Picture Cell -->
                             <td class="w-[10%] px-6 py-4 pl-15">
                                 <div class="flex justify-center">
-                                    <div class="w-6 h-6 rounded-full overflow-hidden bg-gray-200">
+                                    <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
                                         @if (isset($userProfilePics) && $userProfilePics->has($user->id) && $userProfilePics[$user->id])
                                             <img src="{{ asset('storage/' . $userProfilePics[$user->id]) }}"
                                                 alt="Profile" class="w-full h-full object-cover">
@@ -138,14 +138,18 @@
                             <!-- Username Cell -->
                             <td class="w-[30%] px-6 py-4 text-left pl-4">
                                 <div
-                                    class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[17px] text-black text-semibold">
+                                    class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[20px] text-black text-semibold">
                                     {{ $user->role === 'admin' ? $user->role_name : $user->username }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
-                                {{ $user-> role === "admin" ? $user->role : $user->role_name }}
+                            <td class="px-6 py-4 text-center text-[Lexend] text-[20px] text-black text-semibold">
+                                @if($user->role === "admin")
+                                    {{ ucfirst($user->role) }}
+                                @else
+                                    {{ $user->role_name }}
+                                @endif
                             </td>
-                            <td class="px-6 py-4 text-right pr-45 text-[Lexend] text-[17px] text-black text-semibold">
+                            <td class="px-6 py-4 text-right pr-45 text-[Lexend] text-[20px] text-black text-semibold">
                                 {{ $user->created_at->format('F j, Y') }}
                             </td>
 
@@ -158,14 +162,14 @@
             @if ($users->isEmpty())
                 <div class="bg-[#D9D9D9] h-[480px] flex-grow flex items-center justify-center text-gray-600 rounded-b-[25px] px-6"
                     style="height: 100%;">
-                    <span class="font-['Manrope'] text-[17px] text-[#625B5BB2]">No added user.</span>
+                    <span class="font-['Manrope'] text-[20px] text-[#625B5BB2]">No added user.</span>
                 </div>
             @endif
         </div>
     </div>
 
     <!-- Pagination controls -->
-    <div class="mt-4 flex justify-center">
+    <div class="flex justify-center bg-white py-4">
         <nav>
             <ul class="inline-flex items-center space-x-2">
                 <li>
