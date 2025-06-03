@@ -27,6 +27,7 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\ProblemReportController;
 use App\Http\Controllers\StudentDashboardController;
+use Illuminate\Support\Facades\Auth;
 
 
 // Redirect /login to landing page
@@ -108,7 +109,7 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
     Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
         ->name('super-admin.reactivate-user')
         ->middleware('auth');
-        
+
          // Super Admin Reports
     Route::get('/super-admin/reports', function() {
         return view('super-admin.super-admin-component.reports');
@@ -395,3 +396,10 @@ Route::get('/loading', function () {
 Route::get('/login', function () {
     return redirect()->route('landing');
 })->name('login');
+
+Route::post('/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/');
+})->name('logout');

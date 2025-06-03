@@ -139,7 +139,7 @@
             </button>
         </div>
     </div>
-</div>  
+</div>
 <!-- Privacy Policy Modal -->
 <div id="privacyModal" class="fixed inset-0 bg-black/60 backdrop-blur-[3px] items-center justify-center z-50 hidden">
     <div

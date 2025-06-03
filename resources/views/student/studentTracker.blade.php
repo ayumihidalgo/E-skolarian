@@ -11,7 +11,6 @@
 @section('content')
     @include('components.studentSideBarComponent')
     <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
-        @include('components.studentNavBarComponent')
         <div class="flex-grow ">
             <div class="p-6 ">
                 @include('student.components.titleSubmittedDocuments')
