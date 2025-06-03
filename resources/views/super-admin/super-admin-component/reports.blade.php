@@ -25,7 +25,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center gap-2">
             <!-- Month Filter -->
             <div class="flex items-center">
-
+             
                 <div class="flex items-center ">
                 <button id="prevMonth" class="px-2 py-2 focus:outline-none">
                    <svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -96,7 +96,7 @@
                                 <div class="flex items-center">
                                     <span class="whitespace-nowrap text-black">Timestamp</span>
                                     <div class="flex flex-col ml-2">
-
+                                       
                                     </div>
                                 </div>
                             </th>
@@ -104,7 +104,7 @@
                                 <div class="flex items-center">
                                     <span class="whitespace-nowrap text-black">Report ID</span>
                                     <div class="flex flex-col ml-2">
-
+                                      
                                     </div>
                                 </div>
                             </th>
@@ -112,7 +112,7 @@
                                 <div class="flex items-center">
                                     <span class="whitespace-nowrap">Email</span>
                                     <div class="flex flex-col ml-2">
-
+                                     
                                     </div>
                                 </div>
                             </th>
@@ -123,8 +123,9 @@
                     </thead>
                     <tbody class="divide-y divide-[#D9D9D9]/70">
                         @forelse($reports as $report)
-                            <tr class="cursor-pointer hover:bg-gray-50"
-                                onclick="openReportModal({{
+                            <tr class="cursor-pointer hover:bg-gray-50" 
+                                onclick="openReportModal({{ 
+ 
                                     json_encode([
                                         'id' => $report->id,
                                         'created_at' => $report->created_at,
@@ -132,7 +133,7 @@
                                         'description' => $report->description,
                                         // Use Storage::url() for correct file path
                                         'attachment' => $report->screenshot_path ? Storage::url($report->screenshot_path) : ''
-                                    ])
+                                    ]) 
                             }})">
                             <td class="px-4 py-3 text-[13px] text-black font-[Lexend]">
                                 {{ $report->created_at->format('Y-m-d') }}<br>
@@ -206,8 +207,9 @@
                 </nav>
                 </div>
 
+            
 
-
+           
         </div>
     </div>
 </div>

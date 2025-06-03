@@ -16,10 +16,15 @@
                     </svg>
                     Back to Dashboard
                 </a>
-                <h1 class="text-3xl font-bold text-[#7A1212] font-[Lexend]">Activity Log</h1>
             </div>
+        </div>
 
-            <!-- Header Actions -->
+        <!-- Activity Table -->
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Table Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-3xl font-bold text-[#161616] font-[Lexend]">Activity Log</h2>
+                <!-- Header Actions -->
             <div class="flex items-center space-x-3">
                 <!-- Search Box -->
                 <div class="relative">
@@ -35,7 +40,7 @@
 
                 <!-- Filter Button -->
                 <button
-                    class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-lg font-[Lexend] inline-flex items-center">
+                    class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-2 py-1 rounded-lg font-[Lexend] inline-flex items-center">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -45,29 +50,22 @@
 
                 <!-- Export Button -->
                 <button
-                    class="bg-[#7A1212] hover:bg-red-800 text-white px-4 py-2 rounded-lg font-[Lexend] inline-flex items-center">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    class="bg-[#4D0F0F] px-2 py-1 rounded-[8px] text-white font-[Lexend] hover:bg-red-800 transition duration-200 flex items-center cursor-pointer">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Export
+                    Generate Report
                 </button>
             </div>
-        </div>
-
-        <!-- Activity Table -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <!-- Table Header -->
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h2 class="text-xl font-semibold text-gray-800 font-[Lexend]">Recent Activities</h2>
-                <span class="text-sm text-gray-500 font-[Lexend]">
+                <!-- <span class="text-sm text-gray-500 font-[Lexend]">
                     Last updated:
                     @if ($activities->count())
                         {{ \Carbon\Carbon::parse($activities->first()->created_at)->format('F j, Y') }}
                     @else
                         N/A
                     @endif
-                </span>
+                </span> -->
             </div>
 
             <!-- Table Content -->
@@ -163,25 +161,32 @@
             </div>
 
             <!-- Pagination -->
-            <div class="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                <div class="text-sm text-gray-700 font-[Lexend]">
-                    Showing <span class="font-medium">1</span> to <span class="font-medium">5</span> of <span
-                        class="font-medium">5</span> activities
-                </div>
-                <div class="flex space-x-2">
-                    <button
-                        class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md cursor-not-allowed opacity-50 font-[Lexend]">
-                        Previous
-                    </button>
-                    <button
-                        class="px-3 py-2 text-sm font-medium text-white bg-[#7A1212] border border-transparent rounded-md font-[Lexend]">
-                        1
-                    </button>
-                    <button
-                        class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md cursor-not-allowed opacity-50 font-[Lexend]">
-                        Next
-                    </button>
-                </div>
+            <div class="mt-4 flex justify-center">
+                <nav>
+                    <ul class="inline-flex items-center space-x-2">
+                        <li>
+                            <a href="{{ $activities->url(1) }}"
+                                class="pagination-btn-first px-3 py-1 rounded-lg {{ $activities->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
+                                < </a>
+                        </li>
+
+                        @for ($i = 1; $i <= $activities->lastPage(); $i++)
+                            <li>
+                                <a href="{{ $activities->url($i) }}"
+                                    class="pagination-btn px-3 py-1 rounded-lg {{ $activities->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
+                                    {{ $i }}
+                                </a>
+                            </li>
+                        @endfor
+
+                        <li>
+                            <a href="{{ $activities->url($activities->lastPage()) }}"
+                                class="pagination-btn-last px-3 py-1 rounded-lg {{ $activities->currentPage() == $activities->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
+                                >
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
             </div>
         </div>
     </div>
