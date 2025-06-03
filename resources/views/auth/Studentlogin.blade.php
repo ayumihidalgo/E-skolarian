@@ -422,7 +422,7 @@
             @csrf
             <div class="mb-7">
                 <label class="pl-[9px] block font-semibold mb-1">PUP Webmail<span class="text-red-600">*</span></label>
-                <input id="emailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
+                <input id="webmailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
                 <p id="webmailLengthWarning" class="text-red-600 mt-1 hidden">*Webmail must not exceed 50 characters.</p>
             </div>
 
@@ -790,6 +790,20 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     }
 
+    const webmailInput = document.getElementById('webmailInput');
+
+     // Prevent spaces in email
+    webmailInput.addEventListener('keydown', function (e) {
+        if (e.key === ' ') e.preventDefault();
+        });
+
+    webmailInput.addEventListener('paste', function (e) {
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        if (/\s/.test(pastedText)) {
+            e.preventDefault();
+            alert('Spaces are not allowed in the email address.');
+        }
+    });
     // Update description counter
     const descriptionInput = document.getElementById('descriptionInput');
     const descCounter = document.getElementById('descCounter');
