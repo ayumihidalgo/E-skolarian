@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Events\DocumentStatusUpdated;
+use App\Models\DocumentTimeline;
 
 class DocumentReviewController extends Controller
 {
@@ -36,11 +37,8 @@ class DocumentReviewController extends Controller
         $documentsQuery = SubmittedDocument::with(['user'])
             ->select('submitted_documents.*')
             ->where(function($query) use ($user) {
-                // Get documents assigned to this admin or forwarded by this admin
-                $query->where('received_by', $user->id)
-                    ->orWhereHas('documentForwards', function($q) use ($user) {
-                        $q->where('forwarded_by', $user->id);
-                    });
+                // Get documents assigned to this admin
+                $query->where('received_by', $user->id);
             })
             ->addSelect(DB::raw("
                 CASE 
@@ -199,12 +197,6 @@ class DocumentReviewController extends Controller
         return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType', 'organizations'));
     }
 
-    /**
-     * Get the details of a specific document
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getDetails($id)
     {
         $user = Auth::user();
@@ -215,40 +207,36 @@ class DocumentReviewController extends Controller
             'reviews.reviewer',
             'documentVersions' => function($query) {
                 $query->orderBy('version', 'desc');
-            },
-            'documentForwards' => function($query) use ($user) {
-                $query->where('forwarded_by', $user->id)
-                    ->orWhere('forwarded_to', $user->id);
             }
         ])
         ->where(function($query) use ($user) {
-            $query->where('received_by', $user->id)
-                ->orWhereHas('documentForwards', function($q) use ($user) {
-                    $q->where('forwarded_by', $user->id);
-                });
+            $query->where('received_by', $user->id);
         })
         ->findOrFail($id);
-            
+        
         // Determine if user is current receiver (for UI permission control)
         $isCurrentReceiver = $document->received_by == $user->id;
-        $forwardInfo = null;
-
-        // If not current receiver, get forwarding details
-        if (!$isCurrentReceiver) {
-            $forwardRecord = $document->documentForwards()
-                ->where('forwarded_by', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->first();
-                
-            if ($forwardRecord) {
-                $receiverUser = User::find($forwardRecord->forwarded_to);
-                $forwardInfo = [
-                    'forwarded_to' => $receiverUser ? $receiverUser->username : 'Unknown Admin',
-                    'forwarded_at' => $forwardRecord->created_at,
-                    'message' => $forwardRecord->message
+        
+        // Get timeline data from document_timeline table
+        $timeline = DocumentTimeline::with(['user', 'forwardedToUser'])
+            ->where('document_id', $id)
+            ->orderBy('created_at')
+            ->get()
+            ->map(function($entry) {
+                return [
+                    'id' => $entry->id,
+                    'action_type' => $entry->action_type,
+                    'status' => $entry->status,
+                    'message' => $entry->message,
+                    'user_id' => $entry->user_id,
+                    'user_name' => $entry->user->username ?? 'Unknown',
+                    'forwarded_to' => $entry->forwarded_to,
+                    'forwarded_to_name' => $entry->forwardedToUser->username ?? null,
+                    'created_at' => $entry->created_at,
+                    'updated_at' => $entry->updated_at,
+                    'user_role' => $entry->user->role_name ?? 'Unknown'
                 ];
-            }
-        }
+            });
             
         // Transform document for the view
         $documentData = [
@@ -269,8 +257,8 @@ class DocumentReviewController extends Controller
             ] : null,
             'has_decision' => $document->reviews()->whereIn('status', ['approved', 'rejected', 'resubmission'])->exists(),
             'is_current_receiver' => $isCurrentReceiver,
-            'forward_info' => $forwardInfo,
             'reviews' => $document->reviews->map(function($review) {
+                // Return formatted review data
                 return [
                     'reviewer_name' => $review->reviewer ? $review->reviewer->username : 'Unknown',
                     'status' => $review->status,
@@ -279,6 +267,7 @@ class DocumentReviewController extends Controller
                     'updated_at' => $review->updated_at
                 ];
             }),
+            'timeline' => $timeline, // Add timeline data to the response
             'attachments' => []
         ];
 
@@ -307,14 +296,7 @@ class DocumentReviewController extends Controller
         
         return response()->json($documentData);
     }
-    
 
-    /**
-     * Mark a document as opened/reviewed
-     *
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function markAsOpened($id)
     {
         try {
@@ -344,12 +326,22 @@ class DocumentReviewController extends Controller
                     
                 // If no review exists, create one with "Under Review" status
                 if (!$existingReview) {
-                    Review::create([
+                    $review = Review::create([
                         'document_id' => $id,
                         'reviewed_by' => $user->id,
                         'status' => 'Under Review',
                         'created_at' => now(),
                         'updated_at' => now()
+                    ]);
+                    
+                    // Add this to the timeline
+                    DocumentTimeline::create([
+                        'document_id' => $id,
+                        'user_id' => $user->id,
+                        'action_type' => 'review',
+                        'status' => 'under_review',
+                        'message' => 'Document opened for review',
+                        'related_review_id' => $review->id
                     ]);
                 }
             }
@@ -377,28 +369,22 @@ class DocumentReviewController extends Controller
             $document->status = 'Approved';
             $document->save();
             
-            // Dispatch event for notification
-            // Make sure the event is constructed with the correct parameters as defined in your event class
-            event(new DocumentStatusUpdated($document));
-           
             // Find the existing review and update it
-            $existingReview = DB::table('reviews')
-                ->where('document_id', $id)
+            $existingReview = Review::where('document_id', $id)
                 ->where('reviewed_by', Auth::id())
                 ->first();
                 
             if ($existingReview) {
                 // Update the existing review
-                DB::table('reviews')
-                    ->where('id', $existingReview->id)
-                    ->update([
-                        'status' => 'Approved',
-                        'message' => $request->input('message', 'Document approved'),
-                        'updated_at' => now()
-                    ]);
+                $existingReview->status = 'Approved';
+                $existingReview->message = $request->input('message', 'Document approved');
+                $existingReview->updated_at = now();
+                $existingReview->save();
+                
+                $reviewId = $existingReview->id;
             } else {
                 // Create a new review
-                DB::table('reviews')->insert([
+                $review = Review::create([
                     'document_id' => $id,
                     'reviewed_by' => Auth::id(),
                     'status' => 'Approved',
@@ -406,102 +392,27 @@ class DocumentReviewController extends Controller
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
+                
+                $reviewId = $review->id;
             }
             
-            // Handle forwarding logic if needed
-            if ($request->has('forward_to')) {
-                // Update the document's received_by field to the new admin
-                $document->received_by = $request->input('forward_to');
-                $document->save();
-                
-                // Create a record of the forwarding
-                DB::table('document_forwards')->insert([
-                    'document_id' => $id,
-                    'forwarded_by' => Auth::id(),
-                    'forwarded_to' => $request->input('forward_to'),
-                    'message' => $request->input('forward_message', ''),
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
-            }
+            // Add to timeline - ONLY create the timeline entry here, not in the event
+            DocumentTimeline::create([
+                'document_id' => $id,
+                'user_id' => Auth::id(),
+                'action_type' => 'approve',
+                'status' => 'approved',
+                'message' => $request->input('message', 'Document approved'),
+                'related_review_id' => $reviewId
+            ]);
+            
+            // Dispatch event for notification - AFTER creating the timeline entry
+            // This event should NOT create another timeline entry
+            event(new DocumentStatusUpdated($document));
             
             return response()->json([
                 'success' => true,
                 'message' => 'Document approved successfully'
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Get list of admins for forwarding
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getAdmins()
-    {
-        $admins = User::where('role', 'admin')
-            ->where('id', '!=', Auth::id()) // Exclude current user
-            ->where('active', true) // Only active users
-            ->select('id', 'username', 'email')
-            ->get();
-        
-        return response()->json($admins);
-    }
-
-    /**
-     * Reject a document
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function rejectDocument(Request $request, $id)
-    {
-        try {
-            $document = SubmittedDocument::where('received_by', Auth::id())
-                ->findOrFail($id);
-            
-            // Update document status
-            $document->status = 'Rejected';
-            $document->save();
-
-            event(new \App\Events\DocumentStatusUpdated($document));
-            
-            // Find the existing review and update it
-            $existingReview = DB::table('reviews')
-                ->where('document_id', $id)
-                ->where('reviewed_by', Auth::id())
-                ->first();
-                
-            if ($existingReview) {
-                // Update the existing review
-                DB::table('reviews')
-                    ->where('id', $existingReview->id)
-                    ->update([
-                        'status' => 'Rejected',
-                        'message' => $request->input('message', 'Document rejected'),
-                        'updated_at' => now()
-                    ]);
-            } else {
-                // Create a new review
-                DB::table('reviews')->insert([
-                    'document_id' => $id,
-                    'reviewed_by' => Auth::id(),
-                    'status' => 'Rejected',
-                    'message' => $request->input('message', 'Document rejected'),
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
-            }
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Document rejected successfully'
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -525,38 +436,47 @@ class DocumentReviewController extends Controller
                 ->findOrFail($id);
             
             // Update document status
-            $document->status = 'Resubmit';
+            $document->status = 'Returned';
             $document->save();
 
-
-            event(new \App\Events\DocumentStatusUpdated($document));
-            
-            // Find the existing review and update it
-            $existingReview = DB::table('reviews')
-                ->where('document_id', $id)
+            // Create or update review entry
+            $existingReview = Review::where('document_id', $id)
                 ->where('reviewed_by', Auth::id())
                 ->first();
                 
+            $reviewId = null;    
             if ($existingReview) {
                 // Update the existing review
-                DB::table('reviews')
-                    ->where('id', $existingReview->id)
-                    ->update([
-                        'status' => 'Resubmit',
-                        'message' => $request->input('message', 'Please resubmit with changes'),
-                        'updated_at' => now()
-                    ]);
+                $existingReview->status = 'Returned';
+                $existingReview->message = $request->input('message', 'Document returned for revision. Please review the feedback and resubmit.');
+                $existingReview->updated_at = now();
+                $existingReview->save();
+                $reviewId = $existingReview->id;
             } else {
                 // Create a new review
-                DB::table('reviews')->insert([
+                $review = Review::create([
                     'document_id' => $id,
                     'reviewed_by' => Auth::id(),
-                    'status' => 'Resubmit',
-                    'message' => $request->input('message', 'Please resubmit with changes'),
+                    'status' => 'Returned',
+                    'message' => $request->input('message', 'Document returned for revision. Please review the feedback and resubmit.'),
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
+                $reviewId = $review->id;
             }
+            
+            // Add to timeline - ONLY create the timeline entry here
+            DocumentTimeline::create([
+                'document_id' => $id,
+                'user_id' => Auth::id(),
+                'action_type' => 'return',
+                'status' => 'returned',
+                'message' => $request->input('message', 'Document returned for revision. Please review the feedback and resubmit.'),
+                'related_review_id' => $reviewId
+            ]);
+            
+            // Dispatch event for notification
+            event(new \App\Events\DocumentStatusUpdated($document));
             
             // Send notification to student if user exists
             if ($document->user_id) {
@@ -566,7 +486,7 @@ class DocumentReviewController extends Controller
                         $student->notify(new \App\Notifications\DocumentResubmissionRequested([
                             'document_id' => $document->id,
                             'document_title' => $document->subject,
-                            'message' => $request->input('message', 'Please resubmit with changes')
+                            'message' => $request->input('message', 'Document returned for revision. Please review the feedback and resubmit.')
                         ]));
                     } catch (\Exception $e) {
                         // Log the error but don't stop the process
@@ -577,101 +497,10 @@ class DocumentReviewController extends Controller
             
             return response()->json([
                 'success' => true,
-                'message' => 'Resubmission requested successfully'
+                'message' => 'Document returned for revision successfully'
             ]);
         } catch (\Exception $e) {
             \Log::error('Document resubmission error: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Forward a document to another admin
-     *
-     * @param \Illuminate\Http\Request $request
-     * @param int $id
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function forwardDocument(Request $request, $id)
-    {
-        try {
-            // Validate request data
-            $request->validate([
-                'forward_to' => 'required|exists:users,id',
-                'message' => 'required|string|max:500',
-            ]);
-
-            $document = SubmittedDocument::where('received_by', Auth::id())
-                ->findOrFail($id);
-            
-            // Get the target admin name for notification purposes
-            $targetAdmin = User::find($request->input('forward_to'));
-            if (!$targetAdmin) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Target administrator not found'
-                ], 404);
-            }
-
-            // Find existing review or create a new one for current admin
-            $review = Review::where('document_id', $id)
-                ->where('reviewed_by', Auth::id())
-                ->first();
-                
-            if ($review) {
-                // Update existing review
-                $review->status = 'Forwarded';
-                $review->message = 'Document forwarded to ' . $targetAdmin->username . ': ' . $request->input('message');
-                $review->updated_at = now();
-                $review->save();
-            } else {
-                // Create a new review record
-                $review = new Review([
-                    'document_id' => $id,
-                    'reviewed_by' => Auth::id(),
-                    'status' => 'Forwarded',
-                    'message' => 'Document forwarded to ' . $targetAdmin->username . ': ' . $request->input('message'),
-                ]);
-                $review->save();
-            }
-
-            // Record the forwarding action
-            $forward = new DocumentForward([
-                'document_id' => $id,
-                'forwarded_by' => Auth::id(),
-                'forwarded_to' => $request->input('forward_to'),
-                'message' => $request->input('message'),
-            ]);
-            $forward->save();
-
-            // ALWAYS create a new "Under Review" entry for the target admin
-            // This creates a consistent timeline entry when document is received
-            $newReview = new Review([
-                'document_id' => $id,
-                'reviewed_by' => $request->input('forward_to'),
-                'status' => 'Under Review',
-                'message' => 'Document received for review',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-            $newReview->save();
-
-            // Update the document's received_by field
-            $document->received_by = $request->input('forward_to');
-            $document->save();
-
-            // Trigger notification for the target admin
-            event(new DocumentStatusUpdated($document));
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Document successfully forwarded to ' . $targetAdmin->username
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Document forwarding error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage()

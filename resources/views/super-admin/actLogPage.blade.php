@@ -3,7 +3,7 @@
 @section('content')
     @include('components.superAdminNavigation')
 
-    <div class="max-h-screen bg-[#F2F4F7] bg-opacity-30 px-10 py-10">
+    <div class="max-h-screen bg-[#F2F4F7] bg-opacity-30 px-10 py-8">
         <!-- Header Section -->
         <div class="flex justify-between items-center mb-6">
             <div class="flex items-center">
@@ -20,7 +20,7 @@
         </div>
 
         <!-- Activity Table -->
-        <div class="bg-white rounded-[25px] shadow-lg overflow-hidden" style= "width: 100%; height: 710px; flex-shrink:0;">
+        <div class="bg-white rounded-[25px] shadow-lg overflow-hidden" style= "width: 100%; height: 725px; flex-shrink:0;">
             <!-- Table Header -->
             <div class="px-8 py-4 flex justify-between items-center">
                 <h2 class="text-[30px] font-bold text-[#161616] font-[Lexend]">ACTIVITY LOG</h2>
@@ -95,7 +95,7 @@
                             <tr class="h-16">
                                 <td class="w-[10%] px-13 py-2 whitespace-nowrap text-l text-[#000000] font-[Lexend]">
                                     <div>{{ \Carbon\Carbon::parse($activity->created_at)->format('F j, Y') }}</div>
-                                    <div class="text-m">
+                                    <div class="text-m text-gray-500">
                                         {{ \Carbon\Carbon::parse($activity->created_at)->format('h:i:s A') }}</div>
                                 </td>
                                 <td class="w-[25%] px-6 py-2 whitespace-nowrap">
@@ -112,12 +112,18 @@
                                             </div>
                                         </div>
                                         <div class="ml-3">
-                                            <div class="text-l font-medium text-gray-900 font-[Lexend] max-w-[450px] truncate">
-                                                @if (in_array($activity->user_role_name, ['Admin', 'Superadmin']))
-                                                    {{ $activity->user_role_name }}
-                                                @else
-                                                    {{ $activity->user_name }}
-                                                @endif
+                                            <div class="text-l font-semibold text-gray-900 font-[Lexend] max-w-[450px] truncate">
+                                                <span class="font-semibold text-[18px] text-black text[Lexend]">
+                                                    @if($activity->user)
+                                                        @if(in_array($activity->user_role_name, ['Admin', 'Superadmin']))
+                                                            {{ $activity->user->role_name }}
+                                                        @else
+                                                            {{ $activity->user->username }}
+                                                        @endif
+                                                    @else
+                                                        Unknown User
+                                                    @endif
+                                                </span>
                                             </div>
                                             <div class="text-l text-gray-500 font-[Lexend] max-w-[450px] truncate">
                                                 {{ $activity->user_role_name }}
@@ -126,7 +132,6 @@
                                     </div>
                                 </td>
                                 <td class="w-[10%] px-6 py-1 whitespace-nowrap">
-
                                     <span
                                         class="inline-flex px-3 py-1 text-l font-semibold bg-gray-100 text-gray-700 rounded-full font-[Lexend]">
                                         {{ strtoupper($activity->action) }}
@@ -162,7 +167,7 @@
             </div>
 
             <!-- Pagination -->
-            <div class="mt-3 flex justify-center mb-3 absolute bottom-10 left-0 w-full p-2 text-center">
+            <div class="mt-4 flex justify-center mb-1 absolute bottom-10 left-0 w-full p-2 text-center">
                 <nav>
                     <ul class="inline-flex items-center space-x-2">
                         <!-- First/Previous Page -->

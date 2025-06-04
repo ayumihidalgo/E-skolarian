@@ -100,7 +100,8 @@ class AdminDocumentController extends Controller
     {
         // Start with a base query
         $query = DB::table('submitted_documents')
-            ->whereNull('archived_at');
+            ->whereNull('archived_at')
+            ->where('status', 'Approved');
         
         // Apply organization filter
         if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
@@ -170,6 +171,7 @@ class AdminDocumentController extends Controller
         try {
             DB::table('submitted_documents')
                 ->whereIn('id', $documentIds)
+                ->where('status', 'Approved')
                 ->update([
                     'archived_at' => now()
                 ]);
