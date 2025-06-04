@@ -14,9 +14,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Events\DocumentStatusUpdated;
 use App\Models\DocumentTimeline;
+use App\LogsActivity;
 
 class DocumentReviewController extends Controller
 {
+    use LogsActivity;
     /**
      * Display the document review page with documents that need admin approval
      *
@@ -362,6 +364,7 @@ class DocumentReviewController extends Controller
     public function approveDocument(Request $request, $id)
     {
         try {
+            $user = Auth::user();
             $document = SubmittedDocument::where('received_by', Auth::id())
                 ->findOrFail($id);
             
@@ -380,7 +383,6 @@ class DocumentReviewController extends Controller
                 $existingReview->message = $request->input('message', 'Document approved');
                 $existingReview->updated_at = now();
                 $existingReview->save();
-                
                 $reviewId = $existingReview->id;
             } else {
                 // Create a new review
@@ -395,6 +397,13 @@ class DocumentReviewController extends Controller
                 
                 $reviewId = $review->id;
             }
+
+            // Log the activity
+            $this->logActivity(
+                'Approved',
+                'Submission #' . $document->id,
+                "{$user->username} approved submission titled '{$document->subject}'."
+            );
             
             // Add to timeline - ONLY create the timeline entry here, not in the event
             DocumentTimeline::create([
@@ -432,6 +441,7 @@ class DocumentReviewController extends Controller
     public function requestResubmission(Request $request, $id)
     {
         try {
+            $user = Auth::user();
             $document = SubmittedDocument::where('received_by', Auth::id())
                 ->findOrFail($id);
             
@@ -464,6 +474,13 @@ class DocumentReviewController extends Controller
                 ]);
                 $reviewId = $review->id;
             }
+
+            // Log the activity
+            $this->logActivity(
+                'Returned',
+                'Submission #' . $document->id,
+                "{$user->username} returned document titled '{$document->subject}'."
+            );
             
             // Add to timeline - ONLY create the timeline entry here
             DocumentTimeline::create([
