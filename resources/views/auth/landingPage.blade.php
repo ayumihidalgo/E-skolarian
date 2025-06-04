@@ -21,32 +21,34 @@
         <p class="font-[Manrope] font-normal text-xl">You are Logging In as?</p>
     </header>
     <main class="flex flex-1 justify-center items-center gap-6 p-5 flex-wrap">
-        <section class="flex justify-center items-center flex-1">
-            <div class="flex flex-col gap-y-3 bg-[#A98018D9] pl-5 pr-5 pb-5 pt-10 rounded-2xl text-center w-full min-h-[310px] max-w-[500px]">
-                <img class="w-[80px] mx-auto" src="{{ asset('images/landing_student.svg') }}" alt="Student Org Icon">
-                <div class="flex-1 pb-4">
-                    <h2 class="font-[Lexend] text-[27px]">STUDENT ORGANIZATION</h2>
-                    <p class="mx-auto font-[Manrope] font-normal w-[80%]">Access your student portal or organization dashboard</p>
+        <div class="flex flex-1 gap-6 w-full max-w-7xl flex-wrap justify-center items-stretch">
+            <section class="flex justify-center items-stretch flex-1 min-w-[300px]">
+                <div class="flex flex-col gap-y-3 bg-[#A98018D9] pl-5 pr-5 pb-5 pt-10 rounded-2xl text-center w-full min-h-[310px] max-w-[500px] h-full">
+                    <img class="w-[80px] mx-auto" src="{{ asset('images/landing_student.svg') }}" alt="Student Org Icon">
+                    <div class="flex-1 pb-4">
+                        <h2 class="font-[Lexend] text-[27px]">STUDENT ORGANIZATION</h2>
+                        <p class="mx-auto font-[Manrope] font-normal w-[80%]">Access your student portal or organization dashboard</p>
+                    </div>
+                    <a href="{{ route('student.login.form') }}"
+                        class="inline-block p-4 rounded-full bg-[#A98018] border border-white py-2 text-center w-full hover:bg-[#8a6f14] transition-bg duration-75">
+                        Login as Student Organization
+                    </a>
                 </div>
-                <a href="{{ route('student.login.form') }}"
-                    class="inline-block p-4 rounded-full bg-[#A98018] border border-white py-2 text-center w-full hover:bg-[#8a6f14] transition-bg duration-75">
-                    Login as Student Organization
-                </a>
-            </div>
-        </section>
-          <section class="flex justify-center items-center flex-1">
-            <div class="flex flex-col gap-y-3 bg-[#7A1212D9] pl-5 pr-5 pb-5 pt-10 rounded-2xl text-center w-full min-h-[310px] max-w-[500px]">
-                <img class="w-[80px] mx-auto" src="{{ asset('images/landing_admin.svg') }}" alt="Admin Icon">
-                <div class="flex-1 pb-4">
-                    <h2 class="font-[Lexend] text-[27px]">ADMIN</h2>
-                    <p class="text-center mx-auto font-[Manrope] font-normal w-[80%]">Access the administrative control panel</p>
+            </section>
+            <section class="flex justify-center items-stretch flex-1 min-w-[300px]">
+                <div class="flex flex-col gap-y-3 bg-[#7A1212D9] pl-5 pr-5 pb-5 pt-10 rounded-2xl text-center w-full min-h-[310px] max-w-[500px] h-full">
+                    <img class="w-[80px] mx-auto" src="{{ asset('images/landing_admin.svg') }}" alt="Admin Icon">
+                    <div class="flex-1 pb-4">
+                        <h2 class="font-[Lexend] text-[27px]">ADMIN</h2>
+                        <p class="text-center mx-auto font-[Manrope] font-normal w-[80%]">Access the administrative control panel</p>
+                    </div>
+                    <a href="{{ route('admin.login.form') }}"
+                        class="inline-block p-4 rounded-full bg-[#7A1212] border border-white py-2 text-center w-full hover:bg-[#5a0f0f] transition-bg duration-75">
+                        Login as Admin
+                    </a>
                 </div>
-                <a href="{{ route('admin.login.form') }}"
-                    class="inline-block p-4 rounded-full bg-[#7A1212] border border-white py-2 text-center w-full hover:bg-[#5a0f0f] transition-bg duration-75">
-                    Login as Admin
-                </a>
-            </div>
-        </section>
+            </section>
+        </div>
     </main>
     <footer class="flex text-center justify-center items-center gap-2 bg-[#4D0F0F] min-h-[70px] flex-wrap p-2">
         <p>Need help? Contact <button onclick="document.getElementById('reportBtn').click();" class="underline cursor-pointer">PUPSRC SUPERADMIN</button> for assistance with your login.</p>
@@ -63,7 +65,7 @@
         </button>
     </footer>
          <!-- Report Problem Modal -->
-        <div id="reportModal" class="fixed inset-0 flex items-center z-50 backdrop-blur-sm w-full text-black hidden">
+        <div id="reportModal" class="fixed px-[10px] inset-0 flex items-center z-50 backdrop-blur-sm w-full text-black hidden">
         <div class="bg-[#ffffffe8] p-6 shadow-lg mx-auto rounded-3xl max-w-[600px]">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-20 h-20 mx-auto pb-4">
                 <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
@@ -71,14 +73,14 @@
                 <rect x="11" y="8" width="2" height="4" fill="black" />
                 <rect x="11" y="14" width="2" height="2" fill="black" />
             </svg>
-            <div class="mb-4 text-center mx-auto w-[75%]">
+            <div class="mb-4 text-center mx-auto w-[90%] md:w-[75%]">
             <h1 class="text-3xl font-[Lexend] font-bold mb-2 text-[var(--secondary-color)]">Report a Problem</h1>
             <p class="text-black font-[Manrope] font-normal text-xs">
                 Noticed something wrong or not working as expected? Tell us what issue you encountered so we can look into it and improve your experience.
             </p>
             </div>
 
-            <form id="reportForm" class="mx-auto w-[75%] text-xs" method="POST" action="{{ route('report.problem.store') }}" enctype="multipart/form-data" onsubmit="submitReport(event)">
+            <form id="reportForm" class="mx-auto w-[90%] md:w-[75%] text-xs" method="POST" action="{{ route('report.problem.store') }}" enctype="multipart/form-data" onsubmit="submitReport(event)">
             @csrf
             <div class="mb-7">
                 <label class="pl-[9px] block font-semibold mb-1">PUP Webmail<span class="text-red-600">*</span></label>
@@ -108,7 +110,7 @@
             <div class="mb-7">
                 <label class="pl-[9px] block font-semibold mb-1">Attach a File (optional)</label>
                 <input id="fileInput" type="file" name="screenshot" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                    class="text-slate-500 text-sm rounded-lg leading-6 file:bg-[var(--secondary-color)] file:text-white file:border-none file:px-4 file:py-1 file:mr-6 file:rounded-lg hover:file:brightness-75 border bg-[#0000000c] cursor-pointer border-gray-300 transition duration-200">
+                    class="text-slate-500 w-full max-w-[300px] text-sm rounded-lg leading-6 file:bg-[var(--secondary-color)] file:text-white file:border-none file:px-4 file:py-1 file:mr-6 file:rounded-lg hover:file:brightness-75 border bg-[#0000000c] cursor-pointer border-gray-300 transition duration-200">
                 <p class="pl-[5px] text-[8px]">Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC, PNG, JPG</p>
             </div>
 
