@@ -362,6 +362,12 @@ class EventController extends Controller
                     'is_rescheduled' => $event->updated_at > $event->created_at->addMinutes(5) // If updated more than 5 minutes after creation
                 ];
             });
+
+            // Get scheduled announcements
+            $announcementEvents = $this->getScheduledAnnouncements();
+            
+            // Merge both types of events
+            $allEvents = $formattedManualEvents->merge($announcementEvents);
             
             \Log::info('Returning filtered admin events', ['count' => count($formattedManualEvents)]);
             return response()->json($formattedManualEvents);
@@ -457,7 +463,85 @@ public function rescheduleApprovedProposal(Request $request)
         return response()->json(['error' => 'Internal server error: ' . $e->getMessage()], 500);
     }
 }
+public function getCalendarAnnouncements()
+{
+    try {
+        $announcementEvents = $this->getScheduledAnnouncements();
+        return response()->json($announcementEvents);
+    } catch (\Exception $e) {
+        \Log::error('Error fetching calendar announcements', ['error' => $e->getMessage()]);
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
+}
 
+private function getScheduledAnnouncements()
+{
+    try {
+        $userRole = auth()->user()->role;
+        
+        // Get scheduled announcements that are not archived and have future or current deadlines
+        $query = Announcement::where('is_archived', false)
+            ->whereNotNull('scheduled_date')
+            ->where(function($q) {
+                $q->whereNull('deadline')
+                  ->orWhere('deadline', '>=', Carbon::now());
+            });
+
+        // Filter by audience for students
+        if ($userRole === 'student') {
+            $userId = auth()->id();
+            $query->where(function($q) use ($userId) {
+                $q->where('audience', 'all');
+                // Handle custom audience - check if stored as JSON or has relationship
+                $q->orWhere(function($subQ) use ($userId) {
+                    $subQ->where('audience', 'custom')
+                         ->where(function($jsonQ) use ($userId) {
+                             // If stored as JSON in audience_students column
+                             $jsonQ->whereRaw("JSON_CONTAINS(audience_students, '\"$userId\"')")
+                                   // Or if there's a pivot table relationship
+                                   ->orWhereHas('audienceUsers', function($pivotQ) use ($userId) {
+                                       $pivotQ->where('user_id', $userId);
+                                   });
+                         });
+                });
+            });
+        }
+
+        $announcements = $query->with('user')->get();
+
+        \Log::info('Scheduled announcements found', ['count' => $announcements->count()]);
+
+        return $announcements->map(function($announcement) {
+            $scheduledDate = Carbon::parse($announcement->scheduled_date);
+            $deadline = $announcement->deadline ? Carbon::parse($announcement->deadline) : null;
+            
+            // Use scheduled date as start, deadline as end (if exists)
+            $startDate = $scheduledDate;
+            $endDate = $deadline;
+            
+            return [
+                'id' => 'announcement_' . $announcement->id,
+                'title' => '📢 ' . $announcement->title,
+                'start' => $startDate->format('Y-m-d H:i:s'),
+                'end' => $endDate ? $endDate->format('Y-m-d H:i:s') : null,
+                'backgroundColor' => '#FF6347', // Tomato color for announcements
+                'textColor' => '#ffffff',
+                'allDay' => $startDate->format('H:i:s') === '00:00:00' && 
+                          (!$endDate || $endDate->format('H:i:s') === '00:00:00'),
+                'source' => 'announcement',
+                'editable' => false,
+                'deletable' => false,
+                'announcement_id' => $announcement->id,
+                'content' => $announcement->content,
+                'poster' => $announcement->user->username ?? 'Unknown',
+                'deadline_text' => $deadline ? $deadline->format('F j, Y g:i A') : null
+            ];
+        });
+    } catch (\Exception $e) {
+        \Log::error('Error fetching scheduled announcements', ['error' => $e->getMessage()]);
+        return collect([]);
+    }
+}
     public function destroy(Event $event)
     {
         $this->authorize('delete', $event);

@@ -327,17 +327,41 @@ function containsSpecialChars(text) {
                 },
                 dayHeaderFormat: { weekday: 'short' },
                 fixedWeekCount: false,
-                events: '{{ route("calendar.events") }}',
+                
+                events: function(fetchInfo, successCallback, failureCallback) {
+                Promise.all([
+                    @if(Auth::user()->role === 'admin')
+                    fetch('{{ route("calendar.events") }}').then(r => r.json()),
+                    fetch('/calendar/approved-proposals').then(r => r.json()),
+                    @endif
+                    fetch('/calendar/announcements').then(r => r.json())
+                ]).then(responses => {
+                    let allEvents = [];
+                    @if(Auth::user()->role === 'admin')
+                    allEvents = allEvents.concat(responses[0] || []);
+                    allEvents = allEvents.concat(responses[1] || []);
+                    allEvents = allEvents.concat(responses[2] || []);
+                    @else
+                    allEvents = allEvents.concat(responses[0] || []);
+                    @endif
+                    successCallback(allEvents);
+                }).catch(error => {
+                    console.error('Error fetching events:', error);
+                    failureCallback(error);
+                });
+            },
                 // Handle date changes
                 datesSet: function() {
                     checkIfCurrentMonth();
                 },
                 eventClick: function(info) {
+                if (info.event.extendedProps.source === 'announcement') {
+                    openAnnouncementDetailsModal(info.event);
+                } else {
                     openEventDetailsModal(info.event);
-                    
-                    // Prevent browser from following the link
-                    info.jsEvent.preventDefault();
-                },
+                }
+                info.jsEvent.preventDefault();
+            },
                 // Handle date clicks
                 // function dateClick 
                 dateClick: function(info) {
@@ -353,25 +377,25 @@ function containsSpecialChars(text) {
                 eventMaxStack: 3,
                 // Handle long event titles
                 eventDidMount: function(info) {
-                    // Get the title element
-                    const titleEl = info.el.querySelector('.fc-event-title');
-                    if (!titleEl) return;
-                    
-                    // Store full title for tooltip
-                    const fullTitle = info.event.title;
-                    titleEl.setAttribute('data-full-title', fullTitle);
-                    
-                    // Handle different title lengths
-                    const titleLength = fullTitle.length;
-                    
-                    // Very long titles (60+): Use multi-line
-                    if (titleLength > 60) {
-                        info.el.classList.add('multi-line');
-                    }
-                    
-                    // Add title attribute for native browser tooltip
-                    info.el.setAttribute('title', fullTitle);
-                },
+                // Add announcement styling
+                if (info.event.extendedProps.source === 'announcement') {
+                    info.el.style.borderLeft = '4px solid #FF6347';
+                    info.el.style.backgroundColor = '#FF6347';
+                }
+                
+                // Keep your existing title handling code
+                const titleEl = info.el.querySelector('.fc-event-title');
+                if (!titleEl) return;
+                
+                const fullTitle = info.event.title;
+                titleEl.setAttribute('data-full-title', fullTitle);
+                
+                const titleLength = fullTitle.length;
+                if (titleLength > 60) {
+                    info.el.classList.add('multi-line');
+                }
+                info.el.setAttribute('title', fullTitle);
+            }
                 // Sample events (replace with your actual events)
 
             });
@@ -393,6 +417,41 @@ function containsSpecialChars(text) {
                 '</div></div>';
         }
     }
+
+    function openAnnouncementDetailsModal(event) {
+    const modal = document.getElementById('eventDetailsModal');
+    if (!modal) return;
+    
+    // If you have these elements, populate them
+    const titleEl = document.getElementById('detail-title');
+    const dateEl = document.getElementById('detail-date');
+    const actionEl = document.getElementById('event-action-buttons');
+    
+    if (titleEl) titleEl.textContent = event.title;
+    
+    if (dateEl) {
+        const startDate = event.start ? new Date(event.start) : null;
+        if (startDate) {
+            dateEl.textContent = startDate.toLocaleDateString('en-US', { 
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+            });
+        }
+    }
+    
+    if (actionEl) {
+        actionEl.innerHTML = `
+            <div class="text-sm text-gray-600 mb-2">
+                <strong>Posted by:</strong> ${event.extendedProps.poster || 'Unknown'}<br>
+                ${event.extendedProps.deadline_text ? '<strong>Deadline:</strong> ' + event.extendedProps.deadline_text : ''}
+            </div>
+            <div class="text-sm text-gray-700 mb-4">
+                ${event.extendedProps.content || 'No content available'}
+            </div>
+        `;
+    }
+    
+    modal.classList.remove('hidden');
+}
     
     // Add custom buttons to the calendar
     function addCustomButtons() {

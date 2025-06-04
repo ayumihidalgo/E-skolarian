@@ -361,20 +361,22 @@ function initCalendar() {
             dayHeaderFormat: { weekday: 'short' },
             fixedWeekCount: false,
             // Use multiple event sources
-            eventSources: [
-                {
-                    url: '{{ route("calendar.events") }}',
-                    failure: function(error) {
-                        console.error('Failed to fetch manual events:', error);
-                    }
-                },
-                {
-                    url: '{{ route("calendar.approved-proposals") }}',
-                    failure: function(error) {
-                        console.error('Failed to fetch approved proposals:', error);
-                    }
-                }
-            ],
+            events: function(fetchInfo, successCallback, failureCallback) {
+                Promise.all([
+                    fetch('/calendar/events').then(r => r.json()),
+                    fetch('/calendar/approved-proposals').then(r => r.json()),
+                    fetch('/calendar/announcements').then(r => r.json())
+                ]).then(responses => {
+                    let allEvents = [];
+                    allEvents = allEvents.concat(responses[0] || []);
+                    allEvents = allEvents.concat(responses[1] || []);
+                    allEvents = allEvents.concat(responses[2] || []);
+                    successCallback(allEvents);
+                }).catch(error => {
+                    console.error('Error fetching events:', error);
+                    failureCallback(error);
+                });
+            },
             // Handle date changes
             datesSet: function() {
                 checkIfCurrentMonth();
@@ -401,36 +403,28 @@ function initCalendar() {
             },
             // Handle event clicks - for showing event details
             eventClick: function(info) {
-                console.log('Event clicked:', info.event);
-                info.jsEvent.preventDefault(); // Prevent default browser action
-                info.jsEvent.stopPropagation(); // Prevent event bubbling to dateClick
-                openEventDetailsModal(info.event); // This opens the event details modal
+                if (info.event.extendedProps.source === 'announcement') {
+                    openAnnouncementDetailsModal(info.event);
+                } else {
+                    openEventDetailsModal(info.event);
+                }
+                info.jsEvent.preventDefault();
             },
             // Display settings
             eventDisplay: 'block',
             eventMaxStack: 3,
             // Handle long event titles
             eventDidMount: function(info) {
-                const titleEl = info.el.querySelector('.fc-event-title');
-                if (!titleEl) return;
-                
-                const fullTitle = info.event.title;
-                titleEl.setAttribute('data-full-title', fullTitle);
-                
-                const titleLength = fullTitle.length;
-                
-                if (titleLength > 60) {
-                    info.el.classList.add('multi-line');
+                // Add announcement styling
+                if (info.event.extendedProps.source === 'announcement') {
+                    info.el.style.borderLeft = '4px solid #FF6347';
+                    info.el.style.backgroundColor = '#FF6347';
+                } else if (info.event.extendedProps.source === 'proposal') {
+                    info.el.style.borderLeft = '4px solid #0085FF';
                 }
                 
-                info.el.setAttribute('title', fullTitle);
-                
-                // Add visual indicator for proposal events
-                if (info.event.extendedProps.source === 'proposal') {
-                    info.el.style.borderLeft = '4px solid #1d4ed8';
-                    info.el.setAttribute('title', fullTitle + ' (Approved Proposal)');
-                }
-            }
+                // Keep any existing eventDidMount code you have
+            },
         });
         
         // Render calendar immediately
@@ -454,6 +448,51 @@ function initCalendar() {
     }
 }
 
+function openAnnouncementDetailsModal(event) {
+    const modal = document.getElementById('eventDetailsModal');
+    if (!modal) return;
+    
+    const titleEl = document.getElementById('detail-title');
+    const dateEl = document.getElementById('detail-date');
+    const actionEl = document.getElementById('event-action-buttons');
+    
+    if (titleEl) {
+        titleEl.innerHTML = `
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-3 h-3 rounded-full bg-red-400"></span>
+                <span>${event.title}</span>
+                <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">Announcement</span>
+            </div>
+        `;
+    }
+    
+    if (dateEl && event.start) {
+        const startDate = new Date(event.start);
+        dateEl.textContent = startDate.toLocaleDateString('en-US', { 
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+        });
+    }
+    
+    if (actionEl) {
+        actionEl.innerHTML = `
+            <div class="bg-gray-50 p-3 rounded-lg mb-4">
+                <div class="text-sm text-gray-600 mb-2">
+                    <strong>Posted by:</strong> ${event.extendedProps.poster || 'Unknown'}<br>
+                    ${event.extendedProps.deadline_text ? '<strong>Deadline:</strong> ' + event.extendedProps.deadline_text : ''}
+                </div>
+                <div class="text-sm text-gray-700">
+                    <strong>Content:</strong><br>
+                    ${event.extendedProps.content || 'No content available'}
+                </div>
+            </div>
+            <div class="text-xs text-gray-500 italic">
+                Note: This is a scheduled announcement. To edit or delete, go to the Admin Dashboard.
+            </div>
+        `;
+    }
+    
+    modal.classList.remove('hidden');
+}
 
 
 
