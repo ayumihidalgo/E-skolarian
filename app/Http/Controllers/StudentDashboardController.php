@@ -14,7 +14,7 @@ class StudentDashboardController extends Controller
 {
     public function showStudentDashboard()
     {
-        $userId = Auth::id();
+        $userId = (string) Auth::id();
         //Document status counts
         // Get IDs of documents that are "Under Review" in the review table
         $underReviewIds = \App\Models\Review::where('status', 'Under Review')
@@ -44,14 +44,68 @@ class StudentDashboardController extends Controller
             ->orWhereIn('id', $underReviewIds)
             ->count();
 
-        // Announcements (unchanged)
+        // Announcements: Only show if for all or for this student
         $sevenDaysAgo = Carbon::now()->subDays(7);
+
         $latestAnnouncements = Announcement::with('user')
-            ->where('created_at', '>=', $sevenDaysAgo)
+            ->where(function($query) use ($userId, $sevenDaysAgo) {
+                $query->where(function($q) use ($userId, $sevenDaysAgo) {
+                    // No deadline: show if within 7 days
+                    $q->where(function($subQ) use ($userId, $sevenDaysAgo) {
+                        $subQ->where(function($audQ) use ($userId) {
+                                $audQ->where('audience', 'all')
+                                     ->orWhere(function($q2) use ($userId) {
+                                         $q2->where('audience', 'custom')
+                                            ->whereJsonContains('audience_students', $userId);
+                                     });
+                            })
+                            ->whereNull('deadline')
+                            ->where('created_at', '>=', $sevenDaysAgo);
+                    });
+                })
+                ->orWhere(function($q) use ($userId) {
+                    // With deadline: show if deadline not yet passed
+                    $q->where(function($audQ) use ($userId) {
+                            $audQ->where('audience', 'all')
+                                 ->orWhere(function($q2) use ($userId) {
+                                     $q2->where('audience', 'custom')
+                                        ->whereJsonContains('audience_students', $userId);
+                                 });
+                        })
+                        ->whereNotNull('deadline')
+                        ->where('deadline', '>=', Carbon::now());
+                });
+            })
             ->latest()
             ->get();
+
         $previousAnnouncements = Announcement::with('user')
-            ->where('created_at', '<', $sevenDaysAgo)
+            ->where(function($query) use ($userId, $sevenDaysAgo) {
+                $query->where(function($q) use ($userId, $sevenDaysAgo) {
+                    // No deadline: move to previous after 7 days
+                    $q->where(function($audQ) use ($userId) {
+                            $audQ->where('audience', 'all')
+                                 ->orWhere(function($q2) use ($userId) {
+                                     $q2->where('audience', 'custom')
+                                        ->whereJsonContains('audience_students', $userId);
+                                 });
+                        })
+                        ->whereNull('deadline')
+                        ->where('created_at', '<', $sevenDaysAgo);
+                })
+                ->orWhere(function($q) use ($userId) {
+                    // With deadline: move to previous after deadline is over
+                    $q->where(function($audQ) use ($userId) {
+                            $audQ->where('audience', 'all')
+                                 ->orWhere(function($q2) use ($userId) {
+                                     $q2->where('audience', 'custom')
+                                        ->whereJsonContains('audience_students', $userId);
+                                 });
+                        })
+                        ->whereNotNull('deadline')
+                        ->where('deadline', '<', Carbon::now());
+                });
+            })
             ->latest()
             ->get();
 

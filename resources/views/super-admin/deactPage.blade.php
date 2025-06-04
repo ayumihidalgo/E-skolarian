@@ -6,7 +6,7 @@
     <div class="flex justify-between items-center mb-1">
         <!-- Back to Dashboard Button -->
         <a href="{{ route('super-admin.dashboard') }}" 
-            class="bg-white hover:text-red-800 text-[#7A1212] px-4 py-2 rounded-[16px] font-sm font-[Lexend] inline-flex items-center self-start mb-2">
+            class="bg-white hover:text-red-800 text-[#7A1212] px-4 py-2 rounded-[16px] font-xl font-[Lexend] inline-flex items-center self-start mb-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
             </svg>
@@ -14,11 +14,11 @@
         </a>
 </div>
         <div>
-        <h1 class="text-2xl font-bold font-[Lexend] text-[#332B2B] mb-6">DEACTIVATED ACCOUNTS</h1>
+        <h1 class="text-[35px] font-bold font-[Lexend] text-[#332B2B] mb-6">DEACTIVATED ACCOUNTS</h1>
         </div>
 
     <!-- Table Header and Container -->
-    <div class="overflow-hidden rounded-[25px] shadow bg-[#FFFFFFA6] mt-4" style="width: 100%; height: 400px; flex-shrink:0;">
+    <div class="overflow-hidden rounded-[25px] shadow bg-[#FFFFFFA6] mt-4" style="width: 100%; height: 540px; flex-shrink:0;">
         <table class="min-w-full bg-[#625B5B] text-white rounded-t-[24px] table-fixed">
             <thead>
                 <tr>
@@ -26,7 +26,7 @@
                     <th class="w-[10%] px-6 py-3">
                         <!-- Empty header for profile picture -->
                     </th>
-                    <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] text-[25px] font-bold">
                         <div class="flex items-center">
                             <span class="whitespace-nowrap">Name</span>
                             <div class="flex flex-col ml-2">
@@ -45,7 +45,7 @@
                             </div>
                         </div>
                     </th>
-                    <th class="w-[30%] px-6 py-3 text-center font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[30%] px-6 py-3 text-center font-['Manrope'] text-[25px] font-bold">
                         <div class="flex items-center justify-center">
                             <span class="whitespace-nowrap">Role</span>
                             <div class="flex flex-col ml-2">
@@ -64,7 +64,7 @@
                             </div>
                         </div>
                     </th>
-                    <th class="w-[20%] px-6 py-3 text-right pr-4 font-['Manrope'] text-[17px] font-bold">
+                    <th class="w-[20%] px-6 py-3 text-right pr-4 font-['Manrope'] text-[25px] font-bold">
                         <div class="flex items-center justify-end">
                             <span class="whitespace-nowrap">Deactivation Date</span>
                             <div class="flex flex-col ml-2">
@@ -90,18 +90,18 @@
             </thead>
             <tbody class="divide-y divide-[#7A1212]/70">
             @forelse ($users as $user)
-            <tr class="border-y-[0.1px] border-[#7A1212] bg-[#D9D9D9] hover:bg-[#7e7f80] transition duration-300 cursor-pointer"
-    data-user="{{ json_encode([
-        'username' => $user->username,
-        'email' => $user->email,
-        'role_name' => $user->role_name,
-        'organization_acronym' => $user->organization_acronym,
-        'updated_at' => $user->updated_at->format('M-d-Y')
-    ]) }}">
+            <tr class="border-y-[0.1px] border-[#7A1212] bg-[#D9D9D9] hover:bg-[#7e7f80] transition duration-300 cursor-pointer h-20"
+                data-user="{{ json_encode([
+                    'username' => $user->role === 'admin' ? $user->role_name : $user->username,
+                    'email' => $user->email,
+                    'role_name' => $user->role === 'admin' ? ucfirst($user->role) : $user->role_name,
+                    'organization_acronym' => $user->organization_acronym,
+                    'updated_at' => $user->updated_at->format('M-d-Y')
+                ]) }}">
                 <!-- Profile Picture Cell -->
                 <td class="w-[10%] px-6 py-4 pl-15">
                     <div class="flex justify-center">
-                        <div class="w-6 h-6 rounded-full overflow-hidden bg-gray-200">
+                        <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
                             @if ($user->profile_pic)
                                 <img src="{{ asset('storage/' . $user->profile_pic) }}" 
                                     alt="Profile" 
@@ -117,15 +117,19 @@
                 
                 <!-- Username Cell -->
                 <td class="w-[30%] px-6 py-4 text-left pl-4">
-                    <div class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[17px] text-black text-semibold">
-                        {{ $user->username }}
+                    <div class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[20px] text-black text-semibold">
+                        {{ $user->role === 'admin' ? $user->role_name : $user->username }}
                     </div>
                 </td>
                 </td>
-                <td class="w-[30%] px-6 py-4 text-center text-[Lexend] text-[17px] text-black text-semibold">
-                    {{ $user->role_name }}
+                <td class="w-[30%] px-6 py-4 text-center text-[Lexend] text-[20px] text-black text-semibold">
+                    @if($user->role === "admin")
+                        {{ ucfirst($user->role) }}
+                    @else
+                        {{ $user->role_name }}
+                    @endif
                 </td>
-                <td class="w-[20%] px-6 py-4 text-right pr-13 text-[Lexend] text-[17px] text-black text-semibold">
+                <td class="w-[20%] px-6 py-4 text-right pr-13 text-[Lexend] text-[20px] text-black text-semibold">
                     {{ $user->updated_at->format('F j, Y') }}
                 </td>
                 <!-- Reactivation Button Cell -->
@@ -137,7 +141,7 @@
                             data-user-id="{{ $user->id }}"
                             data-user-email="{{ $user->email }}"
                             title="Reactivate this Account">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 30 30" fill="none" class="hover:opacity-75">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none" class="hover:opacity-75">
                                 <g clip-path="url(#clip0_4491_18334)">
                                     <path d="M28.75 4.99997V12.5M28.75 12.5H21.25M28.75 12.5L22.95 7.04997C21.6066 5.70586 19.9445 4.72398 18.119 4.19594C16.2934 3.6679 14.3639 3.61091 12.5104 4.0303C10.6568 4.44968 8.93975 5.33176 7.51933 6.59425C6.09892 7.85673 5.02146 9.45845 4.3875 11.25M1.25 25V17.5M1.25 17.5H8.75M1.25 17.5L7.05 22.95C8.39343 24.2941 10.0555 25.276 11.881 25.804C13.7066 26.332 15.6361 26.389 17.4896 25.9697C19.3432 25.5503 21.0602 24.6682 22.4807 23.4057C23.9011 22.1432 24.9785 20.5415 25.6125 18.75" stroke="#4D0F0F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
                                 </g>
@@ -156,8 +160,8 @@
         </tbody>
         </table>
         @if($users->isEmpty())
-            <div class="bg-[#FFFFFFA6] h-[480px] flex-grow flex items-center justify-center text-gray-600 rounded-b-[25px] px-6" style="height: 100%;">
-                <span class="font-['Manrope'] text-[17px] text-[#625B5BB2]">No deactivated users found.</span>
+            <div class="bg-[#D9D9D9] h-[480px] flex-grow flex items-center justify-center text-gray-600 rounded-b-[25px] px-6" style="height: 100%;">
+                <span class="font-['Manrope'] text-[25px] text-[#625B5BB2]">No deactivated users found.</span>
             </div>
         @endif
     </div>
@@ -168,26 +172,44 @@
     <nav>
         <ul class="inline-flex items-center space-x-2">
             <li>
-                <a href="{{ $users->url(1) }}"
-                    class="pagination-btn-first px-3 py-1 rounded-lg {{ $users->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
-                    <
-                </a>
+                @if ($users->currentPage() == 1)
+                    <span class="pagination-btn-first px-3 py-1 rounded-lg cursor-not-allowed opacity-50">
+                        <
+                    </span>
+                @else
+                    <a href="{{ $users->url(1) }}"
+                        class="pagination-btn-first px-3 py-1 rounded-lg hover:bg-gray-100">
+                        <
+                    </a>
+                @endif
             </li>
 
             @for ($i = 1; $i <= $users->lastPage(); $i++)
                 <li>
-                    <a href="{{ $users->url($i) }}"
-                        class="pagination-btn px-3 py-1 rounded-lg {{ $users->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
-                        {{ $i }}
-                    </a>
+                    @if ($users->currentPage() == $i)
+                        <span class="pagination-btn px-3 py-1 rounded-lg bg-[#7A1212] text-white">
+                            {{ $i }}
+                        </span>
+                    @else
+                        <a href="{{ $users->url($i) }}"
+                            class="pagination-btn px-3 py-1 rounded-lg hover:bg-gray-100">
+                            {{ $i }}
+                        </a>
+                    @endif
                 </li>
             @endfor
 
             <li>
-                <a href="{{ $users->url($users->lastPage()) }}"
-                    class="pagination-btn-last px-3 py-1 rounded-lg {{ $users->currentPage() == $users->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
-                    >
-                </a>
+                @if ($users->currentPage() == $users->lastPage())
+                    <span class="pagination-btn-last px-3 py-1 rounded-lg cursor-not-allowed opacity-50">
+                        >
+                    </span>
+                @else
+                    <a href="{{ $users->url($users->lastPage()) }}"
+                        class="pagination-btn-last px-3 py-1 rounded-lg hover:bg-gray-100">
+                        >
+                    </a>
+                @endif
             </li>
         </ul>
     </nav>

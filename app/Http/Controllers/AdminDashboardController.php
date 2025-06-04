@@ -14,17 +14,38 @@ class AdminDashboardController extends Controller
 {
      public function showDashboard(Request $request)
     {
-        //announcements
-        $sevenDaysAgo = \Carbon\Carbon::now()->subDays(7);
+        $sevenDaysAgo = Carbon::now()->subDays(7);
 
         $latestAnnouncements = Announcement::with('user')
-            ->where('created_at', '>=', $sevenDaysAgo)
+            ->where(function ($query) use ($sevenDaysAgo) {
+                $query->where(function ($q) use ($sevenDaysAgo) {
+                    // No deadline: show if within 7 days
+                    $q->whereNull('deadline')
+                      ->where('created_at', '>=', $sevenDaysAgo);
+                })
+                ->orWhere(function ($q) {
+                    // With deadline: show if deadline not yet passed
+                    $q->whereNotNull('deadline')
+                      ->where('deadline', '>=', Carbon::now());
+                });
+            })
             ->where('archived', false)
             ->latest()
             ->get();
 
         $previousAnnouncements = Announcement::with('user')
-            ->where('created_at', '<', $sevenDaysAgo)
+            ->where(function ($query) use ($sevenDaysAgo) {
+                $query->where(function ($q) use ($sevenDaysAgo) {
+                    // No deadline: move to previous after 7 days
+                    $q->whereNull('deadline')
+                      ->where('created_at', '<', $sevenDaysAgo);
+                })
+                ->orWhere(function ($q) {
+                    // With deadline: move to previous after deadline is over
+                    $q->whereNotNull('deadline')
+                      ->where('deadline', '<', Carbon::now());
+                });
+            })
             ->where('archived', false)
             ->latest()
             ->get();
@@ -61,9 +82,12 @@ class AdminDashboardController extends Controller
         $showArchive = $request->query('archive', false);
 
         $recentDocuments = \App\Models\SubmittedDocument::with('user')
+            ->where('received_by', Auth::id()) 
             ->latest()
             ->take(5)
             ->get();
+
+        $users = \App\Models\User::all();
 
         return view('admin.dashboard', compact(
             'latestAnnouncements',
@@ -74,7 +98,8 @@ class AdminDashboardController extends Controller
             'reviewCount',
             'approvedCount',
             'totalCount',
-            'recentDocuments'
+            'recentDocuments',
+            'users'
         ));
     }
 }

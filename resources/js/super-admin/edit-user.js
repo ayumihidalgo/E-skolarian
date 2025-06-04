@@ -224,27 +224,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return hasChanged;
     }
 
-    // Add event listener to update the actual role when role_name changes
-    const editRoleName = document.getElementById('editRoleName');
-    if (editRoleName) {
-        editRoleName.addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
-            const selectedRole = selectedOption.getAttribute('data-role');
-            document.getElementById('editActualRole').value = selectedRole;
-
-            // Show/hide acronym field based on role
-            if (editAcronymField) {
-                if (selectedRole === 'student') {
-                    editAcronymField.classList.remove('hidden');
-                } else {
-                    editAcronymField.classList.add('hidden');
-                }
-            }
-
-            validateRole().then(() => validateForm());
-        });
-    }
-
     // Custom close functionality for edit modal to show user details modal again
     if (closeEditModalBtn && editUserModal) {
         closeEditModalBtn.addEventListener('click', function (e) {
@@ -324,34 +303,33 @@ document.addEventListener('DOMContentLoaded', function () {
             const acronym = document.getElementById('userAcronym')?.textContent;
 
             try {
-                // Fetch existing roles before showing the modal
-                const existingRoles = await fetchExistingRoles();
+                // Get the username input element
+                const usernameInput = document.getElementById('editUsername');
                 
-                // Populate the edit form
-                document.getElementById('editUsername').value = username;
-                document.getElementById('editEmail').value = email;
-
-                // Set the role and update available options
-                const roleSelect = document.getElementById('editRoleName');
-                if (roleSelect) {
-                    for (let i = 0; i < roleSelect.options.length; i++) {
-                        if (roleSelect.options[i].value === roleName) {
-                            roleSelect.selectedIndex = i;
-                            document.getElementById('editActualRole').value = 
-                                roleSelect.options[i].getAttribute('data-role');
-                            break;
-                        }
-                    }
-
-                    // Update role options visibility
-                    await updateRoleOptions(existingRoles, roleName);
+                // Set readonly state based on role
+                if (roleName.toLowerCase() === 'admin' || 
+                    roleName.toLowerCase().includes('services') || 
+                    roleName.toLowerCase().includes('director')) {
+                    
+                    // Make name field readonly for admin roles
+                    usernameInput.readOnly = true;
+                    usernameInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                } else {
+                    // Keep name field editable for student roles
+                    usernameInput.readOnly = false;
+                    usernameInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
                 }
+
+                // Populate the edit form
+                usernameInput.value = username;
+                document.getElementById('editEmail').value = email;
+                document.getElementById('editRoleName').value = roleName;
+                document.getElementById('editActualRole').value = 
+                    roleName.toLowerCase().includes('organization') ? 'student' : 'admin';
 
                 // Handle acronym field
                 if (editAcronymField && editAcronymInput) {
-                    const selectedRole = document.querySelector(`#editRoleName option[value="${roleName}"]`)?.getAttribute('data-role');
-                    
-                    if (selectedRole === 'student') {
+                    if (roleName.toLowerCase().includes('organization')) {
                         editAcronymField.classList.remove('hidden');
                         editAcronymInput.value = acronym || '';
                     } else {

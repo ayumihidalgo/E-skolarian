@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use App\LogsActivity;
 
 class AdminLoginController extends Controller
 {
+        use LogsActivity;
     // Lockout parameters
     protected $maxAttempts = 4;
     protected $decayMinutes = 5;
@@ -62,6 +64,13 @@ class AdminLoginController extends Controller
             $request->session()->put('user_role', Auth::user()->role);
             $request->session()->put('user_email', Auth::user()->email);
 
+             // Log the successful login
+            $user = Auth::user();
+            $this->logActivity(
+                'Login',
+                'User',
+                "{$user->role_name} successfully logged in."
+            );
             return redirect('/admin/dashboard');
         }
 

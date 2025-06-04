@@ -46,31 +46,36 @@
                         @if ($latestAnnouncements->count())
                             <div class="space-y-4 h-64 overflow-y-auto pr-2">
                                 @foreach ($latestAnnouncements as $announcement)
+                                    @php
+                                        $deadline = $announcement->deadline ? \Carbon\Carbon::parse($announcement->deadline) : null;
+                                        $hasTime = $deadline && $deadline->format('H:i:s') !== '00:00:00';
+                                        $deadlineText = $deadline
+                                            ? 'Due ' . ($hasTime ? $deadline->format('F j, Y g:i A') : $deadline->format('F j, Y'))
+                                            : '';
+                                        $postDate = \Carbon\Carbon::parse($announcement->created_at)->format('F j, Y');
+                                    @endphp
                                     <div class="mb-4 pb-4 border-b border-gray-300">
                                         <h3 class="text-xl font-semibold">{{ $announcement->title }}</h3>
                                         <p class="text-sm text-gray-500">
-                                            Posted by {{ $announcement->user->username }} on
-                                            {{ $announcement->created_at->format('F j, Y') }}
+                                            Posted by {{ $announcement->user->username }} on {{ $postDate }}
+                                            @if($deadlineText)
+                                                <span class="ml-2 text-red-600 font-semibold">{{ $deadlineText }}</span>
+                                            @endif
                                         </p>
                                         @php
                                             $maxLength = 150;
-                                            $isLong = strlen($announcement->content) > $maxLength;
-                                            $preview = $isLong
-                                                ? mb_substr($announcement->content, 0, $maxLength) . '...'
-                                                : $announcement->content;
+                                            $preview = mb_substr($announcement->content, 0, $maxLength) . (strlen($announcement->content) > $maxLength ? '...' : '');
                                         @endphp
-                                        <span class="text-gray-700 whitespace-pre-line">{{ $preview }}</span>
-                                        @if ($isLong)
-                                            <button class="text-indigo-600 hover:underline ml-2 text-sm"
-                                                onclick="showAnnouncementModal(
+                                        <span class="text-gray-700 whitespace-pre-line break-words">{{ $preview }}</span>
+                                        <button class="text-indigo-600 hover:underline ml-2 text-sm"
+                                            onclick="showAnnouncementModal(
                                                 `{{ addslashes($announcement->title) }}`,
                                                 `{{ addslashes(e($announcement->content)) }}`,
-                                                `Posted by {{ addslashes($announcement->user->username) }} on {{ $announcement->created_at->format('F j, Y') }}`,
-                                                'announcement'
-                                            )">
-                                                Read More
-                                            </button>
-                                        @endif
+                                                `{{ addslashes($announcement->user->username) }}`,
+                                                `{{ $postDate }}`,
+                                                `{{ $deadlineText }}`)">
+                                            View Post
+                                        </button>
                                     </div>
                                 @endforeach
                             </div>
@@ -98,7 +103,7 @@
                                                 ? mb_substr($announcement->content, 0, $maxLength) . '...'
                                                 : $announcement->content;
                                         @endphp
-                                        <span class="text-gray-700 whitespace-pre-line">{{ $preview }}</span>
+                                        <span class="text-gray-700 whitespace-pre-line break-words">{{ $preview }}</span>
                                         @if ($isLong)
                                             <button class="text-indigo-600 hover:underline ml-2 text-sm"
                                                 onclick="showAnnouncementModal(
@@ -204,17 +209,39 @@
     <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
         <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
-            <div class="flex items-center justify-between mb-2 border-b pb-2">
+            <div class="relative mb-2 border-b pb-2">
+    <!-- Close button absolutely positioned -->
+    <button onclick="closeAnnouncementModal()"
+        class="absolute top-3 right-4 text-2xl text-gray-500 hover:text-gray-700 z-10" style="line-height: 1;">&times;</button>
+    <!-- Modal header -->
                 <div class="flex items-center gap-2">
                     <span class="text-2xl text-red-500">📢</span>
                     <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
                 </div>
-                <button onclick="closeAnnouncementModal()"
-                    class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                <!-- Title and Due Date flex row -->
+                <div class="flex items-center justify-between mt-2">
+                    <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
+                    <span id="modalDeadline" class="text-sm text-red-600 font-semibold"></span>
+                </div>
             </div>
             <h3 id="modalTitle" class="text-lg font-bold mt-3 mb-1"></h3>
-            <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
-            <div id="modalContent" class="text-gray-700 whitespace-pre-line"></div>
+            <div class="flex items-center gap-2 mb-3">
+                <span id="modalPoster" class="flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
+                    <svg class="w-4 h-4 mr-1 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 10a4 4 0 100-8 4 4 0 000 8zm0 2c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z"/></svg>
+                    <span id="modalPosterName"></span>
+                </span>
+                <span class="flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
+                    <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3M16 7V3M4 11h16M4 19h16M4 15h16"></path></svg>
+                    <span id="modalPostDate"></span>
+                </span>
+            </div>
+            <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words mb-6"></div>
+            <div class="flex justify-end">
+                <a href="{{ route('student.submit-documents') }}" id="openPortalBtn"
+                    class="bg-[#7B2323] hover:bg-[#5a1818] text-white px-5 py-2 rounded-lg font-semibold transition">
+                    Open Submission Portal
+                </a>
+            </div>
         </div>
     </div>
 
@@ -268,15 +295,14 @@
     </div>
 
     <script>
-        function showAnnouncementModal(title, content, meta = '', type = 'announcement') {
+        function showAnnouncementModal(title, content, poster, postDate, deadlineText) {
             document.getElementById('modalTitle').textContent = title;
             document.getElementById('modalContent').textContent = content;
-            document.getElementById('modalMeta').innerHTML = meta;
-            document.getElementById('modalLabel').textContent =
-                type === 'previous' ? 'Previous Announcement' : 'Announcement';
+            document.getElementById('modalPosterName').textContent = poster;
+            document.getElementById('modalPostDate').textContent = postDate;
+            document.getElementById('modalDeadline').textContent = deadlineText || '';
             document.getElementById('announcementModal').classList.remove('hidden');
         }
-
         function closeAnnouncementModal() {
             document.getElementById('announcementModal').classList.add('hidden');
         }

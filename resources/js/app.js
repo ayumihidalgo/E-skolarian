@@ -1,4 +1,6 @@
 import './bootstrap';
+import './super-admin/admin-dropdown.js';
+
 // import Alpine from 'alpinejs'
 
 // window.Alpine = Alpine

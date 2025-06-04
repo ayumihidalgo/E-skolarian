@@ -422,15 +422,29 @@
             @csrf
             <div class="mb-7">
                 <label class="pl-[9px] block font-semibold mb-1">PUP Webmail<span class="text-red-600">*</span></label>
-                <input id="emailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
+                <input id="webmailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
                 <p id="webmailLengthWarning" class="text-red-600 mt-1 hidden">*Webmail must not exceed 50 characters.</p>
             </div>
 
-            <div class="mb-3">
-                <label class="pl-[9px] block font-semibold mb-1">Problem Description<span class="text-red-600">*</span></label>
-                <textarea name="description" placeholder="Describe the problem here..." class="w-full border rounded-lg px-3 py-2 bg-white" rows="4" required maxlength="251"></textarea>
-                <p id="descLengthWarning" class="text-red-600 mt-1 hidden">*Description must be 250 characters or less.</p>
-            </div >
+            <div class="mb-3 relative">
+            <label class="pl-[9px] block font-semibold mb-1">Problem Description<span class="text-red-600">*</span></label>
+            <textarea
+                id="descriptionInput"
+                name="description"
+                placeholder="Describe the problem here..."
+                class="w-full border rounded-lg px-3 py-2 bg-white resize-none"
+                rows="4"
+                maxlength="255"
+                required
+            ></textarea>
+
+            <span
+                id="descCounter"
+                class="absolute bottom-2 right-3 text-xs text-gray-500 select-none pointer-events-none"
+            >0 / 255</span>
+            <p id="descLengthWarning" class="text-red-600 mt-1 hidden">*Description must be 255 characters or less.</p>
+            </div>
+
             <div class="mb-7">
                 <label class="pl-[9px] block font-semibold mb-1">Attach a FIle (optional)</label>
                 <input id="fileInput" type="file" name="screenshot" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
@@ -521,6 +535,11 @@
 
         const signInButton = document.getElementById('signInButton');
         const form = emailInput.closest('form');
+
+        document.querySelectorAll("input").forEach((field) => {
+            field.addEventListener("dragover", (e) => e.preventDefault());
+            field.addEventListener("drop", (e) => e.preventDefault());
+        });
 
         let serverErrorEmail = hasFormErrors;
         let serverErrorPassword = hasFormErrors;
@@ -755,7 +774,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const desc = reportForm.description.value.trim();
 
   const maxEmailLength = 50;
-  const maxDescLength = 250;
+  const maxDescLength = 255;
 
   const isEmailTooLong = email.length > maxEmailLength;
   const isDescTooLong = desc.length > maxDescLength;
@@ -769,12 +788,45 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const shouldEnableSubmit = isEmailValid && isDescValid;
 
-  if (shouldEnableSubmit) {
-    enableSubmit();
-  } else {
-    disableSubmit();
-  }
-}
+    if (shouldEnableSubmit) {
+        enableSubmit();
+    } else {
+        disableSubmit();
+    }
+    }
+
+    const webmailInput = document.getElementById('webmailInput');
+
+     // Prevent spaces in email
+    webmailInput.addEventListener('keydown', function (e) {
+        if (e.key === ' ') e.preventDefault();
+        });
+
+    webmailInput.addEventListener('paste', function (e) {
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        if (/\s/.test(pastedText)) {
+            e.preventDefault();
+            alert('Spaces are not allowed in the email address.');
+        }
+    });
+    // Update description counter
+    const descriptionInput = document.getElementById('descriptionInput');
+    const descCounter = document.getElementById('descCounter');
+    const descWarning = document.getElementById('descLengthWarning');
+
+    descriptionInput.addEventListener('input', () => {
+        const currentLength = descriptionInput.value.length;
+        descCounter.textContent = `${currentLength} / 255`;
+
+        if (currentLength > 255) {
+            descWarning.classList.remove('hidden');
+        } else {
+            descWarning.classList.add('hidden');
+        }
+    });
+
+    // Initialize counter on load if there's pre-filled text
+    descCounter.textContent = `${descriptionInput.value.length} / 255`;
 
 
   // On modal open: reset form, reset flags, disable submit and validate inputs

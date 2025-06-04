@@ -6,9 +6,13 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
+use App\LogsActivity;
+
 
 class StudentLoginController extends Controller
 {
+        use LogsActivity;
+
     // Lockout parameters
     protected $maxAttempts = 4;
     protected $decayMinutes = 5;
@@ -62,6 +66,12 @@ class StudentLoginController extends Controller
             $request->session()->put('user_role', Auth::user()->role);
             $request->session()->put('user_email', Auth::user()->email);
 
+            $user = Auth::user();
+            $this->logActivity(
+                'Login',
+                'User',
+                "{$user->organization_acronym} successfully logged in."
+            );
             return redirect('/student/dashboard');
         }
 
