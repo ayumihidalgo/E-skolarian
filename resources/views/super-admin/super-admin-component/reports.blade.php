@@ -124,7 +124,7 @@
                                         'created_at' => $report->created_at,
                                         'email' => $report->email,
                                         'description' => $report->description,
-                                        'attachment' => $report->file_url  // Changed from screenshot_path to file_url
+                                       'attachment' => $report->file_path ? asset('storage/' . $report->file_path) : null
                                     ]) 
                             }})">
                             <td class="w-[10%] px-13 py-2 whitespace-nowrap text-l text-[#000000] font-[Lexend]">

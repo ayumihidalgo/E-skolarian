@@ -133,8 +133,8 @@
                 You have received a new announcement from the E-Skolarian system.
             </p>
             
-            <div class="announcement-message">
-                <strong>{{ $announcement->title }}</strong><br><br>
+            <div class="announcement-message" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
+                <span style="font-weight: 500;"><strong>{{ $announcement->title }}</strong></span><br><br>
                 {{ $announcement->content }}
             </div>
             
