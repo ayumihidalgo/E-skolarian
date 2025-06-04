@@ -29,16 +29,14 @@ use App\Http\Controllers\ProblemReportController;
 use App\Http\Controllers\StudentDashboardController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SuperAdmin\SuperAdminSettingsController;
-
-
-
-// Redirect /login to landing page
-Route::get('/', function () {
-    return view('auth.landingPage');
-})->name('landing');
+use App\Http\Middleware\LogoutIfAuthenticated;
 
 // Guest routes for login selection
-Route::middleware('guest')->group(function () {
+Route::middleware(LogoutIfAuthenticated::class)->group(function () {
+    Route::get('/', function () {
+        return view('auth.landingPage');
+    })->name('landing');
+
     // Student Login
     Route::get('/student/login', function () {
         return view('auth.Studentlogin');
@@ -52,9 +50,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login');
 
     // Super Admin Login
-    Route::get('/superadmin/login', [SuperAdminLoginController::class, 'showLoginForm'])->name('superadmin.login.form');
+    Route::get('/superadmin/login', function () {
+        return app(SuperAdminLoginController::class)->showLoginForm(request());
+    })->name('superadmin.login.form');
     Route::post('/superadmin/login', [SuperAdminLoginController::class, 'login'])->name('superadmin.login');
-
 
     Route::post('/report-problem', [ProblemReportController::class, 'store'])->name('report.problem.store');
 
@@ -77,14 +76,6 @@ Route::middleware('guest')->group(function () {
     Route::get('admin-password-reset-confirmation', function () {
         return view('auth.admin-password-reset-confirmation');
     })->name('admin.password.reset.confirmation');
-
-
-
-    /* Temporary Route for Email Template */
-    Route::get('/custom-reset-password', function () {
-        return view('emails.custom-reset-password');
-
-    });
 });
 
 Route::get('/notification', function () {
