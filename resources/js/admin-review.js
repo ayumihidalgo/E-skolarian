@@ -19,6 +19,28 @@ window.ASSET_URLS = window.ASSET_URLS || {
 };
 
 // __________________________HELPER FUNCTIONS______________________________________
+function repositionActionButtons() {
+    const container = document.getElementById('actionButtonsContainer');
+    const statusSection = document.getElementById('statusSection'); // Get the exact status section container
+    const headerButtonArea = document.querySelector('#detailsView .flex.justify-end');
+    
+    if (window.innerWidth < 768) { // Mobile view
+        // Append to the status section specifically
+        if (statusSection && container) {
+            statusSection.appendChild(container);
+        }
+    } else { // Desktop view
+        // Move back to header area for desktop
+        if (headerButtonArea && container) {
+            headerButtonArea.prepend(container);
+        }
+    }
+}
+
+// Run on page load and window resize
+window.addEventListener('DOMContentLoaded', repositionActionButtons);
+window.addEventListener('resize', repositionActionButtons);
+
 let currentDocumentId = null;
 // Function to clear input fields in modals
 function clearModalInputs(modalId) {
@@ -2083,18 +2105,21 @@ document.addEventListener('DOMContentLoaded', function() {
 });       
 
 // Return button functionality
-if (rejectButton) {
-    rejectButton.addEventListener('click', function(e) {
-        if (this.disabled) {
-            e.preventDefault();
-            showDocumentActionToast('return', 'This document has already been reviewed and cannot be modified.', false);
-            return;
-        }
-        
-        // If not disabled, show the resubmission modal directly
-        document.getElementById('returnModal').classList.remove('hidden');
-    });
-}
+document.addEventListener('DOMContentLoaded', function() {
+    const rejectButton = document.getElementById('rejectButton');
+    if (rejectButton) {
+        rejectButton.addEventListener('click', function(e) {
+            if (this.disabled) {
+                e.preventDefault();
+                showDocumentActionToast('return', 'This document has already been reviewed and cannot be modified.', false);
+                return;
+            }
+            
+            // If not disabled, show the resubmission modal directly
+            document.getElementById('returnModal').classList.remove('hidden');
+        });
+    }
+});
 
 // Handles "RETURN" Button functionality
 document.addEventListener('DOMContentLoaded', function() {

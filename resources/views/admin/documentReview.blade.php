@@ -1,8 +1,33 @@
 @extends('base')
 
+<style>
+    @media (max-width: 767px) {
+        #actionButtonsContainer {
+            width: 100%;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        #actionButtonsContainer button {
+            flex: 1;
+            margin: 0 0.25rem;
+        }
+        
+        /* Ensure the status section has proper spacing */
+        #statusSection {
+            margin-bottom: 0.5rem;
+        }
+
+        #main-content{
+            margin-left: 0;
+        }
+    }
+</style>
+
 @section('content')
     @include('components.adminSidebarComponent')
-    <div id="main-content" class="transition-all duration-300 sm:ml-[20%] sm:mt-16 md:mt-0">
+    <div id="main-content" class="transition-all duration-300 ml-[20%] sm:mt-16 md:mt-0">
         @include('components.adminNavBarComponent')
         <div class="flex-grow bg-gray-100">
             <!-- Main Content -->
@@ -252,7 +277,7 @@
                         <h2 class="font-extrabold text-lg md:text-2xl text-black">Admin Review</h2>
                         <!-- Action Buttons -->
                         <div class="flex justify-end space-x-2 mt-3 md:mt-4">
-                            <div id="actionButtonsContainer" class="hidden md:flex space-x-2">
+                            <div id="actionButtonsContainer" class="flex space-x-2 order-first md:order-none">
                                 <button id="rejectButton" class="bg-[#C42E2E] hover:bg-red-700 text-white font-bold py-1.5 md:py-2 px-6 md:px-10 text-sm md:text-base rounded-full cursor-pointer">Return</button>
                                 <button id="approveButton" class="bg-[#478642] hover:bg-green-700 text-white font-bold py-1.5 md:py-2 px-5 md:px-8 text-sm md:text-base rounded-full cursor-pointer">Approve</button>
                             </div>
@@ -263,7 +288,7 @@
                     <!-- Mobile view - stacks vertically -->
                     <div class="p-3 md:p-6 flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0 w-full max-w-7xl">
                         <!-- Document Details - Full width on mobile -->
-                        <div class="w-full md:w-2/3 bg-[#4D0F0F] rounded-2xl p-4 md:p-6 space-y-4 md:space-y-6">
+                        <div id="documentDetails" class="w-full md:w-2/3 bg-[#4D0F0F] rounded-2xl p-4 md:p-6 space-y-4 md:space-y-6">
                             <!-- Header -->
                             <div class="flex justify-between items-start">
                                 <div class="font-bold text-sm md:text-base max-w-[70%]">
@@ -297,7 +322,7 @@
                             </div>
 
                             <!-- Status section -->
-                            <div>
+                            <div id="statusSection">
                                 <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Status</h2>
                                 
                                 <!-- Status history with timeline style -->
@@ -339,12 +364,6 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Action buttons - Visible on mobile, hidden on desktop -->
-                            <div id="actionButtonsContainer" class="flex md:hidden space-x-2 mt-2">
-                                <button id="rejectButton" class="bg-[#C42E2E] hover:bg-red-700 text-white font-bold py-1.5 px-6 text-sm rounded-full cursor-pointer w-1/2">Return</button>
-                                <button id="approveButton" class="bg-[#478642] hover:bg-green-700 text-white font-bold py-1.5 px-5 text-sm rounded-full cursor-pointer w-1/2">Approve</button>
                             </div>
                         </div>
 
