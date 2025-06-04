@@ -417,4 +417,7 @@ Route::middleware(['auth', 'role:super-admin'])->group(function () {
     Route::post('/super-admin/settings/change-password', [SuperAdminSettingsController::class, 'changePassword'])->name('super-admin.settings.change-password');
     Route::post('/super-admin/settings/change-email', [SuperAdminSettingsController::class, 'changeEmail'])->name('super-admin.settings.change-email');
 });
-
+// Document Export Route
+Route::get('/admin/document-export', [App\Http\Controllers\DocumentExportController::class, 'export'])
+    ->name('admin.document.export')
+    ->middleware('auth');

@@ -219,7 +219,7 @@ $types = [
         @endif
     </div>
 </div>
-
+@include('components.footer')
 <script>
     // Track sort direction for each column
     let sortDirection = [true, true, true, true, true];
