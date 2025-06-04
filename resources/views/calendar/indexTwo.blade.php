@@ -360,78 +360,129 @@ function initCalendar() {
             },
             dayHeaderFormat: { weekday: 'short' },
             fixedWeekCount: false,
-            // Use multiple event sources
+            selectable: true,
+            editable: true,
+            
+            // Complete events function
             events: function(fetchInfo, successCallback, failureCallback) {
+                console.log('=== Fetching all calendar events ===');
+                
+                // Function to safely fetch and handle errors
+                const safeFetch = (url, name) => {
+                    return fetch(url)
+                        .then(response => {
+                            console.log(`${name} response:`, response.status);
+                            if (!response.ok) {
+                                console.warn(`${name} failed with status ${response.status}`);
+                                return [];
+                            }
+                            return response.json();
+                        })
+                        .catch(error => {
+                            console.error(`Error fetching ${name}:`, error);
+                            return []; // Return empty array on error
+                        });
+                };
+                
+                // Fetch all event types with error handling
                 Promise.all([
-                    fetch('/calendar/events').then(r => r.json()),
-                    fetch('/calendar/approved-proposals').then(r => r.json()),
-                    fetch('/calendar/announcements').then(r => r.json())
+                    safeFetch('/calendar/events', 'Manual events'),
+                    safeFetch('/calendar/approved-proposals', 'Approved proposals'),
+                    safeFetch('/calendar/announcements', 'Announcements')
                 ]).then(responses => {
+                    console.log('All responses received:');
+                    console.log('Manual events:', responses[0]);
+                    console.log('Approved proposals:', responses[1]);
+                    console.log('Announcements:', responses[2]);
+                    
                     let allEvents = [];
-                    allEvents = allEvents.concat(responses[0] || []);
-                    allEvents = allEvents.concat(responses[1] || []);
-                    allEvents = allEvents.concat(responses[2] || []);
+                    
+                    // Safely concatenate arrays (filter out any null/undefined responses)
+                    responses.forEach((response, index) => {
+                        if (Array.isArray(response)) {
+                            allEvents = allEvents.concat(response);
+                        } else {
+                            console.warn(`Response ${index} is not an array:`, response);
+                        }
+                    });
+                    
+                    console.log('Total events:', allEvents.length);
+                    console.log('All events:', allEvents);
+                    
                     successCallback(allEvents);
                 }).catch(error => {
-                    console.error('Error fetching events:', error);
-                    failureCallback(error);
+                    console.error('Critical error in Promise.all:', error);
+                    // Even if there's an error, try to at least show announcements
+                    safeFetch('/calendar/announcements', 'Announcements fallback')
+                        .then(announcements => {
+                            console.log('Fallback: showing only announcements');
+                            successCallback(announcements || []);
+                        });
                 });
             },
+            
             // Handle date changes
             datesSet: function() {
                 checkIfCurrentMonth();
             },
+            
             // Handle date clicks - for creating new events
             dateClick: function(info) {
-                // Check if the click target is an event element - if so, ignore dateClick
-                if (info.jsEvent.target.closest('.fc-event')) {
-                    return; // Don't create new event if clicking on an existing event
-                }
-                
-                const clickedDate = new Date(info.dateStr);
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                
-                if (clickedDate < today) {
-                    alert("Events cannot be created on past dates");
-                    return;
-                }
-                
-                @if(Auth::user()->role === 'admin')
                 openEventModal(info.dateStr);
-                @endif
             },
-            // Handle event clicks - for showing event details
+            
+            // Handle event clicks
             eventClick: function(info) {
+                console.log('Event clicked:', info.event);
+                info.jsEvent.preventDefault();
+                
                 if (info.event.extendedProps.source === 'announcement') {
                     openAnnouncementDetailsModal(info.event);
                 } else {
                     openEventDetailsModal(info.event);
                 }
-                info.jsEvent.preventDefault();
             },
+            
+            // Handle event drag and drop
+            eventDrop: function(info) {
+                console.log('Event dropped:', info.event.id);
+                // Add your event update logic here if needed
+            },
+            
+            // Handle event resize
+            eventResize: function(info) {
+                console.log('Event resized:', info.event.id);
+                // Add your event update logic here if needed
+            },
+            
             // Display settings
             eventDisplay: 'block',
             eventMaxStack: 3,
-            // Handle long event titles
+            
+            // Handle event styling
             eventDidMount: function(info) {
                 // Add announcement styling
                 if (info.event.extendedProps.source === 'announcement') {
                     info.el.style.borderLeft = '4px solid #FF6347';
                     info.el.style.backgroundColor = '#FF6347';
+                    info.el.setAttribute('title', 'Announcement: ' + info.event.title);
                 } else if (info.event.extendedProps.source === 'proposal') {
                     info.el.style.borderLeft = '4px solid #0085FF';
+                    info.el.setAttribute('title', 'Approved Proposal: ' + info.event.title);
                 }
                 
-                // Keep any existing eventDidMount code you have
-            },
+                // Handle long titles
+                const titleEl = info.el.querySelector('.fc-event-title');
+                if (titleEl) {
+                    const fullTitle = info.event.title;
+                    titleEl.setAttribute('data-full-title', fullTitle);
+                    info.el.setAttribute('title', fullTitle);
+                }
+            }
         });
         
         // Render calendar immediately
         calendarObj.render();
-        
-        // Remove this line since we're using the built-in eventClick handler now
-        // initializeEventClickHandlers();
         
         // Add custom buttons after calendar is visible
         addCustomButtons();
@@ -448,33 +499,79 @@ function initCalendar() {
     }
 }
 
-function openAnnouncementDetailsModal(event) {
-    const modal = document.getElementById('eventDetailsModal');
-    if (!modal) return;
+function debugCalendarData() {
+    console.log('=== DEBUG: Testing announcement fetch ===');
     
-    const titleEl = document.getElementById('detail-title');
-    const dateEl = document.getElementById('detail-date');
-    const actionEl = document.getElementById('event-action-buttons');
-    
-    if (titleEl) {
-        titleEl.innerHTML = `
-            <div class="flex items-center gap-2">
-                <span class="inline-block w-3 h-3 rounded-full bg-red-400"></span>
-                <span>${event.title}</span>
-                <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">Announcement</span>
-            </div>
-        `;
-    }
-    
-    if (dateEl && event.start) {
-        const startDate = new Date(event.start);
-        dateEl.textContent = startDate.toLocaleDateString('en-US', { 
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    fetch('/calendar/announcements')
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Announcement data:', data);
+            console.log('Number of announcements:', data.length);
+        })
+        .catch(error => {
+            console.error('Error fetching announcements:', error);
         });
+}
+
+// Call this function after calendar initialization
+setTimeout(debugCalendarData, 2000);
+
+function openAnnouncementDetailsModal(event) {
+    console.log("Opening announcement details modal for:", event.title);
+    
+    const modal = document.getElementById('eventDetailsModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    if (!modal) {
+        console.error('Event details modal not found');
+        return;
     }
     
-    if (actionEl) {
-        actionEl.innerHTML = `
+    // Populate the modal with announcement details
+    const titleElement = document.getElementById('detail-title');
+    const dateElement = document.getElementById('detail-date');
+    const colorIndicator = document.getElementById('event-color-indicator');
+    const actionContainer = document.getElementById('event-action-buttons');
+    
+    if (titleElement) {
+        titleElement.textContent = event.title;
+    }
+    
+    // Format and display the date
+    if (dateElement) {
+        let dateStr = '';
+        const startDate = event.start ? new Date(event.start) : null;
+        const endDate = event.end ? new Date(event.end) : null;
+        
+        if (startDate) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            if (event.allDay) {
+                dateStr = startDate.toLocaleDateString('en-US', options);
+                if (endDate && endDate.getTime() !== startDate.getTime()) {
+                    dateStr += ' - ' + endDate.toLocaleDateString('en-US', options);
+                }
+            } else {
+                const timeOptions = { ...options, hour: 'numeric', minute: '2-digit' };
+                dateStr = startDate.toLocaleDateString('en-US', timeOptions);
+                if (endDate) {
+                    dateStr += ' - ' + endDate.toLocaleDateString('en-US', timeOptions);
+                }
+            }
+        }
+        dateElement.textContent = dateStr;
+    }
+    
+    // Set event color indicator
+    if (colorIndicator) {
+        colorIndicator.style.backgroundColor = '#FF6347';
+    }
+    
+    // Show announcement-specific content
+    if (actionContainer) {
+        actionContainer.innerHTML = `
             <div class="bg-gray-50 p-3 rounded-lg mb-4">
                 <div class="text-sm text-gray-600 mb-2">
                     <strong>Posted by:</strong> ${event.extendedProps.poster || 'Unknown'}<br>
@@ -491,7 +588,13 @@ function openAnnouncementDetailsModal(event) {
         `;
     }
     
+    // Show modal
     modal.classList.remove('hidden');
+    if (modalContent) {
+        setTimeout(() => {
+            modalContent.classList.add('modal-visible');
+        }, 10);
+    }
 }
 
 

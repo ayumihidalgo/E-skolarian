@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Announcement; // Make sure this line exists
+use Carbon\Carbon;
 
 class EventController extends Controller
 {
@@ -466,10 +468,72 @@ public function rescheduleApprovedProposal(Request $request)
 public function getCalendarAnnouncements()
 {
     try {
-        $announcementEvents = $this->getScheduledAnnouncements();
-        return response()->json($announcementEvents);
+        \Log::info('=== getCalendarAnnouncements() method called ===');
+        
+        $userRole = auth()->user()->role;
+        \Log::info('User role: ' . $userRole);
+        
+        // Get announcements that are scheduled (have deadline) and not archived
+        $query = Announcement::where('archived', 0) // Use 'archived' not 'is_archived'
+            ->whereNotNull('deadline') // Use 'deadline' as the scheduled date
+            ->where('deadline', '>=', Carbon::now()); // Only show future/current announcements
+
+        \Log::info('Base query count: ' . $query->count());
+
+        // Filter by audience for students
+        if ($userRole === 'student') {
+            $userId = auth()->id();
+            \Log::info('Filtering for student ID: ' . $userId);
+            
+            $query->where(function($q) use ($userId) {
+                $q->where('audience', 'all')
+                  ->orWhere(function($subQ) use ($userId) {
+                      $subQ->where('audience', 'custom')
+                           ->whereNotNull('audience_students')
+                           ->where(function($jsonQ) use ($userId) {
+                               // Check if user ID is in the JSON array
+                               $jsonQ->whereRaw("JSON_CONTAINS(audience_students, '\"$userId\"')")
+                                     ->orWhereRaw("JSON_CONTAINS(audience_students, '$userId')");
+                           });
+                  });
+            });
+        }
+
+        $announcements = $query->with('user')->get();
+        \Log::info('Final filtered announcements: ' . $announcements->count());
+        
+        // Log each announcement details
+        foreach($announcements as $announcement) {
+            \Log::info('Announcement: ' . $announcement->title . ' | Deadline: ' . $announcement->deadline . ' | Audience: ' . $announcement->audience);
+        }
+
+        $announcementEvents = $announcements->map(function($announcement) {
+            $deadline = Carbon::parse($announcement->deadline);
+            
+            return [
+                'id' => 'announcement_' . $announcement->id,
+                'title' => '📢 ' . $announcement->title,
+                'start' => $deadline->format('Y-m-d H:i:s'),
+                'end' => $deadline->format('Y-m-d H:i:s'),
+                'backgroundColor' => '#FF6347',
+                'textColor' => '#ffffff',
+                'allDay' => $deadline->format('H:i:s') === '00:00:00',
+                'source' => 'announcement',
+                'editable' => false,
+                'deletable' => false,
+                'announcement_id' => $announcement->id,
+                'content' => $announcement->content,
+                'poster' => $announcement->user->username ?? 'Unknown',
+                'deadline_text' => $deadline->format('F j, Y g:i A')
+            ];
+        });
+        
+        \Log::info('Returning ' . $announcementEvents->count() . ' announcement events');
+        return response()->json($announcementEvents->values());
+        
     } catch (\Exception $e) {
-        \Log::error('Error fetching calendar announcements', ['error' => $e->getMessage()]);
+        \Log::error('Error in getCalendarAnnouncements: ' . $e->getMessage());
+        \Log::error('Stack trace: ' . $e->getTraceAsString());
         return response()->json(['error' => $e->getMessage()], 500);
     }
 }
