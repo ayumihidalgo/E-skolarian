@@ -249,7 +249,7 @@ class CommentController extends Controller
     {
         try {
             $comments = Comment::where('document_id', $documentId)
-                ->with(['sender:id,username,profile_pic,role'])
+                ->with(['sender:id,username,role_name,profile_pic'])
                 ->orderBy('created_at', 'asc')
                 ->get();
 
