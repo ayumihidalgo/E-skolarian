@@ -18,12 +18,16 @@
         #statusSection {
             margin-bottom: 0.5rem;
         }
+
+        #main-content{
+            margin-left: 0;
+        }
     }
 </style>
 
 @section('content')
     @include('components.adminSidebarComponent')
-    <div id="main-content" class="transition-all duration-300 sm:ml-[20%] sm:mt-16 md:mt-0">
+    <div id="main-content" class="transition-all duration-300 ml-[20%] sm:mt-16 md:mt-0">
         @include('components.adminNavBarComponent')
         <div class="flex-grow bg-gray-100">
             <!-- Main Content -->
