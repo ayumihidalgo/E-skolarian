@@ -132,8 +132,6 @@
                                     </div>
                                 </div>
                                 <!-- Vertical line (last step, orange dot) -->
-                                <span class="absolute left-1.5 top-[90px] w-0.5 h-6 bg-orange-400"></span>
-                                <span class="absolute left-0 top-[110px] w-3 h-3 rounded-full bg-orange-400 border-2 border-white"></span>
                             </div>
                         </div>
                     </div>

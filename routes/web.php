@@ -27,7 +27,9 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\ProblemReportController;
 use App\Http\Controllers\StudentDashboardController;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SuperAdmin\SuperAdminSettingsController;
+
 
 
 // Redirect /login to landing page
@@ -109,6 +111,7 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
     Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
         ->name('super-admin.reactivate-user')
         ->middleware('auth');
+
 
     // Super Admin Reports
     Route::get('/super-admin/reports', function () {
@@ -408,6 +411,14 @@ Route::get('/login', function () {
     return redirect()->route('landing');
 })->name('login');
 
+
+Route::post('/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/');
+})->name('logout');
+
 // Super Admin Settings Routes
 Route::middleware(['auth', 'role:super-admin'])->group(function () {
     Route::get('/super-admin/settings', [SuperAdminSettingsController::class, 'index'])->name('super-admin.settings');
@@ -415,3 +426,4 @@ Route::middleware(['auth', 'role:super-admin'])->group(function () {
     Route::post('/super-admin/settings/change-password', [SuperAdminSettingsController::class, 'changePassword'])->name('super-admin.settings.change-password');
     Route::post('/super-admin/settings/change-email', [SuperAdminSettingsController::class, 'changeEmail'])->name('super-admin.settings.change-email');
 });
+
