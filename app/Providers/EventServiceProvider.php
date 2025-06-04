@@ -4,6 +4,8 @@ namespace App\Providers;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use App\Events\DocumentSubmitted;
 use App\Listeners\submitDocumentListener;
+use App\Events\NewAnnouncement;
+use App\Listeners\NewAnnouncementListener;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -18,6 +20,9 @@ protected $listen = [
     ],
      \App\Events\NewChatMessage::class => [
         \App\Listeners\SendChatNotification::class,
+    ],
+    NewAnnouncement::class => [
+        NewAnnouncementListener::class,
     ],
     
 ];
