@@ -300,13 +300,26 @@
                         </button>
                     </div>
                     <!-- Terms & Privacy Buttons -->
-                    <div class="flex justify-center text-[14px] text-[#00000066] gap-x-[30px]">
+                    <div class="flex justify-center text-[14px] text-[#00000066] gap-x-[30px] pb-6">
                         <button onclick="termModal()" id="termsBtn" type="button" class="cursor-pointer">
                             Terms & Conditions
                         </button>
                         <button onclick="privacyModal()" id="privacyBtn" type="button" class="cursor-pointer">
                             Privacy Policy
                         </button>
+                    </div>
+                    <div class="flex justify-end items-center gap-x-1 relative">
+                        <a class="font-[Manrope] font-normal text-[var(--secondary-color)] underline" href="{{ route('landing') }}">Return to Main Page</a>
+                        <svg width="25" height="25" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_9223_23095)">
+                            <path d="M27.1521 16.9427C27.4021 16.6927 27.5425 16.3536 27.5425 16.0001C27.5425 15.6465 27.4021 15.3074 27.1521 15.0574L19.6094 7.51472C19.4864 7.38737 19.3393 7.28579 19.1766 7.21592C19.014 7.14604 18.839 7.10925 18.662 7.10772C18.4849 7.10618 18.3094 7.13991 18.1455 7.20696C17.9816 7.274 17.8328 7.373 17.7076 7.49819C17.5824 7.62338 17.4834 7.77225 17.4163 7.93611C17.3493 8.09997 17.3156 8.27555 17.3171 8.45259C17.3186 8.62962 17.3554 8.80458 17.4253 8.96726C17.4952 9.12993 17.5968 9.27706 17.7241 9.40005L22.9908 14.6667H5.33343C4.97981 14.6667 4.64067 14.8072 4.39062 15.0572C4.14057 15.3073 4.0001 15.6464 4.0001 16.0001C4.0001 16.3537 4.14057 16.6928 4.39062 16.9429C4.64067 17.1929 4.97981 17.3334 5.33343 17.3334H22.9908L17.7241 22.6001C17.4812 22.8515 17.3468 23.1883 17.3499 23.5379C17.3529 23.8875 17.4931 24.2219 17.7403 24.4691C17.9876 24.7164 18.322 24.8566 18.6716 24.8596C19.0212 24.8627 19.358 24.7283 19.6094 24.4854L27.1521 16.9427Z" fill="#7A1212"/>
+                            </g>
+                            <defs>
+                            <clipPath id="clip0_9223_23095">
+                            <rect width="32" height="32" fill="white" transform="matrix(0 1 -1 0 32 0)"/>
+                            </clipPath>
+                            </defs>
+                        </svg>
                     </div>
                 </form>
             </div>
@@ -606,7 +619,7 @@
 
 <!-- Report Button -->
 <button id="reportBtn"
-  class="fixed bottom-4 right-4 bg-transparent rounded-full w-9 h-9 shadow-none focus:outline-none z-50 flex items-center justify-center cursor-pointer"
+class="fixed bottom-4 right-4 bg-transparent rounded-full w-9 h-9 shadow-none focus:outline-none z-50 flex items-center justify-center cursor-pointer"
   title="Report a Problem">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-full h-full">
     <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
