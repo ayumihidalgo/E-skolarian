@@ -46,6 +46,19 @@ class AnnouncementController extends Controller
 
         $announcement->save();
 
+        // Log the data being saved
+        \Log::info('Announcement created', [
+            'title' => $announcement->title,
+            'content' => $announcement->content,
+            'user_id' => $announcement->user_id,
+            'audience' => $announcement->audience,
+            'audience_students' => $announcement->audience_students,
+            'deadline' => $announcement->deadline,
+        ]);
+
+        // Trigger NewAnnouncement event
+        event(new \App\Events\NewAnnouncement($announcement, $announcement->audience, $announcement->audience_students));
+
         return redirect()->route('admin.dashboard')->with('success', 'Announcement posted!');
     }
 
