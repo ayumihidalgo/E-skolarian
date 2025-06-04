@@ -185,7 +185,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
     // Super Admin Logout
     Route::post('/superadmin/logout', [SuperAdminLoginController::class, 'logout'])->name('superadmin.logout');
-    Route::get('/dashboard', fn() => view('student.dashboard'))->name('dashboard');
+    Route::get('/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
 
     // Calendar
     Route::get('/calendar', [EventController::class, 'index'])->name('calendar.index');

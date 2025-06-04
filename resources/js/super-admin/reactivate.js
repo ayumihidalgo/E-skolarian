@@ -69,17 +69,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const userData = JSON.parse(this.getAttribute('data-user'));
                 
-                // Get references to elements
-                const acronymField = document.getElementById('deactivatedAcronymField');
-                const acronymEl = document.getElementById('deactivatedUserAcronym');
-                
-                // Populate basic user details
+                // Populate user details
                 document.getElementById('deactivatedUserUsername').textContent = userData.username;
                 document.getElementById('deactivatedUserEmail').textContent = userData.email;
                 document.getElementById('deactivatedUserRole').textContent = userData.role_name;
 
-                // Handle acronym field visibility and content
-                if (userData.role_name.includes('Organization')) {
+                // Handle acronym field visibility
+                const acronymField = document.getElementById('deactivatedAcronymField');
+                const acronymEl = document.getElementById('deactivatedUserAcronym');
+                
+                if (!userData.role_name.toLowerCase().includes('admin')) {
                     if (acronymField) {
                         acronymField.classList.remove('hidden');
                     }
