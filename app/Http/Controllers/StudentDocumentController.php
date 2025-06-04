@@ -66,7 +66,7 @@ class StudentDocumentController extends Controller
         $query = DB::table('submitted_documents')
             ->where('user_id', $userId)
             ->whereNull('archived_at') // Exclude archived documents
-            ->whereIn('status', ['Approved', 'Rejected']); // show Approved or Rejected
+            ->whereIn('status', ['Approved']); // show Approved 
         
         // Apply type filter
         if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {

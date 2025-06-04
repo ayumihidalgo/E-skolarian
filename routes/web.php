@@ -417,6 +417,12 @@ Route::middleware(['auth', 'role:super-admin'])->group(function () {
     Route::post('/super-admin/settings/change-password', [SuperAdminSettingsController::class, 'changePassword'])->name('super-admin.settings.change-password');
     Route::post('/super-admin/settings/change-email', [SuperAdminSettingsController::class, 'changeEmail'])->name('super-admin.settings.change-email');
 });
+
+// Document Export Route
+Route::get('/admin/document-export', [App\Http\Controllers\DocumentExportController::class, 'export'])
+    ->name('admin.document.export')
+    ->middleware('auth');
+
 // Report Viewing and Management
 Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(function () {
     Route::get('/reports', function () {
@@ -428,3 +434,4 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
     Route::post('/reports/{report}/mark-as-viewed', [SuperAdminController::class, 'markReportAsViewed'])
         ->name('reports.mark-viewed');
 });
+
