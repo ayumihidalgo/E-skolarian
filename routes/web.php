@@ -417,4 +417,14 @@ Route::middleware(['auth', 'role:super-admin'])->group(function () {
     Route::post('/super-admin/settings/change-password', [SuperAdminSettingsController::class, 'changePassword'])->name('super-admin.settings.change-password');
     Route::post('/super-admin/settings/change-email', [SuperAdminSettingsController::class, 'changeEmail'])->name('super-admin.settings.change-email');
 });
+// Report Viewing and Management
+Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(function () {
+    Route::get('/reports', function () {
+        return view('super-admin.reports.index');
+    })->name('reports.index');
 
+    Route::get('/reports/{report}', [SuperAdminController::class, 'showReport'])->name('reports.show');
+
+    Route::post('/reports/{report}/mark-as-viewed', [SuperAdminController::class, 'markReportAsViewed'])
+        ->name('reports.mark-viewed');
+});
