@@ -57,9 +57,8 @@ class DocumentController extends Controller
                 'type' => $validated['type'],
             ]);
 
-            // Defines the control tag of the submitted documents, Format: DOC-0001
-            $receiver = User::find($validated['received_by']);
-            $acronym = $receiver->organization_acronym ?? 'DOC';
+            // Defines the control tag of the submitted documents, Example: ELITE-0001
+            $acronym = Auth::user()->organization_acronym ?? 'DOC';
             $document->control_tag = $acronym . '-' . str_pad($document->id, 4, '0', STR_PAD_LEFT);
 
             // Store the validated data with the generated control tag
