@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\ActivityLog; // Import ActivityLog model
+use App\Models\ProblemReport; // Import ProblemReport model
 use Illuminate\Http\Request;
 use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Log;
@@ -223,5 +224,20 @@ class SuperAdminController extends Controller
         ->get();
 
         return view('super-admin.dashboard', compact('activities'));
+    }
+
+    public function markReportAsViewed(ProblemReport $report)
+    {
+        $report->update(['viewed' => true]);
+        
+        // Get the new count of unviewed reports
+        $newCount = ProblemReport::where('viewed', false)
+                                ->where('created_at', '>=', now()->subDay())
+                                ->count();
+        
+        return response()->json([
+            'success' => true,
+            'newCount' => $newCount
+        ]);
     }
 }

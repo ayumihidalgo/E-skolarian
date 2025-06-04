@@ -2,7 +2,7 @@
     <!-- Modal Content -->
     <div class="bg-white rounded-[16px] shadow-xl w-[500px] relative">
         <div class="p-4">
-            <div class="divide-y divide-gray-200 max-h-[350px] overflow-y-auto">
+            <div class="divide-y divide-gray-200 max-h-[370px] overflow-y-auto">
                 @forelse($activities as $activity)
                     <div class="py-2">
                         <div class="flex justify-between items-center">
