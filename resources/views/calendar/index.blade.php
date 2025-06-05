@@ -327,15 +327,44 @@ function containsSpecialChars(text) {
                 },
                 dayHeaderFormat: { weekday: 'short' },
                 fixedWeekCount: false,
-                events: '{{ route("calendar.events") }}',
+                
+                events: function(fetchInfo, successCallback, failureCallback) {
+                    Promise.all([
+                        fetch('/calendar/events').then(r => r.json()), // Add this line to fetch admin events
+                        fetch('/calendar/announcements').then(r => r.json())
+                    ]).then(responses => {
+                        console.log('Manual events:', responses[0]);
+                        console.log('Announcements:', responses[1]);
+                        
+                        let allEvents = [];
+                        
+                        // Safely concatenate arrays
+                        responses.forEach((response, index) => {
+                            if (Array.isArray(response)) {
+                                allEvents = allEvents.concat(response);
+                            } else {
+                                console.warn(`Response ${index} is not an array:`, response);
+                            }
+                        });
+                        
+                        console.log('Total events for student view:', allEvents.length);
+                        successCallback(allEvents);
+                    }).catch(error => {
+                        console.error('Error fetching events:', error);
+                        failureCallback(error);
+                    });
+                },
                 // Handle date changes
                 datesSet: function() {
                     checkIfCurrentMonth();
                 },
                 eventClick: function(info) {
-                    openEventDetailsModal(info.event);
-                    
-                    // Prevent browser from following the link
+                    if (info.event.extendedProps.source === 'announcement') {
+                        openAnnouncementDetailsModal(info.event);
+                    } else {
+                        // For manual events, show details but without edit options
+                        openEventDetailsModal(info.event);
+                    }
                     info.jsEvent.preventDefault();
                 },
                 // Handle date clicks
@@ -353,25 +382,25 @@ function containsSpecialChars(text) {
                 eventMaxStack: 3,
                 // Handle long event titles
                 eventDidMount: function(info) {
-                    // Get the title element
-                    const titleEl = info.el.querySelector('.fc-event-title');
-                    if (!titleEl) return;
-                    
-                    // Store full title for tooltip
-                    const fullTitle = info.event.title;
-                    titleEl.setAttribute('data-full-title', fullTitle);
-                    
-                    // Handle different title lengths
-                    const titleLength = fullTitle.length;
-                    
-                    // Very long titles (60+): Use multi-line
-                    if (titleLength > 60) {
-                        info.el.classList.add('multi-line');
-                    }
-                    
-                    // Add title attribute for native browser tooltip
-                    info.el.setAttribute('title', fullTitle);
-                },
+                // Add announcement styling
+                if (info.event.extendedProps.source === 'announcement') {
+                    info.el.style.borderLeft = '4px solid #FF6347';
+                    info.el.style.backgroundColor = '#FF6347';
+                }
+                
+                // Keep your existing title handling code
+                const titleEl = info.el.querySelector('.fc-event-title');
+                if (!titleEl) return;
+                
+                const fullTitle = info.event.title;
+                titleEl.setAttribute('data-full-title', fullTitle);
+                
+                const titleLength = fullTitle.length;
+                if (titleLength > 60) {
+                    info.el.classList.add('multi-line');
+                }
+                info.el.setAttribute('title', fullTitle);
+            }
                 // Sample events (replace with your actual events)
 
             });
@@ -393,6 +422,76 @@ function containsSpecialChars(text) {
                 '</div></div>';
         }
     }
+
+    function openAnnouncementDetailsModal(event) {
+    console.log("Opening announcement details modal for:", event.title);
+    
+    const modal = document.getElementById('eventDetailsModal');
+    const modalContent = modal.querySelector('.modal-container');
+    
+    if (!modal) {
+        console.error('Event details modal not found');
+        alert('Modal not found. Please refresh the page.');
+        return;
+    }
+    
+    // Populate the modal with announcement details
+    const titleElement = document.getElementById('detail-title');
+    const dateElement = document.getElementById('detail-date');
+    const colorIndicator = document.getElementById('event-color-indicator');
+    const actionContainer = document.getElementById('event-action-buttons');
+    
+    if (titleElement) {
+        titleElement.textContent = event.title;
+    }
+    
+    // Format and display the date
+    if (dateElement) {
+        const startDate = event.start ? new Date(event.start) : null;
+        let dateStr = '';
+        
+        if (startDate) {
+            dateStr = startDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        dateElement.textContent = dateStr;
+    }
+    
+    // Set event color indicator
+    if (colorIndicator) {
+        colorIndicator.style.backgroundColor = event.backgroundColor || '#FF6347';
+    }
+    
+    // Show announcement-specific content
+    if (actionContainer) {
+        actionContainer.innerHTML = `
+            <div class="text-sm text-gray-600 mb-2">
+                <strong>Posted by:</strong> ${event.extendedProps.poster || 'Unknown'}<br>
+                ${event.extendedProps.deadline_text ? '<strong>Deadline:</strong> ' + event.extendedProps.deadline_text : ''}
+            </div>
+            <div class="text-sm text-gray-700 mb-4">
+                ${event.extendedProps.content || 'No additional details available.'}
+            </div>
+            <p class="text-xs text-orange-600 font-medium">📢 This is an announcement with a deadline.</p>
+        `;
+    }
+    
+    // Show modal with animation
+    modal.classList.remove('hidden');
+    if (modalContent) {
+        setTimeout(() => {
+            modalContent.classList.remove('modal-hidden');
+            modalContent.classList.add('modal-visible');
+        }, 10);
+    }
+}
     
     // Add custom buttons to the calendar
     function addCustomButtons() {
