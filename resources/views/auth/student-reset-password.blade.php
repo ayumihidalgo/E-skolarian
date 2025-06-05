@@ -115,7 +115,7 @@
         </script>
     @endif
     <div class="p-5 w-full">
-        <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-white/60 max-md:shadow-md">
+        <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-[#FFFFFFCC] max-md:shadow-md">
             <div class="flex justify-center pb-4">
                 <img class="md:h-20" src="{{asset('images/e-skolarianLogo.svg')}}" alt="E-skolarian Logo">
             </div>
