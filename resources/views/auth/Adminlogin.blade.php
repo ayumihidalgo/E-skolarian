@@ -53,23 +53,21 @@
             const nextIndex = (currentIndex + 1) % images.length;
             const nextImage = images[nextIndex];
 
-            if (window.innerWidth >= 768) {
-                if (showingA) {
-                    setLayerBackground(bgB, nextImage);
-                    bgB.classList.remove('opacity-0');
-                    bgB.classList.add('opacity-100');
-                    bgA.classList.remove('opacity-100');
-                    bgA.classList.add('opacity-0');
-                } else {
-                    setLayerBackground(bgA, nextImage);
-                    bgA.classList.remove('opacity-0');
-                    bgA.classList.add('opacity-100');
-                    bgB.classList.remove('opacity-100');
-                    bgB.classList.add('opacity-0');
-                }
-                showingA = !showingA;
-                currentIndex = nextIndex;
+            if (showingA) {
+                setLayerBackground(bgB, nextImage);
+                bgB.classList.remove('opacity-0');
+                bgB.classList.add('opacity-100');
+                bgA.classList.remove('opacity-100');
+                bgA.classList.add('opacity-0');
+            } else {
+                setLayerBackground(bgA, nextImage);
+                bgA.classList.remove('opacity-0');
+                bgA.classList.add('opacity-100');
+                bgB.classList.remove('opacity-100');
+                bgB.classList.add('opacity-0');
             }
+            showingA = !showingA;
+            currentIndex = nextIndex;
         }
 
         window.addEventListener('load', () => {
@@ -132,20 +130,20 @@
 
 @include('loading');
 <body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] md:bg-[var(--secondary-color)] font-['Manrope'] font-bold">
-    <div id="bgA" class="absolute inset-0 transition-all duration-1000 ease-in-out opacity-100 max-md:hidden" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: center;"></div>
-    <div id="bgB" class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-0 max-md:hidden"></div>
+    <div id="bgA" class="fixed inset-0 z-0 transition-all duration-1000 ease-in-out opacity-100" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: center;"></div>
+    <div id="bgB" class="fixed inset-0 z-0 transition-opacity duration-1000 ease-in-out opacity-0"></div>
     <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md md:absolute relative">
-        <div id="formContainer" class="opacity-0 flex flex-col items-center justify-center h-full px-6 bg-[#D9D9D9]/70 p-4 md:w-[50%] md:max-w-[600px] md:rounded-l-[100px] md:backdrop-blur-xs md:bg-white/80 md:transition-all md:duration-1000 md:absolute md:right-0 md:top-0 md:bottom-0">
+        <div id="formContainer" class="opacity-0 flex flex-col items-center justify-center h-full px-6 bg-[#FFFFFFCC] p-4 md:w-[50%] md:max-w-[600px] rounded-4xl md:rounded-r-none md:rounded-l-[80px] md:backdrop-blur-xs md:transition-all md:duration-1000 md:absolute md:right-0 md:top-0 md:bottom-0">
             <div class="h-35 flex items-center">
                 <img class="mx-auto h-19 md:h-22" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
             </div>
-            <h1 class="font-[Lexend] text-[#7A1212] text-3xl md:pt-6">ADMIN LOGIN</h1>
+            <h1 class="font-[Lexend] text-[#7A1212] text-2xl md:text-3xl text-center md:pt-6">ADMIN LOGIN</h1>
             <div class="w-full max-w-[400px] mx-auto pt-14 md:pt-10">
-                <form method="POST" action="{{ route('admin.login') }}" class="space-y-4 md:space-y-2">
+                <form method="POST" action="{{ route('admin.login') }}" class="space-y-2 pb-10">
                     @csrf
                     <input type="hidden" name="role" id="role" value="admin">
                     <!-- Email -->
-                    <div class="pb-6">
+                    <div class="pb-10">
                         <label id="emailLabel" class="w-full rounded-2xl px-3 py-2 md:p-4 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
                             <input type="email" id="emailInput" name="email" placeholder="Email Address" required
                                 class="w-0 flex-grow outline-none mr-3" maxlength="100">
@@ -293,14 +291,14 @@
 
 
                     <!-- Submit -->
-                    <div class="pt-8 flex justify-center">
+                    <div class="pt-4 md:pt-8 flex justify-center">
                         <button type="submit" id="signInButton"
-                            class="opacity-50 w-full rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-2 md:py-4  hover:bg-[var(--primary-color)] transition font-semibold">
+                            class="opacity-50 w-full max-md:max-w-[280px] rounded-full md:rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-4 hover:bg-[var(--primary-color)] transition font-semibold">
                             Sign In
                         </button>
                     </div>
                     <!-- Terms & Privacy Buttons -->
-                    <div class="flex justify-center text-[14px] text-[#00000066] gap-x-[30px] pb-6">
+                    <div class="flex justify-center text-[14px] text-[#00000066] gap-x-[30px]">
                         <button onclick="termModal()" id="termsBtn" type="button" class="cursor-pointer">
                             Terms & Conditions
                         </button>
@@ -308,7 +306,9 @@
                             Privacy Policy
                         </button>
                     </div>
-                    <div class="flex justify-end items-center gap-x-1 relative">
+
+                    <!-- Return to Main Page -->
+                    <div class="flex justify-center pt-4 md:absolute md:top-0 md:right-5">
                         <a class="font-[Manrope] font-normal text-[var(--secondary-color)] underline" href="{{ route('landing') }}">Return to Main Page</a>
                         <svg width="25" height="25" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <g clip-path="url(#clip0_9223_23095)">
@@ -322,6 +322,18 @@
                         </svg>
                     </div>
                 </form>
+
+                <!-- Report Button -->
+                <button id="reportBtn"
+                    class="absolute bottom-10 md:bottom-5 right-10 md:right-5 bg-transparent rounded-full w-6 h-6 md:w-8 md:h-8 shadow-none focus:outline-none z-50 flex items-center justify-center cursor-pointer"
+                    title="Report a Problem">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-full h-full">
+                        <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
+                            fill="transparent" stroke="black" stroke-width="2.5"/>
+                        <rect x="11" y="8" width="2" height="4" fill="black" />
+                        <rect x="11" y="14" width="2" height="2" fill="black" />
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -616,18 +628,6 @@
         </div>
     </div>
 </div>
-
-<!-- Report Button -->
-<button id="reportBtn"
-class="fixed bottom-4 right-4 bg-transparent rounded-full w-9 h-9 shadow-none focus:outline-none z-50 flex items-center justify-center cursor-pointer"
-  title="Report a Problem">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-full h-full">
-    <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
-          fill="transparent" stroke="black" stroke-width="2.5"/>
-    <rect x="11" y="8" width="2" height="4" fill="black" />
-    <rect x="11" y="14" width="2" height="2" fill="black" />
-  </svg>
-</button>
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {

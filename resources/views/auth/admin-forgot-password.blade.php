@@ -19,13 +19,9 @@
             const box = document.getElementById('box');
             if (!box) return;
 
-            if (window.innerWidth >= 768) {
-                box.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ asset('images/PUP_Bg1.jpg') }}')`;
-                box.style.backgroundRepeat = 'no-repeat';
-                box.style.backgroundSize = 'cover';
-            } else {
-                box.style.backgroundImage = '';
-            }
+            box.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ asset('images/PUP_Bg1.jpg') }}')`;
+            box.style.backgroundRepeat = 'no-repeat';
+            box.style.backgroundSize = 'cover';
         }
 
         /* Fade Messages  */
@@ -50,7 +46,7 @@
 @include('loading');
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
     <div class="p-5 w-full">
-        <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-white/60 max-md:shadow-md">
+        <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-[#FFFFFFCC] max-md:shadow-md">
             <div class="flex justify-center pb-4">
                 <img class="md:h-20" src="{{asset('images/e-skolarianLogo.svg')}}" alt="E-skolarian Logo">
             </div>
