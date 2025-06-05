@@ -329,39 +329,44 @@ function containsSpecialChars(text) {
                 fixedWeekCount: false,
                 
                 events: function(fetchInfo, successCallback, failureCallback) {
-                Promise.all([
-                    @if(Auth::user()->role === 'admin')
-                    fetch('{{ route("calendar.events") }}').then(r => r.json()),
-                    fetch('/calendar/approved-proposals').then(r => r.json()),
-                    @endif
-                    fetch('/calendar/announcements').then(r => r.json())
-                ]).then(responses => {
-                    let allEvents = [];
-                    @if(Auth::user()->role === 'admin')
-                    allEvents = allEvents.concat(responses[0] || []);
-                    allEvents = allEvents.concat(responses[1] || []);
-                    allEvents = allEvents.concat(responses[2] || []);
-                    @else
-                    allEvents = allEvents.concat(responses[0] || []);
-                    @endif
-                    successCallback(allEvents);
-                }).catch(error => {
-                    console.error('Error fetching events:', error);
-                    failureCallback(error);
-                });
-            },
+                    Promise.all([
+                        fetch('/calendar/events').then(r => r.json()), // Add this line to fetch admin events
+                        fetch('/calendar/announcements').then(r => r.json())
+                    ]).then(responses => {
+                        console.log('Manual events:', responses[0]);
+                        console.log('Announcements:', responses[1]);
+                        
+                        let allEvents = [];
+                        
+                        // Safely concatenate arrays
+                        responses.forEach((response, index) => {
+                            if (Array.isArray(response)) {
+                                allEvents = allEvents.concat(response);
+                            } else {
+                                console.warn(`Response ${index} is not an array:`, response);
+                            }
+                        });
+                        
+                        console.log('Total events for student view:', allEvents.length);
+                        successCallback(allEvents);
+                    }).catch(error => {
+                        console.error('Error fetching events:', error);
+                        failureCallback(error);
+                    });
+                },
                 // Handle date changes
                 datesSet: function() {
                     checkIfCurrentMonth();
                 },
                 eventClick: function(info) {
-                if (info.event.extendedProps.source === 'announcement') {
-                    openAnnouncementDetailsModal(info.event);
-                } else {
-                    openEventDetailsModal(info.event);
-                }
-                info.jsEvent.preventDefault();
-            },
+                    if (info.event.extendedProps.source === 'announcement') {
+                        openAnnouncementDetailsModal(info.event);
+                    } else {
+                        // For manual events, show details but without edit options
+                        openEventDetailsModal(info.event);
+                    }
+                    info.jsEvent.preventDefault();
+                },
                 // Handle date clicks
                 // function dateClick 
                 dateClick: function(info) {
@@ -419,38 +424,73 @@ function containsSpecialChars(text) {
     }
 
     function openAnnouncementDetailsModal(event) {
+    console.log("Opening announcement details modal for:", event.title);
+    
     const modal = document.getElementById('eventDetailsModal');
-    if (!modal) return;
+    const modalContent = modal.querySelector('.modal-container');
     
-    // If you have these elements, populate them
-    const titleEl = document.getElementById('detail-title');
-    const dateEl = document.getElementById('detail-date');
-    const actionEl = document.getElementById('event-action-buttons');
-    
-    if (titleEl) titleEl.textContent = event.title;
-    
-    if (dateEl) {
-        const startDate = event.start ? new Date(event.start) : null;
-        if (startDate) {
-            dateEl.textContent = startDate.toLocaleDateString('en-US', { 
-                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
-            });
-        }
+    if (!modal) {
+        console.error('Event details modal not found');
+        alert('Modal not found. Please refresh the page.');
+        return;
     }
     
-    if (actionEl) {
-        actionEl.innerHTML = `
+    // Populate the modal with announcement details
+    const titleElement = document.getElementById('detail-title');
+    const dateElement = document.getElementById('detail-date');
+    const colorIndicator = document.getElementById('event-color-indicator');
+    const actionContainer = document.getElementById('event-action-buttons');
+    
+    if (titleElement) {
+        titleElement.textContent = event.title;
+    }
+    
+    // Format and display the date
+    if (dateElement) {
+        const startDate = event.start ? new Date(event.start) : null;
+        let dateStr = '';
+        
+        if (startDate) {
+            dateStr = startDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        dateElement.textContent = dateStr;
+    }
+    
+    // Set event color indicator
+    if (colorIndicator) {
+        colorIndicator.style.backgroundColor = event.backgroundColor || '#FF6347';
+    }
+    
+    // Show announcement-specific content
+    if (actionContainer) {
+        actionContainer.innerHTML = `
             <div class="text-sm text-gray-600 mb-2">
                 <strong>Posted by:</strong> ${event.extendedProps.poster || 'Unknown'}<br>
                 ${event.extendedProps.deadline_text ? '<strong>Deadline:</strong> ' + event.extendedProps.deadline_text : ''}
             </div>
             <div class="text-sm text-gray-700 mb-4">
-                ${event.extendedProps.content || 'No content available'}
+                ${event.extendedProps.content || 'No additional details available.'}
             </div>
+            <p class="text-xs text-orange-600 font-medium">📢 This is an announcement with a deadline.</p>
         `;
     }
     
+    // Show modal with animation
     modal.classList.remove('hidden');
+    if (modalContent) {
+        setTimeout(() => {
+            modalContent.classList.remove('modal-hidden');
+            modalContent.classList.add('modal-visible');
+        }, 10);
+    }
 }
     
     // Add custom buttons to the calendar
