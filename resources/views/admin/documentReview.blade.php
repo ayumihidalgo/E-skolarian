@@ -19,6 +19,11 @@
             margin-bottom: 0.5rem;
         }
 
+        /* This is the important part - ensure hidden state is preserved with !important */
+        #actionButtonsContainer.hidden {
+            display: none !important;
+        }
+
         #main-content{
             margin-left: 0;
         }
@@ -271,7 +276,7 @@
                 </div>
 
                 <!-- Details View (initially hidden) -->
-                <div id="detailsView" class="hidden h-full text-white">
+                <div id="detailsView" class="hidden h-auto text-white">
                     <!-- Header with close button -->
                     <div class="flex items-start justify-between px-3 md:px-6 mb-2 md:mb-0">
                         <h2 class="font-extrabold text-lg md:text-2xl text-black">Admin Review</h2>
@@ -357,10 +362,10 @@
                                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
                                             </svg>
                                         </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm font-medium">You've requested resubmission for this document on <span id="forwardedDate">loading date...</span></p>
-                                            <p class="text-sm mt-1">Message: <span id="forwardedMessage" class="italic">Loading message...</span></p>
-                                            <p class="text-xs mt-2 font-medium">You can still view this document, but you can only perform actions once the organization resubmits the document.</p>
+                                        <div class="ml-3 overflow-hidden">
+                                            <p class="text-sm font-medium break-words">You've requested resubmission for this document on <span id="forwardedDate">loading date...</span></p>
+                                            <p class="text-sm mt-1 break-words">Message: <span id="forwardedMessage" class="italic break-words">Loading message...</span></p>
+                                            <p class="text-xs mt-2 font-medium break-words">You can still view this document, but you can only perform actions once the organization resubmits the document.</p>
                                         </div>
                                     </div>
                                 </div>

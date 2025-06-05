@@ -21,8 +21,13 @@ window.ASSET_URLS = window.ASSET_URLS || {
 // __________________________HELPER FUNCTIONS______________________________________
 function repositionActionButtons() {
     const container = document.getElementById('actionButtonsContainer');
-    const statusSection = document.getElementById('statusSection'); // Get the exact status section container
+    const statusSection = document.getElementById('statusSection');
     const headerButtonArea = document.querySelector('#detailsView .flex.justify-end');
+    
+    if (!container) return; // Exit if container not found
+    
+    // Store the visibility state before moving
+    const wasHidden = container.classList.contains('hidden');
     
     if (window.innerWidth < 768) { // Mobile view
         // Append to the status section specifically
@@ -35,10 +40,50 @@ function repositionActionButtons() {
             headerButtonArea.prepend(container);
         }
     }
+
+    console.log("Is button hidden:", wasHidden);
+
+    // Restore the visibility state after moving
+    if (wasHidden) {
+        container.classList.add('hidden');
+    } else {
+        // Additional check for document status, regardless of previous visibility
+        const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+        const returnedStatusIndicator = document.getElementById('returnedStatusIndicator');
+        
+        // If any status indicator is visible, the buttons should be hidden
+        if ((processedStatusIndicator && !processedStatusIndicator.classList.contains('hidden')) || 
+            (returnedStatusIndicator && !returnedStatusIndicator.classList.contains('hidden'))) {
+            container.classList.add('hidden');
+        } else {
+            container.classList.remove('hidden'); // Only show if document is not processed
+        }
+    }
 }
 
 // Run on page load and window resize
-window.addEventListener('DOMContentLoaded', repositionActionButtons);
+document.addEventListener('DOMContentLoaded', function() {
+    // Original repositionActionButtons call
+    repositionActionButtons();
+    
+    // Also observe changes to status indicators
+    const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+    const returnedStatusIndicator = document.getElementById('returnedStatusIndicator');
+    
+    if (processedStatusIndicator) {
+        const observer = new MutationObserver(function(mutations) {
+            repositionActionButtons();
+        });
+        observer.observe(processedStatusIndicator, { attributes: true, attributeFilter: ['class'] });
+    }
+    
+    if (returnedStatusIndicator) {
+        const observer = new MutationObserver(function(mutations) {
+            repositionActionButtons();
+        });
+        observer.observe(returnedStatusIndicator, { attributes: true, attributeFilter: ['class'] });
+    }
+});
 window.addEventListener('resize', repositionActionButtons);
 
 let currentDocumentId = null;
@@ -514,6 +559,36 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('searchInput');
         const organizationFilter = document.getElementById('organizationFilter');
         const documentTypeFilter = document.getElementById('documentTypeFilter');
+        const searchButton = document.getElementById('searchButton');
+        const clearButton = document.getElementById('clearButton');
+        
+        // Initialize from URL parameters on page load
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Set search input from URL
+        if (searchInput && urlParams.has('search')) {
+            searchInput.value = urlParams.get('search');
+        }
+        
+        // Set organization filter from URL
+        if (organizationFilter && urlParams.has('organization')) {
+            const orgValue = urlParams.get('organization');
+            // Check if the option exists before setting it
+            const optionExists = Array.from(organizationFilter.options).some(option => option.value === orgValue);
+            if (optionExists) {
+                organizationFilter.value = orgValue;
+            }
+        }
+        
+        // Set document type filter from URL
+        if (documentTypeFilter && urlParams.has('documentType')) {
+            const docTypeValue = urlParams.get('documentType');
+            // Check if the option exists before setting it
+            const optionExists = Array.from(documentTypeFilter.options).some(option => option.value === docTypeValue);
+            if (optionExists) {
+                documentTypeFilter.value = docTypeValue;
+            }
+        }
         
         if (searchInput && organizationFilter && documentTypeFilter) {
             // Remove existing event listeners first (to prevent duplicates)
@@ -537,34 +612,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     clearTimeout(searchTimeout);
-                    
-                    if (searchInput.value.trim() === '') {
-                        // Reset filters and update URL
-                        history.pushState(null, '', window.location.pathname);
-                        
-                        // Refresh the page content with no filters
-                        fetch(window.location.pathname, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(response => response.text())
-                        .then(html => {
-                            updateTableContent(html);
-                        });
-                    } else {
-                        submitAjaxSearch();
-                    }
+                    submitAjaxSearch();
                 }
             }
             searchInput.addEventListener('keydown', handleSearchKeydown);
             
-            // Add filter change listeners
+            // Add filter change listeners - apply filters immediately
             function handleFilterChange() {
+                // Clear any pending search timeout
+                clearTimeout(searchTimeout);
+                // Apply the combined search and filters
                 submitAjaxSearch();
             }
             organizationFilter.addEventListener('change', handleFilterChange);
             documentTypeFilter.addEventListener('change', handleFilterChange);
+            
+            // Add search button handler if it exists
+            if (searchButton) {
+                searchButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    clearTimeout(searchTimeout);
+                    submitAjaxSearch();
+                });
+            }
+            
+            // Add clear button handler if it exists
+            if (clearButton) {
+                clearButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Reset all filters and search
+                    searchInput.value = '';
+                    organizationFilter.selectedIndex = 0; // Use selectedIndex to reset to first option
+                    documentTypeFilter.selectedIndex = 0; // Use selectedIndex to reset to first option
+                    
+                    // Reset URL and refresh content
+                    history.pushState(null, '', window.location.pathname);
+                    
+                    // Refresh the page content with no filters
+                    fetch(window.location.pathname, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        updateTableContent(html);
+                    });
+                });
+            }
             
             // Initialize event listeners for the table
             attachRowEventListeners();
@@ -581,56 +676,69 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show loading indicator
         showLoader();
         
-        // Initialize search parameters
+        // Initialize search parameters with current values
         let searchParams = new URLSearchParams();
         
-        // Check for full date format (MM/DD/YYYY)
-        const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-        const fullDateMatch = searchTerm.match(fullDatePattern);
-        
-        if (fullDateMatch) {
-            // Extract values for validation
-            const month = parseInt(fullDateMatch[1], 10);
-            const day = parseInt(fullDateMatch[2], 10);
-            const year = parseInt(fullDateMatch[3], 10);
+        // Always include the search term if it exists (even when empty)
+        if (searchTerm) {
+            // Check for full date format (MM/DD/YYYY)
+            const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+            const fullDateMatch = searchTerm.match(fullDatePattern);
             
-            // Validate date values
-            if (isValidDate(month, day, year)) {
-                // Format as MM/DD/YYYY for consistency
-                searchParams.append('fullDate', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`);
-            } else {
-                // If invalid date, just use as regular search term
-                searchParams.append('search', searchTerm);
-            }
-        } else {
-            // Check for month/day pattern (M/D or MM/DD)
-            const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
-            const monthDayMatch = searchTerm.match(monthDayPattern);
-            
-            if (monthDayMatch && searchTerm.length <= 5) {
+            if (fullDateMatch) {
                 // Extract values for validation
-                const month = parseInt(monthDayMatch[1], 10);
-                const day = parseInt(monthDayMatch[2], 10);
+                const month = parseInt(fullDateMatch[1], 10);
+                const day = parseInt(fullDateMatch[2], 10);
+                const year = parseInt(fullDateMatch[3], 10);
                 
-                // Validate month and day values
-                if (isValidDate(month, day, new Date().getFullYear())) {
-                    // Format as MM/DD for consistency
-                    searchParams.append('monthDayPattern', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`);
+                // Validate date values
+                if (isValidDate(month, day, year)) {
+                    // Format as MM/DD/YYYY for consistency
+                    searchParams.append('fullDate', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`);
                 } else {
-                    // If invalid month/day, just use as regular search term
+                    // If invalid date, just use as regular search term
                     searchParams.append('search', searchTerm);
                 }
             } else {
-                // Not a date pattern, use as direct search term
-                searchParams.append('search', searchTerm);
+                // Check for month/day pattern (M/D or MM/DD)
+                const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
+                const monthDayMatch = searchTerm.match(monthDayPattern);
+                
+                if (monthDayMatch && searchTerm.length <= 5) {
+                    // Extract values for validation
+                    const month = parseInt(monthDayMatch[1], 10);
+                    const day = parseInt(monthDayMatch[2], 10);
+                    
+                    // Validate month and day values
+                    if (isValidDate(month, day, new Date().getFullYear())) {
+                        // Format as MM/DD for consistency
+                        searchParams.append('monthDayPattern', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`);
+                    } else {
+                        // If invalid month/day, just use as regular search term
+                        searchParams.append('search', searchTerm);
+                    }
+                } else {
+                    // Not a date pattern, use as direct search term
+                    searchParams.append('search', searchTerm);
+                }
             }
+        } else {
+            // If search is empty but we're coming from a search action, 
+            // explicitly include empty search to clear previous search
+            searchParams.append('search', '');
         }
         
-        // Always add filter values
-        searchParams.append('organization', organizationFilter.value || 'All');
-        searchParams.append('documentType', documentTypeFilter.value || 'All');
+        // Always add filter values, regardless of search term
+        // This is key for maintaining both filters and search simultaneously
+        if (organizationFilter.value && organizationFilter.value !== '' && organizationFilter.value !== 'All') {
+            searchParams.append('organization', organizationFilter.value);
+        }
         
-        // Update URL without page reload
+        if (documentTypeFilter.value && documentTypeFilter.value !== '' && documentTypeFilter.value !== 'All') {
+            searchParams.append('documentType', documentTypeFilter.value);
+        }
+        
+        // Update URL with all parameters
         const newUrl = window.location.pathname + '?' + searchParams.toString();
         history.pushState(null, '', newUrl);
         
@@ -642,12 +750,42 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.text())
         .then(html => {
+            // Preserve current filter and search values before updating content
+            const currentSearchValue = searchInput.value;
+            const currentOrgValue = organizationFilter.value;
+            const currentDocTypeValue = documentTypeFilter.value;
+            
+            // Update table content
             updateTableContent(html);
+            
+            // Restore filter and search values
+            if (searchInput) searchInput.value = currentSearchValue;
+            if (organizationFilter) organizationFilter.value = currentOrgValue || '';
+            if (documentTypeFilter) documentTypeFilter.value = currentDocTypeValue || '';
+            
             hideLoader();
         })
         .catch(error => {
             console.error('Error fetching results:', error);
             hideLoader();
+            
+            // Show error message to user
+            const tableView = document.getElementById('tableView');
+            if (tableView) {
+                tableView.innerHTML = `
+                    <div class="p-4 text-center">
+                        <div class="text-red-500 mb-2">Error loading results</div>
+                        <button id="retryButton" class="bg-[#7A1212] text-white px-4 py-2 rounded">
+                            Retry
+                        </button>
+                    </div>
+                `;
+                
+                // Add retry button functionality
+                document.getElementById('retryButton').addEventListener('click', function() {
+                    submitAjaxSearch();
+                });
+            }
         });
     }
     
@@ -660,10 +798,81 @@ document.addEventListener('DOMContentLoaded', function() {
         // Extract and update the table content
         const newTable = doc.querySelector('#tableView');
         if (newTable) {
-            document.querySelector('#tableView').innerHTML = newTable.innerHTML;
+            const tableView = document.querySelector('#tableView');
+            
+            // Get current values BEFORE replacing content
+            const searchInput = document.getElementById('searchInput');
+            const orgFilter = document.getElementById('organizationFilter');
+            const docTypeFilter = document.getElementById('documentTypeFilter');
+            
+            const searchValue = searchInput ? searchInput.value : '';
+            const orgValue = orgFilter ? orgFilter.value : '';
+            const docTypeValue = docTypeFilter ? docTypeFilter.value : '';
+            
+            // Update the table content
+            tableView.innerHTML = newTable.innerHTML;
+            
+            // Restore input values AFTER replacing content
+            const newSearchInput = document.getElementById('searchInput');
+            const newOrgFilter = document.getElementById('organizationFilter');
+            const newDocTypeFilter = document.getElementById('documentTypeFilter');
+            
+            if (newSearchInput) newSearchInput.value = searchValue;
+            
+            // Carefully restore dropdown values, checking if options exist
+            if (newOrgFilter && orgValue) {
+                const optionExists = Array.from(newOrgFilter.options).some(option => option.value === orgValue);
+                if (optionExists) {
+                    newOrgFilter.value = orgValue;
+                }
+            }
+            
+            if (newDocTypeFilter && docTypeValue) {
+                const optionExists = Array.from(newDocTypeFilter.options).some(option => option.value === docTypeValue);
+                if (optionExists) {
+                    newDocTypeFilter.value = docTypeValue;
+                }
+            }
             
             // Reattach all event listeners
             attachRowEventListeners();
+        }
+        
+        // Display "no results" message if needed
+        const tableBody = document.querySelector('tbody');
+        if (tableBody && !tableBody.querySelector('tr')) {
+            const colSpan = document.querySelectorAll('thead th').length || 6;
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="${colSpan}" class="text-center py-4 text-gray-500">
+                        <div class="py-8">
+                            <p class="mb-4">No documents found matching your search criteria</p>
+                            <button id="clearFiltersBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">
+                                Clear All Filters
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            
+            // Add event listener to the clear filters button
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', function() {
+                    // Reset search and filters
+                    const searchInput = document.getElementById('searchInput');
+                    const orgFilter = document.getElementById('organizationFilter');
+                    const docTypeFilter = document.getElementById('documentTypeFilter');
+                    
+                    if (searchInput) searchInput.value = '';
+                    if (orgFilter) orgFilter.selectedIndex = 0;
+                    if (docTypeFilter) docTypeFilter.selectedIndex = 0;
+                    
+                    // Reset URL and reload
+                    history.pushState(null, '', window.location.pathname);
+                    location.reload();
+                });
+            }
         }
         
         // Make sure search and filter event listeners are reattached
@@ -697,11 +906,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Show loader
                     showLoader();
                     
+                    // We need to preserve search and filter params when paginating
+                    const currentUrl = new URL(url, window.location.origin);
+                    const currentParams = new URLSearchParams(currentUrl.search);
+                    
+                    // Get current search and filter values from the form
+                    const searchInput = document.getElementById('searchInput');
+                    const orgFilter = document.getElementById('organizationFilter');
+                    const docTypeFilter = document.getElementById('documentTypeFilter');
+                    
+                    // Add search parameter if it exists
+                    if (searchInput && searchInput.value.trim()) {
+                        currentParams.set('search', searchInput.value.trim());
+                    }
+                    
+                    // Add organization filter if set
+                    if (orgFilter && orgFilter.value && orgFilter.value !== 'All') {
+                        currentParams.set('organization', orgFilter.value);
+                    }
+                    
+                    // Add document type filter if set
+                    if (docTypeFilter && docTypeFilter.value && docTypeFilter.value !== 'All') {
+                        currentParams.set('documentType', docTypeFilter.value);
+                    }
+                    
+                    // Build the new URL with all parameters
+                    const newPaginationUrl = currentUrl.pathname + '?' + currentParams.toString();
+                    
                     // Update URL without page reload
-                    history.pushState(null, '', url);
+                    history.pushState(null, '', newPaginationUrl);
                     
                     // Make AJAX request for pagination
-                    fetch(url, {
+                    fetch(newPaginationUrl, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
                         }
@@ -757,7 +993,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Create loader overlay
             const loader = document.createElement('div');
             loader.id = 'search-loader';
-            loader.className = 'absolute inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm';
+            loader.className = 'absolute inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-10';
             loader.style.minHeight = '200px';
             loader.innerHTML = `
                 <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
@@ -779,13 +1015,93 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideLoader() {
         const loader = document.getElementById('search-loader');
         if (loader) {
-            loader.style.display = 'none';
+            loader.remove();
         }
     }
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function() {
+        // Fetch content for the new URL
+        fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            updateTableContent(html);
+            
+            // Update filter fields to match URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Update search input
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = urlParams.get('search') || '';
+            }
+            
+            // Update organization filter
+            const organizationFilter = document.getElementById('organizationFilter');
+            if (organizationFilter) {
+                const orgValue = urlParams.get('organization') || '';
+                if (orgValue) {
+                    const optionExists = Array.from(organizationFilter.options).some(option => option.value === orgValue);
+                    if (optionExists) {
+                        organizationFilter.value = orgValue;
+                    } else {
+                        organizationFilter.selectedIndex = 0; // Default to first option if not found
+                    }
+                } else {
+                    organizationFilter.selectedIndex = 0;
+                }
+            }
+            
+            // Update document type filter
+            const documentTypeFilter = document.getElementById('documentTypeFilter');
+            if (documentTypeFilter) {
+                const docTypeValue = urlParams.get('documentType') || '';
+                if (docTypeValue) {
+                    const optionExists = Array.from(documentTypeFilter.options).some(option => option.value === docTypeValue);
+                    if (optionExists) {
+                        documentTypeFilter.value = docTypeValue;
+                    } else {
+                        documentTypeFilter.selectedIndex = 0; // Default to first option if not found
+                    }
+                } else {
+                    documentTypeFilter.selectedIndex = 0;
+                }
+            }
+        });
+    });
     
     // Make functions available globally if needed
     window.attachRowEventListeners = attachRowEventListeners;
     window.submitAjaxSearch = submitAjaxSearch;
+    
+    // Add a global function to clear filters
+    window.clearFiltersAndSearch = function() {
+        const searchInput = document.getElementById('searchInput');
+        const orgFilter = document.getElementById('organizationFilter');
+        const docTypeFilter = document.getElementById('documentTypeFilter');
+        
+        if (searchInput) searchInput.value = '';
+        if (orgFilter) orgFilter.selectedIndex = 0;
+        if (docTypeFilter) docTypeFilter.selectedIndex = 0;
+        
+        // Reset URL
+        history.pushState(null, '', window.location.pathname);
+        
+        // Reload content
+        fetch(window.location.pathname, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            updateTableContent(html);
+        });
+    };
 });
 
 // Sorting Functionality
@@ -1107,9 +1423,9 @@ function updateDocumentDetailsView(docData) {
                 timelineHTML += `
                     <div class="flex items-start relative">
                         ${index < timeline.length - 1 ? 
-                            `<span class="absolute left-1 top-4 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>` : 
+                            `<span class="absolute left-1 top-5 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>` : 
                             ''}
-                        <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-1 mr-3"></span>
+                        <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-2 mr-3"></span>
                         <div class="mt-1">
                             <span class="font-bold">${entry.user_role || 'Unknown'}</span>
                             <div class="flex items-center">
@@ -2023,58 +2339,61 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // Update the original confirmation button handler to use the message from the input
+    // Finalize approve button handler to use the message from the input
     const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
     if (confirmFinalizeBtn) {
         confirmFinalizeBtn.addEventListener('click', function() {
-            // Reset the flag since we're submitting the form
-            hasUnsavedChanges = false;
-
-            // Reset original message value
-            originalApprovalMessage = '';
-
+            // Get the approval message from the input field
+            const approvalMessage = document.getElementById('approvalMessage').value.trim();
+            
+            if (!approvalMessage) {
+                showDocumentActionToast('approved', 'Please provide an approval message.', false);
+                return;
+            }
+            
             // Make sure we have a valid ID
             if (!currentDocumentId) {
                 showDocumentActionToast('approved', "Error: Document ID is missing. Please try again.", false);
                 return;
             }
             
-            // Get the approval message from the input field
-            const message = document.getElementById('approvalMessage').value.trim();
+            // Reset the flag since we're submitting the form
+            hasUnsavedChanges = false;
+            
+            // Reset original message value
+            originalApprovalMessage = '';
             
             // Show loading state
             setButtonLoading('confirmFinalizeBtn', true, 'finalizeConfirmationModal');
             
-            // Hide the confirmation modal
-            document.getElementById('finalizeConfirmationModal').classList.add('hidden');
-            
-            // The rest of the Ajax call remains the same
+            // Submit the approval request
             fetch(`/admin/documents/${currentDocumentId}/approve`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify({
-                    message: message || 'Document approved and finalized'
+                    message: approvalMessage
                 })
             })
             .then(response => {
                 if (!response.ok) {
-                    return response.json().then(data => { 
-                        throw new Error(data.error || 'Failed to approve document');
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Server error');
                     });
                 }
                 return response.json();
             })
             .then(data => {
-                // Success handling (unchanged)
                 if (data.success) {
+                    // Show success toast
                     showDocumentActionToast('approved');
-                    document.getElementById('actionButtonsContainer').classList.add('hidden');
-                    document.getElementById('processedStatusIndicator').classList.remove('hidden');
                     
-                    // Refresh document details
+                    // Close the modal
+                    document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+                    
+                    // Update the UI to reflect the approval
                     fetch(`/admin/documents/${currentDocumentId}/details`, {
                         headers: {
                             'Accept': 'application/json',
@@ -2083,21 +2402,43 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .then(response => response.json())
                     .then(docData => {
+                        // Update the status history and other details
                         updateDocumentDetailsView(docData);
+                        
+                        // Reload comments to include any system-generated comments
                         loadComments(currentDocumentId);
+                        
+                        // Update UI to show document is approved
+                        const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+                        if (actionButtonsContainer) {
+                            actionButtonsContainer.classList.add('hidden');
+                        }
+                        
+                        // Show processedStatusIndicator
+                        const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+                        if (processedStatusIndicator) {
+                            processedStatusIndicator.classList.remove('hidden');
+                        }
+                        
+                        // Ensure returnedStatusIndicator is hidden
+                        const returnedStatusIndicator = document.getElementById('returnedStatusIndicator');
+                        if (returnedStatusIndicator) {
+                            returnedStatusIndicator.classList.add('hidden');
+                        }
                     })
                     .catch(error => {
                         console.error('Error refreshing document details:', error);
                     });
                 } else {
-                    showDocumentActionToast('approved', data.error || "An unknown error occurred during approval.", false);
+                    showDocumentActionToast('approved', data.error || 'Failed to approve document.', false);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
+                showDocumentActionToast('approved', error.message || 'An error occurred while approving the document.', false);
             })
             .finally(() => {
+                // Reset button state
                 setButtonLoading('confirmFinalizeBtn', false, 'finalizeConfirmationModal');
             });
         });
