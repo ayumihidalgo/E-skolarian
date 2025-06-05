@@ -37,6 +37,11 @@ Route::middleware(LogoutIfAuthenticated::class)->group(function () {
         return view('auth.landingPage');
     })->name('landing');
 
+    // Guest
+    Route::get('/guest', function() {
+        return view('guest.guest');
+    })->name('guest');
+
     // Student Login
     Route::get('/student/login', function () {
         return view('auth.Studentlogin');

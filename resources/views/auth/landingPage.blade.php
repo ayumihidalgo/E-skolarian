@@ -21,12 +21,12 @@
         <p class="font-[Manrope] font-normal text-xl">You are Logging In as?</p>
     </header>
     <main class="flex flex-1 justify-center items-center gap-6 p-5 flex-wrap">
-        <div class="flex flex-1 gap-6 w-full max-w-7xl flex-wrap justify-center items-stretch">
-            <section class="flex justify-center items-stretch flex-1 min-w-[300px]">
-                <div class="flex flex-col gap-y-3 bg-[#A98018D9] pl-5 pr-5 pb-5 pt-10 rounded-2xl text-center w-full min-h-[310px] max-w-[500px] h-full">
-                    <img class="w-[80px] mx-auto" src="{{ asset('images/landing_student.svg') }}" alt="Student Org Icon">
-                    <div class="flex-1 pb-4">
-                        <h2 class="font-[Lexend] text-[27px]">STUDENT ORGANIZATION</h2>
+        <div class="flex flex-1 gap-6 w-full max-w-6xl flex-wrap justify-around items-stretch">
+            <section class="flex justify-center flex-1 min-w-[300px] w-full max-w-[500px]">
+                <div class="flex flex-col gap-y-3 bg-[#A98018D9] pl-5 pr-5 pb-5 pt-10 rounded-2xl text-center w-full max-w-[500px] h-full">
+                    <img class="w-[70px] mx-auto" src="{{ asset('images/landing_student.svg') }}" alt="Student Org Icon">
+                    <div class="flex-1">
+                        <h2 class="font-[Lexend] text-[30px]">STUDENT ORGANIZATION</h2>
                         <p class="mx-auto font-[Manrope] font-normal w-[80%]">Access your student portal or organization dashboard</p>
                     </div>
                     <a href="{{ route('student.login.form') }}"
@@ -35,11 +35,11 @@
                     </a>
                 </div>
             </section>
-            <section class="flex justify-center items-stretch flex-1 min-w-[300px]">
+            <section class="flex justify-center items-stretch flex-1 min-w-[300px] w-full max-w-[500px]">
                 <div class="flex flex-col gap-y-3 bg-[#7A1212D9] pl-5 pr-5 pb-5 pt-10 rounded-2xl text-center w-full min-h-[310px] max-w-[500px] h-full">
-                    <img class="w-[80px] mx-auto" src="{{ asset('images/landing_admin.svg') }}" alt="Admin Icon">
-                    <div class="flex-1 pb-4">
-                        <h2 class="font-[Lexend] text-[27px]">ADMIN</h2>
+                    <img class="w-[70px] mx-auto" src="{{ asset('images/landing_admin.svg') }}" alt="Admin Icon">
+                    <div class="flex-1">
+                        <h2 class="font-[Lexend] text-[30px]">ADMIN</h2>
                         <p class="text-center mx-auto font-[Manrope] font-normal w-[80%]">Access the administrative control panel</p>
                     </div>
                     <a href="{{ route('admin.login.form') }}"
@@ -48,6 +48,35 @@
                     </a>
                 </div>
             </section>
+            <div class="w-full flex justify-center items-end">
+                <section class="flex justify-center items-stretch min-w-[300px] w-full max-w-[500px]">
+                    <div class="flex gap-x-6 bg-[#525866CC] p-6 rounded-2xl text-center w-full h-full">
+                        <div>
+                            <svg width="60" height="60" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <g clip-path="url(#clip0_9347_27247)">
+                                    <path d="M70 34.965C70 15.6625 54.32 0 35 0C15.68 0 0 15.6625 0 34.965C0 45.5963 4.83 55.1775 12.39 61.6087C12.46 61.6787 12.53 61.6788 12.53 61.7488C13.16 62.2388 13.79 62.7287 14.49 63.2188C14.84 63.4287 15.12 63.7044 15.47 63.9844C21.2564 67.9011 28.0827 69.9962 35.07 70C42.0573 69.9962 48.8836 67.9011 54.67 63.9844C55.02 63.7744 55.3 63.4987 55.65 63.2844C56.28 62.7988 56.98 62.3088 57.61 61.8188C57.68 61.7487 57.75 61.7487 57.75 61.6787C65.17 55.1731 70 45.5963 70 34.965ZM35 65.5944C28.42 65.5944 22.4 63.4944 17.43 59.9987C17.5 59.4387 17.64 58.8831 17.78 58.3231C18.1985 56.8059 18.8102 55.3488 19.6 53.9875C20.37 52.6575 21.28 51.4675 22.4 50.4175C23.45 49.3675 24.71 48.3919 25.97 47.6219C27.3 46.8519 28.7 46.2919 30.24 45.8719C31.7925 45.4561 33.3928 45.2457 35 45.2463C39.772 45.2101 44.3692 47.0408 47.81 50.3475C49.42 51.9575 50.68 53.846 51.59 56.0131C52.08 57.2731 52.43 58.6017 52.64 59.9987C47.4739 63.6307 41.315 65.5844 35 65.5944ZM24.29 33.2194C23.6745 31.8068 23.3644 30.2801 23.38 28.7394C23.38 27.2037 23.66 25.6637 24.29 24.2638C24.92 22.8638 25.76 21.6081 26.81 20.5581C27.86 19.5081 29.12 18.6725 30.52 18.0425C31.92 17.4125 33.46 17.1325 35 17.1325C36.61 17.1325 38.08 17.4125 39.48 18.0425C40.88 18.6725 42.14 19.5125 43.19 20.5581C44.24 21.6081 45.08 22.8681 45.71 24.2638C46.34 25.6637 46.62 27.2037 46.62 28.7394C46.62 30.3494 46.34 31.8194 45.71 33.215C45.1055 34.5962 44.2512 35.8539 43.19 36.925C42.1186 37.9846 40.8609 38.8374 39.48 39.4406C36.5869 40.627 33.3431 40.627 30.45 39.4406C29.0691 38.8374 27.8114 37.9846 26.74 36.925C25.6779 35.8691 24.8441 34.6107 24.29 33.2194ZM56.77 56.4331C56.77 56.2931 56.7 56.2231 56.7 56.0831C56.0128 53.8926 54.998 51.8187 53.69 49.9319C52.381 48.0312 50.7736 46.3545 48.93 44.9662C47.5215 43.9063 45.9946 43.0136 44.38 42.3063C45.1111 41.8171 45.7912 41.2558 46.41 40.6306C47.4536 39.6003 48.3701 38.4488 49.14 37.2006C50.6956 34.6558 51.4967 31.7216 51.45 28.7394C51.4729 26.5321 51.0441 24.3435 50.19 22.3081C49.3478 20.3466 48.1357 18.5656 46.62 17.0625C45.1028 15.5796 43.3224 14.3926 41.37 13.5625C39.3316 12.7087 37.1399 12.2814 34.93 12.3069C32.7198 12.2828 30.5281 12.7116 28.49 13.5669C26.5162 14.3869 24.7299 15.6 23.24 17.1325C21.7494 18.6417 20.5613 20.4223 19.74 22.3781C18.8859 24.4135 18.4571 26.6021 18.48 28.8094C18.48 30.3494 18.69 31.8179 19.11 33.215C19.53 34.685 20.09 36.015 20.86 37.2706C21.56 38.5306 22.54 39.6506 23.59 40.7006C24.22 41.3306 24.92 41.8892 25.69 42.3763C24.0682 43.0983 22.5403 44.015 21.14 45.1063C19.32 46.5063 17.71 48.1819 16.38 50.0019C15.0599 51.8815 14.0442 53.9574 13.37 56.1531C13.3 56.2931 13.3 56.4331 13.3 56.5031C7.77 50.9075 4.34 43.3563 4.34 34.965C4.34 18.1125 18.13 4.33563 35 4.33563C51.87 4.33563 65.66 18.1125 65.66 34.965C65.6508 43.0148 62.4545 50.7335 56.77 56.4331Z" fill="white"/>
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0_9347_27247">
+                                        <rect width="70" height="70" fill="white"/>
+                                    </clipPath>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div class="flex flex-col flex-1">
+                            <div class="flex-1 pb-4">
+                                <p class="text-start mx-auto font-[Manrope] font-normal">For document submission without logging in as a Student organization.</p>
+                            </div>
+                            <div class="self-start">
+                                <a href="{{ route('guest') }}"
+                                    class="inline-block max-w-[200px] p-4 rounded-full bg-[#525866] border border-white py-2 text-center w-full hover:bg-[#404550] transition-bg duration-75">
+                                    Continue as Guest
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </div>
     </main>
     <footer class="flex text-center justify-center items-center gap-2 bg-[#4D0F0F] min-h-[70px] flex-wrap p-2">
