@@ -6,7 +6,16 @@
     @include('components.studentNavBarComponent')
     <div class="flex-grow mb-10">
         <div class="w-full px-6 py-8 flex flex-col">
-            <h2 class="text-2xl font-extrabold mb-4">Document History Table</h2>
+            <!-- Header section with title and archive page link -->
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-extrabold">Document History Table</h2>
+
+                <!-- Link to archive page for viewing archived documents -->
+                <a href="{{ route('student.archivePage') }}"
+                    class="text-[#7A1212] underline font-medium hover:text-[#DAA520] transition-colors duration-200">
+                    Go to Archive Page
+                </a>
+            </div>
 
             <!-- Search and filter controls section -->
             <div class="flex flex-wrap items-center justify-between gap-4 mb-4">

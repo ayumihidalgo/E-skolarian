@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Document;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -14,24 +16,51 @@ class DocumentExportController extends Controller
 {
     public function export(Request $request)
     {
-        // Get filtered documents based on request parameters
-        $documents = Document::when($request->organization && $request->organization != 'All', function ($query) use ($request) {
-                $query->where('control_tag', 'LIKE', $request->organization . '%');
-            })
-            ->when($request->type && $request->type != 'All', function ($query) use ($request) {
-                $query->where('type', $request->type);
-            })
-            ->when($request->status && $request->status != 'All', function ($query) use ($request) {
-                $query->where('status', $request->status);
-            })
-            ->when($request->search, function ($query) use ($request) {
-                $query->where(function ($q) use ($request) {
-                    $q->where('control_tag', 'LIKE', '%' . $request->search . '%')
-                        ->orWhere('subject', 'LIKE', '%' . $request->search . '%')
-                        ->orWhere('type', 'LIKE', '%' . $request->search . '%');
-                });
-            })
-            ->get();
+        // Build the query with the same filtering logic as documentHistory method
+        $query = DB::table('submitted_documents')
+            ->whereNull('archived_at')
+            ->where('status', 'Approved');
+        
+        // Apply the same filters as in documentHistory method
+        if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
+            $query->where('control_tag', 'LIKE', $request->organization . '_%');
+        }
+        
+        if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {
+            $query->where('type', $request->type);
+        }
+        
+        // Apply date filtering - THIS IS THE KEY ADDITION
+        if ($request->has('start_date') && !empty($request->start_date)) {
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+            $query->where('created_at', '>=', $startDate);
+        }
+        
+        if ($request->has('end_date') && !empty($request->end_date)) {
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+            $query->where('created_at', '<=', $endDate);
+        }
+        
+        // Apply search filter
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('subject', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('control_tag', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('type', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+        
+        // Apply the same sorting as in the table view
+        if ($request->has('sort_by') && $request->has('sort_dir')) {
+            $query->orderBy($request->sort_by, $request->sort_dir);
+        } else {
+            // Default sorting
+            $query->orderBy('created_at', 'desc');
+        }
+        
+        // Get all documents (not paginated for export)
+        $documents = $query->get();
         
         // Organization mapping data
         $orgMap = [
@@ -60,55 +89,91 @@ class DocumentExportController extends Controller
             ->setLastModifiedBy('E-Skolarian')
             ->setTitle('Document History Report')
             ->setSubject('Document History Report')
-            ->setDescription('Document History Report generated on ' . date('Y-m-d'));
+            ->setDescription('Document History filtered report generated on ' . Carbon::now()->format('Y-m-d H:i'));
         
-        // Add headers
+        // Set document title
+        $sheet->setTitle('Document History');
+        
+        // Add header with filter information
         $sheet->setCellValue('A1', 'Document History Report');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
         $sheet->mergeCells('A1:F1');
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         
-        $sheet->setCellValue('A2', 'Generated on: ' . date('Y-m-d'));
-        $sheet->mergeCells('A2:F2');
+        // Add filter information
+        $row = 3;
+        $sheet->setCellValue('A' . $row, 'Generated on: ' . now()->format('F j, Y g:i A'));
+        $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+        $sheet->mergeCells('A' . $row . ':F' . $row);
+        $row++;
         
-        $sheet->setCellValue('A4', 'Control Tag');
-        $sheet->setCellValue('B4', 'Organization');
-        $sheet->setCellValue('C4', 'Title');
-        $sheet->setCellValue('D4', 'Date Submitted');
-        $sheet->setCellValue('E4', 'Type');
-        $sheet->setCellValue('F4', 'Status');
+        // Show applied filters
+        $filters = [];
         
-        // Style headers
-        $headerStyle = [
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => 'FFFFFF'],
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => '7A1212'],
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                ],
-            ],
-        ];
+        if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
+            $filters[] = 'Organization: ' . $request->organization;
+        }
         
-        $sheet->getStyle('A1:F1')->applyFromArray([
-            'font' => ['bold' => true, 'size' => 16],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
+        if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {
+            $filters[] = 'Type: ' . $request->type;
+        }
         
-        $sheet->getStyle('A2:F2')->applyFromArray([
-            'font' => ['italic' => true],
-            'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-        ]);
+        if ($request->has('search') && !empty($request->search)) {
+            $filters[] = 'Search: "' . $request->search . '"';
+        }
         
-        $sheet->getStyle('A4:F4')->applyFromArray($headerStyle);
+        // Show date range filter prominently
+        if ($request->has('start_date') && $request->has('end_date') && !empty($request->start_date) && !empty($request->end_date)) {
+            $startDisplay = $request->has('start_date_display') ? $request->start_date_display : Carbon::parse($request->start_date)->format('m/d/Y');
+            $endDisplay = $request->has('end_date_display') ? $request->end_date_display : Carbon::parse($request->end_date)->format('m/d/Y');
+            $filters[] = 'Date Range: ' . $startDisplay . ' - ' . $endDisplay;
+        } elseif ($request->has('start_date') && !empty($request->start_date)) {
+            $startDisplay = $request->has('start_date_display') ? $request->start_date_display : Carbon::parse($request->start_date)->format('m/d/Y');
+            $filters[] = 'From Date: ' . $startDisplay;
+        } elseif ($request->has('end_date') && !empty($request->end_date)) {
+            $endDisplay = $request->has('end_date_display') ? $request->end_date_display : Carbon::parse($request->end_date)->format('m/d/Y');
+            $filters[] = 'Until Date: ' . $endDisplay;
+        }
         
-        // Fill data
-        $row = 5;
+        if (!empty($filters)) {
+            $sheet->setCellValue('A' . $row, 'Applied Filters:');
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+            $sheet->mergeCells('A' . $row . ':F' . $row);
+            $row++;
+            
+            foreach ($filters as $filter) {
+                $sheet->setCellValue('A' . $row, '• ' . $filter);
+                $sheet->mergeCells('A' . $row . ':F' . $row);
+                $row++;
+            }
+        } else {
+            $sheet->setCellValue('A' . $row, 'No filters applied - showing all approved documents');
+            $sheet->mergeCells('A' . $row . ':F' . $row);
+            $row++;
+        }
+        
+        $row++; // Add extra space
+        
+        // Set up table headers
+        $headers = ['Control Tag', 'Organization', 'Subject', 'Date Submitted', 'Type', 'Status'];
+        $column = 'A';
+        
+        foreach ($headers as $header) {
+            $sheet->setCellValue($column . $row, $header);
+            $sheet->getStyle($column . $row)->getFont()->setBold(true);
+            $sheet->getStyle($column . $row)->getFill()
+                ->setFillType(Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('7A1212'); // Your brand color
+            $sheet->getStyle($column . $row)->getFont()->getColor()->setRGB('FFFFFF');
+            $column++;
+        }
+        
+        $headerRow = $row;
+        $row++;
+        
+        // Add data rows
         foreach ($documents as $document) {
-            // Extract organization acronym
+            // Extract organization name from control tag
             $parts = explode('_', $document->control_tag);
             $acronym = count($parts) > 0 ? $parts[0] : '';
             $orgName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
@@ -116,54 +181,55 @@ class DocumentExportController extends Controller
             $sheet->setCellValue('A' . $row, $document->control_tag);
             $sheet->setCellValue('B' . $row, $orgName);
             $sheet->setCellValue('C' . $row, $document->subject);
-            $sheet->setCellValue('D' . $row, \Carbon\Carbon::parse($document->created_at)->format('m/d/Y'));
+            $sheet->setCellValue('D' . $row, Carbon::parse($document->created_at)->format('m/d/Y'));
             $sheet->setCellValue('E' . $row, $document->type);
             $sheet->setCellValue('F' . $row, $document->status);
-            
-            // Add status color
-            $statusColor = match($document->status) {
-                'Approved' => '10B981',
-                'Rejected' => 'EF4444',
-                default => 'F59E0B'
-            };
-            
-            $sheet->getStyle('F' . $row)->applyFromArray([
-                'font' => ['color' => ['rgb' => 'FFFFFF']],
-                'fill' => [
-                    'fillType' => Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => $statusColor],
-                ],
-            ]);
             
             $row++;
         }
         
-        // Auto-size columns
+        // Add total count
+        $row++;
+        $sheet->setCellValue('A' . $row, 'Total Documents: ' . count($documents));
+        $sheet->mergeCells('A' . $row . ':F' . $row);
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true);
+        
+        // Auto-size columns for better readability
         foreach (range('A', 'F') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
         
-        // Set borders for all data
-        $sheet->getStyle('A4:F' . ($row - 1))->applyFromArray([
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => Border::BORDER_THIN,
-                ],
-            ],
-        ]);
+        // Add borders to the data table
+        $dataStartRow = $headerRow;
+        $dataEndRow = $row - 2; // Exclude the total row
         
-        // Create and save spreadsheet
-        $writer = new Xlsx($spreadsheet);
-        $filename = 'document_history_' . date('Y-m-d_His') . '.xlsx';
-        $path = storage_path('app/public/' . $filename);
-        
-        // Make sure the directory exists
-        if (!file_exists(storage_path('app/public'))) {
-            mkdir(storage_path('app/public'), 0777, true);
+        if ($dataEndRow >= $dataStartRow) {
+            $sheet->getStyle('A' . $dataStartRow . ':F' . $dataEndRow)->getBorders()->getAllBorders()
+                ->setBorderStyle(Border::BORDER_THIN);
         }
         
-        $writer->save($path);
+        // Create filename with timestamp and filters
+        $filename = 'document_history_' . now()->format('Y-m-d_H-i-s');
         
-        return response()->download($path, $filename)->deleteFileAfterSend(true);
+        if ($request->has('start_date') && $request->has('end_date') && !empty($request->start_date) && !empty($request->end_date)) {
+            $filename .= '_' . Carbon::parse($request->start_date)->format('Ymd') . '_to_' . Carbon::parse($request->end_date)->format('Ymd');
+        }
+        
+        $filename .= '.xlsx';
+        
+        // Set up the writer and download
+        $writer = new Xlsx($spreadsheet);
+        
+        return response()->stream(
+            function() use ($writer) {
+                $writer->save('php://output');
+            },
+            200,
+            [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'max-age=0',
+            ]
+        );
     }
 }

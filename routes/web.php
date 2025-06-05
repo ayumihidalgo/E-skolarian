@@ -169,6 +169,7 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(funct
     Route::post('student/settings/send-recovery-code', [SettingsController::class, 'sendRecoveryCode'])->name('student.settings.sendRecoveryCode');
     Route::post('student/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('student.settings.verifyRecoveryCode');
     Route::post('student/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('student.settings.removeRecoveryEmail');
+    Route::get('/student/archivePage', [StudentDocumentController::class, 'archivePage'])->name('student.archivePage');
 });
 
 Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(function () {
