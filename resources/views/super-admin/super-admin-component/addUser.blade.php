@@ -128,7 +128,7 @@
                            id="organization_acronym" 
                            name="organization_acronym" 
                            class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"
-                           placeholder="Enter organization acronym">
+                           placeholder="Organization acronym">
                     <p id="organizationAcronymError" class="text-red-600 text-xs mt-1 hidden"></p>
                 </div>
 
