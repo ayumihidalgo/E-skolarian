@@ -17,9 +17,9 @@ return new class extends Migration
             $table->id();
             $table->string('subject');
             $table->text('summary')->nullable();
-            $table->enum('type', ['Event Proposal','General Plan of Activities','Calendar of Activities','Accomplishment Report','Constitution and By-Laws','Request Letter','Off Campus','Petition and Concern']);
+            $table->enum('type', ['Event Proposal','General Plan of Activities','Calendar of Activities','Accomplishment Report','Constitution and By-Laws','Request Letter','Off Campus','Petition and Concern','Others']);
             $table->string('control_tag')->unique()->default('AUTO');
-            $table->enum('status', ['Pending', 'Under Review', 'Approved', 'Rejected', 'Resubmit'])->default('Pending');
+            $table->enum('status', ['Pending', 'Under Review', 'Approved', 'Returned'])->default('Pending');
             $table->timestamps();
         });
     }

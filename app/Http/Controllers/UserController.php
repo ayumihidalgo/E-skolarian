@@ -10,6 +10,7 @@ use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\LogsActivity;
 
 class UserController extends Controller
 {
@@ -19,48 +20,62 @@ class UserController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
+    use LogsActivity;
     public function store(Request $request)
-    {
-        // Validate the request data
+{
+    try {
         $validated = $request->validate([
-            'username' => 'required|string|max:255|unique:users,username',
-            'email' => 'required|email|max:255|unique:users,email',
-            'role' => 'required|in:admin,student',
-            'role_name' => 'required|string|max:255',
+            'username' => 'required|string|unique:users,username',
+            'email' => 'required|email|unique:users,email',
+            'role' => 'required|string',
+            'role_name' => 'required|string',
+            'organization_acronym' => 'nullable|string|required_if:role,student',
         ]);
 
-        // Generate a random password
-        $password = Str::random(10); 
+        // Generate random password
+        $password = Str::random(10);
 
-        // Create the user
         $user = User::create([
-            'username' => $validated['username'],
-            'email' => $validated['email'],
-            'role' => $validated['role'],
-            'role_name' => $validated['role_name'],
-            'password' => Hash::make($password), // Use the generated password
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => Hash::make($password),
+            'role' => $request->role,
+            'role_name' => $request->role_name,
+            'organization_acronym' => $request->organization_acronym,
+            'active' => true
         ]);
 
-        // Send notification email to the user with the generated password
+        // Send email notification
         try {
             Mail::to($user->email)->send(new UserNotificationMail($user, 'created', $password));
+            \Log::info('Account creation email sent to: ' . $user->email);
         } catch (\Exception $e) {
-            // Log the error but don't stop the process
-            Log::error('Failed to send email notification: ' . $e->getMessage());
+            \Log::error('Failed to send account creation email: ' . $e->getMessage());
         }
 
-        // Return a JSON response for AJAX requests
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'User added successfully!',
-                'user' => $user
-            ]);
-        }
+        $this->logActivity(
+            'Created',
+            'User',
+            ($user->role === 'admin' ? 
+            "{$user->role_name} account has been created." : 
+            "{$user->organization_acronym} account has been created."
+        )
+        );
 
-        // For normal form submissions, redirect with a success message
-        return redirect()->route('super-admin.dashboard')->with('success', 'User added successfully!');
+        return response()->json([
+            'success' => true,
+            'message' => 'User created successfully'
+        ], 201);
+
+    } catch (\Exception $e) {
+        \Log::error('User creation failed: ' . $e->getMessage());
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to create user: ' . $e->getMessage()
+        ], 500);
     }
+
 
     /**
      * Update the specified user in storage.
@@ -69,6 +84,7 @@ class UserController extends Controller
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
+}
     public function update(Request $request, $id)
     {
         // Find the user
@@ -125,6 +141,13 @@ class UserController extends Controller
         }
 
         // For normal form submissions, redirect with a success message
+        $this->logActivity(
+        'Updated',
+        'User',
+        ($user->role === 'admin' ? 
+        "{$user->role_name} account has been updated." : 
+        "{$user->organization_acronym} account has been updated."
+    ));
         return redirect()->route('super-admin.dashboard')->with('success', 'User updated successfully!');
     }
     public function deactivatedUsers(Request $request)
@@ -149,7 +172,7 @@ public function checkEmail(Request $request)
 }
 public function checkRoles()
 {
-    $restrictedRoles = ['Student Services', 'Academic Services', 'Administrative Services', 'Campus Director'];
+    $restrictedRoles = ['Office of the Student Services', 'Office of the Academic Services', 'Office of the Administrative Services', 'Office of the Campus Director'];
     $existingRoles = User::whereIn('role_name', $restrictedRoles)
                         ->pluck('role_name')
                         ->unique()
@@ -167,5 +190,28 @@ public function checkUsername(Request $request)
     return response()->json([
         'exists' => $exists
     ]);
+}
+public function checkOrganizations()
+{
+    try {
+        $existingOrganizations = User::where('role', 'student')
+            ->pluck('username')  // Using username column since it stores organization names
+            ->map(function($name) {
+                return strtolower($name);
+            })
+            ->unique()
+            ->values()
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'existingOrganizations' => $existingOrganizations
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch organizations'
+        ], 500);
+    }
 }
 }

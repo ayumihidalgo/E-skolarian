@@ -41,6 +41,9 @@ class User extends Authenticatable
         'role_name',
         'password',
         'active',
+        'organization_acronym',
+        'organization_name',
+        'type'
     ];
 
     /**

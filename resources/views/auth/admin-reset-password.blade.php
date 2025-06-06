@@ -1,11 +1,5 @@
-@php
-    $role = request()->query('role', 'student'); // Default to 'student' if not provided
-if ($role === 'super admin') {
-    $role = 'admin'; // treat super admin same as admin
-}
-@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $role }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="admin">
 <head>
     <meta charset="UTF-8" >
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,13 +23,9 @@ if ($role === 'super admin') {
             const box = document.getElementById('box');
             if (!box) return;
 
-            if (window.innerWidth >= 768) {
-                box.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ asset('images/PUP_Bg1.jpg') }}')`;
-                box.style.backgroundRepeat = 'no-repeat';
-                box.style.backgroundSize = 'cover';
-            } else {
-                box.style.backgroundImage = '';
-            }
+            box.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ asset('images/PUP_Bg1.jpg') }}')`;
+            box.style.backgroundRepeat = 'no-repeat';
+            box.style.backgroundSize = 'cover';
         }
 
             /* Toggle Show/Hide Password */
@@ -91,7 +81,32 @@ if ($role === 'super admin') {
         });
     </script>
 </head>
+
+@include('loading');
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
+    {{-- Modal for expired token --}}
+    @if (!empty($tokenExpired) && $tokenExpired)
+         <div id="expiredModal" class="fixed inset-0 flex items-center flex-col justify-center bg-black/80 z-50">
+            <div class="flex items-center justify-center gap-4 pb-5">
+                <img class="h-[80px]" src="{{asset('images/e-skolarianIcon.svg')}}">
+                <img class="h-[35px]" src="{{asset('images/E-skolarianWhite.svg')}}">
+            </div>
+            <div class="bg-[#FFFFFFCC] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+                <div class="w-[80%] mx-auto">
+                    <h2 class="text-xl font-[Lexend] mb-4 text-[var(--secondary-color)]">RESET TOKEN EXPIRED</h2>
+                    <p class="mb-6 font-[Manrope] font-normal">Your password reset link has expired or is invalid. Please request a new one.</p>
+                    <a href="{{ route('admin.login.form') }}" class="inline-block px-6 py-2 bg-[var(--secondary-color)] text-white rounded-full font-bold hover:bg-[var(--primary-color)] transition">Back to Login</a>
+                </div>
+            </div>
+        </div>
+        <script>
+            // Prevent form interaction when modal is open
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelector('form').style.filter = 'blur(2px)';
+                document.querySelector('form').style.pointerEvents = 'none';
+            });
+        </script>
+    @endif
     <div class="p-5 w-full">
         <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-white/60 max-md:shadow-md">
             <div class="flex justify-center pb-4">
@@ -99,11 +114,11 @@ if ($role === 'super admin') {
             </div>
             <div class="w-full max-w-[550px] mx-auto  md:bg-[var(--forgot-color-bg)]/50 px-8 md:py-12 rounded-[40px] md:shadow-md md:backdrop-blur-lg">
                 <h1 class="text-2xl md:text-3xl font-bold text-center mb-6 font-['Lexend'] uppercase text-[var(--secondary-color)]">Reset Password</h1>
-                <form method="POST" action="{{ route('password.update') }}">
+                <form method="POST" action="{{ route('admin.password.update') }}">
                     @csrf
                     <input type="hidden" name="token" value="{{ $token }}">
                     <input type="hidden" name="email" value="{{ request()->get('email') }}">
-                    <input type="hidden" name="role" value="{{ $role }}">
+                    <input type="hidden" name="role" value="admin">
 
                     <div class="mt-5 mb-2">
                         <label id="passwordLabel" class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
@@ -154,9 +169,33 @@ if ($role === 'super admin') {
                         Reset Password
                     </button>
                 </form>
+                <div class="mt-4 text-center">
+                    <a href="#" id="backToLogin" class="flex items-center justify-center md:text-[var(--forgot-color-text)] font-normal group transition-all duration-75">
+                        <img class="md:h-[25px] pr-5 pt-0.5 group-hover:translate-x-1 transition-all duration-75" src="{{asset('images/arrow-left-admin.svg')}}" alt="Arrow Left Icon">
+                        <span class="border-b-2 border-transparent group-hover:border-[var(--forgot-color-text)] transition-all duration-75">Back to Login</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
+    <!-- Confirmation Modal -->
+<div id="unsavedChangesModal" class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 hidden z-50">
+    <div class="flex items-center justify-center gap-4 pb-3">
+        <img class="h-[80px]" src="{{asset('images/e-skolarianIcon.svg')}}">
+        <img class="h-[35px]" src="{{asset('images/E-skolarianWhite.svg')}}">
+    </div>
+    <div class="bg-white/90 font-[Manrope] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+        <div class="w-[80%] mx-auto">
+            <h1 class="text-xl mb-4 text-[var(--secondary-color)]">Go back to Login Page?</h1>
+            <p class="mb-6 font-normal text-black">You have unsaved changes. Do you wish to go back to the Login Page?</p>
+            <div class="flex justify-around gap-5">
+                <button id="confirmLeave" class="bg-[var(--secondary-color)] text-white px-4 py-2 rounded-full hover:brightness-75">Back to Login Page</button>
+                <button id="cancelLeave" class="bg-[#D9D9D9CC] text-black px-4 py-2 rounded-full hover:bg-gray-400">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
     <script>
         const hasFormErrors = {{ $errors->any() ? 'true' : 'false' }};
     </script>
@@ -283,8 +322,73 @@ if ($role === 'super admin') {
         document.querySelector('form').addEventListener('submit', function (e) {
         submitButton.disabled = true;
         submitButton.textContent = 'Please wait...';
+
+        // Show loader
+        document.getElementById('loader').classList.toggle('hidden');
+        document.getElementById('loader').classList.toggle('flex');
+    });
+        const backToLogin = document.getElementById('backToLogin');
+        const modal = document.getElementById('unsavedChangesModal');
+        const confirmLeave = document.getElementById('confirmLeave');
+        const cancelLeave = document.getElementById('cancelLeave');
+
+        let isDirty = false;
+
+        // Track changes on all inputs
+        function checkDirtyState() {
+            const password = passwordInput?.value.trim() || '';
+            const confirmPassword = confirmPasswordInput?.value.trim() || '';
+
+            isDirty = password !== '' || confirmPassword !== '';
+        }
+
+        [passwordInput, confirmPasswordInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', checkDirtyState);
+            }
+        });
+
+         let isSafeExit = false;
+
+    // Mark exit as safe when user clicks "Back to Login"
+    document.getElementById('backToLogin').addEventListener('click', function (e) {
+    e.preventDefault();
+
+    if (isDirty) {
+        // Show the modal only if there are unsaved changes
+        modal.classList.remove('hidden');
+    } else {
+        // If not dirty, navigate immediately without modal
+        isSafeExit = true; // mark as safe exit to skip beforeunload
+        window.location.href = "{{ route('admin.login') }}";
+    }
+});
+    // If user confirms going back
+    document.getElementById('confirmLeave').addEventListener('click', function () {
+        isSafeExit = true; // Allow leaving without beforeunload
+        window.location.href = "{{ route('admin.login') }}";
     });
 
-    </script>
+    // Cancel going back
+    document.getElementById('cancelLeave').addEventListener('click', function () {
+        document.getElementById('unsavedChangesModal').classList.add('hidden');
+    });
+
+    // Trigger beforeunload only if NOT a safe exit
+    window.addEventListener('beforeunload', function (e) {
+        if (!isSafeExit) {
+            e.preventDefault();
+            e.returnValue = ''; // Needed for Chrome/Edge
+        }
+    });
+
+    // Also make sure form submission sets safe exit
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function () {
+        isSafeExit = true;
+    });
+
+        </script>
+
 </body>
 </html>

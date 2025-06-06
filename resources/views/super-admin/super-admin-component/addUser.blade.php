@@ -1,5 +1,6 @@
 <!-- Add User Component -->
 <div class="bg-white rounded-[25px] shadow-xl w-full max-w-lg relative z-50">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <!-- Close button -->
     <button id="closeAddUserModalBtn" 
             class="absolute top-7 right-5 text-gray-500 hover:text-[#7A1212] transition-colors duration-200 cursor-pointer">
@@ -9,7 +10,7 @@
     </button>
     <div class="p-6">
         <h3 class="text-xl font-semibold text-gray-800">ADD USER (Admin/Organization)</h3>
-        <p class="text-gray-500 text-sm mb-6">Create new user by selecting a role first</p>
+        <p class="text-gray-500 text-sm mb-6">Create new user by adding their email and role</p>
         <form id="addUserForm">
             <!-- Step 1: Role Selection -->
             <div id="step-role" class="step-container active">
@@ -24,11 +25,11 @@
                             <option value="Academic Organization" data-role="student">Academic Organization</option>
                             <option value="Non-Academic Organization" data-role="student">Non-Academic Organization</option>
                         </optgroup>
-                        <optgroup label="Administrative Staff">
-                            <option value="Student Services" data-role="admin">Student Services</option>
-                            <option value="Academic Services" data-role="admin">Academic Services</option>
-                            <option value="Administrative Services" data-role="admin">Administrative Services</option>
-                            <option value="Campus Director" data-role="admin">Campus Director</option>
+                        <optgroup label="Campus Administration">           
+                            <option value="Office of the Student Services" data-role="admin">Office of the Student Services</option>
+                            <option value="Office of the Academic Services" data-role="admin">Office of the Academic Services</option>
+                            <option value="Office of the Administrative Services" data-role="admin">Office of the Administrative Services</option>
+                            <option value="Office of the Campus Director" data-role="admin">Office of the Campus Director</option>
                         </optgroup>
                         <option value="custom_role" data-role="custom">+ Add New Role</option>
                     </select>
@@ -37,29 +38,35 @@
                 
                 <!-- Custom Role Field (Initially Hidden) -->
                 <div id="custom-role-container" class="mb-4 hidden">
-                    <label for="custom_role_name" class="block text-sm font-medium mb-2 text-gray-700">New Role Name</label>
-                    <input type="text" 
-                        name="custom_role_name" 
-                        id="custom_role_name" 
-                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
-                        placeholder="Enter new role name">
-                    <p id="customRoleError" class="text-red-600 text-xs mt-1 hidden"></p>
-                    
-                    <div class="mt-3">
-                        <label class="block text-sm font-medium mb-2 text-gray-700">Role Type</label>
-                        <div class="flex space-x-4">
-                            <label class="inline-flex items-center">
-                                <input type="radio" name="custom_role_type" value="student" class="form-radio h-5 w-5 text-[#7A1212]">
-                                <span class="ml-2 text-gray-700">Student Organization</span>
-                            </label>
-                            <label class="inline-flex items-center">
-                                <input type="radio" name="custom_role_type" value="admin" class="form-radio h-5 w-5 text-[#7A1212]">
-                                <span class="ml-2 text-gray-700">Administrative Staff</span>
-                            </label>
-                        </div>
-                        <p id="roleTypeError" class="text-red-600 text-xs mt-1 hidden"></p>
-                    </div>
-                </div>
+    <label for="custom_role_name" class="block text-sm font-medium mb-2 text-gray-700">New Role Name</label>
+    <input type="text" 
+           name="custom_role_name" 
+           id="custom_role_name" 
+           class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
+           placeholder="Enter new role name">
+    <p id="customRoleNameError" class="text-red-600 text-xs mt-1 hidden"></p>
+    
+    <div class="mt-3 space-y-2">
+        <label class="block text-sm font-medium mb-2 text-gray-700">Role Type</label>
+        <div class="space-y-2">
+            <label class="inline-flex items-center">
+                <input type="radio" 
+                       name="custom_role_type" 
+                       value="student" 
+                       class="form-radio h-5 w-5 text-[#7A1212]">
+                <span class="ml-2 text-gray-700">Student Organization</span>
+            </label>
+            <label class="inline-flex items-center">
+                <input type="radio" 
+                       name="custom_role_type" 
+                       value="admin" 
+                       class="form-radio h-5 w-5 text-[#7A1212]">
+                <span class="ml-2 text-gray-700">Campus Administration</span>
+            </label>
+        </div>
+        <p id="roleTypeError" class="text-red-600 text-xs mt-1 hidden"></p>
+    </div>
+</div>
 
                 <div class="mt-6">
                     <button type="button"
@@ -73,54 +80,71 @@
             
             <!-- Step 2: Student Organization Fields (Initially Hidden) -->
             <div id="step-student" class="step-container hidden">
-                <div class="mb-4">
-                    <label for="organization_name" class="block text-sm font-medium mb-2 text-gray-700">Organization Name</label>
-                    <select name="organization_name" 
-                            id="organization_name" 
-                            class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] cursor-pointer text-ellipsis"
-                            style="text-overflow: ellipsis;">
-                        <option value="" disabled selected>Select an organization</option>
-                        <optgroup label="Academic Organization (Student)">
-                            <option value="Eligible League of Information Technology Enthusiast">Eligible League of Information Technology Enthusiast</option>
-                            <option value="Association of Electronics Engineering Students">Association of Electronics Engineering Students</option>
-                            <option value="Association of Competent and Aspiring Psychologists">Association of Competent and Aspiring Psychologists</option>
-                            <option value="Junior Marketing Association of the Philippines">Junior Marketing Association of the Philippines</option>
-                            <option value="Philippine Institute of Industrial Engineers">Philippine Institute of Industrial Engineers</option>
-                            <option value="Guild of Imporous and Valuable Educators">Guild of Imporous and Valuable Educators</option>
-                            <option value="Junior Philippine Institute of Accountants">Junior Philippine Institute of Accountants</option>
-                            <option value="Junior Executives of Human Resources Association">Junior Executives of Human Resources Association</option>
-                        </optgroup>
-                        <optgroup label="Non-Academic Organization (Student)">
-                            <option value="Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism">Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism</option>
-                            <option value="PUP SRC CHORALE">PUP SRC CHORALE</option>
-                            <option value="Supreme Innovators' Guild for Mathematics Advancement">Supreme Innovators' Guild for Mathematics Advancement</option>
-                            <option value="Artist Guild Dance Squad">Artist Guild Dance Squad</option>
-                        </optgroup>
-                    </select>
-                    <p id="organizationNameError" class="text-red-600 text-xs mt-1 hidden"></p>
+                <!-- Regular organization dropdown (shown for existing roles) -->
+                <div id="existing-org-fields">
+                    <div class="mb-4">
+                        <label for="organization_name" class="block text-sm font-medium mb-2 text-gray-700">Organization Name</label>
+                        <select name="organization_name" 
+                                id="organization_name" 
+                                class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] cursor-pointer">
+                            <option value="" disabled selected>Select an organization</option>
+                            <!-- <optgroup label="Academic Organization (Student)"> -->
+                                <option value="Eligible League of Information Technology Enthusiast">Eligible League of Information Technology Enthusiast</option>
+                                <option value="Association of Electronics Engineering Students">Association of Electronics Engineering Students</option>
+                                <option value="Association of Competent and Aspiring Psychologists">Association of Competent and Aspiring Psychologists</option>
+                                <option value="Junior Marketing Association of the Philippines">Junior Marketing Association of the Philippines</option>
+                                <option value="Philippine Institute of Industrial Engineers">Philippine Institute of Industrial Engineers</option>
+                                <option value="Guild of Imporous and Valuable Educators">Guild of Imporous and Valuable Educators</option>
+                                <option value="Junior Philippine Institute of Accountants">Junior Philippine Institute of Accountants</option>
+                                <option value="Junior Executives of Human Resources Association">Junior Executives of Human Resources Association</option>
+                            <!-- </optgroup> -->
+                            <!-- <optgroup label="Non-Academic Organization (Student)"> -->
+                                <option value="Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism">Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism</option>
+                                <option value="PUP SRC CHORALE">PUP SRC CHORALE</option>
+                                <option value="Supreme Innovators' Guild for Mathematics Advancement">Supreme Innovators' Guild for Mathematics Advancement</option>
+                                <option value="Artist Guild Dance Squad">Artist Guild Dance Squad</option>
+                            <!-- </optgroup> -->
+                        </select>
+                        <p id="organizationNameError" class="text-red-600 text-xs mt-1 hidden"></p>
+                    </div>
                 </div>
-                
+
+                <!-- New organization input fields (initially hidden) -->
+                <div id="new-org-fields" class="hidden">
+                    <div class="mb-4">
+                        <label for="new_organization_name" class="block text-sm font-medium mb-2 text-gray-700">New Organization Name</label>
+                        <input type="text" 
+                               id="new_organization_name" 
+                               name="new_organization_name" 
+                               class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"
+                               placeholder="Enter organization name">
+                        <p id="newOrganizationNameError" class="text-red-600 text-xs mt-1 hidden"></p>
+                    </div>
+                </div>
+
                 <div class="mb-4">
                     <label for="organization_acronym" class="block text-sm font-medium mb-2 text-gray-700">Organization Acronym</label>
                     <input type="text" 
-                        name="organization_acronym" 
-                        id="organization_acronym" 
-                        maxlength="20"
-                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
-                        placeholder="Organization Acronym (e.g. SSG)">
-                    <p id="acronymError" class="text-red-600 text-xs mt-1 hidden"></p>
+                           id="organization_acronym" 
+                           name="organization_acronym" 
+                           class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"
+                           placeholder="Organization acronym">
+                    <p id="organizationAcronymError" class="text-red-600 text-xs mt-1 hidden"></p>
                 </div>
-                
+
                 <div class="mb-4">
                     <label for="student_email" class="block text-gray-700 text-sm font-medium mb-2">Email</label>
                     <input type="email" 
-                        name="student_email" 
-                        id="student_email" 
-                        maxlength="50"
-                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
-                        placeholder="Enter organization email">
+                           name="student_email" 
+                           id="student_email" 
+                           maxlength="50"
+                           class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
+                           placeholder="Enter organization email">
                     <p id="studentEmailError" class="text-red-600 text-xs mt-1 hidden"></p>
                 </div>
+                
+                <!-- Add notification text -->
+                <p class="text-sm text-gray-500 text-center mb-4">User will be notified via email.</p>
                 
                 <div class="flex space-x-4 mt-6">
                     <button type="button"
@@ -140,17 +164,6 @@
             <!-- Step 2: Admin User Fields (Initially Hidden) -->
             <div id="step-admin" class="step-container hidden">
                 <div class="mb-4">
-                    <label for="username" class="block text-sm font-medium mb-2 text-gray-700">Name</label>
-                    <input type="text" 
-                        name="username" 
-                        id="username" 
-                        maxlength="150"
-                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
-                        placeholder="Admin Name">
-                    <p id="usernameError" class="text-red-600 text-xs mt-1 hidden"></p>
-                </div>
-                
-                <div class="mb-4">
                     <label for="admin_email" class="block text-gray-700 text-sm font-medium mb-2">Email</label>
                     <input type="email" 
                         name="admin_email" 
@@ -160,6 +173,9 @@
                         placeholder="Enter admin email">
                     <p id="adminEmailError" class="text-red-600 text-xs mt-1 hidden"></p>
                 </div>
+                
+                <!-- Add notification text -->
+                <p class="text-sm text-gray-500 text-center mb-4">User will be notified via email.</p>
                 
                 <div class="flex space-x-4 mt-6">
                     <button type="button"

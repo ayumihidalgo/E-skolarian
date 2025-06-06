@@ -12,8 +12,6 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->text('description')->nullable();
-            $table->dateTime('start_date');
-            $table->dateTime('end_date')->nullable();
             $table->enum('status', ['scheduled', 'completed', 'cancelled'])->default('scheduled');
             $table->foreignId('created_by')->constrained('users');
             $table->timestamps();

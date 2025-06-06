@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const usernameInput = document.getElementById('editUsername');
     const emailInput = document.getElementById('editEmail');
     const roleSelect = document.getElementById('editRoleName');
+    const editAcronymField = document.getElementById('editAcronymField');
+    const editAcronymInput = document.getElementById('editAcronym');
     
     // Create error elements
     const usernameError = document.createElement('p');
@@ -153,22 +155,36 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Function to update role options based on existing roles
-    function updateRoleOptions(existingRoles, currentRole) {
+    // Update the updateRoleOptions function
+    async function updateRoleOptions(existingRoles, currentRole) {
         if (!roleSelect) return;
 
-        const restrictedRoles = ['Student Services', 'Academic Services', 'Administrative Services', 'Campus Director'];
+        const adminRoles = [
+            'Office of the Student Services',
+            'Office of the Academic Services',
+            'Office of the Administrative Services',
+            'Office of the Campus Director'
+        ];
+
+        // Get all options
         const options = Array.from(roleSelect.options);
 
         options.forEach(option => {
             const roleName = option.value;
-            // Only disable if it's a restricted role that exists AND it's not the current user's role
-            const isRestricted = restrictedRoles.includes(roleName) && 
-                                existingRoles.includes(roleName) && 
-                                roleName !== currentRole;
             
-            option.disabled = isRestricted;
-            option.style.display = isRestricted ? 'none' : '';
+            // Check if it's an admin role
+            if (adminRoles.includes(roleName)) {
+                // Hide the option if:
+                // 1. It exists in the database AND
+                // 2. It's not the current user's role
+                if (existingRoles.includes(roleName) && roleName !== currentRole) {
+                    option.disabled = true;
+                    option.style.display = 'none'; // Hide the option completely
+                } else {
+                    option.disabled = false;
+                    option.style.display = ''; // Show the option
+                }
+            }
         });
     }
 
@@ -206,16 +222,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         return hasChanged;
-    }
-
-    // Add event listener to update the actual role when role_name changes
-    const editRoleName = document.getElementById('editRoleName');
-    if (editRoleName) {
-        editRoleName.addEventListener('change', function () {
-            const selectedOption = this.options[this.selectedIndex];
-            document.getElementById('editActualRole').value = selectedOption.getAttribute('data-role');
-            validateRole().then(() => validateForm());
-        });
     }
 
     // Custom close functionality for edit modal to show user details modal again
@@ -286,47 +292,59 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Edit User Modal Event Listeners - Open modal when clicking edit button
     if (editUserBtn && editUserModal) {
-        editUserBtn.addEventListener('click', function () {
+        editUserBtn.addEventListener('click', async function () {
             // Hide the user details modal
             userDetailsModal.classList.add('hidden');
 
-            // Get current user data from the details modal
+            // Get current user data
             const username = document.getElementById('userUsername').textContent;
             const email = document.getElementById('userEmail').textContent;
             const roleName = document.getElementById('userRole').textContent;
+            const acronym = document.getElementById('userAcronym')?.textContent;
 
-            // Populate the edit form
-            document.getElementById('editUsername').value = username;
-            document.getElementById('editEmail').value = email;
+            try {
+                // Get the username input element
+                const usernameInput = document.getElementById('editUsername');
+                
+                // Set readonly state based on role
+                if (roleName.toLowerCase() === 'admin' || 
+                    roleName.toLowerCase().includes('services') || 
+                    roleName.toLowerCase().includes('director')) {
+                    
+                    // Make name field readonly for admin roles
+                    usernameInput.readOnly = true;
+                    usernameInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                } else {
+                    // Keep name field editable for student roles
+                    usernameInput.readOnly = false;
+                    usernameInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                }
 
-            // Set the role in the dropdown
-            const roleSelect = document.getElementById('editRoleName');
-            if (roleSelect) {
-                for (let i = 0; i < roleSelect.options.length; i++) {
-                    if (roleSelect.options[i].value === roleName) {
-                        roleSelect.selectedIndex = i;
-                        // Set the actual role (admin/student) from the data-role attribute
-                        document.getElementById('editActualRole').value = roleSelect.options[i].getAttribute('data-role');
-                        break;
+                // Populate the edit form
+                usernameInput.value = username;
+                document.getElementById('editEmail').value = email;
+                document.getElementById('editRoleName').value = roleName;
+                document.getElementById('editActualRole').value = 
+                    roleName.toLowerCase().includes('organization') ? 'student' : 'admin';
+
+                // Handle acronym field
+                if (editAcronymField && editAcronymInput) {
+                    if (roleName.toLowerCase().includes('organization')) {
+                        editAcronymField.classList.remove('hidden');
+                        editAcronymInput.value = acronym || '';
+                    } else {
+                        editAcronymField.classList.add('hidden');
+                        editAcronymInput.value = '';
                     }
                 }
-            }
-            
-            // Fetch available roles and update options
-            fetchExistingRoles().then(existingRoles => {
-                updateRoleOptions(existingRoles, roleName);
-                editUserModal.classList.remove('hidden');
-                captureInitialState(); // Capture initial state after form is populated
-            }).catch(error => {
-                console.error('Error fetching roles:', error);
+
+                // Show the modal and capture initial state
                 editUserModal.classList.remove('hidden');
                 captureInitialState();
-            });
 
-            // Alternative for editRole if that's what's in the form
-            const editRole = document.getElementById('editRole');
-            if (editRole) {
-                editRole.value = roleName;
+            } catch (error) {
+                console.error('Error setting up edit form:', error);
+                alert('Error loading user data. Please try again.');
             }
         });
     }
@@ -576,7 +594,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 const formData = {
                     id: window.currentUserId, // Get the current user ID from the global variable
                     username: document.getElementById('editUsername').value,
-                    email: document.getElementById('editEmail').value
+                    email: document.getElementById('editEmail').value,
+                    role_name: document.getElementById('editRoleName').value,
+                    role: document.getElementById('editActualRole').value,
+                    organization_acronym: document.getElementById('editAcronym')?.value || null
                 };
 
                 // Get the role data - check for both possible form structures
@@ -642,8 +663,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     editUserModal.classList.add('hidden');
 
                     // Set success message content if elements exist
-                    document.getElementById('successTitle').textContent = 'Account Successfully Updated!';
-                    document.getElementById('successMessage').textContent = 'The user account has been updated successfully.';
+                    document.getElementById('successTitle').textContent = 'Account Updated Successfully!';
+                    document.getElementById('successMessage').textContent = 'Your changes has been saved. You can change it anytime. The user will get notified about the update via email.';
 
                     // Show success message if modal exists
                     successModal.classList.remove('hidden');

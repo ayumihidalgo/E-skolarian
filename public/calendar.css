@@ -126,7 +126,7 @@
 /* Stable navigation buttons */
 .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
     position: relative !important;
-    min-width: 240px !important; /* Fixed width to prevent shifting */
+    min-width: 300px !important; /* Fixed width to prevent shifting */
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
@@ -156,12 +156,12 @@
 
 .fc-prev-button {
     margin-right: 15px !important;
-    left: 0 !important;
+    left:-20px !important;
 }
 
 .fc-next-button {
     margin-left: 15px !important;
-    right: 0 !important;
+    right: -20px !important;
 }
 
 /* Today button styling */
@@ -438,3 +438,89 @@
     transform: translateY(-2px);
 }
 
+/* Year selector styling */
+#year-selector {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-family: inherit;
+}
+
+#year-selector select {
+    font-size: inherit;
+    cursor: pointer;
+}
+
+.fc-toolbar-title {
+    position: relative;
+}
+
+.fc-toolbar-title::after {
+    content: "▾";
+    font-size: 0.7em;
+    margin-left: 4px;
+    vertical-align: middle;
+    opacity: 0.7;
+}
+
+.fc-toolbar-title:hover {
+    color: #7A1212;
+}
+/* Event color scheme based on status */
+.fc-event[style*="background-color: rgb(0, 178, 68)"],
+.fc-event[style*="background-color: #00B244"] {
+    /* Green - On Due (Today) */
+    background: linear-gradient(0deg, rgba(148, 255, 155, 0.5) 0%, rgba(148, 255, 155, 0.5) 100%), #FFF !important;
+    color: #00B244 !important;
+    border: 1px solid #00B244 !important;
+}
+
+.fc-event[style*="background-color: rgb(0, 133, 255)"],
+.fc-event[style*="background-color: #0085FF"] {
+    /* Blue - Rescheduled/Approved Proposals */
+    background: linear-gradient(0deg, rgba(0, 133, 255, 0.10) 0%, rgba(0, 133, 255, 0.10) 100%), #FFF !important;
+    color: #0085FF !important;
+    border: 1px solid #0085FF !important;
+}
+
+.fc-event[style*="background-color: rgb(255, 159, 45)"],
+.fc-event[style*="background-color: #FF9F2D"] {
+    /* Yellow - This Week */
+    background: linear-gradient(0deg, rgba(255, 150, 27, 0.10) 0%, rgba(255, 150, 27, 0.10) 100%), #FFF !important;
+    color: #FF9F2D !important;
+    border: 1px solid #FF9F2D !important;
+}
+
+.fc-event[style*="background-color: rgba(155, 81, 224, 1)"],
+.fc-event[style*="background-color: rgb(155, 81, 224)"] {
+    /* Purple - Admin Events */
+    background: rgba(155, 81, 224, 0.32) !important;
+    color: rgba(155, 81, 224, 1) !important;
+    border: 1px solid rgba(155, 81, 224, 1) !important;
+}
+
+/* Event title styling to ensure proper color inheritance */
+.fc-event-title {
+    color: inherit !important;
+    font-weight: 600 !important;
+}
+
+/* Event time styling */
+.fc-event-time {
+    color: inherit !important;
+    font-weight: 500 !important;
+}
+
+/* Hover effects for events */
+.fc-event:hover {
+    opacity: 0.8 !important;
+    transform: translateY(-1px) !important;
+    transition: all 0.2s ease !important;
+}
+
+/* Make sure text remains readable */
+.fc-event .fc-event-main {
+    color: inherit !important;
+}
+
+.fc-event .fc-event-main-frame {
+    color: inherit !important;
+}

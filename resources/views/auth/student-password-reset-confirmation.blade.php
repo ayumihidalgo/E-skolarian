@@ -1,8 +1,5 @@
-@php
-    $role = request()->query('role', 'student'); // Default to 'student' if not provided
-@endphp
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="{{ $role }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="student">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,7 +31,7 @@
 </head>
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
     <div class="p-5 w-full">
-        <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-white/60 max-md:shadow-md">
+        <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-[#FFFFFFCC] max-md:shadow-md">
             <div class="flex justify-center pb-4">
                 <img class="md:h-20" src="{{asset('images/e-skolarianLogo.svg')}}" alt="E-skolarian Logo">
             </div>
@@ -42,11 +39,10 @@
                 <h1 class="text-2xl md:text-3xl font-bold text-center mb-3 font-['Lexend'] uppercase text-[var(--secondary-color)]">Password Reset Successfully!</h1>
                 <p class="md:text-[var(--forgot-color-text)] text-center font-normal md:text-lg">Your password has been successfully reset. You can now log in with your new password.</p>
                 <div class="mt-6 text-center">
-                    <a href="{{ route('login') }}" class="bg-[var(--secondary-color)] px-5 py-3 rounded-full inline-block hover:bg-[var(--primary-color)] text-white font-bold transition-all duration-75">Go Back to Login Page</a>
+                    <a href="{{ route('student.login.form') }}" class="bg-[var(--secondary-color)] px-5 py-3 rounded-full inline-block hover:bg-[var(--primary-color)] text-white font-bold transition-all duration-75">Go Back to Login Page</a>
                 </div>
             </div>
         </div>
     </div>
-
 </body>
 </html>
