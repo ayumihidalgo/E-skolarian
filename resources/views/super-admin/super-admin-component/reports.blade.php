@@ -19,63 +19,40 @@
         <div class="px-8 py-4 flex justify-between items-center">
             <h2 class="text-[30px] font-bold text-[#161616] font-[Lexend]">REPORTS</h2>
             
-            <!-- Filter Controls: stack vertically on mobile/tablet -->
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                <!-- Month Filter -->
-                <div class="flex items-center">
-                    <div class="flex items-center ">
-                        <button id="prevMonth" class="px-2 py-2 focus:outline-none">
-                            <svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M11.1667 21.4167L0.75 11L11.1667 0.583374V21.4167Z" fill="#1D1B20"/>
-                            </svg>
-                        </button>
-                            <select id="monthFilter"
-                                class="block w-[160px] text-[24px] focus:outline-none focus:ring-2 focus:ring-[#7A1212] font-[Lexend] font-bold appearance-none text-center">
-                                    <option value="">All Months</option>
-                                @php
-                                $months = [
-                                    '01' => 'January', '02' => 'February', '03' => 'March', '04' => 'April',
-                                    '05' => 'May', '06' => 'June', '07' => 'July', '08' => 'August',
-                                    '09' => 'September', '10' => 'October', '11' => 'November', '12' => 'December'
-                                ];
-                                @endphp
-                                @foreach($months as $value => $name)
-                                    <option value="{{ $value }}">{{ $name }}</option>
-                                @endforeach
-                            </select>
-                        <button id="nextMonth" class="px-2 py-2 focus:outline-none">
-                        <svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M0.833374 21.4167L11.25 11L0.833374 0.583374V21.4167Z" fill="#1D1B20"/>
-                            </svg>
-                        </button>
+            <!-- Header Actions -->
+            <div class="flex items-center space-x-3">
+                <!-- Search Box -->
+                <div class="relative">
+                    <input type="text" id="searchInput" placeholder="Search reports..."
+                        class="w-64 px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7A1212] focus:border-transparent font-[Lexend]">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
                     </div>
                 </div>
-                <!-- Year Filter -->
-                <div class="flex items-center">
-                    <div class="flex items-center">
-                        <button id="prevYear" class="px-2 py-2 focus:outline-none">
-                            <svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M11.1667 21.4167L0.75 11L11.1667 0.583374V21.4167Z" fill="#1D1B20"/>
-                            </svg>
-                        </button>
-                            <select id="yearFilter" class="block w-[160px] text-[24px] focus:outline-none focus:ring-2 focus:ring-[#7A1212] font-[Lexend] font-bold appearance-none text-center"
-                                <option value="">All Years</option>
-                                @php
-                                $currentYear = date('Y');
-                                $startYear = 2025;
-                                $endYear = max($currentYear, $startYear);
-                                @endphp
-                                @for ($year = $startYear; $year <= $endYear; $year++)
-                                <option value="{{ $year }}">{{ $year }}</option>
-                                @endfor
-                            </select>
-                        <button id="nextYear" class="px-2 py-2 focus:outline-none">
-                            <svg width="12" height="22" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M0.833374 21.4167L11.25 11L0.833374 0.583374V21.4167Z" fill="#1D1B20"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
+
+                <!-- Filter Button -->
+                <button
+                    class="bg-white border border-gray-300 hover:bg-[#F5E6E6] text-gray-700 px-2 py-1 rounded-lg font-[Lexend] inline-flex items-center cursor-pointer transition duration-200" 
+                    id="openFilterModal">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                    Filter
+                </button>
+
+                <!-- Export Button -->
+                <button
+                    class="bg-[#4D0F0F] px-2 py-1 rounded-[8px] text-white font-[Lexend] hover:bg-red-800 transition duration-200 flex items-center cursor-pointer">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Generate Report
+                </button>
             </div>
         </div>
         <!-- Reports Table Container with vertical scrollbar -->
@@ -115,8 +92,24 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#D9D9D9]/70">
-                        @forelse($reports as $report)
-                            <tr class="cursor-pointer hover:bg-gray-50" 
+                    <!-- No Results Row - Initially Hidden -->
+                    <tr id="noResultsRow" class="hidden">
+                        <td colspan="4" class="text-center py-12 text-gray-500 font-[Lexend]">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
+                                <span class="text-lg font-semibold mb-2">No reports found</span>
+                                <span class="text-l text-gray-400">Try adjusting your search or filter to find what you're looking for.</span>
+                                <button id="clearSearchBtn"
+                                    class="mt-6 px-4 py-2 bg-[#7A1212] text-white rounded-lg font-[Lexend] hover:bg-red-800 transition cursor-pointer focus:outline-none focus:ring-0">
+                                    Clear Search
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+    
+                    <!-- Data Rows -->
+                    @forelse($reports as $report)
+                        <tr class="cursor-pointer hover:bg-gray-50" 
                                 onclick="openReportModal({{ 
  
                                     json_encode([
@@ -143,18 +136,11 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="h-96 text-center bg-white rounded-b-[15px]">
-                                <div class="flex items-center justify-center h-full">
-                                    <span class="font-['Manrope'] text-[22px] text-[#625B5BB2]">No reports found.</span>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        @empty
+                        @endforelse
+                        </tbody>
+                    </table>
+                </div>
               <!-- Pagination always visible -->
                 <div class="mt-4 flex justify-center mb-1 absolute bottom-10 left-0 w-full p-2 text-center">
                     <nav>
@@ -262,6 +248,47 @@
                         Email Response
                     </button>
                 </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div id="filterModal" class="hidden absolute right-[250px] top-[245px] w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+    <div class="p-4">
+        <h3 class="text-sm font-semibold text-gray-900 mb-3 font-[Lexend]">Filter Reports</h3>
+        
+        <!-- Quick Filters -->
+        <div class="mb-4">
+            <button data-filter="newest" class="w-full text-left px-3 py-2 text-sm font-[Lexend] hover:bg-[#F5E6E6] rounded mb-1">Newest</button>
+            <button data-filter="oldest" class="w-full text-left px-3 py-2 text-sm font-[Lexend] hover:bg-[#F5E6E6] rounded mb-1">Oldest</button>
+            <button data-filter="today" class="w-full text-left px-3 py-2 text-sm font-[Lexend] hover:bg-[#F5E6E6] rounded mb-1">Today</button>
+            <button data-filter="this-week" class="w-full text-left px-3 py-2 text-sm font-[Lexend] hover:bg-[#F5E6E6] rounded mb-1">This Week</button>
+            <button data-filter="this-month" class="w-full text-left px-3 py-2 text-sm font-[Lexend] hover:bg-[#F5E6E6] rounded mb-1">This Month</button>
+        </div>
+
+        <!-- Custom Range -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]">Custom Range</label>
+            <div class="space-y-2">
+                <div>
+                    <label class="text-xs text-gray-500 mb-1 block font-[Lexend]">Start Date</label>
+                    <input type="date" id="startDate" class="w-full p-2 text-sm border rounded font-[Lexend]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 mb-1 block font-[Lexend]">End Date</label>
+                    <input type="date" id="endDate" class="w-full p-2 text-sm border rounded font-[Lexend]">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filter Buttons -->
+        <div class="flex justify-end gap-2">
+            <button id="clearFilters" class="px-3 py-1 text-sm bg-gray-200 text-gray-800 rounded font-[Lexend] hover:bg-gray-300">
+                Clear
+            </button>
+            <button id="applyFilters" class="px-3 py-1 text-sm bg-[#4D0F0F] text-white rounded font-[Lexend] hover:bg-red-800">
+                Apply
+            </button>
         </div>
     </div>
 </div>
@@ -410,40 +437,195 @@ document.addEventListener('click', function(event) {
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const monthFilter = document.getElementById('monthFilter');
-    const yearFilter = document.getElementById('yearFilter');
-    const prevMonth = document.getElementById('prevMonth');
-    const nextMonth = document.getElementById('nextMonth');
-    const prevYear = document.getElementById('prevYear');
-    const nextYear = document.getElementById('nextYear');
+    // Get all required elements
+    const filterModal = document.getElementById('filterModal');
+    const openFilterModalBtn = document.getElementById('openFilterModal');
+    const applyFiltersBtn = document.getElementById('applyFilters');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const tableBody = document.querySelector('tbody');
+    const noResultsRow = document.getElementById('noResultsRow');
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const quickFilterBtns = document.querySelectorAll('[data-filter]');
 
-    prevMonth.addEventListener('click', function() {
-        if (monthFilter.selectedIndex > 0) {
-            monthFilter.selectedIndex--;
-            monthFilter.dispatchEvent(new Event('change'));
+    // Toggle filter modal
+    openFilterModalBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const buttonRect = this.getBoundingClientRect();
+        filterModal.style.top = `${buttonRect.bottom + 5}px`;
+        filterModal.style.right = `${window.innerWidth - buttonRect.right}px`;
+        filterModal.classList.toggle('hidden');
+    });
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!filterModal.contains(e.target) && e.target !== openFilterModalBtn) {
+            filterModal.classList.add('hidden');
         }
     });
 
-    nextMonth.addEventListener('click', function() {
-        if (monthFilter.selectedIndex < monthFilter.options.length - 1) {
-            monthFilter.selectedIndex++;
-            monthFilter.dispatchEvent(new Event('change'));
-        }
+    // Parse date string to Date object
+    function parseDate(dateStr) {
+        const parts = dateStr.split(',')[0].trim().split(' ');
+        const month = new Date(Date.parse(parts[0] + " 1, 2012")).getMonth();
+        const day = parseInt(parts[1]);
+        const year = parseInt(parts[2] || new Date().getFullYear());
+        return new Date(year, month, day);
+    }
+
+    // Quick filter buttons
+    quickFilterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const filterType = this.dataset.filter;
+            const now = new Date();
+            
+            // Reset custom range inputs
+            startDateInput.value = '';
+            endDateInput.value = '';
+
+            // Remove active state from all buttons
+            quickFilterBtns.forEach(b => b.classList.remove('bg-[#F5E6E6]'));
+            // Add active state to clicked button
+            this.classList.add('bg-[#F5E6E6]');
+
+            const rows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow)'));
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const dateCell = row.querySelector('td:first-child');
+                if (!dateCell) return;
+                
+                const dateText = dateCell.childNodes[0].textContent.trim();
+                const rowDate = parseDate(dateText);
+                let showRow = false;
+
+                switch(filterType) {
+                    case 'newest':
+                        showRow = true;
+                        rows.sort((a, b) => {
+                            const dateA = parseDate(a.querySelector('td:first-child').childNodes[0].textContent.trim());
+                            const dateB = parseDate(b.querySelector('td:first-child').childNodes[0].textContent.trim());
+                            return dateB - dateA;
+                        });
+                        break;
+                    case 'oldest':
+                        showRow = true;
+                        rows.sort((a, b) => {
+                            const dateA = parseDate(a.querySelector('td:first-child').childNodes[0].textContent.trim());
+                            const dateB = parseDate(b.querySelector('td:first-child').childNodes[0].textContent.trim());
+                            return dateA - dateB;
+                        });
+                        break;
+                    case 'today':
+                        showRow = rowDate.toDateString() === now.toDateString();
+                        break;
+                    case 'this-week':
+                        const weekStart = new Date(now);
+                        weekStart.setDate(now.getDate() - now.getDay());
+                        weekStart.setHours(0, 0, 0, 0);
+                        const weekEnd = new Date(weekStart);
+                        weekEnd.setDate(weekStart.getDate() + 6);
+                        weekEnd.setHours(23, 59, 59, 999);
+                        showRow = rowDate >= weekStart && rowDate <= weekEnd;
+                        break;
+                    case 'this-month':
+                        showRow = rowDate.getMonth() === now.getMonth() && 
+                                rowDate.getFullYear() === now.getFullYear();
+                        break;
+                }
+
+                row.style.display = showRow ? '' : 'none';
+                if (showRow) visibleCount++;
+            });
+
+            if (filterType === 'newest' || filterType === 'oldest') {
+                rows.forEach(row => tableBody.appendChild(row));
+            }
+
+            noResultsRow.classList.toggle('hidden', visibleCount > 0);
+        });
     });
 
-    prevYear.addEventListener('click', function() {
-        if (yearFilter.selectedIndex > 0) {
-            yearFilter.selectedIndex--;
-            yearFilter.dispatchEvent(new Event('change'));
-        }
+    // Apply custom range filter
+    applyFiltersBtn.addEventListener('click', function() {
+        const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
+        const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
+        
+        if (startDate) startDate.setHours(0, 0, 0, 0);
+        if (endDate) endDate.setHours(23, 59, 59, 999);
+
+        quickFilterBtns.forEach(btn => btn.classList.remove('bg-[#F5E6E6]'));
+
+        const rows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow)'));
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const dateCell = row.querySelector('td:first-child');
+            if (!dateCell) return;
+
+            const dateText = dateCell.childNodes[0].textContent.trim();
+            const rowDate = parseDate(dateText);
+            
+            let showRow = true;
+            if (startDate && endDate) {
+                showRow = rowDate >= startDate && rowDate <= endDate;
+            } else if (startDate) {
+                showRow = rowDate >= startDate;
+            } else if (endDate) {
+                showRow = rowDate <= endDate;
+            }
+
+            row.style.display = showRow ? '' : 'none';
+            if (showRow) visibleCount++;
+        });
+
+        noResultsRow.classList.toggle('hidden', visibleCount > 0);
+        filterModal.classList.add('hidden');
     });
 
-    nextYear.addEventListener('click', function() {
-        if (yearFilter.selectedIndex < yearFilter.options.length - 1) {
-            yearFilter.selectedIndex++;
-            yearFilter.dispatchEvent(new Event('change'));
-        }
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const rows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow)'));
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const cells = row.querySelectorAll('td');
+            const matchesSearch = Array.from(cells).some(cell => 
+                cell.textContent.toLowerCase().includes(searchTerm)
+            );
+
+            row.style.display = matchesSearch ? '' : 'none';
+            if (matchesSearch) visibleCount++;
+        });
+
+        noResultsRow.classList.toggle('hidden', visibleCount > 0);
     });
+
+    // Clear all filters and search
+    function clearAllFiltersAndSearch() {
+        searchInput.value = '';
+        startDateInput.value = '';
+        endDateInput.value = '';
+        
+        quickFilterBtns.forEach(btn => btn.classList.remove('bg-[#F5E6E6]'));
+
+        const rows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow)'));
+        rows.forEach(row => {
+            row.style.display = '';
+            row.style.order = '';
+        });
+
+        noResultsRow.classList.add('hidden');
+        filterModal.classList.add('hidden');
+    }
+
+    clearFiltersBtn.addEventListener('click', clearAllFiltersAndSearch);
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', clearAllFiltersAndSearch);
+    }
 });
 </script>
 @endsection
