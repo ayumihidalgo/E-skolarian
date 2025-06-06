@@ -19,6 +19,11 @@
             margin-bottom: 0.5rem;
         }
 
+        /* This is the important part - ensure hidden state is preserved with !important */
+        #actionButtonsContainer.hidden {
+            display: none !important;
+        }
+
         #main-content{
             margin-left: 0;
         }
@@ -271,7 +276,7 @@
                 </div>
 
                 <!-- Details View (initially hidden) -->
-                <div id="detailsView" class="hidden h-full text-white">
+                <div id="detailsView" class="hidden h-auto text-white">
                     <!-- Header with close button -->
                     <div class="flex items-start justify-between px-3 md:px-6 mb-2 md:mb-0">
                         <h2 class="font-extrabold text-lg md:text-2xl text-black">Admin Review</h2>
@@ -312,6 +317,18 @@
                                 </div>
                             </div>
 
+                            <!-- Added Details For Event Proposal Document Type -->
+                            <div id="eventProposalDetails" class="hidden">
+                                <div class="font-bold text-sm md:text-base max-w-[70%]">
+                                    <p id="venueInfo" class="break-words"><span class="text-[#FFFFFF91] font-normal">Venue:</span> </p>
+                                    <p id="dateTimeInfo" class="break-words"><span class="text-[#FFFFFF91] font-normal">Date & Time:</span> </p>
+                                    <p id="hoursInfo" class="break-words"><span class="text-[#FFFFFF91] font-normal">No. Of Hours:</span> </p>
+                                    <p id="attendeesInfo" class="break-words"><span class="text-[#FFFFFF91] font-normal">Attendees:</span> </p>
+                                    <p id="numAttendeesInfo" class="break-words"><span class="text-[#FFFFFF91] font-normal">Expected No. of Attendees:</span> </p>
+                                    <p id="feeInfo" class="break-words"><span class="text-[#FFFFFF91] font-normal">Fee/Contribution per Student/Participant:</span> </p>
+                                </div>                         
+                            </div>
+
                             <!-- Attachment -->
                             <div>
                                 <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Attachment</h2>
@@ -350,17 +367,17 @@
                                     </div>
                                 </div>
                                  <!-- Returned status indicator - Initially hidden, will be shown by JS -->
-                                <div id="returnedStatusIndicator" class="hidden mt-2 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 rounded">
+                                <div id="returnedStatusIndicator" class="hidden mt-2 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 rounded max-h-[200px] overflow-y-auto" style="scrollbar-width: thin; scrollbar-color: rgba(0, 142, 188, 0.53) transparent;">
                                     <div class="flex">
                                         <div class="flex-shrink-0">
                                             <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
                                             </svg>
                                         </div>
-                                        <div class="ml-3">
-                                            <p class="text-sm font-medium">You've requested resubmission for this document on <span id="forwardedDate">loading date...</span></p>
-                                            <p class="text-sm mt-1">Message: <span id="forwardedMessage" class="italic">Loading message...</span></p>
-                                            <p class="text-xs mt-2 font-medium">You can still view this document, but you can only perform actions once the organization resubmits the document.</p>
+                                        <div class="ml-3 overflow-hidden">
+                                            <p class="text-sm font-medium break-words">You've requested resubmission for this document on <span id="forwardedDate">loading date...</span></p>
+                                            <p class="text-sm mt-1 break-words">Message: <span id="forwardedMessage" class="italic break-words">Loading message...</span></p>
+                                            <p class="text-xs mt-2 font-medium break-words">You can still view this document, but you can only perform actions once the organization resubmits the document.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -385,7 +402,7 @@
                                 <hr class="border-white"></hr>
 
                                 <!-- Comments section -->
-                                <div class="space-y-3 md:space-y-4 text-xs md:text-sm overflow-y-auto max-h-[200px] md:max-h-[400px]" id="commentsContainer" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;">
+                                <div class="space-y-3 md:space-y-4 text-xs md:text-sm overflow-y-auto max-h-[500px]" id="commentsContainer" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;">
                                     <!-- Comments will be loaded here -->
                                 </div>
                             </div>

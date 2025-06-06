@@ -23,13 +23,9 @@
             const box = document.getElementById('box');
             if (!box) return;
 
-            if (window.innerWidth >= 768) {
-                box.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ asset('images/PUP_Bg1.jpg') }}')`;
-                box.style.backgroundRepeat = 'no-repeat';
-                box.style.backgroundSize = 'cover';
-            } else {
-                box.style.backgroundImage = '';
-            }
+            box.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ asset('images/PUP_Bg1.jpg') }}')`;
+            box.style.backgroundRepeat = 'no-repeat';
+            box.style.backgroundSize = 'cover';
         }
 
             /* Toggle Show/Hide Password */
@@ -95,7 +91,7 @@
                 <img class="h-[80px]" src="{{asset('images/e-skolarianIcon.svg')}}">
                 <img class="h-[35px]" src="{{asset('images/E-skolarianWhite.svg')}}">
             </div>
-            <div class="bg-white/80 rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+            <div class="bg-[#FFFFFFCC] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
                 <div class="w-[80%] mx-auto">
                     <h2 class="text-xl font-[Lexend] mb-4 text-[var(--secondary-color)]">RESET TOKEN EXPIRED</h2>
                     <p class="mb-6 font-[Manrope] font-normal">Your password reset link has expired or is invalid. Please request a new one.</p>

@@ -4,7 +4,7 @@
 
 <style>
     body {
-        overflow: hidden;
+        overflow-x: hidden; /* Allow vertical scrolling */
     }
 </style>
 

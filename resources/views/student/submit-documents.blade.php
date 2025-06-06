@@ -19,7 +19,7 @@
                                 <!-- Receiver Button -->
                                 <div class="relative w-full">
                                     <button type="button" id="receiverButton" aria-expanded
-                                        class="w-full text-left border-b-2 border-gray-500 py-3 relative focus:outline-none flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                        class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative focus:outline-none flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
                                         <span class="font-semibold text-gray-500">
                                             To<span class="required-indicator text-red-500"> *</span>:
                                             <span id="receiverSelected" class="font-semibold text-black"></span>
@@ -44,7 +44,7 @@
                                 </div>
 
                                 <!-- Subject Field -->
-                                <div class="flex items-center border-b-2 border-gray-500 py-3 w-full">
+                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full">
                                     <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span
                                             class="required-indicator text-red-500"> *</span>:</span>
                                     <input type="text" id="subject" name="subject" autocomplete="off"
@@ -53,58 +53,55 @@
                             </div>
 
                             <!-- Right Side -->
-                            <div class="relative w-full md:w-1/3">
-                                <!-- Document Type Button -->
-                                <button type="button" id="docTypeButton" aria-expanded
-                                    class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white px-6 py-3 rounded-[12px] cursor-pointer transition">
-                                    <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
-                                        class="w-5 h-5">
-                                    <span id="docTypeSelected">Document Type</span>
+                            <div class="flex flex-col gap-4 w-full md:w-1/3 relative">
+                                <div class="">
+                                    <!-- Receiver Button -->
+                                    <div class="relative w-full">
+                                        <!-- Document Type Button -->
+                                        <button type="button" id="docTypeButton" aria-expanded
+                                            class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white border-2 border-[#7A1212] hover:border-[#a31515] p-2 rounded-[8px] cursor-pointer transition">
+                                            <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
+                                                class="w-5 h-5">
+                                            <span id="docTypeSelected">Document Type</span>
 
-                                    <!-- Dropdown Arrow aligned to the right -->
-                                    <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
-                                        class="absolute right-4 w-8 h-3">
-                                </button>
+                                            <!-- Dropdown Arrow aligned to the right -->
+                                            <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
+                                                class="absolute right-4 w-8 h-3">
+                                        </button>
 
-                                <!-- Dropdown List -->
-                                <ul role="listbox" id="docTypeDropdown"
-                                    class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Event Proposal')">Event Proposal</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('General Plan of Activities')">General Plan of Activities</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Calendar of Activities')">Calendar of Activities</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Accomplishment Report')">Accomplishment Report</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Constitution and By-Laws')">Constitution and By-Laws</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Request Letter')">Request Letter</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Off Campus')">Off Campus</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Petition and Concern')">Petition and Concern</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Others')">Others</li>
-                                </ul>
+                                        <!-- Dropdown List -->
+                                        <ul role="listbox" id="docTypeDropdown"
+                                            class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
+                                            @foreach ([
+                                                'Event Proposal',
+                                                'General Plan of Activities',
+                                                'Calendar of Activities',
+                                                'Accomplishment Report',
+                                                'Constitution and By-Laws',
+                                                'Request Letter',
+                                                'Off Campus',
+                                                'Petition and Concern',
+                                                'Others'
+                                            ] as $type)
+                                                <li tabindex="0" role="option"
+                                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                                    onclick="selectDocType('{{ $type }}')">
+                                                    {{ $type }}
+                                                </li>
+                                            @endforeach
+                                        </ul>
 
-                                <!-- Hidden input for form submission -->
-                                <input type="hidden" name="type" id="docTypeInput">
+                                        <!-- Hidden input for form submission -->
+                                        <input type="hidden" name="type" id="docTypeInput">
+                                    </div>
+                                    
+                                    
+                                </div>
                             </div>
                         </div>
 
                         <!-- Summary -->
-                        <div class="flex flex-col gap-1">
+                        <div class="flex flex-col gap-1 border-2 border-gray-500 p-2 rounded-[8px]">
                             <label for="summary" class="font-semibold text-gray-500">Summary<span
                                     class="required-indicator text-red-500"> *</span>:</label>
 
@@ -112,7 +109,7 @@
                                 class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
                                 oninput="summaryUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
 
-                            <div class="text-sm text-gray-500 text-right border-b-2 border-gray-500">
+                            <div class="text-sm text-gray-500 text-right">
                                 <span id="summary-counter">0</span>/255
                             </div>
                         </div>
@@ -193,7 +190,7 @@
                                         class="font-semibold px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer"
                                         type="button">Cancel</button>
                                     <button id="confirmSubmitBtn" type="submit" onclick="handleConfirmSubmit(this)"
-                                        class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
+                                        class="font-semibold px-4 py-2 bg-[#7A1212] text-white rounded-md hover:bg-[#a31515] cursor-pointer">
                                         Submit
                                     </button>
                                 </div>

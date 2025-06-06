@@ -94,19 +94,12 @@
                             class="absolute top-1/2 right-3 -translate-y-1/2 w-4 h-4 pointer-events-none" />
                     </div>
 
-                    <!-- Status dropdown filter -->
-                    <div class="relative w-40">
-                        <select id="statusFilter"
-                            class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200">
-                            <option class="bg-white text-black" value="Status" disabled selected>Status</option>
-                            <option class="bg-white text-black" value="All">All Status</option>
-                            <option class="bg-white text-black" value="Approved">Approved</option>
-                            <option class="bg-white text-black" value="Rejected">Rejected</option>
-                        </select>
-                        <!-- Custom dropdown arrow -->
-                        <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
-                            class="absolute top-1/2 right-3 -translate-y-1/2 w-4 h-4 pointer-events-none" />
-                    </div>
+                    <!-- Date filter button (replacing status dropdown) -->
+                    <button id="dateFilterBtn"
+                        class="px-4 py-2 rounded-full bg-[#7A1212] text-white w-40 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 flex items-center justify-between">
+                        <span id="dateFilterText">Date Range</span>
+                        <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Calendar Icon" class="w-4 h-4" />
+                    </button>
                 </div>
             </div>
 
@@ -315,153 +308,732 @@
                 </nav>
             </div>
             @endif
-        </div>
 
-        <!-- Archive Documents Confirmation Modal -->
-        <div id="archiveConfirmationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center"
-            style="background-color: rgba(0,0,0,0.3);">
-            <div class="bg-white w-[30rem] rounded-2xl shadow-xl p-6">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-lg font-semibold text-gray-800">Archive Document Confirmation</h3>
-                    <button id="closeArchiveModalBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
+            <!-- Archive Documents Confirmation Modal -->
+            <div id="archiveConfirmationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center"
+                style="background-color: rgba(0,0,0,0.3);">
+                <div class="bg-white w-[30rem] rounded-2xl shadow-xl p-6">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-lg font-semibold text-gray-800">Archive Document Confirmation</h3>
+                        <button id="closeArchiveModalBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
 
-                <p class="text-sm text-gray-600 mb-6">
-                    Are you sure you want to archive this document? Once archived, it will be removed from your history
-                    list
-                    and will no longer be visible there.
-                </p>
+                    <p class="text-sm text-gray-600 mb-6">
+                        Are you sure you want to archive this document? Once archived, it will be removed from your history
+                        list
+                        and will no longer be visible there.
+                    </p>
 
-                <div class="flex justify-end space-x-3">
-                    <button id="cancelArchiveBtn"
-                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
-                        Cancel
-                    </button>
-                    <button id="confirmArchiveBtn"
-                        class="px-4 py-2 bg-[#7A1212] text-white rounded-md hover:bg-[#DAA520] cursor-pointer">
-                        Archive
-                    </button>
+                    <div class="flex justify-end space-x-3">
+                        <button id="cancelArchiveBtn"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                            Cancel
+                        </button>
+                        <button id="confirmArchiveBtn"
+                            class="px-4 py-2 bg-[#7A1212] text-white rounded-md hover:bg-[#DAA520] cursor-pointer">
+                            Archive
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <!-- Date Filter Modal -->
+            <div id="dateFilterModal" class="hidden fixed inset-0 z-50 flex items-center justify-center"
+                style="background-color: rgba(0,0,0,0.3);">
+                <div class="bg-white w-[25rem] rounded-2xl shadow-xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Filter by Date Range</h3>
+                        <button id="closeDateModalBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label for="startDate" class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                            <input type="date" id="startDate"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:border-transparent">
+                        </div>
+                        <div>
+                            <label for="endDate" class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                            <input type="date" id="endDate"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:border-transparent">
+                        </div>
+                        <div id="dateError" class="text-red-500 text-sm hidden">
+                            End date cannot be earlier than start date.
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end space-x-3 mt-6">
+                        <button id="clearDateFilterBtn"
+                            class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                            Clear Filter
+                        </button>
+                        <button id="applyDateFilterBtn"
+                            class="px-4 py-2 bg-[#7A1212] text-white rounded-md hover:bg-[#DAA520] cursor-pointer">
+                            Apply Filter
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Action Toast -->
+            <div id="documentActionToast" class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-gray-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50">
+                <div>
+                    <img
+                        src="{{ asset('images/successful.svg') }}"
+                        alt="Action Icon"
+                        id="actionIcon"
+                        class="">
+                </div>
+                <div class="flex-1">
+                    <p class="font-semibold" id="actionTitle">Document Action</p>
+                    <p id="actionMessage" class="text-sm">Action performed on document.</p>
+                </div>
+                <button type="button" onclick="hideActionToast()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer self-center">&times;</button>
+            </div>
+
+            <!-- Generate Reports button -->
+            <div class="w-full px-6 flex justify-end mb-8 mt-4">
+                <button id="floatingExportBtn"
+                    class="px-4 py-2 bg-[#7A1212] text-white rounded-full shadow-lg hover:bg-[#DAA520] transition-colors duration-200 flex items-center gap-2"
+                    onclick="exportDocumentHistory()">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Generate Reports
+                </button>
+            </div>
         </div>
-        <!-- Generate Reports button -->
-        <div class="w-full px-6 flex justify-end mb-8">
-            <button id="floatingExportBtn"
-                class="px-4 py-2 bg-[#7A1212] text-white rounded-full shadow-lg hover:bg-[#DAA520] transition-colors duration-200 flex items-center gap-2"
-                onclick="exportDocumentHistory()">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Generate Reports
-            </button>
-        </div>
+    </div>
+    @include('components.footer')
+</div>
 
+<script>
+    // Configuration constants
+    let selectedItems = new Set(); // Set to track selected document IDs
+    let currentDateFilter = {
+        start: '',
+        end: ''
+    }; // Track current date filter
 
-        <script>
-            // Configuration constants
-            let selectedItems = new Set(); // Set to track selected document IDs
+    // Track sort direction for each column 
+    let sortDirection = [true, true, true, true, true, true];
 
-            // Updates the selected document count and button state
-            function updateSelectedCount() {
-                const count = selectedItems.size;
-                document.getElementById('selectedCount').textContent = count;
-                document.getElementById('archiveSelectedBtn').disabled = count === 0;
+    // Updates the selected document count and button state
+    function updateSelectedCount() {
+        const count = selectedItems.size;
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('archiveSelectedBtn').disabled = count === 0;
+    }
+
+    //view document preview - THIS WAS MISSING
+    function viewDocument(id) {
+        window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
+    }
+
+    // Toast functionality
+    function showActionToast(title, message, isSuccess = true) {
+        const toast = document.getElementById('documentActionToast');
+        const actionIcon = document.getElementById('actionIcon');
+        const actionTitle = document.getElementById('actionTitle');
+        const actionMessage = document.getElementById('actionMessage');
+
+        // Set the appropriate icon and styling based on success/failure
+        if (isSuccess) {
+            actionIcon.src = "{{ asset('images/successful.svg') }}";
+            toast.className = toast.className.replace('border-red-400', 'border-green-400');
+            if (!toast.className.includes('border-green-400')) {
+                toast.className = toast.className.replace('border-gray-400', 'border-green-400');
             }
+        } else {
+            actionIcon.src = "{{ asset('images/error.svg') }}"; // Assuming you have an error icon
+            toast.className = toast.className.replace('border-green-400', 'border-red-400');
+            if (!toast.className.includes('border-red-400')) {
+                toast.className = toast.className.replace('border-gray-400', 'border-red-400');
+            }
+        }
 
-            //Archives the selected documents - ONLY called from the confirmation modal
+        actionTitle.textContent = title;
+        actionMessage.textContent = message;
 
-            function processArchiving() {
-                if (selectedItems.size === 0) return;
+        // Show the toast
+        toast.classList.remove('hidden');
 
-                const documentIds = Array.from(selectedItems);
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            hideActionToast();
+        }, 5000);
+    }
 
-                fetch("{{ route('admin.archiveDocuments') }}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify({
-                            document_ids: documentIds
-                        })
-                    })
-                    .then(response => response.json())
-                    .then((data) => {
-                        if (data.success) {
-                            // Reload the page to show updated list
-                            window.location.reload();
-                        } else {
-                            alert(data.message || 'Failed to archive documents.');
+    function hideActionToast() {
+        const toast = document.getElementById('documentActionToast');
+        toast.classList.add('hidden');
+    }
+
+    //Archives the selected documents - ONLY called from the confirmation modal
+    function processArchiving() {
+        if (selectedItems.size === 0) return;
+
+        const documentIds = Array.from(selectedItems);
+        const count = documentIds.length;
+
+        fetch("{{ route('admin.archiveDocuments') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    document_ids: documentIds
+                })
+            })
+            .then(response => response.json())
+            .then((data) => {
+                if (data.success) {
+                    // Show success toast
+                    showActionToast(
+                        'Archive Successful',
+                        `Successfully archived ${count} document${count > 1 ? 's' : ''}.`,
+                        true
+                    );
+
+                    // Remove archived rows with smooth animation
+                    documentIds.forEach(id => {
+                        const row = document.querySelector(`tr[data-id="${id}"]`);
+                        if (row) {
+                            // Add fade-out animation
+                            row.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateX(-20px)';
+
+                            // Remove the row after animation completes
+                            setTimeout(() => {
+                                row.remove();
+                            }, 500);
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred while archiving documents.');
                     });
+
+                    // Wait for animations to complete, then reset filters and reload data
+                    setTimeout(() => {
+                        resetFiltersAndReloadData();
+                    }, 600);
+
+                } else {
+                    // Show error toast
+                    showActionToast(
+                        'Archive Failed',
+                        data.message || 'Failed to archive documents.',
+                        false
+                    );
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Show error toast
+                showActionToast(
+                    'Archive Error',
+                    'An error occurred while archiving documents.',
+                    false
+                );
+            });
+    }
+
+    // Date filter functionality - UPDATED TO KEEP CONSTANT TEXT
+    function updateDateFilterDisplay() {
+        // Keep the button text constant as "Date Range"
+        const dateFilterText = document.getElementById('dateFilterText');
+        dateFilterText.textContent = 'Date Range';
+    }
+
+    function validateDateRange() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const errorDiv = document.getElementById('dateError');
+
+        if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+            errorDiv.classList.remove('hidden');
+            return false;
+        } else {
+            errorDiv.classList.add('hidden');
+            return true;
+        }
+    }
+
+    // Function to update the export button state based on document count
+    function updateExportButtonState() {
+        const floatingExportBtn = document.getElementById('floatingExportBtn');
+        const visibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
+
+        if (visibleRows === 0) {
+            floatingExportBtn.disabled = true;
+            floatingExportBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            floatingExportBtn.classList.remove('hover:bg-[#DAA520]');
+        } else {
+            floatingExportBtn.disabled = false;
+            floatingExportBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            floatingExportBtn.classList.add('hover:bg-[#DAA520]');
+        }
+    }
+
+    // Function to reset all filters and reload all documents
+    function resetFiltersAndReloadData() {
+        // Reset all filter dropdowns to their default values
+        const organizationFilter = document.getElementById("organizationFilter");
+        const typeFilter = document.getElementById("typeFilter");
+        const searchInput = document.querySelector('input[placeholder="Search..."]');
+
+        // Reset filter values
+        organizationFilter.value = "Organization";
+        typeFilter.value = "Type";
+        searchInput.value = "";
+
+        // Reset date filter
+        currentDateFilter = {
+            start: '',
+            end: ''
+        };
+        updateDateFilterDisplay(); // This will set it back to "Date Range"
+
+        // Show loading state
+        const tableContainer = document.querySelector('#tableContainer');
+        tableContainer.classList.add('opacity-50');
+
+        // Clear selections
+        selectedItems.clear();
+        updateSelectedCount();
+
+        // Fetch all documents (no filters)
+        const baseUrl = window.location.pathname;
+
+        fetch(baseUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Parse the HTML response
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Update the table body
+                const newTableBody = doc.querySelector('#documentTable tbody');
+                if (newTableBody) {
+                    document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+                }
+
+                // Update pagination
+                const newPagination = doc.querySelector('#paginationContainer');
+                const currentPagination = document.querySelector('#paginationContainer');
+
+                if (newPagination) {
+                    if (currentPagination) {
+                        currentPagination.outerHTML = newPagination.outerHTML;
+                        currentPagination.style.display = 'block'; // Make sure it's visible
+                    }
+                } else if (currentPagination) {
+                    currentPagination.style.display = 'none';
+                }
+
+                // Update URL to base path (remove all query parameters)
+                window.history.pushState({}, '', baseUrl);
+
+                // Update select all checkbox state
+                const selectAllCheckbox = document.getElementById('selectAll');
+                if (selectAllCheckbox) {
+                    const visibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
+                    selectAllCheckbox.disabled = visibleRows === 0;
+                    selectAllCheckbox.checked = false;
+                }
+
+                // Update export button state
+                updateExportButtonState();
+
+                // Remove loading state
+                tableContainer.classList.remove('opacity-50');
+            })
+            .catch(error => {
+                console.error('Error resetting filters:', error);
+                tableContainer.classList.remove('opacity-50');
+
+                // Fallback: if AJAX fails, do a page reload to base URL
+                window.location.href = window.location.pathname;
+            });
+    }
+
+    // Sorting functionality
+    function sortTable(columnIndex) {
+        const columnMap = [
+            'control_tag', // Tag - index 1
+            'organization', // Organization - index 2
+            'subject', // Subject - index 3
+            'created_at', // Date Submitted - index 4
+            'type' // Type - index 5
+        ];
+
+        const columnName = columnMap[columnIndex - 1];
+
+        if (!columnName) return;
+
+        sortDirection[columnIndex] = !sortDirection[columnIndex];
+        const direction = sortDirection[columnIndex] ? 'asc' : 'desc';
+
+        const tableContainer = document.querySelector('#tableContainer');
+        tableContainer.classList.add('opacity-50');
+
+        const orgFilter = document.getElementById("organizationFilter").value;
+        const typeFilter = document.getElementById("typeFilter").value;
+        const searchInput = document.querySelector('input[placeholder="Search..."]').value;
+
+        const params = new URLSearchParams(window.location.search);
+
+        params.set('sort_by', columnName);
+        params.set('sort_dir', direction);
+
+        if (orgFilter !== 'Organization') {
+            params.set('organization', orgFilter);
+        }
+
+        if (typeFilter !== 'Type') {
+            params.set('type', typeFilter);
+        }
+
+        if (searchInput.trim() !== '') {
+            params.set('search', searchInput);
+        }
+
+        // Include date filter if set
+        if (currentDateFilter.start) {
+            params.set('start_date', currentDateFilter.start);
+        }
+        if (currentDateFilter.end) {
+            params.set('end_date', currentDateFilter.end);
+        }
+
+        const url = `${window.location.pathname}?${params.toString()}`;
+
+        fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const newTableBody = doc.querySelector('#documentTable tbody');
+                if (newTableBody) {
+                    document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+                }
+
+                const newPagination = doc.querySelector('#paginationContainer');
+                const currentPagination = document.querySelector('#paginationContainer');
+
+                if (newPagination && currentPagination) {
+                    currentPagination.outerHTML = newPagination.outerHTML;
+                }
+
+                window.history.pushState({}, '', url);
+
+                updateSortIndicator(columnIndex);
+
+                tableContainer.classList.remove('opacity-50');
+
+                // Reset selections after sort
+                selectedItems.clear();
+                updateSelectedCount();
+
+                // Uncheck "select all" checkbox
+                const selectAllCheckbox = document.getElementById('selectAll');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error sorting table:', error);
+                tableContainer.classList.remove('opacity-50');
+            });
+    }
+
+    function updateSortIndicator(columnIndex) {
+        const sortIcons = document.querySelectorAll('thead button img');
+        sortIcons.forEach(icon => {
+            icon.classList.remove('rotate-180');
+        });
+
+        const clickedIcon = document.querySelector(`thead th:nth-child(${columnIndex + 1}) button img`);
+        if (clickedIcon && !sortDirection[columnIndex]) {
+            clickedIcon.classList.add('rotate-180');
+        }
+    }
+
+    // Show the modal when the archive button is clicked
+    function showArchiveConfirmation() {
+        if (selectedItems.size > 0) {
+            document.getElementById("archiveConfirmationModal").classList.remove("hidden");
+        }
+    }
+
+    // Event delegation for checkbox and button clicks
+    document.addEventListener('click', function(e) {
+        // Handle "Select All" checkbox
+        if (e.target.id === 'selectAll') {
+            const checkboxes = document.querySelectorAll('.row-checkbox:not(:disabled)');
+
+            // Check/uncheck all visible checkboxes
+            checkboxes.forEach(checkbox => {
+                if (checkbox.closest('tr').style.display !== 'none') {
+                    checkbox.checked = e.target.checked;
+
+                    const id = checkbox.getAttribute('data-id');
+                    if (e.target.checked) {
+                        selectedItems.add(id);
+                    } else {
+                        selectedItems.delete(id);
+                    }
+                }
+            });
+
+            updateSelectedCount();
+        }
+        // Handle individual row checkbox
+        else if (e.target.classList.contains('row-checkbox')) {
+            const id = e.target.getAttribute('data-id');
+
+            if (e.target.checked) {
+                selectedItems.add(id);
+            } else {
+                selectedItems.delete(id);
             }
 
-            // Track sort direction for each column
-            let sortDirection = [true, true, true, true, true, true];
+            updateSelectedCount();
+        }
+        // Handle archive button - ONLY SHOW MODAL, NO ARCHIVING
+        else if (e.target.id === 'archiveSelectedBtn') {
+            showArchiveConfirmation();
+        }
+        // Handle date filter button
+        else if (e.target.id === 'dateFilterBtn' || e.target.closest('#dateFilterBtn')) {
+            document.getElementById('dateFilterModal').classList.remove('hidden');
+        }
+    });
 
-            //view document preview
-            function viewDocument(id) {
-                window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
+    // Close button functionality for the archive modal
+    document.getElementById("closeArchiveModalBtn").addEventListener("click", function() {
+        document.getElementById("archiveConfirmationModal").classList.add("hidden");
+    });
+
+    document.getElementById("cancelArchiveBtn").addEventListener("click", function() {
+        document.getElementById("archiveConfirmationModal").classList.add("hidden");
+    });
+
+    // ONLY THIS BUTTON SHOULD TRIGGER THE ACTUAL ARCHIVING
+    document.getElementById("confirmArchiveBtn").addEventListener("click", function() {
+        processArchiving(); // Call the function that actually does the archiving
+        document.getElementById("archiveConfirmationModal").classList.add("hidden");
+    });
+
+    // Date filter modal event listeners
+    document.getElementById("closeDateModalBtn").addEventListener("click", function() {
+        document.getElementById("dateFilterModal").classList.add("hidden");
+    });
+
+    document.getElementById("startDate").addEventListener("change", function() {
+        validateDateRange();
+        // Update the minimum date for end date
+        const startDate = this.value;
+        if (startDate) {
+            document.getElementById('endDate').min = startDate;
+        }
+    });
+
+    document.getElementById("endDate").addEventListener("change", validateDateRange);
+
+    document.getElementById("clearDateFilterBtn").addEventListener("click", function() {
+        document.getElementById('startDate').value = '';
+        document.getElementById('endDate').value = '';
+        document.getElementById('endDate').removeAttribute('min');
+        currentDateFilter = {
+            start: '',
+            end: ''
+        };
+        updateDateFilterDisplay(); // This will reset to "Date Range"
+        document.getElementById("dateFilterModal").classList.add("hidden");
+        // Apply the cleared filter using global function
+        if (typeof handleFilterChange === 'function') {
+            handleFilterChange();
+        }
+    });
+
+    document.getElementById("applyDateFilterBtn").addEventListener("click", function() {
+        if (validateDateRange()) {
+            currentDateFilter.start = document.getElementById('startDate').value;
+            currentDateFilter.end = document.getElementById('endDate').value;
+            updateDateFilterDisplay(); // This will keep it as "Date Range"
+            document.getElementById("dateFilterModal").classList.add("hidden");
+            // Apply the date filter using global function
+            if (typeof handleFilterChange === 'function') {
+                handleFilterChange();
             }
+        }
+    });
 
-            // Sorting functionality
-            function sortTable(columnIndex) {
-                const columnMap = [
-                    'control_tag', // Tag - index 1
-                    'organization', // Organization - index 2
-                    'subject', // Subject - index 3
-                    'created_at', // Date Submitted - index 4
-                    'type' // Type - index 5
-                ];
+    // Function to apply server-side filters
+    function applyServerSideFilters() {
+        // Show loading state
+        const tableContainer = document.querySelector('#tableContainer');
+        tableContainer.classList.add('opacity-50');
 
-                const columnName = columnMap[columnIndex - 1];
+        // Reset selections
+        selectedItems.clear();
+        updateSelectedCount();
 
-                if (!columnName) return;
+        // Build the query parameters
+        const params = new URLSearchParams();
 
-                sortDirection[columnIndex] = !sortDirection[columnIndex];
-                const direction = sortDirection[columnIndex] ? 'asc' : 'desc';
+        const organizationFilter = document.getElementById("organizationFilter");
+        const typeFilter = document.getElementById("typeFilter");
+        const searchInput = document.querySelector('input[placeholder="Search..."]');
 
+        if (organizationFilter.value !== 'Organization') {
+            params.append('organization', organizationFilter.value);
+        }
+
+        if (typeFilter.value !== 'Type') {
+            params.append('type', typeFilter.value);
+        }
+
+        if (searchInput.value.trim() !== '') {
+            params.append('search', searchInput.value);
+        }
+
+        // Add date filter parameters
+        if (currentDateFilter.start) {
+            params.append('start_date', currentDateFilter.start);
+        }
+        if (currentDateFilter.end) {
+            params.append('end_date', currentDateFilter.end);
+        }
+
+        // Create the URL
+        const url = `${window.location.pathname}?${params.toString()}`;
+
+        // Fetch filtered results
+        fetch(url, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Parse the HTML response
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Update the table body
+                const newTableBody = doc.querySelector('#documentTable tbody');
+                if (newTableBody) {
+                    document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+                }
+
+                // Update pagination
+                const newPagination = doc.querySelector('#paginationContainer');
+                const currentPagination = document.querySelector('#paginationContainer');
+
+                if (newPagination) {
+                    if (currentPagination) {
+                        currentPagination.outerHTML = newPagination.outerHTML;
+                    }
+                } else if (currentPagination) {
+                    // If no new pagination but we had one before, hide it
+                    currentPagination.style.display = 'none';
+                }
+
+                // Update URL without reload for bookmarking
+                window.history.pushState({}, '', url);
+
+                // Uncheck "select all" checkbox
+                const selectAllCheckbox = document.getElementById('selectAll');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+
+                    // Disable checkbox if no results
+                    const visibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
+                    selectAllCheckbox.disabled = visibleRows === 0;
+                }
+
+                // Update export button state
+                updateExportButtonState();
+
+                // Remove loading state
+                tableContainer.classList.remove('opacity-50');
+            })
+            .catch(error => {
+                console.error('Error applying filters:', error);
+                tableContainer.classList.remove('opacity-50');
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initial setup
+        const initialVisibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.disabled = initialVisibleRows === 0;
+        }
+
+        // Initialize export button state
+        updateExportButtonState();
+
+        // Filter form elements
+        const organizationFilter = document.getElementById("organizationFilter");
+        const typeFilter = document.getElementById("typeFilter");
+        const searchInput = document.querySelector('input[placeholder="Search..."]');
+
+        // Handle filter changes
+        function handleFilterChange() {
+            applyServerSideFilters();
+        }
+
+        // Make handleFilterChange globally available
+        window.handleFilterChange = handleFilterChange;
+
+        // Add event listeners to filters
+        organizationFilter.addEventListener("change", handleFilterChange);
+        typeFilter.addEventListener("change", handleFilterChange);
+
+        // For search, use debouncing
+        let searchTimeout;
+        searchInput.addEventListener("input", function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(handleFilterChange, 500);
+        });
+
+        // Handle pagination links with AJAX
+        document.addEventListener('click', function(e) {
+            const paginationLink = e.target.closest('a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
+
+            if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
+                e.preventDefault();
+                const url = paginationLink.getAttribute('href');
+
+                // Show loading indicator
                 const tableContainer = document.querySelector('#tableContainer');
                 tableContainer.classList.add('opacity-50');
 
-                const statusFilter = document.getElementById("statusFilter").value;
-                const orgFilter = document.getElementById("organizationFilter").value;
-                const typeFilter = document.getElementById("typeFilter").value;
-                const searchInput = document.querySelector('input[placeholder="Search..."]').value;
-
-                const params = new URLSearchParams(window.location.search);
-
-                params.set('sort_by', columnName);
-                params.set('sort_dir', direction);
-
-                if (statusFilter !== 'Status') {
-                    params.set('status', statusFilter);
-                }
-
-                if (orgFilter !== 'Organization') {
-                    params.set('organization', orgFilter);
-                }
-
-                if (typeFilter !== 'Type') {
-                    params.set('type', typeFilter);
-                }
-
-                if (searchInput.trim() !== '') {
-                    params.set('search', searchInput);
-                }
-
-                const url = `${window.location.pathname}?${params.toString()}`;
-
+                // Fetch the new page content
                 fetch(url, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
@@ -469,352 +1041,119 @@
                     })
                     .then(response => response.text())
                     .then(html => {
+                        // Create a temporary element to parse the HTML
                         const parser = new DOMParser();
                         const doc = parser.parseFromString(html, 'text/html');
 
-                        const newTableBody = doc.querySelector('#documentTable tbody');
-                        if (newTableBody) {
-                            document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
-                        }
+                        // Extract the table body content
+                        const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
+                        document.querySelector('#documentTable tbody').innerHTML = newTableBody;
 
+                        // Update pagination
                         const newPagination = doc.querySelector('#paginationContainer');
-                        const currentPagination = document.querySelector('#paginationContainer');
-
-                        if (newPagination && currentPagination) {
-                            currentPagination.outerHTML = newPagination.outerHTML;
+                        if (newPagination) {
+                            const currentPagination = document.querySelector('#paginationContainer');
+                            if (currentPagination) {
+                                currentPagination.outerHTML = newPagination.outerHTML;
+                            }
                         }
 
+                        // Update URL without reload
                         window.history.pushState({}, '', url);
 
-                        updateSortIndicator(columnIndex);
-
-                        tableContainer.classList.remove('opacity-50');
-
-                        // Reset selections after sort
+                        // Reset selections
                         selectedItems.clear();
                         updateSelectedCount();
 
-                        // Uncheck "select all" checkbox
-                        const selectAllCheckbox = document.getElementById('selectAll');
+                        // If "select all" checkbox is checked, uncheck it
                         if (selectAllCheckbox) {
                             selectAllCheckbox.checked = false;
                         }
+
+                        // Update export button state
+                        updateExportButtonState();
+
+                        // Remove loading state
+                        tableContainer.classList.remove('opacity-50');
                     })
                     .catch(error => {
-                        console.error('Error sorting table:', error);
+                        console.error('Error loading page:', error);
                         tableContainer.classList.remove('opacity-50');
                     });
             }
+        });
 
-            function updateSortIndicator(columnIndex) {
-                const sortIcons = document.querySelectorAll('thead button img');
-                sortIcons.forEach(icon => {
-                    icon.classList.remove('rotate-180');
-                });
+        // Initialize date filter display
+        updateDateFilterDisplay(); // This will set it to "Date Range"
+    });
 
-                const clickedIcon = document.querySelector(`thead th:nth-child(${columnIndex + 1}) button img`);
-                if (clickedIcon && !sortDirection[columnIndex]) {
-                    clickedIcon.classList.add('rotate-180');
-                }
+    function exportDocumentHistory() {
+        // Check if button is disabled
+        const floatingExportBtn = document.getElementById('floatingExportBtn');
+        if (floatingExportBtn.disabled) {
+            return; // Don't proceed if button is disabled
+        }
+
+        // Get current filter values
+        const organization = document.getElementById("organizationFilter").value !== "Organization" ?
+            document.getElementById("organizationFilter").value : '';
+        const type = document.getElementById("typeFilter").value !== "Type" ?
+            document.getElementById("typeFilter").value : '';
+        const search = document.querySelector('input[placeholder="Search..."]').value;
+
+        // Build export URL with current filters
+        let exportUrl = "{{ route('admin.document.export') }}";
+        const params = new URLSearchParams();
+
+        if (organization && organization !== 'All') params.append('organization', organization);
+        if (type && type !== 'All') params.append('type', type);
+        if (search.trim() !== '') params.append('search', search);
+
+        // Add date filter parameters with display-friendly versions
+        if (currentDateFilter.start) {
+            params.append('start_date', currentDateFilter.start);
+            params.append('start_date_display', new Date(currentDateFilter.start).toLocaleDateString());
+        }
+        if (currentDateFilter.end) {
+            params.append('end_date', currentDateFilter.end);
+            params.append('end_date_display', new Date(currentDateFilter.end).toLocaleDateString());
+        }
+
+        // Store original HTML
+        const originalContent = floatingExportBtn.innerHTML;
+
+        // Set loading state
+        floatingExportBtn.innerHTML = '<span class="animate-pulse">Generating...</span>';
+        floatingExportBtn.disabled = true;
+
+        // Append parameters to URL
+        if (params.toString()) {
+            exportUrl += '?' + params.toString();
+        }
+
+        // Create a hidden iframe to handle the download
+        const hiddenIframe = document.createElement('iframe');
+        hiddenIframe.style.display = 'none';
+        document.body.appendChild(hiddenIframe);
+
+        // Set a timeout to restore the button state if the download takes too long
+        setTimeout(() => {
+            floatingExportBtn.innerHTML = originalContent;
+            updateExportButtonState(); // Use the function to properly restore state
+        }, 5000); // 5 seconds timeout
+
+        // Navigate iframe to the export URL to trigger download
+        hiddenIframe.src = exportUrl;
+
+        // Remove the iframe after download likely started
+        setTimeout(() => {
+            if (hiddenIframe.parentNode) {
+                hiddenIframe.parentNode.removeChild(hiddenIframe);
             }
-            // Event delegation for checkbox and button clicks
-            document.addEventListener('click', function(e) {
-                // Handle "Select All" checkbox
-                if (e.target.id === 'selectAll') {
-                    const checkboxes = document.querySelectorAll('.row-checkbox:not(:disabled)');
-
-                    // Check/uncheck all visible checkboxes
-                    checkboxes.forEach(checkbox => {
-                        if (checkbox.closest('tr').style.display !== 'none') {
-                            checkbox.checked = e.target.checked;
-
-                            const id = checkbox.getAttribute('data-id');
-                            if (e.target.checked) {
-                                selectedItems.add(id);
-                            } else {
-                                selectedItems.delete(id);
-                            }
-                        }
-                    });
-
-                    updateSelectedCount();
-                }
-                // Handle individual row checkbox
-                else if (e.target.classList.contains('row-checkbox')) {
-                    const id = e.target.getAttribute('data-id');
-
-                    if (e.target.checked) {
-                        selectedItems.add(id);
-                    } else {
-                        selectedItems.delete(id);
-                    }
-
-                    updateSelectedCount();
-                }
-                // Handle archive button - ONLY SHOW MODAL, NO ARCHIVING
-                else if (e.target.id === 'archiveSelectedBtn') {
-                    showArchiveConfirmation();
-                }
-            });
-
-            // Close button functionality for the modal
-            document.getElementById("closeArchiveModalBtn").addEventListener("click", function() {
-                document.getElementById("archiveConfirmationModal").classList.add("hidden");
-            });
-
-            document.getElementById("cancelArchiveBtn").addEventListener("click", function() {
-                document.getElementById("archiveConfirmationModal").classList.add("hidden");
-            });
-
-            // Show the modal when the archive button is clicked
-            function showArchiveConfirmation() {
-                if (selectedItems.size > 0) {
-                    document.getElementById("archiveConfirmationModal").classList.remove("hidden");
-                }
-            }
-
-            // ONLY THIS BUTTON SHOULD TRIGGER THE ACTUAL ARCHIVING
-            document.getElementById("confirmArchiveBtn").addEventListener("click", function() {
-                processArchiving(); // Call the function that actually does the archiving
-                document.getElementById("archiveConfirmationModal").classList.add("hidden");
-            });
-
-            document.addEventListener('DOMContentLoaded', function() {
-                // Initial setup
-                const initialVisibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
-                const selectAllCheckbox = document.getElementById('selectAll');
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.disabled = initialVisibleRows === 0;
-                }
-
-                // Filter form elements
-                const statusFilter = document.getElementById("statusFilter");
-                const organizationFilter = document.getElementById("organizationFilter");
-                const typeFilter = document.getElementById("typeFilter");
-                const searchInput = document.querySelector('input[placeholder="Search..."]');
-
-                // Handle filter changes
-                function handleFilterChange() {
-                    applyServerSideFilters();
-                }
-
-                // Add event listeners to filters
-                statusFilter.addEventListener("change", handleFilterChange);
-                organizationFilter.addEventListener("change", handleFilterChange);
-                typeFilter.addEventListener("change", handleFilterChange);
-
-                // For search, use debouncing
-                let searchTimeout;
-                searchInput.addEventListener("input", function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(handleFilterChange, 500);
-                });
-
-                // Function to apply server-side filters
-                function applyServerSideFilters() {
-                    // Show loading state
-                    const tableContainer = document.querySelector('#tableContainer');
-                    tableContainer.classList.add('opacity-50');
-
-                    // Reset selections
-                    selectedItems.clear();
-                    updateSelectedCount();
-
-                    // Build the query parameters
-                    const params = new URLSearchParams();
-
-                    if (statusFilter.value !== 'Status') {
-                        params.append('status', statusFilter.value);
-                    }
-
-                    if (organizationFilter.value !== 'Organization') {
-                        params.append('organization', organizationFilter.value);
-                    }
-
-                    if (typeFilter.value !== 'Type') {
-                        params.append('type', typeFilter.value);
-                    }
-
-                    if (searchInput.value.trim() !== '') {
-                        params.append('search', searchInput.value);
-                    }
-
-                    // Create the URL
-                    const url = `${window.location.pathname}?${params.toString()}`;
-
-                    // Fetch filtered results
-                    fetch(url, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(response => response.text())
-                        .then(html => {
-                            // Parse the HTML response
-                            const parser = new DOMParser();
-                            const doc = parser.parseFromString(html, 'text/html');
-
-                            // Update the table body
-                            const newTableBody = doc.querySelector('#documentTable tbody');
-                            if (newTableBody) {
-                                document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
-                            }
-
-                            // Update pagination
-                            const newPagination = doc.querySelector('#paginationContainer');
-                            const currentPagination = document.querySelector('#paginationContainer');
-
-                            if (newPagination) {
-                                if (currentPagination) {
-                                    currentPagination.outerHTML = newPagination.outerHTML;
-                                }
-                            } else if (currentPagination) {
-                                // If no new pagination but we had one before, hide it
-                                currentPagination.style.display = 'none';
-                            }
-
-                            // Update URL without reload for bookmarking
-                            window.history.pushState({}, '', url);
-
-                            // Uncheck "select all" checkbox
-                            if (selectAllCheckbox) {
-                                selectAllCheckbox.checked = false;
-
-                                // Disable checkbox if no results
-                                const visibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
-                                selectAllCheckbox.disabled = visibleRows === 0;
-                            }
-
-                            // Remove loading state
-                            tableContainer.classList.remove('opacity-50');
-                        })
-                        .catch(error => {
-                            console.error('Error applying filters:', error);
-                            tableContainer.classList.remove('opacity-50');
-                        });
-                }
-
-                // Handle pagination links with AJAX
-                document.addEventListener('click', function(e) {
-                    const paginationLink = e.target.closest('a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
-
-                    if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
-                        e.preventDefault();
-                        const url = paginationLink.getAttribute('href');
-
-                        // Show loading indicator
-                        const tableContainer = document.querySelector('#tableContainer');
-                        tableContainer.classList.add('opacity-50');
-
-                        // Fetch the new page content
-                        fetch(url, {
-                                headers: {
-                                    'X-Requested-With': 'XMLHttpRequest'
-                                }
-                            })
-                            .then(response => response.text())
-                            .then(html => {
-                                // Create a temporary element to parse the HTML
-                                const parser = new DOMParser();
-                                const doc = parser.parseFromString(html, 'text/html');
-
-                                // Extract the table body content
-                                const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
-                                document.querySelector('#documentTable tbody').innerHTML = newTableBody;
-
-                                // Update pagination
-                                const newPagination = doc.querySelector('#paginationContainer');
-                                if (newPagination) {
-                                    const currentPagination = document.querySelector(
-                                        '#paginationContainer');
-                                    if (currentPagination) {
-                                        currentPagination.outerHTML = newPagination.outerHTML;
-                                    }
-                                }
-
-                                // Update URL without reload
-                                window.history.pushState({}, '', url);
-
-                                // Reset selections
-                                selectedItems.clear();
-                                updateSelectedCount();
-
-                                // If "select all" checkbox is checked, uncheck it
-                                if (selectAllCheckbox) {
-                                    selectAllCheckbox.checked = false;
-                                }
-
-                                // Remove loading state
-                                tableContainer.classList.remove('opacity-50');
-                            })
-                            .catch(error => {
-                                console.error('Error loading page:', error);
-                                tableContainer.classList.remove('opacity-50');
-                            });
-                    }
-                });
-            });
-
-            function exportDocumentHistory() {
-                // Get current filter values
-                const status = document.getElementById("statusFilter").value !== "Status" ?
-                    document.getElementById("statusFilter").value : '';
-                const organization = document.getElementById("organizationFilter").value !== "Organization" ?
-                    document.getElementById("organizationFilter").value : '';
-                const type = document.getElementById("typeFilter").value !== "Type" ?
-                    document.getElementById("typeFilter").value : '';
-                const search = document.querySelector('input[placeholder="Search..."]').value;
-
-                // Build export URL with current filters
-                let exportUrl = "{{ route('admin.document.export') }}";
-                const params = new URLSearchParams();
-
-                if (status && status !== 'All') params.append('status', status);
-                if (organization && organization !== 'All') params.append('organization', organization);
-                if (type && type !== 'All') params.append('type', type);
-                if (search.trim() !== '') params.append('search', search);
-
-                // Get only buttons that exist
-                const floatingExportBtn = document.getElementById('floatingExportBtn');
-
-                // Store original HTML
-                const originalContent = floatingExportBtn.innerHTML;
-
-                // Set loading state
-                floatingExportBtn.innerHTML = '<span class="animate-pulse">Generating...</span>';
-                floatingExportBtn.disabled = true;
-
-                // Append parameters to URL
-                if (params.toString()) {
-                    exportUrl += '?' + params.toString();
-                }
-
-                // Create a hidden iframe to handle the download
-                const hiddenIframe = document.createElement('iframe');
-                hiddenIframe.style.display = 'none';
-                document.body.appendChild(hiddenIframe);
-
-                // Set a timeout to restore the button state if the download takes too long
-                setTimeout(() => {
-                    floatingExportBtn.innerHTML = originalContent;
-                    floatingExportBtn.disabled = false;
-                }, 5000); // 5 seconds timeout
-
-                // Navigate iframe to the export URL to trigger download
-                hiddenIframe.src = exportUrl;
-
-                // Remove the iframe after download likely started
-                setTimeout(() => {
-                    if (hiddenIframe.parentNode) {
-                        hiddenIframe.parentNode.removeChild(hiddenIframe);
-                    }
-                    // Restore button state
-                    floatingExportBtn.innerHTML = originalContent;
-                    floatingExportBtn.disabled = false;
-                }, 2000);
-            }
-        </script>
-    </div>
-    @include('components.footer')
-</div>
+            // Restore button state
+            floatingExportBtn.innerHTML = originalContent;
+            updateExportButtonState(); // Use the function to properly restore state
+        }, 2000);
+    }
+</script>
 @endsection

@@ -118,6 +118,17 @@ class AdminDocumentController extends Controller
             $query->where('status', $request->status);
         }
         
+        // ADD DATE FILTERING 
+        if ($request->has('start_date') && !empty($request->start_date)) {
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+            $query->where('created_at', '>=', $startDate);
+        }
+        
+        if ($request->has('end_date') && !empty($request->end_date)) {
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+            $query->where('created_at', '<=', $endDate);
+        }
+        
         // Apply search filter
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
@@ -145,6 +156,15 @@ class AdminDocumentController extends Controller
             // Default sort
             $query->orderBy('created_at', 'desc');
         }
+        
+        // DEBUG: Add this temporarily to see what's happening
+        \Log::info('Document History Query Debug:', [
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings(),
+            'all_params' => $request->all()
+        ]);
         
         // Execute query with pagination and append all query parameters for pagination links
         $documents = $query->paginate(6)->appends($request->all());
