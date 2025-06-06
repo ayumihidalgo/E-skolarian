@@ -118,7 +118,9 @@
                                     <span class="absolute left-0 mt-1.5 w-3 h-3 rounded-full bg-gray-300 border-2 border-white"></span>
                                     <div>
                                         <span class="font-semibold text-white">ELITE</span>
-                                        <div class="text-gray-300">Pending, Submitted on April 10 2025, 2:45PM</div>
+                                        <div class="text-gray-300">
+                                            Pending, Submitted on {{ $record->created_at->format('F j Y, g:iA') }}
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Vertical line -->
@@ -128,7 +130,15 @@
                                     <span class="absolute left-0 mt-1.5 w-3 h-3 rounded-full bg-gray-300 border-2 border-white"></span>
                                     <div>
                                         <span class="font-semibold text-white">Office of the Student Services</span>
-                                        <div class="text-gray-300">Under Review, April 15 2025, 1:45PM</div>
+                                        @if($record->status == 'approved' && $record->approved_at)
+                                            <div class="text-gray-300">
+                                                Approved, {{ $record->approved_at->format('F j Y, g:iA') }}
+                                            </div>
+                                        @else
+                                            <div class="text-gray-300">
+                                                Awaiting approval
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                                 <!-- Vertical line (last step, orange dot) -->
@@ -362,6 +372,45 @@
                 document.getElementById('downloadTab').addEventListener('click', function() {
                     showTab('download');
                 });
+            });
+
+            // Utility to format date like 'F j Y, g:iA'
+            function formatDateTime(date) {
+                const options = {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: 'numeric', minute: '2-digit', hour12: true
+                };
+                return date.toLocaleString('en-US', options);
+            }
+
+            // After successful approval (inside your finalize approval handler)
+            document.getElementById('confirmFinalizeBtn').addEventListener('click', function () {
+                // ...your AJAX or approval logic...
+
+                // Get current date/time
+                const now = new Date();
+                const formatted = formatDateTime(now);
+
+                // Find the status history container and update it
+                const statusHistory = document.getElementById('statusHistory');
+                if (statusHistory) {
+                    statusHistory.innerHTML = `
+                        <div class="relative pl-6 border-l-2 border-gray-600">
+                            <div class="flex items-start mb-2 mt-2">
+                                <span class="absolute left-0 mt-1.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white"></span>
+                                <div>
+                                    <span class="font-semibold text-white">Office of the Student Services</span>
+                                    <div class="text-gray-300">
+                                        Approved, ${formatted}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Optionally, show a toast or close modal here
+                // ...existing code...
             });
         </script>
     @endpush
