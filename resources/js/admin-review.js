@@ -1373,72 +1373,121 @@ function updateDocumentDetailsView(docData) {
             // Sort timeline by created_at
             const timeline = [...docData.timeline].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
             
-            // Process timeline entries chronologically without grouping by user
+            // Process timeline entries chronologically with grouping by user_role
             let timelineHTML = '';
-
+            
             // Variables to track the latest return entry (if any)
             let hasBeenReturned = false;
             let latestReturnEntry = null;
             
+            // Group consecutive entries by the same user_role
+            let currentUserRole = null;
+            let currentGroupItems = [];
+            let groupedTimeline = [];
+            
+            // First pass: group entries by user_role
             timeline.forEach((entry, index) => {
-                const entryDate = new Date(entry.created_at);
-                const formattedDate = entryDate.toLocaleString('en-US', { 
-                    month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true 
-                });
-
                 // Check if this is a return entry
                 if (entry.status === 'returned' || entry.action_type === 'Return') {
                     hasBeenReturned = true;
                     latestReturnEntry = entry;
                 }
                 
-                // Determine if this is the latest entry
-                const isLatestEntry = index === timeline.length - 1;
-                
-                // Set styling based on status
-                let dot = 'bg-white';
-                let statusColor = 'text-white/90';
-                
-                // Determine status styling
-                switch(entry.status) {
-                    case 'under_review':
-                        dot = isLatestEntry ? 'bg-yellow-400' : 'bg-white';
-                        statusColor = isLatestEntry ? 'text-yellow-400' : 'text-white';
-                        break;
-                    case 'approved':
-                        dot = 'bg-green-400';
-                        statusColor = 'text-green-400';
-                        break;
-                    case 'returned':
-                        dot = 'bg-orange-400';
-                        statusColor = 'text-orange-400';
-                        break;
+                if (entry.user_role !== currentUserRole) {
+                    // Start a new group when user_role changes
+                    if (currentUserRole !== null && currentGroupItems.length > 0) {
+                        // Save the previous group
+                        groupedTimeline.push({
+                            userRole: currentUserRole,
+                            entries: [...currentGroupItems]
+                        });
+                    }
+                    
+                    // Start a new group
+                    currentUserRole = entry.user_role;
+                    currentGroupItems = [entry];
+                } else {
+                    // Add to current group
+                    currentGroupItems.push(entry);
                 }
-                
-                // Format the status display text
-                const displayStatus = entry.status.replace(/_/g, ' ')
-                    .replace(/\b\w/g, c => c.toUpperCase()); // Capitalize each word
-                
-                // Create timeline entry HTML
+            });
+            
+            // Don't forget to add the last group
+            if (currentUserRole !== null && currentGroupItems.length > 0) {
+                groupedTimeline.push({
+                    userRole: currentUserRole,
+                    entries: [...currentGroupItems]
+                });
+            }
+            
+            // Second pass: generate HTML for each group
+            groupedTimeline.forEach((group, groupIndex) => {
+                // Group header with its own bullet
                 timelineHTML += `
-                    <div class="flex items-start relative">
-                        ${index < timeline.length - 1 ? 
-                            `<span class="absolute left-1 top-5 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>` : 
-                            ''}
-                        <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-2 mr-3"></span>
-                        <div class="mt-1">
-                            <span class="font-bold">${entry.user_role || 'Unknown'}</span>
-                            <div class="flex items-center">
-                                <span class="${statusColor}">${displayStatus}, ${formattedDate}</span>
+                    <div class="mb-4">
+                        <div class="flex items-start">
+                            <div class="flex flex-col items-center mr-1">
+                                <div class="w-3 h-3 rounded-full bg-[#D4B2B2] mt-1.5"></div>
+                                <div class="w-[1px] flex-1 bg-[#D4B2B2]"></div>
+                            </div>
+                            <span class="font-bold text-white text-base">${group.userRole || 'Unknown'}</span>
+                        </div>
+                `;
+
+                // Group entries aligned under the same vertical line
+                group.entries.forEach((entry, entryIndex) => {
+                    const entryDate = new Date(entry.created_at);
+                    const formattedDate = entryDate.toLocaleString('en-US', {
+                        month: 'long', day: 'numeric', year: 'numeric',
+                        hour: 'numeric', minute: '2-digit', hour12: true
+                    });
+
+                    const isLatestEntry = (groupIndex === groupedTimeline.length - 1) &&
+                                        (entryIndex === group.entries.length - 1);
+
+                    let statusColor = 'text-white/90';
+                    let bgColor = 'bg-[#B07575]'
+                    switch (entry.status) {
+                        case 'under_review': 
+                            statusColor = isLatestEntry ? 'text-yellow-400' : 'text-white'; 
+                            bgColor = isLatestEntry ? 'bg-yellow-700' : 'bg-[#B07575]';
+                            break;
+                        case 'approved':     
+                            statusColor = 'text-green-400'; 
+                            bgColor = 'bg-green-700';
+                            break;
+                        case 'returned':     
+                            statusColor = 'text-orange-400'; 
+                            bgColor = 'bg-orange-700';
+                            break;
+                        default:
+                            statusColor = 'text-white/90';
+                            bgColor = 'bg-[#B07575]';
+                            break;
+                    }
+
+                    const displayStatus = entry.status.replace(/_/g, ' ')
+                        .replace(/\b\w/g, c => c.toUpperCase());
+
+                    timelineHTML += `
+                        <div class="flex items-start ml-0.5">
+                            <div class="flex flex-col items-center mr-2 -mt-2">
+                                <div class="w-[1px] h-4 bg-[#D4B2B2]"></div>
+                                <div class="w-1.5 h-1.5 rounded-full ${bgColor}"></div>
+                                ${entryIndex !== group.entries.length - 1 ? `<div class="w-[1px] h-1 bg-[#D4B2B2]"></div>` : ''}
+                            </div>
+                            <div class="text-sm ${statusColor}">
+                                ${displayStatus}, ${formattedDate}
                                 ${isLatestEntry ? `
                                     <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                                         Current
-                                    </span>
-                                ` : ''}
-                            </div>
+                                    </span>` : ''}
+                            </div> 
                         </div>
-                    </div>
-                `;
+                    `;
+                });
+
+                timelineHTML += `</div>`;
             });
             
             if (timeline.length === 0) {
@@ -1551,6 +1600,110 @@ function timeAgo(dateString) {
 }
 
 // Comment rendering
+// function loadComments(documentId) {
+//     fetch(`/comments/${documentId}`)
+//         .then(response => response.json())
+//         .then(comments => {
+//             const container = document.getElementById('commentsContainer');
+//             if (!container) {
+//                 console.error('Comments container not found');
+//                 return;
+//             }
+            
+//             if (!Array.isArray(comments) || comments.length === 0) {
+//                 container.innerHTML = '<p class="text-gray-400">No comments yet</p>';
+//                 return;
+//             }
+            
+//             container.innerHTML = comments.map(comment => {
+//                 // Determine if there's an attachment
+//                 const hasAttachment = comment.attachment_path && comment.attachment_name;
+                
+//                 // Generate attachment HTML if needed
+//                 let attachmentHTML = '';
+//                 if (hasAttachment) {
+//                     const filePath = `/storage/${comment.attachment_path}`;
+//                     const fileName = comment.attachment_name;
+//                     const fileType = comment.attachment_type;
+//                     const fileExt = fileName.split('.').pop().toLowerCase();
+                    
+//                     // Determine icon based on file type
+//                     let icon = '';
+//                     if (fileType.startsWith('image/')) {
+//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+//                     } else if (fileType === 'application/pdf' || fileExt === 'pdf') {
+//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
+//                     } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+//                               fileExt === 'docx' || 
+//                               fileType === 'application/msword' || 
+//                               fileExt === 'doc') {
+//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+//                     } else {
+//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+//                     }
+                    
+//                     attachmentHTML = `
+//                         <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full">
+//                             <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
+//                                 ${icon}
+//                                 <span class="text-xs truncate max-w-[200px]">${fileName}</span>
+//                             </a>
+//                         </div>
+//                     `;
+//                 }
+
+//                 // Determine profile image
+//                 let profileHTML = '';
+//                 if (comment.sender && comment.sender.profile_pic) {
+//                     // Use user's profile image
+//                     profileHTML = `
+//                         <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border border-gray-600">
+//                             <img src="/storage/${comment.sender.profile_pic}" alt="Profile" class="w-full h-full object-cover">
+//                         </div>
+//                     `;
+//                 } else {
+//                     // Use default profile icon
+//                     profileHTML = `
+//                         <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0 border border-gray-600">
+//                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+//                                 stroke="currentColor" class="w-6 h-6 text-gray-600">
+//                                 <path stroke-linecap="round" stroke-linejoin="round"
+//                                     d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
+//                             </svg>
+//                         </div>
+//                     `;
+//                 }
+                
+//                 // Format and wrap comment text to prevent overflow
+//                 const commentText = comment.comment || '';
+                
+//                 // Use timeAgo for relative timestamps
+//                 const relativeTime = timeAgo(comment.created_at);
+                
+//                 return `
+//                     <div class="pb-4 mb-4">
+//                         <div class="flex items-start gap-3">
+//                             <div class="flex-shrink-0">
+//                                 ${profileHTML}
+//                             </div>
+//                             <div class="flex-1 min-w-0"> <!-- Added min-w-0 to make sure flexbox respects child sizes -->
+//                                 <div class="flex justify-between items-center">
+//                                     <h3 class="font-bold text-white text-lg break-words">${comment.sender ? comment.sender.role_name : 'Unknown User'}</h3>
+//                                     <span class="text-white text-sm whitespace-nowrap ml-2" title="${new Date(comment.created_at).toLocaleString()}">${relativeTime}</span>
+//                                 </div>
+//                                 <p class="text-white mt-1 break-words whitespace-pre-wrap">${commentText}</p>
+//                                 ${attachmentHTML}
+//                             </div>
+//                         </div>
+//                     </div>
+//                 `;
+//             }).join('');
+//         })
+//         .catch(error => {
+//             console.error('Error loading comments:', error);
+//         });
+// }
+
 function loadComments(documentId) {
     fetch(`/comments/${documentId}`)
         .then(response => response.json())
@@ -1578,29 +1731,44 @@ function loadComments(documentId) {
                     const fileType = comment.attachment_type;
                     const fileExt = fileName.split('.').pop().toLowerCase();
                     
-                    // Determine icon based on file type
-                    let icon = '';
-                    if (fileType.startsWith('image/')) {
-                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
-                    } else if (fileType === 'application/pdf' || fileExt === 'pdf') {
-                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
-                    } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-                              fileExt === 'docx' || 
-                              fileType === 'application/msword' || 
-                              fileExt === 'doc') {
-                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
-                    } else {
-                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
-                    }
+                    // Check if it's an image type
+                    const isImage = fileType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif'].includes(fileExt);
                     
-                    attachmentHTML = `
-                        <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full">
-                            <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
-                                ${icon}
-                                <span class="text-xs truncate max-w-[200px]">${fileName}</span>
-                            </a>
-                        </div>
-                    `;
+                    if (isImage) {
+                        // Display image directly in the comment
+                        attachmentHTML = `
+                            <div class="mt-2 max-w-full">
+                                <div class="rounded overflow-hidden max-w-[250px] cursor-pointer" 
+                                     onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')">
+                                    <img src="${filePath}" alt="${fileName}" class="max-w-full h-auto">
+                                    <div class="text-xs text-gray-400 mt-1 truncate">${fileName}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // For non-image files, keep the current link format
+                        // Determine icon based on file type
+                        let icon = '';
+                        if (fileType === 'application/pdf' || fileExt === 'pdf') {
+                            icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
+                        } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                                  fileExt === 'docx' || 
+                                  fileType === 'application/msword' || 
+                                  fileExt === 'doc') {
+                            icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+                        } else {
+                            icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+                        }
+                        
+                        attachmentHTML = `
+                            <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full">
+                                <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
+                                    ${icon}
+                                    <span class="text-xs truncate max-w-[200px]">${fileName}</span>
+                                </a>
+                            </div>
+                        `;
+                    }
                 }
 
                 // Determine profile image
