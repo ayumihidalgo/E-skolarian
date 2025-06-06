@@ -32,7 +32,7 @@ use App\Http\Controllers\SuperAdmin\SuperAdminSettingsController;
 use App\Http\Middleware\LogoutIfAuthenticated;
 
 // Guest routes for login selection
-Route::middleware(LogoutIfAuthenticated::class)->group(function () {
+Route::middleware([LogoutIfAuthenticated::class, 'guest'])->group(function () {
     Route::get('/', function () {
         return view('auth.landingPage');
     })->name('landing');
