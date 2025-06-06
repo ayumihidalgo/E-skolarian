@@ -10,6 +10,7 @@ use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 use App\LogsActivity;
 
 class UserController extends Controller
@@ -87,68 +88,36 @@ class UserController extends Controller
 }
     public function update(Request $request, $id)
     {
-        // Find the user
-        $user = User::findOrFail($id);
-
-        // Store original email to check if it changed
-        $originalEmail = $user->email;
-
-        // Validate the request data
-        $validated = $request->validate([
-            'username' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
-            ],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
-            ],
-            'role_name' => 'required|string|max:255',
-            'role' => 'required|in:admin,student',
-        ]);
-
-        // Update the user
-        $user->username = $validated['username'];
-        $user->email = $validated['email'];
-        $user->role_name = $validated['role_name'];
-        $user->role = $validated['role'];
-        $user->save();
-
-        // Send notification email to the user's updated email address
         try {
-            Mail::to($user->email)->send(new UserNotificationMail($user, 'updated'));
+            $user = User::findOrFail($id);
+            
+            // Validate request
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email|unique:users,email,' . $id,
+            ]);
 
-            // If email was changed, send notification to the old email as well
-            if ($originalEmail !== $user->email) {
-                Mail::to($originalEmail)->send(new UserNotificationMail($user, 'updated'));
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ], 422);
             }
-        } catch (\Exception $e) {
-            // Log the error but don't stop the process
-            Log::error('Failed to send email notification: ' . $e->getMessage());
-        }
 
-        // Return a JSON response for AJAX requests
-        if ($request->ajax() || $request->wantsJson()) {
+            // Update user
+            $user->email = $request->email;
+            $user->save();
+
             return response()->json([
                 'success' => true,
-                'message' => 'User updated successfully!',
-                'user' => $user
+                'message' => 'User updated successfully'
             ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update user: ' . $e->getMessage()
+            ], 500);
         }
-
-        // For normal form submissions, redirect with a success message
-        $this->logActivity(
-        'Updated',
-        'User',
-        ($user->role === 'admin' ? 
-        "{$user->role_name} account has been updated." : 
-        "{$user->organization_acronym} account has been updated."
-    ));
-        return redirect()->route('super-admin.dashboard')->with('success', 'User updated successfully!');
     }
     public function deactivatedUsers(Request $request)
 {

@@ -303,42 +303,53 @@ document.addEventListener('DOMContentLoaded', function () {
             const acronym = document.getElementById('userAcronym')?.textContent;
 
             try {
-                // Get the username input element
+                const isAdmin = roleName.toLowerCase() === 'admin' || 
+                               roleName.toLowerCase().includes('services') || 
+                               roleName.toLowerCase().includes('director');
+
+                // Store the user type for later use
+                window.currentUserType = isAdmin ? 'admin' : 'student';
+
+                // Lock fields based on user type
                 const usernameInput = document.getElementById('editUsername');
-                
-                // Set readonly state based on role
-                if (roleName.toLowerCase() === 'admin' || 
-                    roleName.toLowerCase().includes('services') || 
-                    roleName.toLowerCase().includes('director')) {
-                    
-                    // Make name field readonly for admin roles
+                const roleNameInput = document.getElementById('editRoleName');
+                const emailInput = document.getElementById('editEmail');
+
+                // For admin users, only email should be editable
+                if (isAdmin) {
+                    // Lock username and role
                     usernameInput.readOnly = true;
+                    roleNameInput.readOnly = true;
                     usernameInput.classList.add('bg-gray-100', 'cursor-not-allowed');
-                } else {
-                    // Keep name field editable for student roles
-                    usernameInput.readOnly = false;
-                    usernameInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                    roleNameInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                    
+                    // Keep email editable
+                    emailInput.readOnly = false;
+                    emailInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+
+                    // Hide acronym field
+                    if (editAcronymField) {
+                        editAcronymField.classList.add('hidden');
+                    }
                 }
 
-                // Populate the edit form
+                // Set form values
                 usernameInput.value = username;
-                document.getElementById('editEmail').value = email;
-                document.getElementById('editRoleName').value = roleName;
-                document.getElementById('editActualRole').value = 
-                    roleName.toLowerCase().includes('organization') ? 'student' : 'admin';
+                roleNameInput.value = roleName;
+                emailInput.value = email;
+                document.getElementById('editActualRole').value = isAdmin ? 'admin' : 'student';
 
-                // Handle acronym field
-                if (editAcronymField && editAcronymInput) {
+                // Handle acronym field for student organizations
+                if (editAcronymField && editAcronymInput && !isAdmin) {
                     if (roleName.toLowerCase().includes('organization')) {
                         editAcronymField.classList.remove('hidden');
                         editAcronymInput.value = acronym || '';
                     } else {
                         editAcronymField.classList.add('hidden');
-                        editAcronymInput.value = '';
                     }
                 }
 
-                // Show the modal and capture initial state
+                // Show modal and capture initial state
                 editUserModal.classList.remove('hidden');
                 captureInitialState();
 
@@ -459,9 +470,11 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     }
 
+    // Update the email validation function
     async function validateEmail() {
         const email = emailInput.value.trim();
         const MAX_EMAIL_LENGTH = 50;
+        const ALLOWED_DOMAINS = ['gmail.com', 'yahoo.com', 'iskolarngbayan.pup.edu.ph'];
 
         emailError.classList.add('hidden');
         emailInput.classList.remove('border-red-500');
@@ -476,8 +489,17 @@ document.addEventListener('DOMContentLoaded', function () {
             return false;
         }
 
-        if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email.toLowerCase())) {
-            showEmailError('Only @gmail.com email addresses are accepted');
+        // Extract domain from email
+        const domain = email.split('@')[1]?.toLowerCase();
+        
+        if (!domain || !ALLOWED_DOMAINS.includes(domain)) {
+            showEmailError('Only @gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph email addresses are accepted');
+            return false;
+        }
+
+        // Basic email format validation
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+            showEmailError('Please enter a valid email address');
             return false;
         }
 
@@ -569,155 +591,76 @@ document.addEventListener('DOMContentLoaded', function () {
     if (editUserForm) {
         editUserForm.addEventListener('submit', async function (e) {
             e.preventDefault();
-
-            // Set processing flag
             isProcessing = true;
 
-            // Disable close button during processing
-            if (closeEditModalBtn) {
-                closeEditModalBtn.disabled = true;
-                closeEditModalBtn.style.opacity = '0.5';
-                closeEditModalBtn.style.cursor = 'not-allowed';
-            }
-
             try {
-                // Validate form before submission
-                if (!await validateForm()) {
-                    isProcessing = false;
-                    closeEditModalBtn.disabled = false;
-                    closeEditModalBtn.style.opacity = '1';
-                    closeEditModalBtn.style.cursor = 'pointer';
-                    return;
+                const isAdmin = window.currentUserType === 'admin';
+                const formData = new FormData();
+                
+                // Add form fields
+                formData.append('_token', document.querySelector('meta[name="csrf-token"]').getAttribute('content'));
+                formData.append('_method', 'PUT');
+                formData.append('id', window.currentUserId);
+                formData.append('email', document.getElementById('editEmail').value.trim());
+                formData.append('username', document.getElementById('editUsername').value);
+                formData.append('role_name', document.getElementById('editRoleName').value);
+                formData.append('role', document.getElementById('editActualRole').value);
+
+                // Only include organization_acronym for student organizations
+                if (!isAdmin && editAcronymField && !editAcronymField.classList.contains('hidden')) {
+                    formData.append('organization_acronym', document.getElementById('editAcronym').value.trim());
                 }
 
-                // Get form data
-                const formData = {
-                    id: window.currentUserId, // Get the current user ID from the global variable
-                    username: document.getElementById('editUsername').value,
-                    email: document.getElementById('editEmail').value,
-                    role_name: document.getElementById('editRoleName').value,
-                    role: document.getElementById('editActualRole').value,
-                    organization_acronym: document.getElementById('editAcronym')?.value || null
-                };
-
-                // Get the role data - check for both possible form structures
-                if (document.getElementById('editRoleName')) {
-                    formData.role_name = document.getElementById('editRoleName').value;
-                    formData.role = document.getElementById('editActualRole').value;
-                } else if (document.getElementById('editRole')) {
-                    formData.role_name = document.getElementById('editRole').value;
-                    // Get the actual role from the selected option's data-role attribute
-                    const roleSelect = document.getElementById('editRole');
-                    const selectedOption = roleSelect.options[roleSelect.selectedIndex];
-                    if (selectedOption && selectedOption.getAttribute('data-role')) {
-                        formData.role = selectedOption.getAttribute('data-role');
-                    }
-                }
-
-                // Get CSRF token
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-                // Show a loading state or disable the submit button to prevent double submissions
-                const submitBtn = editUserForm.querySelector('button[type="submit"]');
+                // Disable the submit button
+                const submitBtn = this.querySelector('button[type="submit"]');
                 if (submitBtn) {
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = 'Saving...';
                 }
 
-                // Send AJAX request to update user
-                fetch(`/users/${formData.id}`, {
+                const response = await fetch(`/users/${window.currentUserId}`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'X-HTTP-Method-Override': 'PUT'
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify(formData)
-                })
-                .then(response => {
-                    // Check response status first
-                    if (response.status >= 200 && response.status < 300) {
-                        // Try to parse as JSON, but don't fail if it's not JSON
-                        return response.text().then(text => {
-                            try {
-                                return JSON.parse(text);
-                            } catch (e) {
-                                // If it's not valid JSON, just return success
-                                console.log("Response is not valid JSON, but request was successful");
-                                return { success: true, message: "User updated successfully" };
-                            }
-                        });
-                    } else {
-                        // For error responses, try to get error details
-                        return response.text().then(text => {
-                            try {
-                                return Promise.reject(JSON.parse(text));
-                            } catch (e) {
-                                return Promise.reject({ message: `Server error: ${response.status}` });
-                            }
-                        });
-                    }
-                })
-                .then(data => {
-                    // Hide the edit modal first
-                    editUserModal.classList.add('hidden');
-
-                    // Set success message content if elements exist
-                    document.getElementById('successTitle').textContent = 'Account Updated Successfully!';
-                    document.getElementById('successMessage').textContent = 'Your changes has been saved. You can change it anytime. The user will get notified about the update via email.';
-
-                    // Show success message if modal exists
-                    successModal.classList.remove('hidden');
-
-                    const okayButton = document.querySelector('#successModal button');
-                        if (okayButton) {
-                            okayButton.addEventListener('click', function() {
-                                window.location.reload();
-                            }, { once: true }); // Use once:true to prevent multiple handlers
-                        }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-
-                    // Re-enable the submit button
-                    if (submitBtn) {
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = 'Save Changes';
-                    }
-
-                    // Extract error message
-                    let errorMessage = 'An error occurred while updating the user.';
-
-                    if (error && typeof error === 'object') {
-                        if (error.errors && Object.keys(error.errors).length > 0) {
-                            const firstErrorKey = Object.keys(error.errors)[0];
-                            errorMessage = error.errors[firstErrorKey][0];
-                        } else if (error.message) {
-                            errorMessage = error.message;
-                        }
-                    }
-
-                    // Display error message to user
-                    alert(errorMessage);
-                })
-                .finally(() => {
-                    // Reset processing state
-                    isProcessing = false;
-                    if (closeEditModalBtn) {
-                        closeEditModalBtn.disabled = false;
-                        closeEditModalBtn.style.opacity = '1';
-                        closeEditModalBtn.style.cursor = 'pointer';
-                    }
+                    body: formData
                 });
+
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        throw new Error(data.message || 'Failed to update user');
+                    } else {
+                        throw new Error('Server returned an invalid response');
+                    }
+                }
+
+                const data = await response.json();
+
+                // Hide edit modal and show success message
+                editUserModal.classList.add('hidden');
+                document.getElementById('successTitle').textContent = 'Account Updated Successfully!';
+                document.getElementById('successMessage').textContent = 
+                    'Your changes have been saved. The user will be notified about the update via email.';
+                successModal.classList.remove('hidden');
+                
+                // Add reload listener to success modal close button
+                const okayButton = document.querySelector('#successModal button');
+                if (okayButton) {
+                    okayButton.addEventListener('click', () => window.location.reload(), { once: true });
+                }
+
             } catch (error) {
                 console.error('Error:', error);
-                
-                // Reset processing state
+                alert(error.message || 'An error occurred while updating the user.');
+            } finally {
                 isProcessing = false;
-                if (closeEditModalBtn) {
-                    closeEditModalBtn.disabled = false;
-                    closeEditModalBtn.style.opacity = '1';
-                    closeEditModalBtn.style.cursor = 'pointer';
+                // Re-enable submit button
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'Save Changes';
                 }
             }
         });

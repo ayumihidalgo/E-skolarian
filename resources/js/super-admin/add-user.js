@@ -1100,6 +1100,7 @@ function truncateOrgName(name, acronym, maxLength = 55) {
     async function validateStudentEmail() {
         const email = studentEmailInput.value.trim();
         const MAX_EMAIL_LENGTH = 50;
+        const ALLOWED_DOMAINS = ['@gmail.com', '@yahoo.com', '@iskolarngbayan.pup.edu.ph'];
 
         // Reset error state
         studentEmailError.classList.add('hidden');
@@ -1122,15 +1123,19 @@ function truncateOrgName(name, acronym, maxLength = 55) {
             return false;
         }
 
-        // Specifically check for gmail.com
-        if (!email.toLowerCase().endsWith('@gmail.com')) {
-            showStudentEmailError('Only @gmail.com email addresses are accepted');
+        // Check for allowed domains
+        const hasValidDomain = ALLOWED_DOMAINS.some(domain => 
+            email.toLowerCase().endsWith(domain)
+        );
+        
+        if (!hasValidDomain) {
+            showStudentEmailError('Please use a valid @gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph email address');
             return false;
         }
 
         // Check for number instead of letter in domain (.c0m instead of .com)
         if (/\.c0m$|\.c0m@/.test(email.toLowerCase())) {
-            showStudentEmailError('Invalid domain (.c0m is not valid)');
+            showStudentEmailError('Invalid domain format');
             return false;
         }
 
@@ -1215,7 +1220,8 @@ function truncateOrgName(name, acronym, maxLength = 55) {
     // Admin email validation
     async function validateAdminEmail() {
         const email = adminEmailInput.value.trim();
-        const MAX_EMAIL_LENGTH = 50;
+        const MAX_EMAIL_LENGTH = 100;
+        const ALLOWED_DOMAINS = ['@gmail.com', '@yahoo.com', '@iskolarngbayan.pup.edu.ph'];
 
         // Reset error state
         adminEmailError.classList.add('hidden');
@@ -1238,15 +1244,19 @@ function truncateOrgName(name, acronym, maxLength = 55) {
             return false;
         }
 
-        // Specifically check for gmail.com
-        if (!email.toLowerCase().endsWith('@gmail.com')) {
-            showAdminEmailError('Only @gmail.com email addresses are accepted');
+        // Check for allowed domains
+        const hasValidDomain = ALLOWED_DOMAINS.some(domain => 
+            email.toLowerCase().endsWith(domain)
+        );
+        
+        if (!hasValidDomain) {
+            showAdminEmailError('Please use a valid @gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph email address');
             return false;
         }
 
         // Check for number instead of letter in domain (.c0m instead of .com)
         if (/\.c0m$|\.c0m@/.test(email.toLowerCase())) {
-            showAdminEmailError('Invalid domain (.c0m is not valid)');
+            showAdminEmailError('Invalid domain format');
             return false;
         }
 

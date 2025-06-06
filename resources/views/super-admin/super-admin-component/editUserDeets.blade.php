@@ -36,7 +36,8 @@
                 <input type="text" 
                        id="editUsername" 
                        name="username"
-                       class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
+                       readonly
+                       class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] bg-gray-100 cursor-not-allowed">
             </div>
 
             <!-- Acronym field - Initially hidden -->
@@ -51,8 +52,11 @@
 
             <div class="block text-sm font-medium text-gray-700 mb-2">
                 <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Email</label>
-                <input type="email" id="editEmail" name="email"
-                    class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] underline decoration-[#3f434a]">
+                <input type="email" 
+                       id="editEmail" 
+                       name="email"
+                       placeholder="Enter email (@gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph)"
+                       class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] underline decoration-[#3f434a]">
             </div>
 
             <p class="text-sm text-gray-500 mt-5 text-center">Any changes made will notify the account owner via email.</p>
@@ -75,7 +79,7 @@
             </h3>
 
             <!-- Message -->
-            <p class="text-gray-600 text-base mb-8">
+            <p class="text-gray-600 text-base mb-8"></p>
                 Are you sure you want to leave this page? Unsaved changes may be lost.
             </p>
 
