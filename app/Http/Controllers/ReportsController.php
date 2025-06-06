@@ -26,7 +26,7 @@ class ReportsController extends Controller
         $query->orderBy('created_at', 'desc');
         
         // Paginate results
-        $reports = $query->paginate(10);
+        $reports = $query->paginate(8);
         
         return view('super-admin.super-admin-component.reports', compact('reports'));
     }

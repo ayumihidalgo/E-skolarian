@@ -10,9 +10,11 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Carbon\Carbon;
+use App\LogsActivity; // Import LogsActivity trait
 
 class AdminPasswordResetLinkController extends Controller
 {
+    use LogsActivity;
     public function create()
     {
         return view('auth.admin-forgot-password');
@@ -124,6 +126,13 @@ class AdminPasswordResetLinkController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
+        // Log the password reset activity
+         $this->logActivity(
+        'Reset',
+        'Password',
+        "$user->organization_acronym reset their account password.",
+        $user
+    );
         // Always redirect as admin
         return redirect()->route('admin.password.reset.confirmation');
     }

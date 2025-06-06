@@ -110,44 +110,40 @@
                     </div>
 
                     <div class="space-y-2">
-                        <div class="flex items-center flex-wrap gap-1 text-sm">
-                            <span
-                                class="w-3 h-3 rounded-full {{ $record->status === 'Pending' ? 'bg-yellow-500' : 'bg-gray-400' }}"></span>
-                            <span>Pending</span>
-
-                            <span
-                                class="w-3 h-3 rounded-full {{ $record->status === 'Under Review' ? 'bg-blue-500' : 'bg-gray-400' }}"></span>
-                            <span>Under Review</span>
-
-                            <span
-                                class="w-3 h-3 rounded-full {{ $record->status === 'Rejected' ? 'bg-red-600' : 'bg-gray-400' }}"></span>
-                            <span>Rejected</span>
-
-                            <span
-                                class="w-3 h-3 rounded-full {{ $record->status === 'Resubmit' ? 'bg-orange-500' : 'bg-gray-400' }}"></span>
-                            <span>Resubmit</span>
-
-                            <span
-                                class="w-3 h-3 rounded-full {{ $record->status === 'Approved' ? 'bg-green-500' : 'bg-gray-400' }}"></span>
-                            <span>Approved</span>
-                        </div>
-
-                        <div class="bg-[#3D1515] text-xs p-3 rounded-md">
-                            <div><span
-                                    class="font-semibold text-pink-300">{{ $record->receiver->username ?? 'Unknown' }}</span>
-                            </div>
-                            @foreach ($record->reviews ?? [] as $review)
-                                <div class="{{ $review->status === 'Rejected' ? 'text-red-500' : 'text-red-300' }}">
-                                    {{ $review->status }},
-                                    {{ \Carbon\Carbon::parse($review->updated_at)->format('F j Y, g:i A') }}
+                        <div class="flex flex-col gap-1 text-sm">
+                            <span class="text-gray-300 font-bold mb-1">Status</span>
+                            <div class="relative pl-6">
+                                <!-- ELITE -->
+                                <div class="flex items-start mb-2">
+                                    <span class="absolute left-0 mt-1.5 w-3 h-3 rounded-full bg-gray-300 border-2 border-white"></span>
+                                    <div>
+                                        <span class="font-semibold text-white">ELITE</span>
+                                        <div class="text-gray-300">
+                                            Pending, Submitted on {{ $record->created_at->format('F j Y, g:iA') }}
+                                        </div>
+                                    </div>
                                 </div>
-                            @endforeach
+                                <!-- Vertical line -->
+                                <span class="absolute left-1.5 top-5 w-0.5 h-8 bg-gray-300"></span>
+                                <!-- Office of the Student Services -->
+                                <div class="flex items-start mb-2 mt-2">
+                                    <span class="absolute left-0 mt-1.5 w-3 h-3 rounded-full bg-gray-300 border-2 border-white"></span>
+                                    <div>
+                                        <span class="font-semibold text-white">Office of the Student Services</span>
+                                        @if($record->status == 'approved' && $record->approved_at)
+                                            <div class="text-gray-300">
+                                                Approved, {{ $record->approved_at->format('F j Y, g:iA') }}
+                                            </div>
+                                        @else
+                                            <div class="text-gray-300">
+                                                Awaiting approval
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                <!-- Vertical line (last step, orange dot) -->
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="flex justify-end space-x-2">
-                        <button onclick="window.history.back()"
-                            class="bg-gray-600 hover:bg-gray-500 text-sm px-4 py-2 rounded">Close</button>
                     </div>
                 </div>
             </div>
@@ -254,7 +250,7 @@
                                             d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                     </svg>
                                 </label>
-                                <button id="submitCommentBtn" type="submit"
+                                <button id="submitCommentBtn" type="button"
                                     class="text-[#4D0F0F] hover:text-[#5d0c0c] cursor-pointer">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5"
                                         viewBox="0 0 20 20" fill="currentColor">
@@ -376,6 +372,45 @@
                 document.getElementById('downloadTab').addEventListener('click', function() {
                     showTab('download');
                 });
+            });
+
+            // Utility to format date like 'F j Y, g:iA'
+            function formatDateTime(date) {
+                const options = {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: 'numeric', minute: '2-digit', hour12: true
+                };
+                return date.toLocaleString('en-US', options);
+            }
+
+            // After successful approval (inside your finalize approval handler)
+            document.getElementById('confirmFinalizeBtn').addEventListener('click', function () {
+                // ...your AJAX or approval logic...
+
+                // Get current date/time
+                const now = new Date();
+                const formatted = formatDateTime(now);
+
+                // Find the status history container and update it
+                const statusHistory = document.getElementById('statusHistory');
+                if (statusHistory) {
+                    statusHistory.innerHTML = `
+                        <div class="relative pl-6 border-l-2 border-gray-600">
+                            <div class="flex items-start mb-2 mt-2">
+                                <span class="absolute left-0 mt-1.5 w-3 h-3 rounded-full bg-green-500 border-2 border-white"></span>
+                                <div>
+                                    <span class="font-semibold text-white">Office of the Student Services</span>
+                                    <div class="text-gray-300">
+                                        Approved, ${formatted}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Optionally, show a toast or close modal here
+                // ...existing code...
             });
         </script>
     @endpush

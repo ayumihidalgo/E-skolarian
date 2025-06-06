@@ -53,23 +53,21 @@
             const nextIndex = (currentIndex + 1) % images.length;
             const nextImage = images[nextIndex];
 
-            if (window.innerWidth >= 768) {
-                if (showingA) {
-                    setLayerBackground(bgB, nextImage);
-                    bgB.classList.remove('opacity-0');
-                    bgB.classList.add('opacity-100');
-                    bgA.classList.remove('opacity-100');
-                    bgA.classList.add('opacity-0');
-                } else {
-                    setLayerBackground(bgA, nextImage);
-                    bgA.classList.remove('opacity-0');
-                    bgA.classList.add('opacity-100');
-                    bgB.classList.remove('opacity-100');
-                    bgB.classList.add('opacity-0');
-                }
-                showingA = !showingA;
-                currentIndex = nextIndex;
+            if (showingA) {
+                setLayerBackground(bgB, nextImage);
+                bgB.classList.remove('opacity-0');
+                bgB.classList.add('opacity-100');
+                bgA.classList.remove('opacity-100');
+                bgA.classList.add('opacity-0');
+            } else {
+                setLayerBackground(bgA, nextImage);
+                bgA.classList.remove('opacity-0');
+                bgA.classList.add('opacity-100');
+                bgB.classList.remove('opacity-100');
+                bgB.classList.add('opacity-0');
             }
+            showingA = !showingA;
+            currentIndex = nextIndex;
         }
 
         window.addEventListener('load', () => {
@@ -125,22 +123,22 @@
     @endphp
 </head>
 
-@include('loading');
+@include('loading')
 <body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] md:bg-[var(--secondary-color)] font-['Manrope'] font-bold">
-    <div id="bgA" class="absolute inset-0 transition-all duration-1000 ease-in-out opacity-100 max-md:hidden" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: center;"></div>
-    <div id="bgB" class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-0 max-md:hidden"></div>
+    <div id="bgA" class="fixed inset-0 z-0 transition-all duration-1000 ease-in-out opacity-100" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: center;"></div>
+    <div id="bgB" class="fixed inset-0 z-0 transition-opacity duration-1000 ease-in-out opacity-0"></div>
     <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md md:absolute relative">
-        <div id="formContainer" class="opacity-0 flex flex-col items-center justify-center h-full px-6 bg-[#D9D9D9]/70 p-4 md:w-[50%] md:max-w-[600px] md:rounded-r-[100px] md:backdrop-blur-xs md:bg-white/80 md:transition-all md:duration-1000 md:absolute md:left-0 md:top-0 md:bottom-0">
+        <div id="formContainer" class="opacity-0 flex flex-col items-center justify-center h-full px-6 bg-[#FFFFFFCC] p-4 md:w-[50%] md:max-w-[600px] rounded-4xl md:rounded-l-none md:rounded-r-[80px] md:backdrop-blur-xs md:transition-all md:duration-1000 md:absolute md:left-0 md:top-0 md:bottom-0">
             <div class="h-35 flex items-center">
                 <img class="mx-auto h-19 md:h-22" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
             </div>
-            <h1 class="font-[Lexend] text-[#A98018] text-3xl text-center md:pt-6">STUDENT ORGANIZATION <br> LOGIN</h1>
+            <h1 class="font-[Lexend] text-[#A98018] text-2xl md:text-3xl text-center md:pt-6">STUDENT ORGANIZATION <br> LOGIN</h1>
             <div class="w-full max-w-[400px] mx-auto pt-14 md:pt-10">
-                <form method="POST" action="{{ route('student.login') }}" class="space-y-4 md:space-y-2">
+                <form method="POST" action="{{ route('student.login') }}" class="space-y-2 pb-10">
                     @csrf
                     <input type="hidden" name="role" id="role" value="student">
                     <!-- Email -->
-                    <div class="pb-6">
+                    <div class="pb-10">
                         <label id="emailLabel" class="w-full rounded-2xl px-3 py-2 md:p-4 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
                             <input type="email" id="emailInput" name="email" placeholder="Email Address" required
                                 class="w-0 flex-grow outline-none mr-3" maxlength="100">
@@ -194,9 +192,9 @@
 
 
                     <!-- Submit -->
-                    <div class="pt-8 flex justify-center">
+                    <div class="pt-4 md:pt-8 flex justify-center">
                         <button type="submit" id="signInButton"
-                            class="opacity-50 w-full rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-2 md:py-4  hover:bg-[var(--primary-color)] transition font-semibold">
+                            class="opacity-50 w-full max-md:max-w-[280px] rounded-full md:rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-4 hover:bg-[var(--primary-color)] transition font-semibold">
                             Sign In
                         </button>
                     </div>
@@ -209,7 +207,35 @@
                             Privacy Policy
                         </button>
                     </div>
+
+                    <!-- Return to Main Page -->
+                    <div class="flex justify-center pt-4 md:absolute md:top-0 md:left-5">
+                            <svg width="25" height="25" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_9223_35351)">
+                            <path d="M4.8479 15.0573C4.59794 15.3073 4.45752 15.6464 4.45752 15.9999C4.45752 16.3535 4.59794 16.6926 4.8479 16.9426L12.3906 24.4853C12.5136 24.6126 12.6607 24.7142 12.8234 24.7841C12.986 24.854 13.161 24.8907 13.338 24.8923C13.5151 24.8938 13.6906 24.8601 13.8545 24.793C14.0184 24.726 14.1672 24.627 14.2924 24.5018C14.4176 24.3766 14.5166 24.2278 14.5837 24.0639C14.6507 23.9 14.6844 23.7245 14.6829 23.5474C14.6814 23.3704 14.6446 23.1954 14.5747 23.0327C14.5048 22.8701 14.4032 22.7229 14.2759 22.5999L9.00923 17.3333H26.6666C27.0202 17.3333 27.3593 17.1928 27.6094 16.9428C27.8594 16.6927 27.9999 16.3536 27.9999 15.9999C27.9999 15.6463 27.8594 15.3072 27.6094 15.0571C27.3593 14.8071 27.0202 14.6666 26.6666 14.6666H9.00923L14.2759 9.39995C14.5188 9.14848 14.6532 8.81168 14.6501 8.46208C14.6471 8.11249 14.5069 7.77807 14.2597 7.53086C14.0124 7.28365 13.678 7.14342 13.3284 7.14038C12.9788 7.13734 12.642 7.27174 12.3906 7.51461L4.8479 15.0573Z" fill="#A98018"/>
+                            </g>
+                            <defs>
+                            <clipPath id="clip0_9223_35351">
+                            <rect width="32" height="32" fill="white" transform="matrix(0 -1 1 0 0 32)"/>
+                            </clipPath>
+                            </defs>
+                        </svg>
+                        <a class="font-[Manrope] font-normal text-[var(--primary-color)] underline" href="{{ route('landing') }}">Return to Main Page</a>
+                    </div>
                 </form>
+
+
+                <!-- Report Button -->
+                <button id="reportBtn"
+                    class="absolute bottom-10 md:bottom-5 right-10 md:left-5 bg-transparent rounded-full w-6 h-6 md:w-8 md:h-8 shadow-none focus:outline-none z-50 flex items-center justify-center cursor-pointer"
+                    title="Report a Problem">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-full h-full">
+                        <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
+                            fill="transparent" stroke="black" stroke-width="2.5"/>
+                        <rect x="11" y="8" width="2" height="4" fill="black" />
+                        <rect x="11" y="14" width="2" height="2" fill="black" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
@@ -402,8 +428,8 @@
 
 
 
-     <!-- Report Problem Modal -->
-    <div id="reportModal" class="fixed inset-0 flex items-center z-50 backdrop-blur-sm w-full hidden">
+   <!-- Report Problem Modal -->
+    <div id="reportModal" class="fixed px-[10px] inset-0 flex items-center z-50 backdrop-blur-sm w-full text-black hidden">
         <div class="bg-[#ffffffe8] p-6 shadow-lg mx-auto rounded-3xl max-w-[600px]">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-20 h-20 mx-auto pb-4">
                 <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
@@ -411,30 +437,44 @@
                 <rect x="11" y="8" width="2" height="4" fill="black" />
                 <rect x="11" y="14" width="2" height="2" fill="black" />
             </svg>
-            <div class="mb-4 text-center mx-auto w-[75%]">
+            <div class="mb-4 text-center mx-auto w-[90%] md:w-[75%]">
             <h1 class="text-3xl font-[Lexend] font-bold mb-2 text-[var(--secondary-color)]">Report a Problem</h1>
             <p class="text-black font-[Manrope] font-normal text-xs">
                 Noticed something wrong or not working as expected? Tell us what issue you encountered so we can look into it and improve your experience.
             </p>
             </div>
 
-            <form id="reportForm" class="mx-auto w-[75%] text-xs" method="POST" action="{{ route('report.problem.store') }}" enctype="multipart/form-data" onsubmit="submitReport(event)">
+            <form id="reportForm" class="mx-auto w-[90%] md:w-[75%] text-xs" method="POST" action="{{ route('report.problem.store') }}" enctype="multipart/form-data" onsubmit="submitReport(event)">
             @csrf
             <div class="mb-7">
                 <label class="pl-[9px] block font-semibold mb-1">PUP Webmail<span class="text-red-600">*</span></label>
-                <input id="emailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
+                <input id="webmailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
                 <p id="webmailLengthWarning" class="text-red-600 mt-1 hidden">*Webmail must not exceed 50 characters.</p>
             </div>
 
-            <div class="mb-3">
-                <label class="pl-[9px] block font-semibold mb-1">Problem Description<span class="text-red-600">*</span></label>
-                <textarea name="description" placeholder="Describe the problem here..." class="w-full border rounded-lg px-3 py-2 bg-white" rows="4" required maxlength="251"></textarea>
-                <p id="descLengthWarning" class="text-red-600 mt-1 hidden">*Description must be 250 characters or less.</p>
-            </div >
+            <div class="mb-3 relative">
+            <label class="pl-[9px] block font-semibold mb-1">Problem Description<span class="text-red-600">*</span></label>
+            <textarea
+                id="descriptionInput"
+                name="description"
+                placeholder="Describe the problem here..."
+                class="w-full border rounded-lg px-3 py-2 bg-white resize-none"
+                rows="4"
+                maxlength="255"
+                required
+            ></textarea>
+
+            <span
+                id="descCounter"
+                class="absolute bottom-2 right-3 text-xs text-gray-500 select-none pointer-events-none"
+            >0 / 255</span>
+            <p id="descLengthWarning" class="text-red-600 mt-1 hidden">*Description must be 255 characters or less.</p>
+            </div>
+
             <div class="mb-7">
-                <label class="pl-[9px] block font-semibold mb-1">Attach a FIle (optional)</label>
+                <label class="pl-[9px] block font-semibold mb-1">Attach a File (optional)</label>
                 <input id="fileInput" type="file" name="screenshot" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
-                    class="text-slate-500 text-sm rounded-lg leading-6 file:bg-[var(--secondary-color)] file:text-white file:border-none file:px-4 file:py-1 file:mr-6 file:rounded-lg hover:file:brightness-75 border bg-[#0000000c] cursor-pointer border-gray-300 transition duration-200">
+                    class="text-slate-500 w-full max-w-[300px] text-sm rounded-lg leading-6 file:bg-[var(--secondary-color)] file:text-white file:border-none file:px-4 file:py-1 file:mr-6 file:rounded-lg hover:file:brightness-75 border bg-[#0000000c] cursor-pointer border-gray-300 transition duration-200">
                 <p class="pl-[5px] text-[8px]">Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC, PNG, JPG</p>
             </div>
 
@@ -444,8 +484,7 @@
             </div>
             </form>
         </div>
-    </div>
-
+        </div>
 
 <!-- Confirmation Modal -->
 <div id="confirmCloseModal" class="hidden font-[Manrope] fixed inset-0 bg-transparent flex items-center justify-center z-60 backdrop-blur-sm">
@@ -493,17 +532,6 @@
     </div>
 </div>
 
-<!-- Report Button -->
-<button id="reportBtn"
-  class="fixed bottom-4 left-4 bg-transparent rounded-full w-9 h-9 shadow-none focus:outline-none z-50 flex items-center justify-center cursor-pointer"
-  title="Report a Problem">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-full h-full">
-    <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
-          fill="transparent" stroke="black" stroke-width="2.5"/>
-    <rect x="11" y="8" width="2" height="4" fill="black" />
-    <rect x="11" y="14" width="2" height="2" fill="black" />
-  </svg>
-</button>
 
 
     <script>
@@ -521,6 +549,11 @@
 
         const signInButton = document.getElementById('signInButton');
         const form = emailInput.closest('form');
+
+        document.querySelectorAll("input").forEach((field) => {
+            field.addEventListener("dragover", (e) => e.preventDefault());
+            field.addEventListener("drop", (e) => e.preventDefault());
+        });
 
         let serverErrorEmail = hasFormErrors;
         let serverErrorPassword = hasFormErrors;
@@ -755,7 +788,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const desc = reportForm.description.value.trim();
 
   const maxEmailLength = 50;
-  const maxDescLength = 250;
+  const maxDescLength = 255;
 
   const isEmailTooLong = email.length > maxEmailLength;
   const isDescTooLong = desc.length > maxDescLength;
@@ -769,12 +802,45 @@ document.addEventListener('DOMContentLoaded', function () {
 
   const shouldEnableSubmit = isEmailValid && isDescValid;
 
-  if (shouldEnableSubmit) {
-    enableSubmit();
-  } else {
-    disableSubmit();
-  }
-}
+    if (shouldEnableSubmit) {
+        enableSubmit();
+    } else {
+        disableSubmit();
+    }
+    }
+
+    const webmailInput = document.getElementById('webmailInput');
+
+     // Prevent spaces in email
+    webmailInput.addEventListener('keydown', function (e) {
+        if (e.key === ' ') e.preventDefault();
+        });
+
+    webmailInput.addEventListener('paste', function (e) {
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        if (/\s/.test(pastedText)) {
+            e.preventDefault();
+            alert('Spaces are not allowed in the email address.');
+        }
+    });
+    // Update description counter
+    const descriptionInput = document.getElementById('descriptionInput');
+    const descCounter = document.getElementById('descCounter');
+    const descWarning = document.getElementById('descLengthWarning');
+
+    descriptionInput.addEventListener('input', () => {
+        const currentLength = descriptionInput.value.length;
+        descCounter.textContent = `${currentLength} / 255`;
+
+        if (currentLength > 255) {
+            descWarning.classList.remove('hidden');
+        } else {
+            descWarning.classList.add('hidden');
+        }
+    });
+
+    // Initialize counter on load if there's pre-filled text
+    descCounter.textContent = `${descriptionInput.value.length} / 255`;
 
 
   // On modal open: reset form, reset flags, disable submit and validate inputs

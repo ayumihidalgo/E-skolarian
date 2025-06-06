@@ -15,10 +15,8 @@
                 </button>
             </div>
 
-
-            {{-- Document Details --}}
-            <div
-                class="p-6 bg-[#4D0F0F] text-white rounded-[2rem] shadow-md space-y-6 w-full max-w-[1055px] mx-auto min-h-[450px]">
+            {{-- Document Details - Updated container width --}}
+            <div class="p-6 bg-[#4D0F0F] text-white rounded-[2rem] shadow-md space-y-6 w-full min-h-[450px]">
                 {{-- General Information --}}
                 <div class="space-y-3">
                     <div class="flex flex-wrap justify-between items-center">
@@ -42,7 +40,7 @@
                     <p>
                         <strong class="text-white/60">Status:</strong><br>
                         <span
-                            class="status-pill {{ $document['status'] === 'Approved' ? 'bg-[#10B981]' : 'bg-[#EF4444]' }} text-white px-4 py-1 rounded-full inline-block mt-1">
+                            class="status-pill {{ $document['status'] === 'Approved' ? 'bg-[#10B981]' : ($document['status'] === 'Rejected' ? 'bg-[#EF4444]' : 'bg-[#F59E0B]') }} text-white px-4 py-1 rounded-full inline-block mt-1">
                             {{ $document['status'] }}
                         </span>
                     </p>

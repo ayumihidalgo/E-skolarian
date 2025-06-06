@@ -124,7 +124,7 @@
                 You have received a new notification from the E-Skolarian system.
             </p>
             
-            <div class="notification-message">
+            <div class="notification-message" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
                 {{ $notification->message }}
             </div>
             

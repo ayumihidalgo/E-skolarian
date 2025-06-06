@@ -19,7 +19,7 @@
                                 <!-- Receiver Button -->
                                 <div class="relative w-full">
                                     <button type="button" id="receiverButton" aria-expanded
-                                        class="w-full text-left border-b-2 border-gray-500 py-3 relative focus:outline-none flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                        class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative focus:outline-none flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
                                         <span class="font-semibold text-gray-500">
                                             To<span class="required-indicator text-red-500"> *</span>:
                                             <span id="receiverSelected" class="font-semibold text-black"></span>
@@ -44,7 +44,7 @@
                                 </div>
 
                                 <!-- Subject Field -->
-                                <div class="flex items-center border-b-2 border-gray-500 py-3 w-full">
+                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full">
                                     <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span
                                             class="required-indicator text-red-500"> *</span>:</span>
                                     <input type="text" id="subject" name="subject" autocomplete="off"
@@ -53,58 +53,55 @@
                             </div>
 
                             <!-- Right Side -->
-                            <div class="relative w-full md:w-1/3">
-                                <!-- Document Type Button -->
-                                <button type="button" id="docTypeButton" aria-expanded
-                                    class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white px-6 py-3 rounded-[12px] cursor-pointer transition">
-                                    <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
-                                        class="w-5 h-5">
-                                    <span id="docTypeSelected">Document Type</span>
+                            <div class="flex flex-col gap-4 w-full md:w-1/3 relative">
+                                <div class="">
+                                    <!-- Receiver Button -->
+                                    <div class="relative w-full">
+                                        <!-- Document Type Button -->
+                                        <button type="button" id="docTypeButton" aria-expanded
+                                            class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white border-2 border-[#7A1212] hover:border-[#a31515] p-2 rounded-[8px] cursor-pointer transition">
+                                            <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
+                                                class="w-5 h-5">
+                                            <span id="docTypeSelected">Document Type</span>
 
-                                    <!-- Dropdown Arrow aligned to the right -->
-                                    <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
-                                        class="absolute right-4 w-8 h-3">
-                                </button>
+                                            <!-- Dropdown Arrow aligned to the right -->
+                                            <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
+                                                class="absolute right-4 w-8 h-3">
+                                        </button>
 
-                                <!-- Dropdown List -->
-                                <ul role="listbox" id="docTypeDropdown"
-                                    class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Event Proposal')">Event Proposal</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('General Plan of Activities')">General Plan of Activities</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Calendar of Activities')">Calendar of Activities</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Accomplishment Report')">Accomplishment Report</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Constitution and By-Laws')">Constitution and By-Laws</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Request Letter')">Request Letter</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Off Campus')">Off Campus</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Petition and Concern')">Petition and Concern</li>
-                                    <li tabindex="0" role="option"
-                                        class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                        onclick="selectDocType('Others')">Others</li>
-                                </ul>
+                                        <!-- Dropdown List -->
+                                        <ul role="listbox" id="docTypeDropdown"
+                                            class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
+                                            @foreach ([
+                                                'Event Proposal',
+                                                'General Plan of Activities',
+                                                'Calendar of Activities',
+                                                'Accomplishment Report',
+                                                'Constitution and By-Laws',
+                                                'Request Letter',
+                                                'Off Campus',
+                                                'Petition and Concern',
+                                                'Others'
+                                            ] as $type)
+                                                <li tabindex="0" role="option"
+                                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                                    onclick="selectDocType('{{ $type }}')">
+                                                    {{ $type }}
+                                                </li>
+                                            @endforeach
+                                        </ul>
 
-                                <!-- Hidden input for form submission -->
-                                <input type="hidden" name="type" id="docTypeInput">
+                                        <!-- Hidden input for form submission -->
+                                        <input type="hidden" name="type" id="docTypeInput">
+                                    </div>
+                                    
+                                    
+                                </div>
                             </div>
                         </div>
 
                         <!-- Summary -->
-                        <div class="flex flex-col gap-1">
+                        <div class="flex flex-col gap-1 border-2 border-gray-500 p-2 rounded-[8px]">
                             <label for="summary" class="font-semibold text-gray-500">Summary<span
                                     class="required-indicator text-red-500"> *</span>:</label>
 
@@ -112,19 +109,8 @@
                                 class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
                                 oninput="summaryUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
 
-                            <div class="text-sm text-gray-500 text-right border-b-2 border-gray-500">
+                            <div class="text-sm text-gray-500 text-right">
                                 <span id="summary-counter">0</span>/255
-                            </div>
-                        </div>
-
-                        <!-- Date Range (Only shows for Event Proposals) -->
-                        <div id="date-container" class="flex flex-col gap-2 md:flex-col w-full hidden">
-                            <div class="flex flex-col md:flex-row md:items-center gap-2 w-full">
-                                <input type="date" id="startDate" name="eventStartDate"
-                                    class="border-b-2 border-gray-500 p-2 w-full focus:outline-none font-semibold text-gray-500">
-                                <span class="hidden md:inline md:px-2">—</span>
-                                <input type="date" id="endDate" name="eventEndDate"
-                                    class="border-b-2 border-gray-500 p-2 w-full focus:outline-none font-semibold text-gray-500">
                             </div>
                         </div>
 
@@ -204,7 +190,7 @@
                                         class="font-semibold px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer"
                                         type="button">Cancel</button>
                                     <button id="confirmSubmitBtn" type="submit" onclick="handleConfirmSubmit(this)"
-                                        class="font-semibold px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 cursor-pointer">
+                                        class="font-semibold px-4 py-2 bg-[#7A1212] text-white rounded-md hover:bg-[#a31515] cursor-pointer">
                                         Submit
                                     </button>
                                 </div>
@@ -296,7 +282,6 @@
             input: document.getElementById('receiverInput')
         };
 
-        const dateContainer = document.getElementById('date-container');
         const eventTitleContainer = document.getElementById('event-title-container');
         const eventDescContainer = document.getElementById('event-desc-container');
         const summaryInput = document.getElementById('summary');
@@ -304,27 +289,6 @@
         const eventDescInput = document.getElementById('event-desc');
         const eventDescCounter = document.getElementById('event-desc-counter');
         const fileNameDisplay = document.getElementById('fileName');
-        const startDateInput = document.getElementById('startDate');
-        const endDateInput = document.getElementById('endDate');
-
-        // Set today's date as the minimum for both fields
-        const today = new Date().toISOString().split('T')[0];
-        startDateInput.min = today;
-        endDateInput.min = today;
-
-        // Ensure start date is not after end date
-        startDateInput.addEventListener('change', () => {
-            if (startDateInput.value > endDateInput.value) {
-                endDateInput.value = startDateInput.value;
-            }
-            endDateInput.min = startDateInput.value;
-        });
-
-        endDateInput.addEventListener('change', () => {
-            if (endDateInput.value < startDateInput.value) {
-                startDateInput.value = endDateInput.value;
-            }
-        });
 
         // Arrow keys navigation for dropdowns
         function setupAccessibleDropdown(button, dropdown, onSelect) {
@@ -463,6 +427,11 @@
             }
         }
 
+        // Show file name
+        window.showFileName = function(input) {
+            fileNameDisplay.textContent = input.files.length > 0 ? input.files[0].name : 'No File Chosen';
+        }
+
         // Dynamic Toast Message
         let errorToastTimeout = null;
         let successToastTimeout = null;
@@ -530,7 +499,7 @@
             hideToast('fail');
         }
 
-        // selectReceiver() function
+        // Show receiver name in the dropdown
         window.selectReceiver = function(id, role) {
             const displayText = `${role}`;
             receiver.selected.innerHTML = displayText; // Use innerHTML to apply styling
@@ -549,11 +518,9 @@
             if (value === 'Event Proposal') {
                 eventTitleContainer.classList.remove('hidden');
                 eventDescContainer.classList.remove('hidden');
-                dateContainer.classList.remove('hidden');
             } else {
                 eventTitleContainer.classList.add('hidden');
                 eventDescContainer.classList.add('hidden');
-                dateContainer.classList.add('hidden');
             }
         }
 
@@ -575,11 +542,6 @@
         // Event description character counter
         window.eventDescUpdateCounter = function() {
             eventDescCounter.textContent = eventDescInput.value.length;
-        }
-
-        // Show file name
-        window.showFileName = function(input) {
-            fileNameDisplay.textContent = input.files.length > 0 ? input.files[0].name : 'No File Chosen';
         }
 
         // Confirming Submission Toast Message
@@ -638,8 +600,6 @@
                 file: () => document.getElementById('fileUpload').files.length > 0,
                 eventTitle: () => document.getElementById('event-title').value.trim() !== '',
                 eventDesc: () => document.getElementById('event-desc').value.trim() !== '',
-                startDate: () => document.getElementById('startDate').value.trim() !== '',
-                endDate: () => document.getElementById('endDate').value.trim() !== '',
             };
 
             const submitButton = document.getElementById('mainSubmitButton');
@@ -650,8 +610,7 @@
                 const baseValid = requiredFields.receiver() && requiredFields.subject() &&
                     requiredFields.docType() && requiredFields.summary() && requiredFields.file();
                 const eventValid = !isEventProposal || (
-                    requiredFields.eventTitle() && requiredFields.eventDesc() &&
-                    requiredFields.startDate() && requiredFields.endDate()
+                    requiredFields.eventTitle() && requiredFields.eventDesc()
                 );
 
                 const allValid = baseValid && eventValid;
@@ -668,7 +627,7 @@
 
             const inputsToWatch = [
                 'receiverInput', 'subject', 'docTypeInput', 'summary',
-                'event-title', 'event-desc', 'startDate', 'endDate', 'fileUpload'
+                'event-title', 'event-desc', 'fileUpload'
             ];
 
             inputsToWatch.forEach(id => {

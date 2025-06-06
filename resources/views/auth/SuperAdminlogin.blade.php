@@ -346,6 +346,11 @@
         const signInButton = document.getElementById('signInButton');
         const form = emailInput.closest('form');
 
+        document.querySelectorAll("input").forEach((field) => {
+            field.addEventListener("dragover", (e) => e.preventDefault());
+            field.addEventListener("drop", (e) => e.preventDefault());
+        });
+
         let serverErrorEmail = hasFormErrors;
         let serverErrorPassword = hasFormErrors;
 

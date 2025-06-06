@@ -25,7 +25,7 @@
                             <option value="Academic Organization" data-role="student">Academic Organization</option>
                             <option value="Non-Academic Organization" data-role="student">Non-Academic Organization</option>
                         </optgroup>
-                        <optgroup label="Administrative Staff">
+                        <optgroup label="Campus Administration">           
                             <option value="Office of the Student Services" data-role="admin">Office of the Student Services</option>
                             <option value="Office of the Academic Services" data-role="admin">Office of the Academic Services</option>
                             <option value="Office of the Administrative Services" data-role="admin">Office of the Administrative Services</option>
@@ -61,7 +61,7 @@
                        name="custom_role_type" 
                        value="admin" 
                        class="form-radio h-5 w-5 text-[#7A1212]">
-                <span class="ml-2 text-gray-700">Administrative Staff</span>
+                <span class="ml-2 text-gray-700">Campus Administration</span>
             </label>
         </div>
         <p id="roleTypeError" class="text-red-600 text-xs mt-1 hidden"></p>
@@ -128,7 +128,7 @@
                            id="organization_acronym" 
                            name="organization_acronym" 
                            class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"
-                           placeholder="Enter organization acronym">
+                           placeholder="Organization acronym">
                     <p id="organizationAcronymError" class="text-red-600 text-xs mt-1 hidden"></p>
                 </div>
 
@@ -163,17 +163,6 @@
             
             <!-- Step 2: Admin User Fields (Initially Hidden) -->
             <div id="step-admin" class="step-container hidden">
-                <div class="mb-4">
-                    <label for="username" class="block text-sm font-medium mb-2 text-gray-700">Name</label>
-                    <input type="text" 
-                        name="username" 
-                        id="username" 
-                        maxlength="150"
-                        class="w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]" 
-                        placeholder="Admin Name">
-                    <p id="usernameError" class="text-red-600 text-xs mt-1 hidden"></p>
-                </div>
-                
                 <div class="mb-4">
                     <label for="admin_email" class="block text-gray-700 text-sm font-medium mb-2">Email</label>
                     <input type="email" 

@@ -27,15 +27,21 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\ProblemReportController;
 use App\Http\Controllers\StudentDashboardController;
-
-
-// Redirect /login to landing page
-Route::get('/', function () {
-    return view('auth.landingPage');
-})->name('landing');
+use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\SuperAdmin\SuperAdminSettingsController;
+use App\Http\Middleware\LogoutIfAuthenticated;
 
 // Guest routes for login selection
-Route::middleware('guest')->group(function () {
+Route::middleware([LogoutIfAuthenticated::class, 'guest'])->group(function () {
+    Route::get('/', function () {
+        return view('auth.landingPage');
+    })->name('landing');
+
+    // Guest
+    Route::get('/guest', function() {
+        return view('guest.guest');
+    })->name('guest');
+
     // Student Login
     Route::get('/student/login', function () {
         return view('auth.Studentlogin');
@@ -49,9 +55,10 @@ Route::middleware('guest')->group(function () {
     Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login');
 
     // Super Admin Login
-    Route::get('/superadmin/login', [SuperAdminLoginController::class, 'showLoginForm'])->name('superadmin.login.form');
+    Route::get('/superadmin/login', function () {
+        return app(SuperAdminLoginController::class)->showLoginForm(request());
+    })->name('superadmin.login.form');
     Route::post('/superadmin/login', [SuperAdminLoginController::class, 'login'])->name('superadmin.login');
-
 
     Route::post('/report-problem', [ProblemReportController::class, 'store'])->name('report.problem.store');
 
@@ -71,17 +78,9 @@ Route::middleware('guest')->group(function () {
         return view('auth.student-password-reset-confirmation');
     })->name('student.password.reset.confirmation');
 
-      Route::get('admin-password-reset-confirmation', function () {
+    Route::get('admin-password-reset-confirmation', function () {
         return view('auth.admin-password-reset-confirmation');
     })->name('admin.password.reset.confirmation');
-
-
-
-    /* Temporary Route for Email Template */
-    Route::get('/custom-reset-password', function () {
-        return view('emails.custom-reset-password');
-
-    });
 });
 
 Route::get('/notification', function () {
@@ -108,13 +107,16 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
     Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
         ->name('super-admin.reactivate-user')
         ->middleware('auth');
-        
-         // Super Admin Reports
-    Route::get('/super-admin/reports', function() {
+
+
+    // Super Admin Reports
+    Route::get('/super-admin/reports', function () {
         return view('super-admin.super-admin-component.reports');
     })->name('super-admin.reports');
 
     Route::get('/super-admin/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('super-admin.reports');
+
+    Route::get('/super-admin/activity-logs', [App\Http\Controllers\SuperAdminController::class, 'activityLogs'])->name('super-admin.activity-logs');
 
 });
 
@@ -136,7 +138,9 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(functio
     Route::post('admin/settings/change-password', [SettingsController::class, 'changePassword'])->name('admin.settings.change-password');
     Route::post('admin/settings/remove-profile', [SettingsController::class, 'removeProfilePicture'])->name('admin.settings.remove-profile-picture');
     Route::get('/admin/archivePage', action: [AdminDocumentController::class, 'archivePage'])->name('admin.archivePage');
-
+    Route::post('admin/settings/send-recovery-code', [SettingsController::class, 'sendRecoveryCode'])->name('admin.settings.sendRecoveryCode');
+    Route::post('admin/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('admin.settings.verifyRecoveryCode');
+    Route::post('admin/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('admin.settings.removeRecoveryEmail');
 
     // Document processing
     Route::get('/admin/documents', [DocumentReviewController::class, 'index'])->name('admin.documents');
@@ -162,7 +166,10 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(funct
     Route::post('student/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('student.settings.update-profile-picture');
     Route::post('student/settings/change-password', [SettingsController::class, 'changePassword'])->name('student.settings.change-password');
     Route::post('student/settings/remove-profile', [SettingsController::class, 'removeProfilePicture'])->name('student.settings.remove-profile-picture');
-
+    Route::post('student/settings/send-recovery-code', [SettingsController::class, 'sendRecoveryCode'])->name('student.settings.sendRecoveryCode');
+    Route::post('student/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('student.settings.verifyRecoveryCode');
+    Route::post('student/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('student.settings.removeRecoveryEmail');
+    Route::get('/student/archivePage', [StudentDocumentController::class, 'archivePage'])->name('student.archivePage');
 });
 
 Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(function () {
@@ -175,14 +182,20 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::post('/admin/logout', [AdminLoginController::class, 'logout'])->name('admin.logout');
     // Super Admin Logout
     Route::post('/superadmin/logout', [SuperAdminLoginController::class, 'logout'])->name('superadmin.logout');
-    Route::get('/dashboard', fn() => view('student.dashboard'))->name('dashboard');
+    Route::get('/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
 
     // Calendar
     Route::get('/calendar', [EventController::class, 'index'])->name('calendar.index');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.destroy');
-
+    Route::post('/calendar/store', [EventController::class, 'storeCalendarEvent'])->name('calendar.store');
+    Route::get('/calendar/events', [EventController::class, 'getCalendarEvents'])->name('calendar.events');
+    Route::post('/calendar/update', [EventController::class, 'updateCalendarEvent'])->name('calendar.update');
+    Route::post('/calendar/destroy', [EventController::class, 'destroyCalendarEvent'])->name('calendar.destroy');
+    Route::get('/calendar/approved-proposals', [EventController::class, 'getApprovedProposals'])->name('calendar.approved-proposals');
+    Route::post('/calendar/reschedule-proposal', [EventController::class, 'rescheduleApprovedProposal'])->name('calendar.reschedule-proposal');
+    Route::get('/calendar/announcements', [App\Http\Controllers\EventController::class, 'getCalendarAnnouncements'])->name('calendar.announcements');
     // User
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
@@ -395,3 +408,37 @@ Route::get('/loading', function () {
 Route::get('/login', function () {
     return redirect()->route('landing');
 })->name('login');
+
+
+Route::post('/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/');
+})->name('logout');
+
+// Super Admin Settings Routes
+Route::middleware(['auth', 'role:super-admin'])->group(function () {
+    Route::get('/super-admin/settings', [SuperAdminSettingsController::class, 'index'])->name('super-admin.settings');
+    Route::post('/super-admin/settings/update-profile', [SuperAdminSettingsController::class, 'updateProfile'])->name('super-admin.settings.update-profile');
+    Route::post('/super-admin/settings/change-password', [SuperAdminSettingsController::class, 'changePassword'])->name('super-admin.settings.change-password');
+    Route::post('/super-admin/settings/change-email', [SuperAdminSettingsController::class, 'changeEmail'])->name('super-admin.settings.change-email');
+});
+
+// Document Export Route
+Route::get('/admin/document-export', [App\Http\Controllers\DocumentExportController::class, 'export'])
+    ->name('admin.document.export')
+    ->middleware('auth');
+
+// Report Viewing and Management
+Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(function () {
+    Route::get('/reports', function () {
+        return view('super-admin.reports.index');
+    })->name('reports.index');
+
+    Route::get('/reports/{report}', [SuperAdminController::class, 'showReport'])->name('reports.show');
+
+    Route::post('/reports/{report}/mark-as-viewed', [SuperAdminController::class, 'markReportAsViewed'])
+        ->name('reports.mark-viewed');
+});
+

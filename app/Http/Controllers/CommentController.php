@@ -124,7 +124,7 @@ class CommentController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Store a newly created comment for students.
      *
@@ -216,7 +216,7 @@ class CommentController extends Controller
 
             // Trigger the event
             event(new NewChatMessage($comment, $receiverUser));
-            
+
             // Load the sender relationship
             $comment->load('sender');
 
@@ -249,7 +249,7 @@ class CommentController extends Controller
     {
         try {
             $comments = Comment::where('document_id', $documentId)
-                ->with(['sender:id,username,profile_pic,role'])
+                ->with(['sender:id,username,role_name,profile_pic'])
                 ->orderBy('created_at', 'asc')
                 ->get();
 

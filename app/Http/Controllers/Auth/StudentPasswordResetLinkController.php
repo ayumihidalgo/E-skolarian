@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\LogsActivity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -13,6 +14,7 @@ use Carbon\Carbon;
 
 class StudentPasswordResetLinkController extends Controller
 {
+    use LogsActivity;
     public function create()
     {
         return view('auth.student-forgot-password');
@@ -116,7 +118,12 @@ class StudentPasswordResetLinkController extends Controller
 
         DB::table('password_reset_tokens')->where('email', $request->email)->delete();
 
-        // Always redirect as student
+        $this->logActivity(
+        'Reset',
+        'Password',
+        "$user->organization_acronym reset their account password.",
+        $user
+    );
         return redirect()->route('student.password.reset.confirmation');
     }
 }
