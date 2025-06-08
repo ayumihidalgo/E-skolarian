@@ -9,17 +9,17 @@
                 <div class="">
                     <h1 class="text-2xl font-['Lexend'] font-semibold mb-6">Document Submission</h1>
 
-                    <form class="space-y-6 font-['Manrope']" action="{{ route('submit.document') }}" method="POST"
+                    <form class="font-['Manrope']" action="{{ route('submit.document') }}" method="POST"
                         enctype="multipart/form-data">
                         @csrf
-                        <!-- Receiver, Subject, Doc Type -->
-                        <div class="flex flex-col md:flex-row gap-4">
+                        <!-- Receiver, Subject, Doc Type, Semester A.Y. -->
+                        <div class="flex flex-col md:flex-row gap-4 mb-6">
                             <!-- Left Side -->
-                            <div class="flex flex-col gap-4 w-full md:w-2/3 relative">
+                            <div class="flex flex-col gap-4 w-full md:w-2/3">
                                 <!-- Receiver Button -->
                                 <div class="relative w-full">
                                     <button type="button" id="receiverButton" aria-expanded
-                                        class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative focus:outline-none flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                        class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
                                         <span class="font-semibold text-gray-500">
                                             To<span class="required-indicator text-red-500"> *</span>:
                                             <span id="receiverSelected" class="font-semibold text-black"></span>
@@ -48,96 +48,227 @@
                                     <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span
                                             class="required-indicator text-red-500"> *</span>:</span>
                                     <input type="text" id="subject" name="subject" autocomplete="off"
-                                        class="flex-1 font-semibold focus:outline-none" maxlength="100">
+                                        class="flex-1 font-semibold focus:outline-none" maxlength="255">
+                                </div>
+
+                                <!-- Semester A.Y. Dropdown for Mobile -->
+                                <div class="relative w-full md:hidden">
+                                    <button type="button" id="academicYearButtonMobile" aria-expanded
+                                        class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                        <span class="font-semibold text-gray-500">
+                                            Semester A.Y.<span class="required-indicator text-red-500"> *</span>:
+                                            <span id="academicYearSelectedMobile" class="font-semibold text-black"></span>
+                                        </span>
+                                        <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
+                                            id="academicYearArrowMobile" class="w-8 h-3">
+                                    </button>
+
+                                    <ul role="listbox" id="academicYearDropdownMobile"
+                                        class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md max-h-60 overflow-y-auto">
+                                    </ul>
                                 </div>
                             </div>
 
                             <!-- Right Side -->
-                            <div class="flex flex-col gap-4 w-full md:w-1/3 relative">
-                                <div class="">
-                                    <!-- Receiver Button -->
-                                    <div class="relative w-full">
-                                        <!-- Document Type Button -->
-                                        <button type="button" id="docTypeButton" aria-expanded
-                                            class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white border-2 border-[#7A1212] hover:border-[#a31515] p-2 rounded-[8px] cursor-pointer transition">
-                                            <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
-                                                class="w-5 h-5">
-                                            <span id="docTypeSelected">Document Type</span>
+                            <div class="flex flex-col gap-4 w-full md:w-1/3">
+                                <!-- Document Type Button -->
+                                <div class="relative w-full">                                    
+                                    <button type="button" id="docTypeButton" aria-expanded
+                                        class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white border-2 border-[#7A1212] hover:border-[#a31515] p-2 rounded-[8px] cursor-pointer transition">
+                                        <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
+                                            class="w-5 h-5">
+                                        <span id="docTypeSelected">Document Type</span>
 
-                                            <!-- Dropdown Arrow aligned to the right -->
-                                            <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
-                                                class="absolute right-4 w-8 h-3">
-                                        </button>
+                                        <!-- Dropdown Arrow aligned to the right -->
+                                        <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
+                                            class="absolute right-2 w-8 h-3">
+                                    </button>
 
-                                        <!-- Dropdown List -->
-                                        <ul role="listbox" id="docTypeDropdown"
-                                            class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
-                                            @foreach ([
-                                                'Event Proposal',
-                                                'General Plan of Activities',
-                                                'Calendar of Activities',
-                                                'Accomplishment Report',
-                                                'Constitution and By-Laws',
-                                                'Request Letter',
-                                                'Off Campus',
-                                                'Petition and Concern',
-                                                'Others'
-                                            ] as $type)
-                                                <li tabindex="0" role="option"
-                                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                                    onclick="selectDocType('{{ $type }}')">
-                                                    {{ $type }}
-                                                </li>
-                                            @endforeach
-                                        </ul>
+                                    <!-- Dropdown List -->
+                                    <ul role="listbox" id="docTypeDropdown"
+                                        class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
+                                        @foreach ([
+                                            'Event Proposal',
+                                            'General Plan of Activities',
+                                            'Calendar of Activities',
+                                            'Accomplishment Report',
+                                            'Constitution and By-Laws',
+                                            'Request Letter',
+                                            'Off Campus',
+                                            'Petition and Concern',
+                                            'Others'
+                                        ] as $type)
+                                            <li tabindex="0" role="option"
+                                                class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                                onclick="selectDocType('{{ $type }}')">
+                                                {{ $type }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
 
-                                        <!-- Hidden input for form submission -->
-                                        <input type="hidden" name="type" id="docTypeInput">
+                                    <!-- Hidden input for document type -->
+                                    <input type="hidden" name="type" id="docTypeInput">
+                                </div>
+
+                                <!-- Document Type Field if "Others" is Selected -->
+                                <div id="othersDocTypeContainer" class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full" hidden>
+                                    <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Document Type<span
+                                            class="required-indicator text-red-500"> *</span>:</span>
+                                    <input type="text" name="other_type" id="othersDocTypeInput" autocomplete="off"
+                                        class="flex-1 font-semibold focus:outline-none" maxlength="50">
+                                </div>
+                                
+                                <!-- Semester A.Y. Dropdown for Desktop -->
+                                <div class="relative w-full hidden md:block">
+                                    <button type="button" id="academicYearButton" aria-expanded
+                                        class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                        <span class="font-semibold text-gray-500">
+                                            Semester A.Y.<span class="required-indicator text-red-500"> *</span>:
+                                            <span id="academicYearSelected" class="font-semibold text-black"></span>
+                                        </span>
+                                        <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
+                                            id="academicYearArrow" class="w-8 h-3">
+                                    </button>
+
+                                    <ul role="listbox" id="academicYearDropdown"
+                                        class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md max-h-60 overflow-y-auto">
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Shared Hidden Input for Academic Year -->
+                            <input type="hidden" name="academic_year" id="academicYearInput">
+                        </div>
+
+                        <!-- Overview Field -->
+                        <div class="flex flex-col gap-1 border-2 border-gray-500 p-2 rounded-[8px] mb-6">
+                            <label for="overview" class="font-semibold text-gray-500">Overview<span
+                                    class="required-indicator text-red-500"> *</span>:</label>
+
+                            <textarea id="overview" name="overview"
+                                class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
+                                oninput="overviewUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
+
+                            <div class="text-sm text-gray-500 text-right">
+                                <span id="overview-counter">0</span>/255
+                            </div>
+                        </div>
+
+                        <!-- Only shows for Event Proposals -->
+                        <div id="event_proposal_container" class="space-y-6 mb-6 hidden">
+                            <!-- Venue Field-->
+                            <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                                <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Venue<span
+                                class="required-indicator text-red-500"> *</span>:</span>
+                                <input type="text" id="venue" name="venue" autocomplete="off"
+                                class="flex-1 font-semibold focus:outline-none" maxlength="100">
+                            </div>
+                            
+                            <!-- Proposed Date & Time Field and Hours Field-->
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <!-- Left Side -->
+                                <div class="flex flex-col gap-4 w-full md:w-1/2">
+                                    <!-- Proposed Date & Time Field -->
+                                    <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                                        <span class="text-gray-500 font-semibold mr-2">Proposed Date & Time<span
+                                        class="required-indicator text-red-500"> *</span>:</span>
+                                        <input type="datetime-local" id="proposed_date_time" name="proposed_date_time"
+                                        class="flex-1 font-semibold focus:outline-none">
                                     </div>
-                                    
-                                    
+                                </div>
+                                
+                                <!-- Right Side -->
+                                <div class="flex flex-col gap-4 w-full md:w-1/2">
+                                    <!-- Hours Field -->
+                                    <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                                        <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">No. of Hours<span
+                                        class="required-indicator text-red-500"> *</span>:</span>
+                                        <input type="number" id="hours" name="hours" min="1" step="1" autocomplete="off"
+                                        class="flex-1 font-semibold focus:outline-none">
+                                    </div>
+                                </div>
+                            </div>
+                        
+                            <!-- Attendees Field and Attendees Range Field -->
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <!-- Left Side -->
+                                <div class="flex flex-col gap-4 w-full md:w-1/2">
+                                    <!-- Attendees Field -->
+                                    <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                                        <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Attendees<span
+                                        class="required-indicator text-red-500"> *</span>:</span>
+                                        <input type="text" id="attendees" name="attendees" autocomplete="off"
+                                        class="flex-1 font-semibold focus:outline-none" maxlength="50" placeholder="Course/Year/Section">
+                                    </div>
+                                </div>
+                                
+                                <!-- Right Side -->
+                                <div class="relative w-full md:w-1/2">
+                                    <!-- Attendees Range Button -->
+                                    <button type="button" id="attendeesRangeButton" aria-expanded
+                                        class="relative w-full text-left border-2 border-gray-500 p-2 rounded-[8px] flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                        <span class="font-semibold text-gray-500">
+                                            Expected No. of Attendees<span class="required-indicator text-red-500"> *</span>:
+                                            <span id="attendeesRangeSelected" class="font-semibold text-black"></span>
+                                        </span>
+                                        <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
+                                            id="attendeesRangeArrow" class="absolute right-2 w-8 h-3">
+                                    </button>
+
+                                    <!-- Dropdown List -->
+                                    <ul role="listbox" id="attendeesRangeDropdown"
+                                        class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
+                                        @foreach (['10-50', '50-100', '100-250', '250-500', 'Above 500'] as $attendees_range)
+                                            <li tabindex="0" role="option"
+                                                class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                                onclick="selectAttendeesRange('{{ $attendees_range }}')">
+                                                {{ $attendees_range }}
+                                            </li>
+                                        @endforeach
+                                    </ul>
+
+                                    <!-- Hidden input for attendees range -->
+                                    <input type="hidden" name="attendees_range" id="attendeesRangeInput">
+                                </div>
+                            </div>                        
+                        
+                            <!-- Fees Field-->
+                            <div class="flex items-center w-full flex-wrap md:flex">
+                                <span class="text-gray-500 font-semibold mr-2">
+                                    Fee/Contributions per Student/Participant (if applicable):
+                                </span>
+                                
+                                <div class="relative">
+                                    <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-gray-500">₱</span>
+                                    <input type="number" id="fees" name="fees" min="0" step="0.01" autocomplete="off"
+                                    class="pl-6 w-full border-2 border-gray-500 font-semibold rounded-[8px] px-2 py-1 focus:outline-none">
+                                </div>
+                                
+                                <div class="ml-4">
+                                    <label class="flex items-center space-x-1">
+                                        <input type="checkbox" id="fee_none" name="fee_none" class="form-checkbox font-semibold border-2 border-gray-500 rounded-[8px] h-5 w-5">
+                                        <span class="text-gray-500 font-semibold whitespace-nowrap">None</span>
+                                    </label>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Summary -->
-                        <div class="flex flex-col gap-1 border-2 border-gray-500 p-2 rounded-[8px]">
-                            <label for="summary" class="font-semibold text-gray-500">Summary<span
-                                    class="required-indicator text-red-500"> *</span>:</label>
-
-                            <textarea id="summary" name="summary"
-                                class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
-                                oninput="summaryUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
-
-                            <div class="text-sm text-gray-500 text-right">
-                                <span id="summary-counter">0</span>/255
-                            </div>
-                        </div>
-
-                        <!-- Event Title (Only shows for Event Proposals) -->
-                        <div id="event-title-container"
-                            class="flex items-center border-b-2 border-gray-500 py-3 w-full hidden">
-                            <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Event Title<span
+                            
+                        <div id="event_attachments_container" class="text-gray-500 font-semibold mb-2 hidden">
+                            <div class="flex items-center w-full md:flex md:w-[400px]">
+                                <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Attachments<span
                                     class="required-indicator text-red-500"> *</span>:</span>
-                            <input type="text" id="event-title" name="event-title" autocomplete="off"
-                                class="flex-1 font-semibold focus:outline-none" maxlength="60">
-                        </div>
-
-                        <!-- Event Description (Only shows for Event Proposals) -->
-                        <div id="event-desc-container" class="flex flex-col gap-1 hidden">
-                            <label for="event-desc" class="font-semibold text-gray-500">Event Description<span
-                                    class="required-indicator text-red-500"> *</span>:</label>
-
-                            <textarea id="event-desc" name="event-desc"
-                                class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
-                                oninput="eventDescUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
-
-                            <div class="text-sm text-gray-500 text-right border-b-2 border-gray-500">
-                                <span id="event-desc-counter">0</span>/255
+                            </div>
+                            
+                            <div class="flex w-full ml-2 md:flex items-start">
+                                <ul class="list-disc list-inside">
+                                    <li>Request Letter with Proposal Details and Program of Activities (Required)</li>
+                                    <li>Detailed Budgeted Expenses (if applicable)</li>
+                                    <li>Profile of Resource Speaker (if applicable)</li>
+                                </ul>
                             </div>
                         </div>
 
-                        <!-- File Upload -->
+                        <!-- File Upload Field -->
                         <div class="space-y-2 w-full md:w-[400px]">
                             <div
                                 class="flex items-center w-full overflow-hidden rounded-[12px] bg-white border border-gray-400">
@@ -282,12 +413,32 @@
             input: document.getElementById('receiverInput')
         };
 
-        const eventTitleContainer = document.getElementById('event-title-container');
-        const eventDescContainer = document.getElementById('event-desc-container');
-        const summaryInput = document.getElementById('summary');
-        const summaryCounter = document.getElementById('summary-counter');
-        const eventDescInput = document.getElementById('event-desc');
-        const eventDescCounter = document.getElementById('event-desc-counter');
+        const academicYear = {
+            button: document.getElementById('academicYearButton'),
+            dropdown: document.getElementById('academicYearDropdown'),
+            selected: document.getElementById('academicYearSelected'),
+            input: document.getElementById('academicYearInput')
+        };
+
+        const academicYearMobile = {
+            button: document.getElementById('academicYearButtonMobile'),
+            dropdown: document.getElementById('academicYearDropdownMobile'),
+            selected: document.getElementById('academicYearSelectedMobile'),
+            input: document.getElementById('academicYearInput')
+        };
+
+        const attendeesRange = {
+            button: document.getElementById('attendeesRangeButton'),
+            dropdown: document.getElementById('attendeesRangeDropdown'),
+            selected: document.getElementById('attendeesRangeSelected'),
+            input: document.getElementById('attendeesRangeInput')
+        };
+
+        const eventProposalContainer = document.getElementById('event_proposal_container');
+        const eventAttachmentsContainer = document.getElementById('event_attachments_container');
+        const overviewInput = document.getElementById('overview');
+        const overviewCounter = document.getElementById('overview-counter');
+        const feesNoneCheckbox = document.getElementById("fee_none");
         const fileNameDisplay = document.getElementById('fileName');
 
         // Arrow keys navigation for dropdowns
@@ -330,7 +481,8 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             setupAccessibleDropdown(docType.button, docType.dropdown, selectDocType);
-            setupAccessibleDropdown(receiver.button, receiver.dropdown, selectReceiver);
+            setupAccessibleDropdown(receiver.button, receiver.dropdown, selectReceiver);            
+            setupAccessibleDropdown(attendeesRange.button, attendeesRange.dropdown, selectAttendeesRange);
         });
 
         // Prevent form submission on Enter keypress except from inside the confirmation popup
@@ -344,19 +496,51 @@
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("subject").addEventListener("keydown", function(e) {
                 if (e.key === "Enter") {
-                    e.preventDefault(); // Prevent form submission
+                    e.preventDefault();
                 }
             });
-            document.getElementById("event-title").addEventListener("keydown", function(e) {
+            document.getElementById("othersDocTypeInput").addEventListener("keydown", function(e) {
                 if (e.key === "Enter") {
-                    e.preventDefault(); // Prevent form submission
+                    e.preventDefault();
                 }
             });
+            document.getElementById("venue").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                }
+            });
+            document.getElementById("hours").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                }
+            });
+            document.getElementById("attendees").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                }
+            });
+            document.getElementById("fees").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                }
+            });
+            if (feesNoneCheckbox) {
+                document.getElementById("fee_none").addEventListener("keydown", function (e) {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        feesNoneCheckbox.checked = !feesNoneCheckbox.checked;
+                        feesNoneCheckbox.dispatchEvent(new Event('change', { bubbles: true })); // Fire change event manually
+                    }
+                });
+            }
         });
 
         // Toggle dropdown visibility
         docType.button.addEventListener('click', () => toggleDropdown(docType.dropdown));
         receiver.button.addEventListener('click', () => toggleDropdown(receiver.dropdown));
+        academicYear.button.addEventListener('click', () => toggleDropdown(academicYear.dropdown));
+        academicYearMobile.button.addEventListener('click', () => toggleDropdown(academicYearMobile.dropdown));
+        attendeesRange.button.addEventListener('click', () => toggleDropdown(attendeesRange.dropdown));
 
         function toggleDropdown(dropdown) {
             dropdown.classList.toggle('hidden');
@@ -499,13 +683,71 @@
             hideToast('fail');
         }
 
+        // Populates the academic year field dropdown list with semesters from 1990 up to the current year
+        function populateAcademicYearDropdown(dropdownId, isMobile) {
+            const dropdown = document.getElementById(dropdownId);
+            dropdown.innerHTML = '';
+
+            const today = new Date();
+            const currentMonth = today.getMonth(); // 0 = January, 7 = August
+            let currentAcademicYearStart;
+
+            // Academic year starts in August
+            if (currentMonth >= 7) {
+                currentAcademicYearStart = today.getFullYear();
+            } else {
+                currentAcademicYearStart = today.getFullYear() - 1;
+            }
+
+            const endYear = 1990;
+            const terms = ['1st Semester', '2nd Semester', 'Midyear'];
+
+            // Loop from current academic year down to end year (1990)
+            for (let year = currentAcademicYearStart; year >= endYear; year--) {
+                for (let term of terms) {
+                    const label = `${year}-${year + 1} ${term}`;
+                    const li = document.createElement('li');
+                    li.setAttribute('tabindex', '0');
+                    li.setAttribute('role', 'option');
+                    li.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold';
+                    li.textContent = label;
+                    li.onclick = () => selectAcademicYear(label, isMobile);
+                    dropdown.appendChild(li);
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            populateAcademicYearDropdown('academicYearDropdown', false); // desktop
+            populateAcademicYearDropdown('academicYearDropdownMobile', true); // mobile
+
+            // Setup dropdowns after population of academic year dropdown list
+            setupAccessibleDropdown(academicYear.button, academicYear.dropdown, selectAcademicYear);
+            setupAccessibleDropdown(academicYearMobile.button, academicYearMobile.dropdown, selectAcademicYear);
+        });
+
         // Show receiver name in the dropdown
         window.selectReceiver = function(id, role) {
             const displayText = `${role}`;
-            receiver.selected.innerHTML = displayText; // Use innerHTML to apply styling
+            receiver.selected.innerHTML = displayText;
             receiver.input.value = id;
             receiver.dropdown.classList.add('hidden');
             receiverAutoSelected = true; // Disables auto-select receiver
+        }
+
+        // Show academic year in the dropdown
+        window.selectAcademicYear = function (value, isMobile) {
+            const target = isMobile ? academicYearMobile : academicYear;
+            target.selected.textContent = value;
+            target.input.value = value;
+            target.dropdown.classList.add('hidden');
+        };
+
+        // Show attendees range in the dropdown
+        window.selectAttendeesRange = function(value) {
+            attendeesRange.selected.innerHTML = value;
+            attendeesRange.input.value = value;
+            attendeesRange.dropdown.classList.add('hidden');
         }
 
         // Select doc type
@@ -516,11 +758,26 @@
 
             // Show/hide Event-specific fields
             if (value === 'Event Proposal') {
-                eventTitleContainer.classList.remove('hidden');
-                eventDescContainer.classList.remove('hidden');
+                eventProposalContainer.classList.remove('hidden');
+                eventAttachmentsContainer.classList.remove('hidden');
             } else {
-                eventTitleContainer.classList.add('hidden');
-                eventDescContainer.classList.add('hidden');
+                eventProposalContainer.classList.add('hidden');
+                eventAttachmentsContainer.classList.add('hidden');
+            }
+
+            // Show/hide 'Others' input field
+            const othersDocTypeContainer = document.getElementById('othersDocTypeContainer');
+            const othersDocTypeInput = document.getElementById('othersDocTypeInput');
+
+            if (value === 'Others') {
+                othersDocTypeContainer.hidden = false;
+                othersDocTypeInput.name = 'type'; // Main submission field
+                othersDocTypeInput.focus();
+                docType.input.value = ''; // Clear main hidden input to avoid duplication
+            } else {
+                othersDocTypeContainer.hidden = true;
+                othersDocTypeInput.name = 'other_type'; // Avoid conflicting name
+                // othersDocTypeInput.value = ''; // Clear any leftover input
             }
         }
 
@@ -532,16 +789,20 @@
             if (!receiver.button.contains(e.target) && !receiver.dropdown.contains(e.target)) {
                 receiver.dropdown.classList.add('hidden');
             }
+            if (!academicYear.button.contains(e.target) && !academicYear.dropdown.contains(e.target)) {
+                academicYear.dropdown.classList.add('hidden');
+            }
+            if (!academicYearMobile.button.contains(e.target) && !academicYearMobile.dropdown.contains(e.target)) {
+                academicYearMobile.dropdown.classList.add('hidden');
+            }
+            if (!attendeesRange.button.contains(e.target) && !attendeesRange.dropdown.contains(e.target)) {
+                attendeesRange.dropdown.classList.add('hidden');
+            }
         });
 
-        // Summary character counter
-        window.summaryUpdateCounter = function() {
-            summaryCounter.textContent = summaryInput.value.length;
-        }
-
-        // Event description character counter
-        window.eventDescUpdateCounter = function() {
-            eventDescCounter.textContent = eventDescInput.value.length;
+        // Overview character counter
+        window.overviewUpdateCounter = function() {
+            overviewCounter.textContent = overviewInput.value.length;
         }
 
         // Confirming Submission Toast Message
@@ -551,7 +812,7 @@
             popup.classList.remove('hidden');
 
             const focusableElements = popup.querySelectorAll(
-                'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                'button:not([disabled]), [href], input, textarea, [tabindex]:not([tabindex="-1"])');
             const firstEl = focusableElements[0];
             const lastEl = focusableElements[focusableElements.length - 1];
 
@@ -595,22 +856,45 @@
             const requiredFields = {
                 receiver: () => document.getElementById('receiverInput').value.trim() !== '',
                 subject: () => document.getElementById('subject').value.trim() !== '',
-                docType: () => document.getElementById('docTypeInput').value.trim() !== '',
-                summary: () => document.getElementById('summary').value.trim() !== '',
+                docType: () => {
+                    const docTypeValue = document.getElementById('docTypeSelected').textContent.trim();
+                    if (docTypeValue === 'Others') {
+                        return requiredFields.otherType(); // ensure the user typed something
+                    }
+                    return document.getElementById('docTypeInput').value.trim() !== '';
+                },
+                otherType: () => document.getElementById('othersDocTypeInput').value.trim() !== '',
+                academicYear: () => document.getElementById('academicYearInput').value.trim() !== '',
+                overview: () => document.getElementById('overview').value.trim() !== '',
+                venue: () => document.getElementById('venue').value.trim() !== '',
+                proposed_date_time: () => document.getElementById('proposed_date_time').value.trim() !== '',
+                hours: () => document.getElementById('hours').value.trim() !== '',
+                attendees: () => document.getElementById('attendees').value.trim() !== '',
+                attendeesRange: () => document.getElementById('attendeesRangeInput').value.trim() !== '',
+                fees: () => document.getElementById('fees').value.trim() !== '',
                 file: () => document.getElementById('fileUpload').files.length > 0,
-                eventTitle: () => document.getElementById('event-title').value.trim() !== '',
-                eventDesc: () => document.getElementById('event-desc').value.trim() !== '',
             };
 
             const submitButton = document.getElementById('mainSubmitButton');
             const docTypeInput = document.getElementById('docTypeInput');
+            const feeInput = document.getElementById('fees');
+            const feeNoneCheckbox = document.querySelector('input[name="fee_none"]');
 
             function validateForm() {
+                // If "Others" is selected, use the value from the text input
+                const docTypeSelected = document.getElementById('docTypeSelected').textContent.trim();
+                const othersInput = document.getElementById('othersDocTypeInput');
+
+                if (docTypeSelected === 'Others') {
+                    docTypeInput.value = othersInput.value.trim(); // overwrite hidden input value
+                }
+
                 const isEventProposal = docTypeInput.value === 'Event Proposal';
                 const baseValid = requiredFields.receiver() && requiredFields.subject() &&
-                    requiredFields.docType() && requiredFields.summary() && requiredFields.file();
+                    requiredFields.docType() && requiredFields.academicYear() && requiredFields.overview() && requiredFields.file();
                 const eventValid = !isEventProposal || (
-                    requiredFields.eventTitle() && requiredFields.eventDesc()
+                    requiredFields.venue() && requiredFields.proposed_date_time() && requiredFields.hours()
+                    && requiredFields.attendees() && requiredFields.attendeesRange() && (feeNoneCheckbox.checked || requiredFields.fees())
                 );
 
                 const allValid = baseValid && eventValid;
@@ -626,8 +910,9 @@
             }
 
             const inputsToWatch = [
-                'receiverInput', 'subject', 'docTypeInput', 'summary',
-                'event-title', 'event-desc', 'fileUpload'
+                'receiverInput', 'subject', 'docTypeInput', 'othersDocTypeInput',
+                'academicYearInput', 'overview', 'venue', 'proposed_date_time',
+                'hours', 'attendees', 'attendeesRangeInput', 'fees', 'fileUpload'
             ];
 
             inputsToWatch.forEach(id => {
@@ -636,6 +921,20 @@
                     element.addEventListener('input', validateForm);
                     element.addEventListener('change', validateForm);
                 }
+            });
+
+            // "None" checkbox functionality for fees field
+            feeNoneCheckbox.addEventListener('change', function () {
+                if (this.checked) {
+                    feeInput.disabled = true;
+                    feeInput.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                    feeInput.value = 0;
+                } else {
+                    feeInput.disabled = false;
+                    feeInput.classList.remove('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                }
+
+                validateForm();
             });
 
             // Re-validate when document type is changed via your selectDocType function

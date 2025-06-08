@@ -13,9 +13,12 @@ use App\Models\User;
 use App\Models\Role;
 use App\Events\DocumentSubmitted;
 use App\Models\DocumentVersion;
+use App\LogsActivity;
 
 class DocumentController extends Controller
 {
+    use LogsActivity;
+    
     public function create()
     {
         // Shows the admin users in the receiver dropdown list in the form
@@ -36,11 +39,16 @@ class DocumentController extends Controller
             // Validate the incoming request
             $validated = $request->validate([
                 'received_by' => 'required|exists:users,id',
-                'subject' => 'required|string|max:100',
-                'type' => 'required|in:Event Proposal,General Plan of Activities,Calendar of Activities,Accomplishment Report,Constitution and By-Laws,Request Letter,Off Campus,Petition and Concern,Others',
-                'summary' => 'required|string|max:255',
-                'event-title' => 'nullable|string|max:60|required_if:type,Event Proposal',
-                'event-desc' => 'nullable|string|max:255|required_if:type,Event Proposal',
+                'subject' => 'required|string|max:255',
+                'type' => 'required|string|max:50',
+                'overview' => 'required|string|max:255',
+                'academic_year' => 'required|string',
+                'venue' => 'nullable|string|max:100|required_if:type,Event Proposal',
+                'proposed_date_time' => 'nullable|datetime_local|required_if:type,Event Proposal',
+                'hours' => 'nullable|integer|required_if:type,Event Proposal',
+                'attendees' => 'nullable|string|max:50|required_if:type,Event Proposal',
+                'attendees_range' => 'nullable|required_if:type,Event Proposal|in:10-50,50-100,100-250,250-500,Above 500',
+                'fees' => 'nullable|float|required_if:type,Event Proposal',
                 'file_upload' => 'required|array|max:30',
                 'file_upload.*' => 'file|mimes:pdf,doc,docx|max:5120',
                 'comments' => 'nullable|string|max:500',
@@ -53,8 +61,15 @@ class DocumentController extends Controller
                 'user_id' => $validated['user_id'],
                 'received_by' => $validated['received_by'],
                 'subject' => $validated['subject'],
-                'summary' => $validated['summary'],
+                'overview' => $validated['overview'],
                 'type' => $validated['type'],
+                'academic_year' => $validated['academic_year'],
+                'venue' => $validated['venue'],
+                'proposed_date_time' => $validated['proposed_date_time'],
+                'hours' => $validated['hours'],
+                'attendees' => $validated['attendees'],
+                'attendees_range' => $validated['attendees_range'],
+                'fees' => $validated['fees']
             ]);
 
             // Defines the control tag of the submitted documents, Example: ELITE-0001
@@ -67,7 +82,7 @@ class DocumentController extends Controller
             // Handle the uploaded file
             $files = $request->file('file_upload');
 
-            $version = 1;   // NOTE: Version control not implemented yet
+            $version = 1;   // NOTE: Version 1 by default
             foreach ($files as $file) {
                 $originalName = $file->getClientOriginalName();
                 // Optionally, you can prepend a unique ID or timestamp to avoid overwriting files with the same name
@@ -77,7 +92,7 @@ class DocumentController extends Controller
                     'document_id' => $document->id,
                     'uploaded_by' => Auth::id(),
                     'version' => $version,
-                    'file_path' => $filePath,
+                    'document_url' => $filePath,
                     'original_name' => $originalName,
                     'comments' => $request->input('comments'),
                     'submitted_at' => now(),
@@ -86,16 +101,13 @@ class DocumentController extends Controller
 
             // Add these lines to dispatch the event
             Log::info('Dispatching DocumentSubmitted event for document ID: ' . $document->id);
-            event(new DocumentSubmitted($document)); // Add this line
-
-            // If this is an Event Proposal, create a corresponding event
-            if ($validated['type'] === 'Event Proposal') {
-                Event::create([
-                    'title' => $validated['event-title'],
-                    'description' => $validated['event-desc'],
-                    'created_by' => Auth::id(),
-                ]);
-            }
+            event(new DocumentSubmitted($document));
+                        
+            $this->logActivity(
+                'Submitted',
+                "Document #{$document->id}",
+                "{$document->user_id} submitted a document titled '{$document->title}'."
+            );
 
             return back()->with('success', 'Document submitted successfully!');
         } catch (\Illuminate\Validation\ValidationException $e) {

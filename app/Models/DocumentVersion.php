@@ -12,7 +12,7 @@ class DocumentVersion extends Model
         'document_id',
         'uploaded_by',
         'version',
-        'file_path',
+        'document_url',
         'comments',
         'submitted_at',
     ];
