@@ -90,13 +90,14 @@
                                         @foreach ([
                                             'Event Proposal',
                                             'General Plan of Activities',
-                                            'Calendar of Activities',
-                                            'Accomplishment Report',
+                                            'Reports of Proceedings',
                                             'Constitution and By-Laws',
+                                            'Fundraising Activities',
                                             'Request Letter',
-                                            'Off Campus',
                                             'Petition and Concern',
-                                            'Others'
+                                            'Memorandum of Agreement',
+                                            'Off Campus Activities',
+                                            'Other'
                                         ] as $type)
                                             <li tabindex="0" role="option"
                                                 class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
@@ -110,7 +111,7 @@
                                     <input type="hidden" name="type" id="docTypeInput">
                                 </div>
 
-                                <!-- Document Type Field if "Others" is Selected -->
+                                <!-- Document Type Field if "Other" is Selected -->
                                 <div id="othersDocTypeContainer" class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full" hidden>
                                     <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Document Type<span
                                             class="required-indicator text-red-500"> *</span>:</span>
@@ -741,6 +742,9 @@
             target.selected.textContent = value;
             target.input.value = value;
             target.dropdown.classList.add('hidden');
+
+            // Fire change event manually
+            target.input.dispatchEvent(new Event('change', { bubbles: true }));
         };
 
         // Show attendees range in the dropdown
@@ -748,6 +752,9 @@
             attendeesRange.selected.innerHTML = value;
             attendeesRange.input.value = value;
             attendeesRange.dropdown.classList.add('hidden');
+
+            // Fire change event manually
+            attendeesRange.input.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
         // Select doc type
@@ -765,11 +772,11 @@
                 eventAttachmentsContainer.classList.add('hidden');
             }
 
-            // Show/hide 'Others' input field
+            // Show/hide 'Other' input field
             const othersDocTypeContainer = document.getElementById('othersDocTypeContainer');
             const othersDocTypeInput = document.getElementById('othersDocTypeInput');
 
-            if (value === 'Others') {
+            if (value === 'Other') {
                 othersDocTypeContainer.hidden = false;
                 othersDocTypeInput.name = 'type'; // Main submission field
                 othersDocTypeInput.focus();
@@ -858,7 +865,7 @@
                 subject: () => document.getElementById('subject').value.trim() !== '',
                 docType: () => {
                     const docTypeValue = document.getElementById('docTypeSelected').textContent.trim();
-                    if (docTypeValue === 'Others') {
+                    if (docTypeValue === 'Other') {
                         return requiredFields.otherType(); // ensure the user typed something
                     }
                     return document.getElementById('docTypeInput').value.trim() !== '';
@@ -881,11 +888,11 @@
             const feeNoneCheckbox = document.querySelector('input[name="fee_none"]');
 
             function validateForm() {
-                // If "Others" is selected, use the value from the text input
+                // If "Other" is selected, use the value from the text input
                 const docTypeSelected = document.getElementById('docTypeSelected').textContent.trim();
                 const othersInput = document.getElementById('othersDocTypeInput');
 
-                if (docTypeSelected === 'Others') {
+                if (docTypeSelected === 'Other') {
                     docTypeInput.value = othersInput.value.trim(); // overwrite hidden input value
                 }
 
@@ -926,11 +933,11 @@
             // "None" checkbox functionality for fees field
             feeNoneCheckbox.addEventListener('change', function () {
                 if (this.checked) {
-                    feeInput.disabled = true;
+                    feeInput.readOnly = true;
                     feeInput.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
                     feeInput.value = 0;
                 } else {
-                    feeInput.disabled = false;
+                    feeInput.readOnly = false;
                     feeInput.classList.remove('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
                 }
 
