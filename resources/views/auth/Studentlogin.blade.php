@@ -893,15 +893,15 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // Listen for input on required fields
-  reportForm.email.addEventListener('input', () => {
-    isDirty = true;
+    reportForm.email.addEventListener('input', () => {
+    isDirty = reportForm.email.value.trim().length > 0 || reportForm.description.value.trim().length > 0;
     validateInputs();
-  });
+    });
 
-  reportForm.description.addEventListener('input', () => {
-    isDirty = true;
+    reportForm.description.addEventListener('input', () => {
+    isDirty = reportForm.email.value.trim().length > 0 || reportForm.description.value.trim().length > 0;
     validateInputs();
-  });
+    });
 
   // Cancel button logic with confirmation if dirty
   cancelReportBtn.addEventListener('click', () => {
