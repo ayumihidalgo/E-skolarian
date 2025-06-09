@@ -107,8 +107,28 @@ Route::get('/notification', function () {
 // ----------------------------------------
 Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiveStatus::class])->group(function () {
     // ---------------- Super Admin ----------------
-    Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
-    Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])->name('deactivated.accounts');
+    
+    // Dashboard & Announcements
+    Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])
+        ->name('super-admin.dashboard');
+    Route::get('/super-admin/announcements/archive', [SuperAdminController::class, 'showDashboard'])
+        ->name('super-admin.announcementArchive');
+    
+    // Announcement CRUD operations
+    Route::post('/super-admin/announcements', [AnnouncementController::class, 'store'])
+        ->name('super-admin.announcements.store');
+    //Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])
+       // ->name('super-admin.announcements.update');
+    Route::post('/super-admin/announcements/{id}/archive', [AnnouncementController::class, 'moveToArchive'])
+        ->name('super-admin.announcements.archive');
+    Route::post('/super-admin/announcements/{id}/restore', [AnnouncementController::class, 'restore'])
+        ->name('super-admin.announcements.restore');
+    Route::delete('/super-admin/announcements/{id}/delete', [AnnouncementController::class, 'destroy'])
+        ->name('super-admin.announcements.delete');
+
+    // Other super admin routes...
+    Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
+        ->name('deactivated.accounts');
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
     Route::post('/super-admin/reactivate-user/{user}', [UserController::class, 'reactivateUser'])->name('reactivate.user');
     Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
@@ -143,14 +163,13 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiv
 
     Route::get('/super-admin/activity-logs', [App\Http\Controllers\SuperAdminController::class, 'activityLogs'])->name('super-admin.activity-logs');
 
-
 });
 
 Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStatus::class])->group(function () {
     // ---------------- Admin ----------------
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'showDashboard'])->name('admin.dashboard');
     Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
-    Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
+    //Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
     Route::get('/admin/announcement-archive', [AnnouncementController::class, 'archive'])->name('admin.announcementArchive');
     Route::post('/admin/announcements/{id}/archive', [AnnouncementController::class, 'moveToArchive'])->name('admin.announcements.archive');
     Route::post('/admin/announcements/{id}/restore', [AnnouncementController::class, 'restore'])->name('admin.announcements.restore');
@@ -213,6 +232,8 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiv
     // Super Admin Logout
     Route::post('/superadmin/logout', [SuperAdminLoginController::class, 'logout'])->name('superadmin.logout');
     Route::get('/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
+    // Announcements ID
+    Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
 
 
     // Calendar
