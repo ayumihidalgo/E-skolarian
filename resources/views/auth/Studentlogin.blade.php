@@ -544,6 +544,15 @@
         const emailLabel = document.getElementById('emailLabel');
         const emailWarning = document.getElementById('emailLengthWarning');
 
+        // Add this for custom email format warning
+        let emailFormatWarning = document.getElementById('emailFormatWarning');
+        if (!emailFormatWarning) {
+            emailFormatWarning = document.createElement('div');
+            emailFormatWarning.id = 'emailFormatWarning';
+            emailFormatWarning.className = 'text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden';
+            emailInput.parentNode.parentNode.appendChild(emailFormatWarning);
+        }
+
         const passwordLabel = document.getElementById('passwordLabel');
         const passwordWarning = document.getElementById('passwordLengthWarning');
 
@@ -558,6 +567,10 @@
         let serverErrorEmail = hasFormErrors;
         let serverErrorPassword = hasFormErrors;
 
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,10}$/.test(email);
+        }
+
         function validateInputs() {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
@@ -565,8 +578,25 @@
             const isEmailTooLong = email.length > 50;
             const isPasswordTooLong = password.length > 50;
 
-            const isEmailValid = email.length > 0 && !isEmailTooLong;
+            const isEmailValid = email.length > 0 && !isEmailTooLong && isValidEmail(email);
             const isPasswordValid = password.length > 0 && !isPasswordTooLong;
+
+            // Email length warning
+            if (email.length > 0 && isEmailTooLong) {
+                emailLabel.classList.add('ring-3', '!ring-red-600');
+                emailWarning.classList.remove('hidden');
+            } else {
+                emailWarning.classList.add('hidden');
+            }
+
+            // Email format warning
+            if (email.length > 0 && !isEmailTooLong && !isValidEmail(email)) {
+                emailLabel.classList.add('ring-3', '!ring-red-600');
+                emailFormatWarning.textContent = 'Invalid email format. Please check your email address.';
+                emailFormatWarning.classList.remove('hidden');
+            } else {
+                emailFormatWarning.classList.add('hidden');
+            }
 
             if (!serverErrorEmail) {
                 if (email.length > 0 && isEmailTooLong) {
@@ -639,9 +669,18 @@
         });
 
         form.addEventListener('submit', function (e) {
-            if (emailInput.value.length > 50 || passwordInput.value.length > 50) {
+            const email = emailInput.value.trim();
+            if (email.length > 50 || passwordInput.value.length > 50) {
                 e.preventDefault();
                 alert('Email or password exceeds the allowed length.');
+                return;
+            }
+            if (!isValidEmail(email)) {
+                e.preventDefault();
+                emailLabel.classList.add('ring-3', '!ring-red-600');
+                emailFormatWarning.textContent = 'Invalid email format. Please check your email address.';
+                emailFormatWarning.classList.remove('hidden');
+                return;
             }
             // Disable button to prevent multiple submissions
             signInButton.disabled = true;

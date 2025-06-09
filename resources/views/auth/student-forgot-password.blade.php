@@ -69,6 +69,9 @@
                         <div id="emailLengthWarning" class="w-full max-w-[380px] mx-auto px-4 text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden">
                             <p></p>
                         </div>
+                        <div id="emailFormatWarning" class="w-full max-w-[380px] mx-auto px-4 text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden">
+                            <p></p>
+                        </div>
                     </div>
 
                     @if (session('status'))
@@ -127,124 +130,131 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const emailInput = document.getElementById('emailInput');
-            const warningText = document.getElementById('emailLengthWarning');
-            const sendEmailBtn = document.getElementById('sendEmailBtn');
-            const emailLabel = document.getElementById('emailLabel');
-            const form = sendEmailBtn.closest('form');
+    const emailInput = document.getElementById('emailInput');
+    const warningText = document.getElementById('emailLengthWarning');
+    const formatWarning = document.getElementById('emailFormatWarning');
+    const sendEmailBtn = document.getElementById('sendEmailBtn');
+    const emailLabel = document.getElementById('emailLabel');
+    const form = sendEmailBtn.closest('form');
 
-            const COUNTDOWN_SECONDS = 60;
-            const STORAGE_KEY = 'emailResendTimestamp';
+    const COUNTDOWN_SECONDS = 60;
+    const STORAGE_KEY = 'emailResendTimestamp';
 
-            // Validate email format
-            function validateEmail(email) {
-                const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return pattern.test(email);
-            }
+    // Validate email format
+    function validateEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,10}$/.test(email);
+    }
 
-            // Countdown logic
-            function startCountdown(remainingSeconds) {
-                sendEmailBtn.disabled = true;
-                sendEmailBtn.textContent = `Resend Email (${remainingSeconds})`;
-
-                const interval = setInterval(() => {
-                    remainingSeconds--;
-                    sendEmailBtn.textContent = `Resend Email (${remainingSeconds})`;
-
-                    if (remainingSeconds <= 0) {
-                        clearInterval(interval);
-                        sendEmailBtn.disabled = false;
-                        sendEmailBtn.textContent = "Resend Email";
-                        localStorage.removeItem(STORAGE_KEY);
-                    }
-                }, 1000);
-            }
-
-            // On page load, check if a countdown should resume
-            const lastSent = localStorage.getItem(STORAGE_KEY);
-            if (lastSent) {
-                const elapsed = Math.floor((Date.now() - parseInt(lastSent)) / 1000);
-                const remaining = COUNTDOWN_SECONDS - elapsed;
-                if (remaining > 0) {
-                    startCountdown(remaining);
-                } else {
-                    localStorage.removeItem(STORAGE_KEY);
-                }
-            }
-
-            // Handle email length warning
-            emailInput.addEventListener('input', function () {
-                // Prevent spaces in email
-                emailInput.addEventListener('keydown', function (e) {
-                    if (e.key === ' ') e.preventDefault();
-                });
-                const email = emailInput.value.trim();
-                const isTooLong = email.length > 50;
-
-                if (isTooLong) {
-                    warningText.textContent = "*Email must not exceed 50 characters.";
-                    warningText.classList.remove('hidden');
-                    sendEmailBtn.disabled = true;
-
-                    emailLabel.classList.add('ring-3', !isTooLong);
-                    emailLabel.classList.add('!ring-red-600', !isTooLong);
-                } else {
-                    warningText.classList.add('hidden');
-
-                    emailLabel.classList.remove('ring-3', !isTooLong);
-                    emailLabel.classList.remove('!ring-red-600', !isTooLong);
-                    // Only enable the button if not in "Resend Email" mode
-                    if (!sendEmailBtn.textContent.includes("Resend Email")) {
-                        sendEmailBtn.disabled = false;
-                    }
-                }
-            });
-
-            emailInput.addEventListener('focus', function() {
-                emailLabel.classList.remove('ring-3', '!ring-red-600');
-            });
-
-            // Handle form submission (validate, but don't start countdown here)
-            form.addEventListener('submit', function (e) {
-                const email = emailInput.value.trim();
-                const invalidFormat = !validateEmail(email);
-
-                if (invalidFormat) {
-                    e.preventDefault();
-                    warningText.classList.remove('hidden');
-
-                    if (invalidFormat) {
-                        warningText.textContent = "*Please enter a valid email address format.";
-                    }
-
-                    emailLabel.classList.add('ring-3', invalidFormat);
-                    emailLabel.classList.add('!ring-red-600', invalidFormat);
-
-                    sendEmailBtn.disabled = false;
-                    return;
-                }
-
-                sendEmailBtn.disabled = true;
-                sendEmailBtn.textContent = "Processing...";
-
-                // Show loader
-                document.getElementById('loader').classList.toggle('hidden');
-                document.getElementById('loader').classList.toggle('flex');
-            });
-
-            // Start countdown ONLY if backend confirms email sent
-            const sentFlag = document.getElementById('emailSentFlag');
-            if (sentFlag && sentFlag.dataset.sent === 'true') {
-                const now = Date.now();
-                localStorage.setItem(STORAGE_KEY, now.toString());
-                startCountdown(COUNTDOWN_SECONDS);
-            }
-
-             // Initial server-side red rings
-            if (hasFormErrors === true || hasFormErrors === 'true') {
-                emailLabel.classList.add('ring-3', '!ring-red-600');
-            }
+    // Handle email input for length and format
+    emailInput.addEventListener('input', function () {
+        // Prevent spaces in email
+        emailInput.addEventListener('keydown', function (e) {
+            if (e.key === ' ') e.preventDefault();
         });
+        const email = emailInput.value.trim();
+        const isTooLong = email.length > 50;
+        const isFormatInvalid = email.length > 0 && !isTooLong && !validateEmail(email);
+
+        // Length warning
+        if (isTooLong) {
+            warningText.textContent = "*Email must not exceed 50 characters.";
+            warningText.classList.remove('hidden');
+            emailLabel.classList.add('ring-3', '!ring-red-600');
+        } else {
+            warningText.classList.add('hidden');
+            emailLabel.classList.remove('ring-3', '!ring-red-600');
+        }
+
+        // Format warning
+        if (isFormatInvalid) {
+            formatWarning.querySelector('p').textContent = "*Invalid email format. Please check your email address.";
+            formatWarning.classList.remove('hidden');
+            emailLabel.classList.add('ring-3', '!ring-red-600');
+        } else {
+            formatWarning.classList.add('hidden');
+            if (!isTooLong) emailLabel.classList.remove('ring-3', '!ring-red-600');
+        }
+
+        // Enable/disable button
+        sendEmailBtn.disabled = isTooLong || isFormatInvalid || email.length === 0;
+    });
+
+    emailInput.addEventListener('focus', function() {
+        emailLabel.classList.remove('ring-3', '!ring-red-600');
+    });
+
+    // Handle form submission (validate, but don't start countdown here)
+    form.addEventListener('submit', function (e) {
+        const email = emailInput.value.trim();
+        const isTooLong = email.length > 50;
+        const isFormatInvalid = !validateEmail(email);
+
+        if (isTooLong || isFormatInvalid) {
+            e.preventDefault();
+            if (isTooLong) {
+                warningText.textContent = "*Email must not exceed 50 characters.";
+                warningText.classList.remove('hidden');
+            }
+            if (isFormatInvalid) {
+                formatWarning.querySelector('p').textContent = "*Invalid email format. Please check your email address.";
+                formatWarning.classList.remove('hidden');
+            }
+            emailLabel.classList.add('ring-3', '!ring-red-600');
+            sendEmailBtn.disabled = false;
+            return;
+        }
+
+        sendEmailBtn.disabled = true;
+        sendEmailBtn.textContent = "Processing...";
+
+        // Show loader
+        document.getElementById('loader').classList.toggle('hidden');
+        document.getElementById('loader').classList.toggle('flex');
+    });
+
+    // Countdown logic
+    function startCountdown(remainingSeconds) {
+        sendEmailBtn.disabled = true;
+        sendEmailBtn.textContent = `Resend Email (${remainingSeconds})`;
+
+        const interval = setInterval(() => {
+            remainingSeconds--;
+            sendEmailBtn.textContent = `Resend Email (${remainingSeconds})`;
+
+            if (remainingSeconds <= 0) {
+                clearInterval(interval);
+                sendEmailBtn.disabled = false;
+                sendEmailBtn.textContent = "Resend Email";
+                localStorage.removeItem(STORAGE_KEY);
+            }
+        }, 1000);
+    }
+
+    // On page load, check if a countdown should resume
+    const lastSent = localStorage.getItem(STORAGE_KEY);
+    if (lastSent) {
+        const elapsed = Math.floor((Date.now() - parseInt(lastSent)) / 1000);
+        const remaining = COUNTDOWN_SECONDS - elapsed;
+        if (remaining > 0) {
+            startCountdown(remaining);
+        } else {
+            localStorage.removeItem(STORAGE_KEY);
+        }
+    }
+
+    // Start countdown ONLY if backend confirms email sent
+    const sentFlag = document.getElementById('emailSentFlag');
+    if (sentFlag && sentFlag.dataset.sent === 'true') {
+        const now = Date.now();
+        localStorage.setItem(STORAGE_KEY, now.toString());
+        startCountdown(COUNTDOWN_SECONDS);
+    }
+
+     // Initial server-side red rings
+    if (hasFormErrors === true || hasFormErrors === 'true') {
+        emailLabel.classList.add('ring-3', '!ring-red-600');
+    }
+});
 
         let isDirty = false;
         const emailInput = document.getElementById('emailInput');
@@ -264,7 +274,6 @@
 
          let isSafeExit = false;
 
-    // Mark exit as safe when user clicks "Back to Login"
     document.getElementById('backToLogin').addEventListener('click', function (e) {
     e.preventDefault();
 
@@ -273,7 +282,7 @@
         modal.classList.remove('hidden');
     } else {
         // If not dirty, navigate immediately without modal
-        isSafeExit = true; // mark as safe exit to skip beforeunload
+        isSafeExit = true;
         window.location.href = "{{ route('student.login') }}";
     }
 });
