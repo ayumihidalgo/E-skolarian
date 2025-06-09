@@ -397,10 +397,10 @@ document.addEventListener('DOMContentLoaded', function () {
     if (customRoleName) {
         let customRoleTimeout;
         customRoleName.addEventListener('input', function() {
-            // Remove extra spaces and special characters
+            // Update regex to allow letters, spaces and hyphens
             this.value = this.value
                 .replace(/^\s+/, '')
-                .replace(/[^a-zA-Z\s]/g, '')
+                .replace(/[^a-zA-Z\s-]/g, '') // Changed regex to allow hyphens
                 .replace(/\s+/g, ' ');
 
             // Clear previous timeout
@@ -970,14 +970,13 @@ function truncateOrgName(name, acronym, maxLength = 55) {
         const customRole = customRoleName.value.trim();
         const MAX_ROLE_LENGTH = 50;
 
-        // Check if custom role name is provided
         if (customRole === '') {
             showCustomRoleNameError('Role name cannot be empty');
             return false;
         }
 
-        if (customRole.startsWith(' ')) {
-            showCustomRoleNameError('Role name cannot start with a space');
+        if (customRole.startsWith(' ') || customRole.startsWith('-')) {
+            showCustomRoleNameError('Role name cannot start with a space or hyphen');
             return false;
         }
 
@@ -991,8 +990,8 @@ function truncateOrgName(name, acronym, maxLength = 55) {
             return false;
         }
 
-        if (!/^[a-zA-Z\s]+$/.test(customRole)) {
-            showCustomRoleNameError('Role name can only contain letters and spaces');
+        if (!/^[a-zA-Z\s-]+$/.test(customRole)) { // Updated regex to allow hyphens
+            showCustomRoleNameError('Role name can only contain letters, spaces, and hyphens');
             return false;
         }
 
