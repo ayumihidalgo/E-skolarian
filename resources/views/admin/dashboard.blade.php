@@ -107,7 +107,7 @@
                                                                 `{{ $announcement->deadline ? \Carbon\Carbon::parse($announcement->deadline)->format('Y-m-d') : '' }}`,
                                                                 `{{ $announcement->deadline ? \Carbon\Carbon::parse($announcement->deadline)->format('H:i') : '' }}`,
                                                                 `{{ $announcement->audience ?? 'all' }}`,
-                                                                {!! json_encode($announcement->audience_students ?? []) !!}
+                                                                '{{ htmlspecialchars(json_encode($announcement->audience_students ?? []), ENT_QUOTES, "UTF-8") }}'
                                                             )"
                                                             type="button">
                                                             Edit
@@ -453,6 +453,10 @@
                 <input type="hidden" id="editAnnouncementId" name="id">
                 <input type="hidden" id="originalTitle">
                 <input type="hidden" id="originalContent">
+                <input type="hidden" id="originalScheduleDate">
+                <input type="hidden" id="originalScheduleTime">
+                <input type="hidden" id="originalAudience">
+                <input type="hidden" id="originalAudienceStudents">
                 <div class="mb-3">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
                     <input type="text" id="editTitle" name="title" maxlength="60"
@@ -700,12 +704,25 @@
         });
 
         // Open Edit Modal (now supports schedule and audience)
-        function openEditModal(id, title, content, scheduleDate = '', scheduleTime = '', audience = 'all', audienceStudents = []) {
+        function openEditModal(id, title, content, scheduleDate = '', scheduleTime = '', audience = 'all', audienceStudents = '[]') {
+            // Always parse audienceStudents as JSON
+            try {
+                audienceStudents = JSON.parse(audienceStudents) || [];
+            } catch {
+                audienceStudents = [];
+            }
+
             document.getElementById('editAnnouncementId').value = id;
             document.getElementById('editTitle').value = title;
             document.getElementById('editContent').value = content;
             document.getElementById('originalTitle').value = title;
             document.getElementById('originalContent').value = content;
+
+            // Store original schedule and audience
+            document.getElementById('originalScheduleDate').value = scheduleDate || '';
+            document.getElementById('originalScheduleTime').value = scheduleTime || '';
+            document.getElementById('originalAudience').value = audience;
+            document.getElementById('originalAudienceStudents').value = JSON.stringify(audienceStudents);
 
             // Schedule
             const scheduleCheckbox = document.getElementById('editScheduleCheckbox');
@@ -755,7 +772,46 @@
             const currentTitle = document.getElementById('editTitle').value.trim();
             const currentContent = document.getElementById('editContent').value.trim();
 
-            if (originalTitle === currentTitle && originalContent === currentContent) {
+            const originalScheduleDate = document.getElementById('originalScheduleDate').value;
+            const originalScheduleTime = document.getElementById('originalScheduleTime').value;
+            const currentScheduleCheckbox = document.getElementById('editScheduleCheckbox').checked;
+            const currentScheduleDate = document.getElementById('editScheduleDate').value;
+            const currentScheduleTime = document.getElementById('editScheduleTime').value;
+
+            const originalAudience = document.getElementById('originalAudience').value;
+            const originalAudienceStudents = JSON.parse(document.getElementById('originalAudienceStudents').value || '[]');
+            const currentAudience = document.getElementById('editAudienceAll').checked ? 'all' : 'custom';
+            const currentAudienceStudents = Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb => cb.value);
+
+            // Compare schedule
+            let scheduleChanged = false;
+            if (originalScheduleDate || currentScheduleDate) {
+                scheduleChanged = (
+                    (originalScheduleDate !== currentScheduleDate) ||
+                    (originalScheduleTime !== currentScheduleTime) ||
+                    (Boolean(originalScheduleDate) !== currentScheduleCheckbox)
+                );
+            }
+
+            // Compare audience
+            let audienceChanged = false;
+            if (originalAudience !== currentAudience) {
+                audienceChanged = true;
+            } else if (currentAudience === 'custom') {
+                // Compare arrays
+                const orig = originalAudienceStudents.slice().sort();
+                const curr = currentAudienceStudents.slice().sort();
+                if (orig.length !== curr.length || !orig.every((v, i) => v == curr[i])) {
+                    audienceChanged = true;
+                }
+            }
+
+            if (
+                originalTitle === currentTitle &&
+                originalContent === currentContent &&
+                !scheduleChanged &&
+                !audienceChanged
+            ) {
                 e.preventDefault();
                 const toast = document.getElementById('NoChangeToast');
                 toast.style.display = 'flex';
