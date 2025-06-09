@@ -1,11 +1,11 @@
-@extends('base')
-
+@extends('base')<!-- Extend the base component -->
 @section('content')
     <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-    @include('components.studentSideBarComponent')
-    <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
-        @include('components.studentNavBarComponent')
+    <!-- Content section -->
+    <!-- This is the main content area for the super admin dashboard -->
+    @include('components.superAdminNavigation')
+    <div id="main-content" class="flex flex-col min-h-screen transition-all duration-300 bg-[#F2F4F7]">
         <div class="flex-grow mb-10">
             @if (session('success'))
                 <div id="Toast"
@@ -55,10 +55,10 @@
                         </button>
 
                     </div>
-                    <div>
-                        <h3 class="text-3xl font-black tracking-wider font-['Lexend']">{{ strtoupper($user->username) }}
+                    <div class="flex flex-col justify-end h-full">
+                        <h3 class="text-3xl mb-4 font-black tracking-wider font-['Lexend']">
+                            {{ strtoupper($user->role_name) }}
                         </h3>
-                        <p class="uppercase text-lg tracking-wider font-semibold font-['Lexend']">{{ $user->role_name }}</p>
                         <div id="" class="mt-2 text-sm relative flex items-center gap-7">
                             <div
                                 class="flex items-center min-w-[300px] gap-4 px-4 py-3 bg-[#F2F4F7] rounded-xl border border-gray-200">
@@ -107,8 +107,54 @@
                             </div>
                             <div class="flex items-center justify-end w-1/3">
                                 <button
-                                    class="border px-5 py-2 border-red-950 font-regular cursor-pointer  rounded-xl text-red-950 text-base hover:bg-red-800 hover:border-red-800 hover:text-white transition-colors duration-300"
+                                    class="border px-5 py-2 border-red-950 font-regular cursor-pointer rounded-xl text-white bg-red-950 text-base hover:bg-red-800 hover:border-red-800 hover:text-white transition-colors duration-300"
                                     onclick="openChangePasswordModal()">Change</button>
+                            </div>
+                        </div>
+                        <!-- Primary Email -->
+                        <div class="border w-full flex px-4 py-4 rounded-2xl">
+                            <div class="flex items-center gap-4 w-1/3">
+                                <img src="{{ asset('images/Smail.svg') }}" class="w-6 h-6" alt="email icon">
+                                <p class="font-['Lexend'] text-base">Primary Email</p>
+                            </div>
+                            <div class="flex flex-col items-center justify-center w-1/3 text-center">
+                                @if (!empty($user->email))
+                                    <p class="text-black font-['Lexend'] text-base flex items-center gap-2">
+
+                                        <span class="relative group">
+                                            <i class="fas fa-info-circle text-red-600 w-4 h-4 cursor-pointer"></i>
+                                            <span
+                                                class="absolute left-8 top-2 z-20 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-4 py-2 whitespace-normal font-normal shadow-2xl max-w-2xl min-w-[300px]">
+                                                For your security and to ensure you receive important system notifications,
+                                                please update your primary email if it is outdated or incorrect.
+                                            </span>
+                                        </span>
+                                        {{ $user->email }}
+                                    </p>
+                                @else
+                                    <p class="text-red-600 font-['Lexend'] text-base flex items-center gap-2">
+                                        <span class="relative group">
+                                            <i class="fas fa-info-circle text-red-600 w-4 h-4 cursor-pointer"></i>
+                                            <span
+                                                class="absolute left-6 top-1 z-10 hidden group-hover:block bg-gray-800 text-white text-sm rounded px-2 py-1 whitespace-nowrap font-normal shadow-lg">
+                                                Add a recovery email to help you reset your password if you lose access to
+                                                your main email.
+                                            </span>
+                                        </span>
+                                        Not Configured
+                                    </p>
+                                @endif
+                            </div>
+                            <div class="flex items-center justify-end w-1/3">
+                                @if (!empty($user->recovery_email))
+                                    <button
+                                        class="border px-5 py-2 border-red-950 font-regular cursor-pointer  rounded-xl text-red-950 text-base hover:bg-red-800 hover:border-red-800 hover:text-white transition-colors duration-300"
+                                        onclick="openPreRemoveRecoveryEmailModal()">Remove</button>
+                                @else
+                                    <button
+                                        class="border px-5 py-2 border-red-950 font-regular cursor-pointer rounded-xl text-white bg-red-950 text-base hover:bg-red-800 hover:border-red-800 hover:text-white transition-colors duration-300"
+                                        onclick="openRecoveryEmail()">Change</button>
+                                @endif
                             </div>
                         </div>
                         <!-- Recovery Email -->
@@ -335,7 +381,7 @@
             </div>
             <div class="flex justify-end p-6 gap-4">
                 @if ($user->profile_pic != null)
-                    <form action="{{ route('student.settings.remove-profile-picture') }}" method="POST">
+                    <form action="{{ route('superadmin.settings.remove-profile-picture') }}" method="POST">
                         @csrf
                         <input type="hidden" name="profile_image" value="{{ $user->profile_pic }}">
                     </form>
@@ -381,7 +427,7 @@
                     class="w-56">
             </div>
             <!-- Buttons -->
-            <form id="uploadForm" action="{{ route('student.settings.update-profile-picture') }}" method="POST"
+            <form id="uploadForm" action="{{ route('superadmin.settings.update-profile-picture') }}" method="POST"
                 enctype="multipart/form-data" class="w-full flex justify-end items-center py-6 px-4">
                 @csrf
                 <input type="hidden" name="profile_image_base64" id="profileImageBase64">
@@ -471,7 +517,7 @@
                         <i class="text-xl fas fa-times"></i></button>
                 </div>
             </div>
-            <form id="changePasswordForm" action="{{ route('student.settings.change-password') }}" method="POST"
+            <form id="changePasswordForm" action="{{ route('superadmin.settings.change-password') }}" method="POST"
                 class="px-6 pb-6 space-y-5">
                 @csrf
                 <div class="relative">
@@ -615,7 +661,7 @@
         <div class="bg-white rounded-2xl w-[545] shadow-xl relative p-6">
             <h2 class="text-lg font-semibold font-['Lexend'] mb-4">Password Changed Successfully</h2>
             <p class="text-sm text-gray-600 mb-6">Your password has been updated. Please log in again to continue.</p>
-            <form method="POST" action="{{ route('student.logout') }}" class="mt-4 flex justify-end">
+            <form method="POST" action="{{ route('superadmin.logout') }}" class="mt-4 flex justify-end">
                 @csrf
                 <button type="submit"
                     class="px-4 py-2 bg-red-900 text-white font-['Lexend'] rounded-lg hover:bg-red-800 transition duration-200 cursor-pointer">
@@ -656,20 +702,20 @@
             modal.classList.add('hidden');
             modal.style.display = 'none';
         }
-        
+
         document.addEventListener('DOMContentLoaded', function() {
             // Check if we need to show toast after page reload
             const pendingToast = sessionStorage.getItem('pendingToast');
             if (pendingToast) {
                 const toastData = JSON.parse(pendingToast);
                 sessionStorage.removeItem('pendingToast'); // Clear it immediately
-                
+
                 // Show toast after a brief delay to ensure page is fully loaded
                 setTimeout(() => {
                     showToast(toastData.title, toastData.message);
                 }, 100);
             }
-            
+
             const verifyBtn = document.querySelector(
                 '#codeVerificationForm button[onclick="verifyRecoveryCode()"]');
             const verifySpinner = document.createElement('span');
@@ -710,7 +756,7 @@
                 verifySpinner.classList.remove('hidden');
                 verifyBtnText.textContent = 'Verifying...';
 
-                const verifyPromise = fetch('{{ route('student.settings.verifyRecoveryCode') }}', {
+                const verifyPromise = fetch('{{ route('superadmin.settings.verifyRecoveryCode') }}', {
                         method: 'POST',
                         credentials: 'same-origin',
                         headers: {
@@ -730,13 +776,13 @@
                             isDirty = false;
                             document.getElementById('recoveryEmailModal').classList.add('hidden');
                             document.getElementById('recoveryEmailModal').style.display = 'none';
-                            
+
                             // Store toast data in sessionStorage before reload
                             sessionStorage.setItem('pendingToast', JSON.stringify({
                                 title: 'Recovery Email Verified!',
                                 message: 'Your recovery email has been verified successfully.'
                             }));
-                            
+
                             // Reload immediately - toast will show after reload
                             window.location.reload();
                         } else {
@@ -787,7 +833,7 @@
                 }, 4000);
             };
         });
-        
+
         document.getElementById('recoveryEmailForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -800,7 +846,7 @@
             spinner.classList.remove('hidden');
             btnText.textContent = 'Sending...';
 
-            fetch('{{ route('student.settings.sendRecoveryCode') }}', {
+            fetch('{{ route('superadmin.settings.sendRecoveryCode') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -827,7 +873,7 @@
 
         function verifyRecoveryCode() {
             const code = document.getElementById('verification_code').value;
-            fetch('{{ route('student.settings.verifyRecoveryCode') }}', {
+            fetch('{{ route('superadmin.settings.verifyRecoveryCode') }}', {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -887,7 +933,7 @@
             resendBtn.addEventListener('click', function() {
                 resendBtn.disabled = true;
                 resendBtn.textContent = 'Resending...';
-                fetch('{{ route('student.settings.sendRecoveryCode') }}', {
+                fetch('{{ route('superadmin.settings.sendRecoveryCode') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -1039,49 +1085,51 @@
             let ignoreNextBeforeUnload = false;
 
             function checkDirty() {
-            // Only dirty if user has typed in the input or is in code verification form
-            if (codeVerificationForm && !codeVerificationForm.classList.contains('hidden')) {
-                return true;
-            }
-            if (recoveryEmailInput && recoveryEmailInput.value.trim() !== '') {
-                return true;
-            }
-            return false;
+                // Only dirty if user has typed in the input or is in code verification form
+                if (codeVerificationForm && !codeVerificationForm.classList.contains('hidden')) {
+                    return true;
+                }
+                if (recoveryEmailInput && recoveryEmailInput.value.trim() !== '') {
+                    return true;
+                }
+                return false;
             }
 
             // Listen for input changes
             recoveryEmailInput.addEventListener('input', function() {
-            isDirty = checkDirty();
+                isDirty = checkDirty();
             });
 
             // When switching forms, temporarily ignore beforeunload for this event loop
             const observer = new MutationObserver(() => {
-            // If switching to code verification form, ignore beforeunload for this tick
-            if (!codeVerificationForm.classList.contains('hidden')) {
-                ignoreNextBeforeUnload = true;
-                setTimeout(() => { ignoreNextBeforeUnload = false; }, 100);
-            }
-            isDirty = checkDirty();
+                // If switching to code verification form, ignore beforeunload for this tick
+                if (!codeVerificationForm.classList.contains('hidden')) {
+                    ignoreNextBeforeUnload = true;
+                    setTimeout(() => {
+                        ignoreNextBeforeUnload = false;
+                    }, 100);
+                }
+                isDirty = checkDirty();
             });
             observer.observe(codeVerificationForm, {
-            attributes: true,
-            attributeFilter: ['class']
+                attributes: true,
+                attributeFilter: ['class']
             });
 
             // Prevent leaving if isDirty, but not on form switch
             window.addEventListener('beforeunload', function(e) {
-            if (isDirty && !ignoreNextBeforeUnload) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
+                if (isDirty && !ignoreNextBeforeUnload) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
             });
 
             // Reset isDirty when modal is closed and fields are cleared
             window.closeRecoveryEmailModal = (function(orig) {
-            return function() {
-                isDirty = false;
-                if (typeof orig === 'function') orig();
-            };
+                return function() {
+                    isDirty = false;
+                    if (typeof orig === 'function') orig();
+                };
             })(window.closeRecoveryEmailModal);
         });
 
@@ -1110,7 +1158,7 @@
             document.getElementById('confirmRemoveRecoveryEmailBtn').disabled = true;
 
             // Send code to recovery email
-            fetch('{{ route('student.settings.sendRecoveryCode') }}', {
+            fetch('{{ route('superadmin.settings.sendRecoveryCode') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1203,7 +1251,7 @@
         document.getElementById('removeResendCodeBtn').addEventListener('click', function() {
             this.disabled = true;
             this.textContent = 'Resending...';
-            fetch('{{ route('student.settings.sendRecoveryCode') }}', {
+            fetch('{{ route('superadmin.settings.sendRecoveryCode') }}', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1234,7 +1282,7 @@
                 }
             }
         });
-        
+
         document.getElementById('removeRecoveryEmailForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const btn = document.getElementById('confirmRemoveRecoveryEmailBtn');
@@ -1244,7 +1292,7 @@
             spinner.classList.remove('hidden');
             btnText.textContent = 'Verifying...';
 
-            fetch('{{ route('student.settings.removeRecoveryEmail') }}', {
+            fetch('{{ route('superadmin.settings.removeRecoveryEmail') }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1261,13 +1309,13 @@
                         isRemoveDirty = false;
                         document.getElementById('removeRecoveryEmailModal').classList.add('hidden');
                         document.getElementById('removeRecoveryEmailModal').style.display = 'none';
-                        
+
                         // Store toast data in sessionStorage before reload
                         sessionStorage.setItem('pendingToast', JSON.stringify({
                             title: 'Recovery Email Removed!',
                             message: 'Your recovery email has been unlinked from your account.'
                         }));
-                        
+
                         // Reload immediately - toast will show after reload
                         window.location.reload();
                     } else {
@@ -1283,7 +1331,7 @@
                     btnText.textContent = 'Confirm Remove';
                 });
         });
-        
+
         document.addEventListener('DOMContentLoaded', function() {
             const removeRecoveryEmailModal = document.getElementById('removeRecoveryEmailModal');
             const removeCodeInput = document.getElementById('removeVerificationCode');
@@ -1331,5 +1379,3 @@
         });
     </script>
 @endsection
-
-
