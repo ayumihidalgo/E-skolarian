@@ -128,7 +128,7 @@
     @endphp
 </head>
 
-@include('loading');
+@include('loading')
 <body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] md:bg-[var(--secondary-color)] font-['Manrope'] font-bold">
     <div id="bgA" class="fixed inset-0 z-0 transition-all duration-1000 ease-in-out opacity-100" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: center;"></div>
     <div id="bgB" class="fixed inset-0 z-0 transition-opacity duration-1000 ease-in-out opacity-0"></div>
@@ -1026,6 +1026,16 @@
     function closeErrorModal() {
         document.getElementById('errorModal').classList.add('hidden');
     }
+
+    // Hide loader on bfcache restore
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }
+    });
 </script>
 
     </body>

@@ -600,6 +600,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 1000);
 });
 
+
 function termModal() {
     document.getElementById('termsModal').classList.remove('hidden');
     document.getElementById('termsModal').classList.add('flex');
@@ -609,6 +610,16 @@ function privacyModal() {
     document.getElementById('privacyModal').classList.remove('hidden');
     document.getElementById('privacyModal').classList.add('flex');
 }
+
+// Hide loader on bfcache restore
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        const loader = document.getElementById('loader');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+    }
+});
 </script>
 
     </body>

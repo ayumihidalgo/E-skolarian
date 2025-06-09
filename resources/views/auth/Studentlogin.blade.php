@@ -1032,6 +1032,16 @@ function closeErrorModal() {
         isSafeExit = true;
     });
 
+    // Hide loader on bfcache restore
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }
+    });
+
 </script>
 </body>
 </html>

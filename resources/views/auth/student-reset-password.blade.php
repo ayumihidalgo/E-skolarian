@@ -97,7 +97,7 @@
     </script>
 </head>
 
-@include('loading');
+@include('loading')
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
     {{-- Modal for expired token --}}
     @if (!empty($tokenExpired) && $tokenExpired)
@@ -422,6 +422,16 @@
     const form = document.querySelector('form');
     form.addEventListener('submit', function () {
         window.isSafeExit = true;
+    });
+
+    // Hide loader on bfcache restore
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }
     });
 
         </script>
