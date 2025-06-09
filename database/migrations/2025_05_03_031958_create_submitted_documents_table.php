@@ -16,8 +16,15 @@ return new class extends Migration
             $table->foreignId('received_by')->constrained('users')->onDelete('cascade');
             $table->id();
             $table->string('subject');
-            $table->text('summary')->nullable();
-            $table->enum('type', ['Event Proposal','General Plan of Activities','Calendar of Activities','Accomplishment Report','Constitution and By-Laws','Request Letter','Off Campus','Petition and Concern','Others']);
+            $table->text('overview');
+            $table->string('academic_year');
+            $table->string('venue')->nullable();
+            $table->timestamp('proposed_date_time')->nullable();
+            $table->integer('hours')->nullable();
+            $table->string('attendees')->nullable();
+            $table->enum('attendees_range', ['10-50', '50-100', '100-250', '250-500', 'Above 500'])->nullable();
+            $table->float('fees')->nullable();
+            $table->string('type');
             $table->string('control_tag')->unique()->default('AUTO');
             $table->enum('status', ['Pending', 'Under Review', 'Approved', 'Returned'])->default('Pending');
             $table->timestamps();

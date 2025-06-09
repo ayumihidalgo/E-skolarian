@@ -56,9 +56,8 @@
 
                     </div>
                     <div>
-                        <h3 class="text-3xl font-black tracking-wider font-['Lexend']">{{ strtoupper($user->username) }}
+                        <h3 class="text-3xl font-black  tracking-wider font-['Lexend']">{{ strtoupper($user->role_name) }}
                         </h3>
-                        <p class="uppercase text-lg tracking-wider font-semibold font-['Lexend']">{{ $user->role_name }}</p>
                         <div id="" class="mt-2 text-sm relative flex items-center gap-7">
                             <div
                                 class="flex items-center min-w-[300px] gap-4 px-4 py-3 bg-[#F2F4F7] rounded-xl border border-gray-200">
@@ -127,7 +126,7 @@
                                         <span class="relative group">
                                             <i class="fas fa-info-circle text-red-600 w-4 h-4 cursor-pointer"></i>
                                             <span
-                                                class="absolute left-6 top-1 z-10 hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 whitespace-nowrap font-normal shadow-lg">
+                                                class="absolute left-8 top-2 z-20 hidden group-hover:block bg-gray-800 text-white text-xs rounded-lg px-4 py-2 whitespace-normal font-normal shadow-2xl max-w-2xl min-w-[300px]">
                                                 Add a recovery email to help you reset your password if you lose access to
                                                 your main email.
                                             </span>
@@ -161,8 +160,7 @@
     <!-- Add Recovery Email Modal -->
     <div id="recoveryEmailModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
         <div class="bg-white rounded-2xl w-full max-w-md shadow-xl relative space-y-2">
-
-            <form id="recoveryEmailForm" action="" method="POST" class="px-6 pb-6 space-y-3">
+            <form id="recoveryEmailForm" action="POST" method="POST" class="px-6 pb-6 space-y-3">
                 <div class="w-full flex justify-between pt-5 gap-10">
                     <h2 class="text-xl font-semibold font-['Lexend']">Add Recovery Email</h2>
                     <div class="top-2 right-2">
@@ -183,7 +181,7 @@
                 <div class="mt-5">
                     <h3 class="font-normal text-sm text-gray-600">Important:</h3>
                     <ul class="list-disc ml-6 space-y-1 font-normal text-sm text-gray-600">
-                        <li> Use an email you have regular access to</li>
+                        <li> Use an email you have regular access to</li>
                         <li>Don't use the same email as your main account</li>
                         <li>We'll send a verification code to confirm</li>
                     </ul>
@@ -232,7 +230,7 @@
                     </div>
                 </div>
                 <div class="pb-1">
-                    <p class="text-xs text-gray-600"><strong>Didn't receive the code?</strong> Check your spam folder or
+                    <p class="text-xs text-gray-600"><strong>Didn't receive the code?</strong> Check your spam folder or
                         make sure the email address is
                         correct.</p>
                 </div>
@@ -283,7 +281,7 @@
                         class="font-semibold">{{ $user->recovery_email }}</span> to confirm this action.
                 </p>
                 <div class="relative space-y-2">
-                    <input type="text" id="remove_verification_code"
+                    <input type="text" id="removeVerificationCode"
                         placeholder="Enter the 6-digit code sent to your email"
                         class="border rounded-lg w-full px-4 py-2 pr-32 placeholder:text-black placeholder:text-[14px] placeholder:font-[Lexend]" />
                     <div id="removeCodeError" class="text-red-500 text-xs font-['Lexend']"></div>
@@ -571,6 +569,46 @@
             </div>
         </div>
     </div>
+    <div id="leaveWithoutSavingRevModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-100">
+        <div class="bg-white rounded-2xl w-[545px]  shadow-xl relative space-y-4">
+            <div class="w-full flex justify-between pt-5 px-5">
+                <h2 class="text-lg font-semibold font-['Lexend']">Discard Changes?</h2>
+            </div>
+            <div class="px-6 pb-6">
+                <p class="text-sm text-gray-600 pb-3">You have unsaved changes. Are you sure you want to leave without
+                    saving?
+                </p>
+                <div class="flex justify-end gap-4 mt-4">
+                    <button type="button" onclick="closeUnsavedRevModal()"
+                        class="rounded-lg text-gray-900 font-medium border-1 border-gray-300 px-4 py-2 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Close
+                        without saving</button>
+                    <button type="button" onclick="keepRevEditing()"
+                        class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">Keep
+                        editing</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="leaveWithoutSavingRevRemoveModal" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-100">
+        <div class="bg-white rounded-2xl w-[545px]  shadow-xl relative space-y-4">
+            <div class="w-full flex justify-between pt-5 px-5">
+                <h2 class="text-lg font-semibold font-['Lexend']">Discard Changes?</h2>
+            </div>
+            <div class="px-6 pb-6">
+                <p class="text-sm text-gray-600 pb-3">You have unsaved changes. Are you sure you want to leave without
+                    saving?
+                </p>
+                <div class="flex justify-end gap-4 mt-4">
+                    <button type="button" onclick="closeUnsavedRevRemoveModal()"
+                        class="rounded-lg text-gray-900 font-medium border-1 border-gray-300 px-4 py-2 text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Close
+                        without saving</button>
+                    <button type="button" onclick="keepRevRemoveEditing()"
+                        class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">Keep
+                        editing</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Success Modal -->
     <div id="successModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-100">
         <div class="bg-white rounded-2xl w-[545] shadow-xl relative p-6">
@@ -591,544 +629,9 @@
         }
     </style>
     <!-- Change Password Script -->
-    <script>
-        const changePasswordButton = document.getElementById('changePasswordButton');
-        const currentPasswordInput = document.getElementById('current_password');
-        const newPasswordInput = document.getElementById('new_password');
-        const confirmPasswordInput = document.getElementById('new_password_confirmation');
-
-        let isFormDirty = false;
-        let isSubmitting = false;
-
-        // Mark form as dirty if any field is changed
-        [currentPasswordInput, newPasswordInput, confirmPasswordInput].forEach(input => {
-            input.addEventListener('input', () => {
-                isFormDirty = currentPasswordInput.value !== '' ||
-                    newPasswordInput.value !== '' ||
-                    confirmPasswordInput.value !== '';
-            });
-        });
-
-        // Mark as submitting when form is submitted
-        document.getElementById('changePasswordForm').addEventListener('submit', () => {
-            isSubmitting = true;
-        });
-
-        // Warn user if trying to leave with unsaved changes
-        window.addEventListener('beforeunload', function(e) {
-            if (isFormDirty && !isSubmitting) {
-                e.preventDefault();
-                e.returnValue = ''; // Required for Chrome and modern browsers
-            }
-        });
-
-        // Optional: Reset flags after modal closes
-        function resetDirtyFlags() {
-            isFormDirty = false;
-            isSubmitting = false;
-        }
-
-        const checkIcon = `<span style="color: #16a34a; font-weight: bold;">&#10003;</span>&nbsp;`;
-        const bulletIcon = `•&nbsp;`;
-
-        function updatePasswordRequirements(password) {
-            // Requirement checks
-            const hasMinLength = password.length >= 8;
-            const hasNumber = /\d/.test(password);
-            const hasLower = /[a-z]/.test(password);
-            const hasUpper = /[A-Z]/.test(password);
-            const hasSpecial = /[@$!%*?&#]/.test(password);
-            const noSpaces = !/\s/.test(password);
-
-            // Update checklist
-            document.getElementById('characterLimit').innerHTML = (hasMinLength ? checkIcon : bulletIcon) +
-                'Require at least 8 characters';
-            document.getElementById('oneNumber').innerHTML = (hasNumber ? checkIcon : bulletIcon) +
-                'Require at least one number';
-            document.getElementById('lowerCase').innerHTML = (hasLower ? checkIcon : bulletIcon) +
-                'Require at least one lower case letter';
-            document.getElementById('upperCase').innerHTML = (hasUpper ? checkIcon : bulletIcon) +
-                'Require at least one uppercase letter';
-            document.getElementById('specialCharacter').innerHTML = (hasSpecial ? checkIcon : bulletIcon) +
-                'Require at least one special character';
-            document.getElementById('noSpaces').innerHTML = (noSpaces ? checkIcon : bulletIcon) +
-                'Password cannot contain spaces';
-        }
-
-        // Attach event listener to new password input
-        newPasswordInput.addEventListener('input', function() {
-            updatePasswordRequirements(this.value);
-        });
-
-        function togglePassword(event, inputId) {
-            event.preventDefault();
-            const input = document.getElementById(inputId);
-            const showIcon = document.getElementById('showPass_' + inputId);
-            const hideIcon = document.getElementById('hidePass_' + inputId);
-            if (input.type === 'password') {
-                input.type = 'text';
-                showIcon.classList.add('hidden');
-                hideIcon.classList.remove('hidden');
-            } else {
-                input.type = 'password';
-                showIcon.classList.remove('hidden');
-                hideIcon.classList.add('hidden');
-            }
-        }
-        // Function to check if password meets requirements
-        function passwordMeetsRequirements(password) {
-            const hasMinLength = password.length >= 8;
-            const hasNumber = /\d/.test(password);
-            const hasLower = /[a-z]/.test(password);
-            const hasUpper = /[A-Z]/.test(password);
-            const hasSpecial = /[@$!%*?&#]/.test(password);
-            const noSpaces = !/\s/.test(password);
-            return hasMinLength && hasNumber && hasLower && hasUpper && hasSpecial && noSpaces;
-        }
-        // Function to toggle the button state based on input values
-        function toggleButtonState() {
-            const current = currentPasswordInput.value.trim();
-            const newPass = newPasswordInput.value.trim();
-            const confirm = confirmPasswordInput.value.trim();
-
-            if (
-                current &&
-                newPass &&
-                confirm &&
-                passwordMeetsRequirements(newPass)
-            ) {
-                changePasswordButton.disabled = false;
-            } else {
-                changePasswordButton.disabled = true;
-            }
-        }
-
-        currentPasswordInput.addEventListener('input', toggleButtonState);
-        newPasswordInput.addEventListener('input', toggleButtonState);
-        confirmPasswordInput.addEventListener('input', toggleButtonState);
-        // Initialize the change password modal
-        const changePasswordModal = document.getElementById('changePasswordModal');
-        const leaveWithoutSavingModal = document.getElementById('leaveWithoutSavingModal');
-        document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const form = e.target;
-            const formData = new FormData(form);
-
-            // Set button to loading state
-            changePasswordButton.disabled = true;
-            changePasswordButton.textContent = 'Changing...';
-
-            // Clear previous error messages and remove error borders
-            document.getElementById('currentPasswordError').textContent = '';
-            document.getElementById('newPasswordError').textContent = '';
-            document.getElementById('confirmPasswordError').textContent = '';
-            ['current_password', 'new_password', 'new_password_confirmation'].forEach(id => {
-                document.getElementById(id).classList.remove('border-red-500');
-            });
-            // Validate new password
-            const currentPassword = document.getElementById('current_password').value;
-            const newPassword = document.getElementById('new_password').value;
-
-            if (newPassword === currentPassword) {
-                document.getElementById('newPasswordError').textContent =
-                    'The new password cannot be the same as the current password.';
-                document.getElementById('new_password').classList.add('border-red-500');
-                resetButtonState();
-                return;
-            }
-
-            if (newPassword.trim() !== newPassword || /^\s*$/.test(newPassword)) {
-                document.getElementById('newPasswordError').textContent =
-                    'The new password cannot contain leading or trailing spaces or be all spaces.';
-                document.getElementById('new_password').classList.add('border-red-500');
-                resetButtonState();
-                return;
-            }
-
-            fetch(form.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Accept': 'application/json',
-                    },
-                    body: formData,
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(data => {
-                            if (data.errors) {
-                                // Display validation errors and add red border to fields with errors
-                                if (data.errors.current_password) {
-                                    // Customize the error message for current password
-                                    document.getElementById('currentPasswordError').textContent =
-                                        'Incorrect current password. Please try again.';
-                                    document.getElementById('current_password').classList.add(
-                                        'border-red-500');
-                                }
-                                if (data.errors.new_password) {
-                                    // Customize the error message for new password
-                                    document.getElementById('newPasswordError').textContent =
-                                        'The passwords do not match. Please confirm your new password.';
-                                    document.getElementById('new_password').classList.add(
-                                        'border-red-500');
-                                }
-                            }
-                            throw new Error('Validation failed');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Show success modal
-                    const successModal = document.getElementById('successModal');
-                    const changePasswordModal = document.getElementById('changePasswordModal');
-                    changePasswordModal.classList.add('hidden');
-                    changePasswordModal.style.display = 'none';
-                    successModal.classList.remove('hidden');
-                    successModal.style.display = 'flex';
-                    resetDirtyFlags()
-
-                })
-                .catch(error => {
-                    console.error(error);
-                })
-                .finally(() => {
-                    resetButtonState();
-                });
-        });
-
-        function resetButtonState() {
-            changePasswordButton.disabled = false;
-            changePasswordButton.textContent = 'Change Password';
-        }
-
-        // Automatically remove error messages and red borders on input
-        document.getElementById('current_password').addEventListener('input', function() {
-            document.getElementById('currentPasswordError').textContent = '';
-            this.classList.remove('border-red-500');
-        });
-
-        document.getElementById('new_password').addEventListener('input', function() {
-            document.getElementById('newPasswordError').textContent = '';
-            this.classList.remove('border-red-500');
-        });
-
-        document.getElementById('new_password_confirmation').addEventListener('input', function() {
-            document.getElementById('confirmPasswordError').textContent = '';
-            this.classList.remove('border-red-500');
-        });
-
-        function openChangePasswordModal() {
-            changePasswordModal.classList.remove('hidden');
-            changePasswordModal.style.display = 'flex';
-        }
-
-        function closeChangePasswordModal() {
-            if (document.getElementById('current_password').value === '' &&
-                document.getElementById('new_password').value === '' &&
-                document.getElementById('new_password_confirmation').value === '') {
-                changePasswordModal.classList.add('hidden');
-                changePasswordModal.style.display = 'none';
-                resetDirtyFlags();
-            } else {
-                leaveWithoutSavingModal.classList.remove('hidden');
-                leaveWithoutSavingModal.style.display = 'flex';
-            }
-        }
-
-        function closeUnsavedModal() {
-            changePasswordModal.classList.add('hidden');
-            changePasswordModal.style.display = 'none';
-            leaveWithoutSavingModal.classList.add('hidden');
-            leaveWithoutSavingModal.style.display = 'none';
-            changePasswordButton.disabled = true;
-            // Clear all input fields
-            document.getElementById('current_password').value = '';
-            document.getElementById('new_password').value = '';
-            document.getElementById('new_password_confirmation').value = '';
-
-            // Clear red borders
-            ['current_password', 'new_password', 'new_password_confirmation'].forEach(id => {
-                const input = document.getElementById(id);
-                input.classList.remove('input-error', 'border-red-500'); // remove both if you mix class styles
-            });
-
-            // Clear error messages
-            ['currentPasswordError', 'newPasswordError', 'confirmPasswordError'].forEach(errorId => {
-                const errorDiv = document.getElementById(errorId);
-                if (errorDiv) errorDiv.textContent = '';
-            });
-            resetDirtyFlags();
-        }
-
-        function keepEditing() {
-            leaveWithoutSavingModal.classList.add('hidden');
-            leaveWithoutSavingModal.style.display = 'none';
-        }
-    </script>
+    @vite(['resources/js/settings/changepassword.js'])
     <!-- Update profile Sript -->
-    <script>
-        function openProfilePreviewModal() {
-            const profilePreviewModal = document.getElementById('profilePreviewModal');
-            profilePreviewModal.classList.remove('hidden');
-            profilePreviewModal.style.display = 'flex';
-        }
-
-        function closeProfilePreviewModal() {
-            const profilePreviewModal = document.getElementById('profilePreviewModal');
-            profilePreviewModal.classList.add('hidden');
-            profilePreviewModal.style.display = 'none';
-        }
-        const input = document.getElementById('profileImageInput');
-        const modal = document.getElementById('imagePreviewModal');
-        const preview = document.getElementById('previewImage');
-        const base64Input = document.getElementById('profileImageBase64');
-        const zoomSlider = document.getElementById('zoomRange');
-        const requirements = document.getElementById('requirements');
-        const toLargefile = document.getElementById('toLargefile');
-        const toFiletype = document.getElementById('toFiletype');
-        let cropper;
-
-        let isEditing = false;
-
-        window.onbeforeunload = function(e) {
-            if (isEditing) {
-                e.preventDefault();
-                // Required for Chrome to show alert
-                e.returnValue = '';
-                return '';
-            }
-        };
-
-        input.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            // Hide all error/info messages first
-            if (file) {
-                const allowedTypes = ['image/jpeg', 'image/jpg', 'image/jfif', 'image/png'];
-                const maxSize = 10 * 1024 * 1024; // 10MB
-
-                if (!allowedTypes.includes(file.type)) {
-                    document.getElementById('requirements').classList.add('hidden');
-                    document.getElementById('toFiletype').classList.remove('hidden');
-                    document.getElementById('toLargefile').classList.add('hidden');
-                    e.target.value = '';
-                    return;
-                }
-                if (file.size > maxSize) {
-                    document.getElementById('requirements').classList.add('hidden');
-                    document.getElementById('toLargefile').classList.remove('hidden');
-                    document.getElementById('toFiletype').classList.add('hidden');
-                    e.target.value = '';
-                    return;
-                }
-                // If valid, show requirements and hide errors
-                document.getElementById('requirements').classList.remove('hidden');
-                document.getElementById('toLargefile').classList.add('hidden');
-                document.getElementById('toFiletype').classList.add('hidden');
-
-                isEditing = true;
-
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    preview.src = event.target.result;
-                    modal.classList.remove('hidden');
-                    modal.style.display = 'flex';
-
-                    const styleEl = document.createElement('style');
-                    styleEl.id = 'cropperCustomStyles';
-                    styleEl.innerHTML = `
-                .cropper-line, .cropper-point {
-                    background-color: white !important;
-                }
-                .cropper-view-box {
-                    outline: 3px solid white !important;
-                    outline-color: white !important;
-                }
-                .cropper-face {
-                    background-color: transparent !important;
-                }
-                .cropper-dashed {
-                    border-color: white !important;
-                }
-            `;
-                    document.head.appendChild(styleEl);
-
-                    preview.onload = function() {
-                        if (cropper) cropper.destroy();
-
-                        cropper = new Cropper(preview, {
-                            aspectRatio: 1,
-                            viewMode: 1,
-                            dragMode: 'move',
-                            autoCropArea: 1,
-                            background: false,
-                            zoomOnWheel: true,
-                            guides: false,
-                            highlight: false,
-                            cropBoxMovable: false,
-                            cropBoxResizable: false,
-                            movable: true,
-                            cropBoxHighlight: true,
-                            modal: true,
-                            minCropBoxWidth: 500,
-                            minCropBoxHeight: 500,
-
-                            ready() {
-                                zoomSlider.value = 0;
-
-                                // Make crop box circular
-                                const cropBox = document.querySelector('.cropper-crop-box');
-                                const viewBox = document.querySelector('.cropper-view-box');
-                                const cropperFace = document.querySelector('.cropper-face');
-
-                                if (cropBox && viewBox) {
-                                    // Ensure the crop box is visible
-                                    cropBox.style.display = 'block';
-                                    viewBox.style.display = 'block';
-
-                                    // Apply circular mask to the crop box
-                                    cropBox.style.borderRadius = '50%';
-                                    viewBox.style.borderRadius = '50%';
-
-                                    if (cropperFace) {
-                                        cropperFace.style.borderRadius = '50%';
-                                    }
-
-                                    // Manually set the crop box size to be larger (if needed)
-                                    const containerData = cropper.getContainerData();
-                                    const size = Math.min(containerData.width, containerData
-                                        .height) * 0.9;
-
-                                    // Center the crop box
-                                    const left = (containerData.width - size) / 2;
-                                    const top = (containerData.height - size) / 2;
-
-                                    // Set the crop box data
-                                    cropper.setCropBoxData({
-                                        left: left,
-                                        top: top,
-                                        width: size,
-                                        height: size
-                                    });
-
-                                    // Add proper highlight for circular area
-                                    document.querySelector('.cropper-modal').style.opacity = '0.5';
-                                }
-                            }
-                        });
-                    };
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-        zoomSlider.addEventListener('input', function() {
-            if (cropper) cropper.zoomTo(parseFloat(this.value));
-        });
-
-        document.getElementById('saveProfileButton').addEventListener('click', function(e) {
-            e.preventDefault();
-            if (!cropper) return;
-
-            const size = 300;
-            const canvas = cropper.getCroppedCanvas({
-                width: size,
-                height: size,
-                imageSmoothingQuality: 'high',
-                fillColor: 'transparent',
-                imageSmoothingEnabled: true,
-            });
-
-            const circularCanvas = document.createElement('canvas');
-            circularCanvas.width = size;
-            circularCanvas.height = size;
-            const ctx = circularCanvas.getContext('2d');
-
-            ctx.beginPath();
-            ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
-            ctx.closePath();
-            ctx.clip();
-            ctx.drawImage(canvas, 0, 0, size, size);
-
-            base64Input.value = circularCanvas.toDataURL('image/png');
-            const saveChangesModal = document.getElementById('saveChangesModal');
-
-            // Open Save Changes Modal
-            saveChangesModal.classList.remove('hidden');
-            saveChangesModal.style.display = 'flex';
-
-            // Handle Save Changes Modal buttons
-            document.querySelector('#saveChangesModal button[onclick="keepEditing()"]').addEventListener('click',
-                function() {
-                    saveChangesModal.classList.add('hidden');
-                    saveChangesModal.style.display = 'none';
-                    // Submit the form
-                    isEditing = false;
-                    window.onbeforeunload = null;
-                    document.getElementById('uploadForm').submit();
-
-                });
-
-            document.querySelector('#saveChangesModal button[onclick="closeChangesModal()"]').addEventListener(
-                'click',
-                function() {
-                    saveChangesModal.classList.add('hidden');
-                    saveChangesModal.style.display = 'none';
-                });
-        });
-
-        function openRemoveProfileModal() {
-            const removeProfileModal = document.getElementById('removeProfileModal');
-            removeProfileModal.classList.remove('hidden');
-            removeProfileModal.style.display = 'flex';
-        }
-
-        function closeRemoveProfileModal() {
-            const removeProfileModal = document.getElementById('removeProfileModal');
-            removeProfileModal.classList.add('hidden');
-            removeProfileModal.style.display = 'none';
-        }
-
-        function submitRemoveProfileForm() {
-            const form = document.querySelector('#profilePreviewModal form');
-            if (form) {
-                form.submit();
-            }
-        }
-
-        function closeModal() {
-            const cancelEditImageModal = document.getElementById('cancelEditImageModal');
-            cancelEditImageModal.classList.remove('hidden');
-            cancelEditImageModal.style.display = 'flex';
-
-            document.querySelector('#cancelEditImageModal button[onclick="closeModal()"]').addEventListener('click',
-                function() {
-                    modal.classList.add('hidden');
-                    modal.style.display = 'none';
-                    if (cropper) {
-                        cropper.destroy();
-                        cropper = null;
-                    }
-                    preview.src = '';
-                    input.value = '';
-                    cancelEditImageModal.classList.add('hidden');
-                    cancelEditImageModal.style.display = 'none';
-                });
-            document.querySelector('#cancelEditImageModal button[onclick="keepEditing()"]').addEventListener('click',
-                function() {
-                    const cancelEditImageModal = document.getElementById('cancelEditImageModal');
-                    cancelEditImageModal.classList.add('hidden');
-                    cancelEditImageModal.style.display = 'none';
-                });
-        }
-
-        setTimeout(() => {
-            const toast = document.getElementById('Toast');
-            if (toast) {
-                toast.style.display = 'none';
-            }
-        }, 5000);
-    </script>
+    @vite(['resources/js/settings/changeprofile.js'])
     <!-- Recovery Email Script -->
     <script>
         let isDirty = false;
@@ -1152,7 +655,20 @@
             modal.classList.add('hidden');
             modal.style.display = 'none';
         }
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if we need to show toast after page reload
+            const pendingToast = sessionStorage.getItem('pendingToast');
+            if (pendingToast) {
+                const toastData = JSON.parse(pendingToast);
+                sessionStorage.removeItem('pendingToast'); // Clear it immediately
+
+                // Show toast after a brief delay to ensure page is fully loaded
+                setTimeout(() => {
+                    showToast(toastData.title, toastData.message);
+                }, 100);
+            }
+
             const verifyBtn = document.querySelector(
                 '#codeVerificationForm button[onclick="verifyRecoveryCode()"]');
             const verifySpinner = document.createElement('span');
@@ -1186,8 +702,8 @@
             // Initial state
             verifyBtn.disabled = true;
 
-            // Override verifyRecoveryCode to add loading and toast
-            window.verifyRecoveryCode = function() {
+            // Override verifyRecoveryCode to add loading and reload-first behavior
+            window.verifyRecoveryCode = function(e) {
                 if (verifyBtn.disabled) return;
                 verifyBtn.disabled = true;
                 verifySpinner.classList.remove('hidden');
@@ -1213,9 +729,15 @@
                             isDirty = false;
                             document.getElementById('recoveryEmailModal').classList.add('hidden');
                             document.getElementById('recoveryEmailModal').style.display = 'none';
-                            showToast('Recovery Email Verified!',
-                                'Your recovery email has been verified successfully.');
-                            setTimeout(() => window.location.reload(), 2000);
+
+                            // Store toast data in sessionStorage before reload
+                            sessionStorage.setItem('pendingToast', JSON.stringify({
+                                title: 'Recovery Email Verified!',
+                                message: 'Your recovery email has been verified successfully.'
+                            }));
+
+                            // Reload immediately - toast will show after reload
+                            window.location.reload();
                         } else {
                             codeError.textContent = data.message || 'Invalid code. Please try again.';
                         }
@@ -1264,6 +786,7 @@
                 }, 4000);
             };
         });
+
         document.getElementById('recoveryEmailForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
@@ -1305,7 +828,7 @@
             const code = document.getElementById('verification_code').value;
             fetch('{{ route('admin.settings.verifyRecoveryCode') }}', {
                 method: 'POST',
-                credentials: 'same-origin', // ✅ keeps session cookies intact
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -1478,8 +1001,8 @@
                     ((recoveryEmailInput && recoveryEmailInput.value.trim() !== '') ||
                         (codeInput && codeInput.value.trim() !== ''))
                 ) {
-                    leaveWithoutSavingModal.classList.remove('hidden');
-                    leaveWithoutSavingModal.style.display = 'flex';
+                    leaveWithoutSavingRevModal.classList.remove('hidden');
+                    leaveWithoutSavingRevModal.style.display = 'flex';
                     pendingClose = 'recoveryEmailModal';
                 } else {
                     recoveryEmailModal.classList.add('hidden');
@@ -1490,7 +1013,7 @@
             };
 
             // Leave Without Saving Modal buttons
-            window.closeUnsavedModal = function() {
+            window.closeUnsavedRevModal = function() {
                 // Actually close and reset
                 if (pendingClose === 'recoveryEmailModal') {
                     recoveryEmailModal.classList.add('hidden');
@@ -1498,40 +1021,57 @@
                     resetRecoveryEmailForm();
                     resetCodeVerificationForm();
                 }
-                leaveWithoutSavingModal.classList.add('hidden');
-                leaveWithoutSavingModal.style.display = 'none';
+                leaveWithoutSavingRevModal.classList.add('hidden');
+                leaveWithoutSavingRevModal.style.display = 'none';
                 pendingClose = null;
             };
-            window.keepEditing = function() {
-                leaveWithoutSavingModal.classList.add('hidden');
-                leaveWithoutSavingModal.style.display = 'none';
+            window.keepRevEditing = function() {
+                leaveWithoutSavingRevModal.classList.add('hidden');
+                leaveWithoutSavingRevModal.style.display = 'none';
                 pendingClose = null;
             };
         });
         document.addEventListener('DOMContentLoaded', function() {
             const recoveryEmailInput = document.getElementById('recovery_email');
-            const codeInput = document.getElementById('verification_code');
+            const codeVerificationForm = document.getElementById('codeVerificationForm');
+            isDirty = false;
+            let ignoreNextBeforeUnload = false;
 
             function checkDirty() {
-                return (recoveryEmailInput && recoveryEmailInput.value.trim() !== '') ||
-                    (codeInput && codeInput.value.trim() !== '');
+                // Only dirty if user has typed in the input or is in code verification form
+                if (codeVerificationForm && !codeVerificationForm.classList.contains('hidden')) {
+                    return true;
+                }
+                if (recoveryEmailInput && recoveryEmailInput.value.trim() !== '') {
+                    return true;
+                }
+                return false;
             }
 
             // Listen for input changes
-            if (recoveryEmailInput) {
-                recoveryEmailInput.addEventListener('input', function() {
-                    isDirty = checkDirty();
-                });
-            }
-            if (codeInput) {
-                codeInput.addEventListener('input', function() {
-                    isDirty = checkDirty();
-                });
-            }
+            recoveryEmailInput.addEventListener('input', function() {
+                isDirty = checkDirty();
+            });
 
-            // Listen for beforeunload
+            // When switching forms, temporarily ignore beforeunload for this event loop
+            const observer = new MutationObserver(() => {
+                // If switching to code verification form, ignore beforeunload for this tick
+                if (!codeVerificationForm.classList.contains('hidden')) {
+                    ignoreNextBeforeUnload = true;
+                    setTimeout(() => {
+                        ignoreNextBeforeUnload = false;
+                    }, 100);
+                }
+                isDirty = checkDirty();
+            });
+            observer.observe(codeVerificationForm, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+
+            // Prevent leaving if isDirty, but not on form switch
             window.addEventListener('beforeunload', function(e) {
-                if (isDirty) {
+                if (isDirty && !ignoreNextBeforeUnload) {
                     e.preventDefault();
                     e.returnValue = '';
                 }
@@ -1546,6 +1086,7 @@
             })(window.closeRecoveryEmailModal);
         });
 
+        //Remove Recovery Email Modal
         function openPreRemoveRecoveryEmailModal() {
             document.getElementById('preRemoveRecoveryEmailModal').classList.remove('hidden');
             document.getElementById('preRemoveRecoveryEmailModal').style.display = 'flex';
@@ -1565,7 +1106,7 @@
             const modal = document.getElementById('removeRecoveryEmailModal');
             modal.classList.remove('hidden');
             modal.style.display = 'flex';
-            document.getElementById('remove_verification_code').value = '';
+            document.getElementById('removeVerificationCode').value = '';
             document.getElementById('removeCodeError').textContent = '';
             document.getElementById('confirmRemoveRecoveryEmailBtn').disabled = true;
 
@@ -1589,8 +1130,58 @@
             modal.classList.add('hidden');
             modal.style.display = 'none';
         }
+        document.addEventListener('DOMContentLoaded', function() {
+            const removeRecoveryEmailModal = document.getElementById('removeRecoveryEmailModal');
+            const removeCodeInput = document.getElementById('removeVerificationCode');
+            pendingCloseRemove = null;
+
+            // Override closeRemoveRecoveryEmailModal to check for unsaved input
+            window.closeRemoveRecoveryEmailModal = function() {
+                if (
+                    removeRecoveryEmailModal &&
+                    !removeRecoveryEmailModal.classList.contains('hidden') &&
+                    removeCodeInput &&
+                    removeCodeInput.value.trim() !== ''
+                ) {
+                    leaveWithoutSavingRevRemoveModal.classList.remove('hidden');
+                    leaveWithoutSavingRevRemoveModal.style.display = 'flex';
+                    pendingCloseRemove = 'removeRecoveryEmailModal';
+                } else {
+                    removeRecoveryEmailModal.classList.add('hidden');
+                    removeRecoveryEmailModal.style.display = 'none';
+                    removeCodeInput.value = '';
+                    document.getElementById('removeCodeError').textContent = '';
+                }
+            };
+
+            // Leave Without Saving Modal buttons for remove recovery email
+            window.closeUnsavedRevRemoveModal = (function() {
+                return function() {
+                    if (pendingCloseRemove === 'removeRecoveryEmailModal') {
+                        removeRecoveryEmailModal.classList.add('hidden');
+                        removeRecoveryEmailModal.style.display = 'none';
+                        removeCodeInput.value = '';
+                        document.getElementById('removeCodeError').textContent = '';
+                    }
+                    leaveWithoutSavingRevRemoveModal.classList.add('hidden');
+                    leaveWithoutSavingRevRemoveModal.style.display = 'none';
+                    pendingCloseRemove = null;
+                };
+            })(window.closeUnsavedRevModal);
+
+            window.keepRevRemoveEditing = (function(orig) {
+                return function() {
+                    leaveWithoutSavingRevRemoveModal.classList.add('hidden');
+                    leaveWithoutSavingRevRemoveModal.style.display = 'none';
+                    pendingCloseRemove = null;
+                    if (typeof orig === 'function') orig();
+                };
+            })(window.keepRevEditing);
+        });
         let removeResendSeconds = 60;
         let removeResendInterval;
+        let isRemoveDirty = false;
+        let pendingCloseRemove = null;
 
         function startRemoveResendTimer() {
             const resendBtn = document.getElementById('removeResendCodeBtn');
@@ -1628,7 +1219,7 @@
                 startRemoveResendTimer();
             });
         });
-        const removeCodeInput = document.getElementById('remove_verification_code');
+        const removeCodeInput = document.getElementById('removeVerificationCode');
         const removeConfirmBtn = document.getElementById('confirmRemoveRecoveryEmailBtn');
         const removeCodeError = document.getElementById('removeCodeError');
         removeCodeInput.addEventListener('input', function() {
@@ -1644,6 +1235,7 @@
                 }
             }
         });
+
         document.getElementById('removeRecoveryEmailForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const btn = document.getElementById('confirmRemoveRecoveryEmailBtn');
@@ -1660,16 +1252,25 @@
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
                     body: JSON.stringify({
-                        code: document.getElementById('remove_verification_code').value.trim()
+                        code: document.getElementById('removeVerificationCode').value.trim()
                     })
                 })
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) {
-                        closeRemoveRecoveryEmailModal();
-                        showToast('Recovery Email Removed!',
-                            'Your recovery email has been unlinked from your account.');
-                        setTimeout(() => window.location.reload(), 2000);
+                        pendingCloseRemove = null;
+                        isRemoveDirty = false;
+                        document.getElementById('removeRecoveryEmailModal').classList.add('hidden');
+                        document.getElementById('removeRecoveryEmailModal').style.display = 'none';
+
+                        // Store toast data in sessionStorage before reload
+                        sessionStorage.setItem('pendingToast', JSON.stringify({
+                            title: 'Recovery Email Removed!',
+                            message: 'Your recovery email has been unlinked from your account.'
+                        }));
+
+                        // Reload immediately - toast will show after reload
+                        window.location.reload();
                     } else {
                         removeCodeError.textContent = data.message || 'Invalid code. Please try again.';
                     }
@@ -1682,6 +1283,52 @@
                     spinner.classList.add('hidden');
                     btnText.textContent = 'Confirm Remove';
                 });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const removeRecoveryEmailModal = document.getElementById('removeRecoveryEmailModal');
+            const removeCodeInput = document.getElementById('removeVerificationCode');
+            isRemoveDirty = false;
+
+            function checkRemoveDirty() {
+                // If modal is visible and input has value, consider dirty
+                return (
+                    removeRecoveryEmailModal &&
+                    !removeRecoveryEmailModal.classList.contains('hidden') &&
+                    removeCodeInput &&
+                    removeCodeInput.value.trim() !== ''
+                );
+            }
+
+            // Listen for input changes
+            removeCodeInput.addEventListener('input', function() {
+                isRemoveDirty = checkRemoveDirty();
+            });
+
+            // Listen for modal open/close (class changes)
+            const removeObserver = new MutationObserver(() => {
+                isRemoveDirty = checkRemoveDirty();
+            });
+            removeObserver.observe(removeRecoveryEmailModal, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+
+            // Prevent leaving if isRemoveDirty
+            window.addEventListener('beforeunload', function(e) {
+                if (isRemoveDirty) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            // Reset isRemoveDirty when modal is closed and input is cleared
+            window.closeRemoveRecoveryEmailModal = (function(orig) {
+                return function() {
+                    isRemoveDirty = false;
+                    if (typeof orig === 'function') orig();
+                };
+            })(window.closeRemoveRecoveryEmailModal);
         });
     </script>
 @endsection

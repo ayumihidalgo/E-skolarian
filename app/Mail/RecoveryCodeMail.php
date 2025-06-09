@@ -1,6 +1,8 @@
 <?php
 
+
 namespace App\Mail;
+
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -9,21 +11,29 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
+
 class RecoveryCodeMail extends Mailable
 {
     use Queueable, SerializesModels;
+
 
     /**
      * Create a new message instance.
      */
     public $code;
-    public function __construct($code)
+    public $user;
+    public function __construct($code, $user)
     {
         $this->code = $code;
+        $this->user = $user;
     }
     public function build()
     {
-        return $this->view('emails.recovery_code')->with(['code' => $this->code]);
+        return $this->view('emails.recovery_code')
+            ->with([
+                'code' => $this->code,
+                'user' => $this->user,
+            ]);
     }
     /**
      * Get the message envelope.
@@ -34,6 +44,7 @@ class RecoveryCodeMail extends Mailable
             subject: 'Recovery Code Mail',
         );
     }
+
 
     /**
      * Get the message content definition.
@@ -48,3 +59,6 @@ class RecoveryCodeMail extends Mailable
         return [];
     }
 }
+
+
+

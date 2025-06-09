@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Session;
 
 class SuperAdminLoginController extends Controller
 {
@@ -45,13 +47,22 @@ class SuperAdminLoginController extends Controller
             ]);
         }
 
-        // Attempt to authenticate the user (super admin only)
-        if (Auth::attempt([
-            'email' => $credentials['email'],
-            'password' => $credentials['password'],
+        $remember = $request->has('remember');
+
+        // Try to find the user by either email or recovery_email
+        $user = \App\Models\User::where(function ($query) use ($request) {
+            $query->where('email', $request->email)
+                  ->orWhere('recovery_email', $request->email);
+        })->where('role', 'super admin')
+          ->where('active', 1)
+          ->first();
+
+        if ($user && Auth::attempt([
+            'email' => $user->email,
+            'password' => $request->password,
             'role' => 'super admin',
             'active' => 1,
-        ])) {
+        ], $remember)) {
             // Successful login - clear attempts
             $this->clearLoginAttempts($request);
 
@@ -59,6 +70,14 @@ class SuperAdminLoginController extends Controller
             $request->session()->put('user_id', Auth::id());
             $request->session()->put('user_role', Auth::user()->role);
             $request->session()->put('user_email', Auth::user()->email);
+
+            // Logout all other sessions for this user except the current one
+            $currentSessionId = Session::getId();
+            $userId = Auth::id();
+            DB::table('sessions')
+                ->where('user_id', $userId)
+                ->where('id', '!=', $currentSessionId)
+                ->delete();
 
             return redirect('super-admin/dashboard');
         }

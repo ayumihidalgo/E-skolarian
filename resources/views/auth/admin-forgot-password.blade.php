@@ -43,8 +43,8 @@
     </script>
 
 </head>
-@include('loading');
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
+    @include('loading')
     <div class="p-5 w-full">
         <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-[#FFFFFFCC] max-md:shadow-md">
             <div class="flex justify-center pb-4">
@@ -67,6 +67,9 @@
                             </button>
                         </label>
                         <div id="emailLengthWarning" class="w-full max-w-[380px] mx-auto px-4 text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden">
+                            <p></p>
+                        </div>
+                        <div id="emailFormatWarning" class="w-full max-w-[380px] mx-auto px-4 text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden">
                             <p></p>
                         </div>
                     </div>
@@ -129,18 +132,80 @@
         document.addEventListener('DOMContentLoaded', function () {
             const emailInput = document.getElementById('emailInput');
             const warningText = document.getElementById('emailLengthWarning');
+            const formatWarning = document.getElementById('emailFormatWarning');
             const sendEmailBtn = document.getElementById('sendEmailBtn');
             const emailLabel = document.getElementById('emailLabel');
             const form = sendEmailBtn.closest('form');
 
-            const COUNTDOWN_SECONDS = 60;
-            const STORAGE_KEY = 'emailResendTimestamp';
-
-            // Validate email format
+            // Validate email format (TLD 2-10 letters, no numbers)
             function validateEmail(email) {
-                const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                return pattern.test(email);
+                return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,10}$/.test(email);
             }
+
+            emailInput.addEventListener('keydown', function (e) {
+                if (e.key === ' ') e.preventDefault();
+            });
+
+            emailInput.addEventListener('input', function () {
+                const email = emailInput.value.trim();
+                const isTooLong = email.length > 50;
+                const isFormatInvalid = email.length > 0 && !isTooLong && !validateEmail(email);
+
+                // Length warning
+                if (isTooLong) {
+                    warningText.querySelector('p').textContent = "*Email must not exceed 50 characters.";
+                    warningText.classList.remove('hidden');
+                    emailLabel.classList.add('ring-3', '!ring-red-600');
+                } else {
+                    warningText.classList.add('hidden');
+                }
+
+                // Format warning
+                if (isFormatInvalid) {
+                    formatWarning.querySelector('p').textContent = "*Invalid email format. Please check your email address.";
+                    formatWarning.classList.remove('hidden');
+                    emailLabel.classList.add('ring-3', '!ring-red-600');
+                } else {
+                    formatWarning.classList.add('hidden');
+                    if (!isTooLong) emailLabel.classList.remove('ring-3', '!ring-red-600');
+                }
+
+                // Enable/disable button
+                sendEmailBtn.disabled = isTooLong || isFormatInvalid || email.length === 0;
+            });
+
+            emailInput.addEventListener('focus', function() {
+                emailLabel.classList.remove('ring-3', '!ring-red-600');
+            });
+
+            // Handle form submission (validate, but don't start countdown here)
+            form.addEventListener('submit', function (e) {
+                const email = emailInput.value.trim();
+                const isTooLong = email.length > 50;
+                const isFormatInvalid = !validateEmail(email);
+
+                if (isTooLong || isFormatInvalid) {
+                    e.preventDefault();
+                    if (isTooLong) {
+                        warningText.querySelector('p').textContent = "*Email must not exceed 50 characters.";
+                        warningText.classList.remove('hidden');
+                    }
+                    if (isFormatInvalid) {
+                        formatWarning.querySelector('p').textContent = "*Invalid email format. Please check your email address.";
+                        formatWarning.classList.remove('hidden');
+                    }
+                    emailLabel.classList.add('ring-3', '!ring-red-600');
+                    sendEmailBtn.disabled = false;
+                    return;
+                }
+
+                sendEmailBtn.disabled = true;
+                sendEmailBtn.textContent = "Processing...";
+
+                // Show loader
+                document.getElementById('loader').classList.toggle('hidden');
+                document.getElementById('loader').classList.toggle('flex');
+            });
 
             // Countdown logic
             function startCountdown(remainingSeconds) {
@@ -171,66 +236,6 @@
                     localStorage.removeItem(STORAGE_KEY);
                 }
             }
-
-            // Handle email length warning
-            emailInput.addEventListener('input', function () {
-                // Prevent spaces in email
-                emailInput.addEventListener('keydown', function (e) {
-                    if (e.key === ' ') e.preventDefault();
-                });
-                const email = emailInput.value.trim();
-                const isTooLong = email.length > 50;
-
-                if (isTooLong) {
-                    warningText.textContent = "*Email must not exceed 50 characters.";
-                    warningText.classList.remove('hidden');
-                    sendEmailBtn.disabled = true;
-
-                    emailLabel.classList.add('ring-3', !isTooLong);
-                    emailLabel.classList.add('!ring-red-600', !isTooLong);
-                } else {
-                    warningText.classList.add('hidden');
-
-                    emailLabel.classList.remove('ring-3', !isTooLong);
-                    emailLabel.classList.remove('!ring-red-600', !isTooLong);
-                    // Only enable the button if not in "Resend Email" mode
-                    if (!sendEmailBtn.textContent.includes("Resend Email")) {
-                        sendEmailBtn.disabled = false;
-                    }
-                }
-            });
-
-            emailInput.addEventListener('focus', function() {
-                emailLabel.classList.remove('ring-3', '!ring-red-600');
-            });
-
-            // Handle form submission (validate, but don't start countdown here)
-            form.addEventListener('submit', function (e) {
-                const email = emailInput.value.trim();
-                const invalidFormat = !validateEmail(email);
-
-                if (invalidFormat) {
-                    e.preventDefault();
-                    warningText.classList.remove('hidden');
-
-                    if (invalidFormat) {
-                        warningText.textContent = "*Please enter a valid email address format.";
-                    }
-
-                    emailLabel.classList.add('ring-3', invalidFormat);
-                    emailLabel.classList.add('!ring-red-600', invalidFormat);
-
-                    sendEmailBtn.disabled = false;
-                    return;
-                }
-
-                sendEmailBtn.disabled = true;
-                sendEmailBtn.textContent = "Processing...";
-
-                // Show loader
-                document.getElementById('loader').classList.toggle('hidden');
-                document.getElementById('loader').classList.toggle('flex');
-            });
 
             // Start countdown ONLY if backend confirms email sent
             const sentFlag = document.getElementById('emailSentFlag');
@@ -303,7 +308,17 @@
         isSafeExit = true;
     });
 
-        </script>
+    // Hide loader on bfcache restore
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }
+    });
+
+</script>
 
 </body>
 </html>

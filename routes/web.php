@@ -30,17 +30,21 @@ use App\Http\Controllers\StudentDashboardController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SuperAdmin\SuperAdminSettingsController;
 use App\Http\Middleware\LogoutIfAuthenticated;
+use App\Http\Middleware\CheckActiveStatus;
+
 
 // Guest routes for login selection
-Route::middleware([LogoutIfAuthenticated::class, 'guest'])->group(function () {
+Route::middleware(LogoutIfAuthenticated::class)->group(function () {
     Route::get('/', function () {
         return view('auth.landingPage');
     })->name('landing');
+
 
     // Guest
     Route::get('/guest', function() {
         return view('guest.guest');
     })->name('guest');
+
 
     // Student Login
     Route::get('/student/login', function () {
@@ -48,11 +52,13 @@ Route::middleware([LogoutIfAuthenticated::class, 'guest'])->group(function () {
     })->name('student.login.form');
     Route::post('/student/login', [StudentLoginController::class, 'login'])->name('student.login');
 
+
     // Admin Login
     Route::get('/admin/login', function () {
         return view('auth.Adminlogin');
     })->name('admin.login.form');
     Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login');
+
 
     // Super Admin Login
     Route::get('/superadmin/login', function () {
@@ -60,7 +66,9 @@ Route::middleware([LogoutIfAuthenticated::class, 'guest'])->group(function () {
     })->name('superadmin.login.form');
     Route::post('/superadmin/login', [SuperAdminLoginController::class, 'login'])->name('superadmin.login');
 
+
     Route::post('/report-problem', [ProblemReportController::class, 'store'])->name('report.problem.store');
+
 
     // --- Student Password Reset ---
     Route::get('/student/forgot-password', [StudentPasswordResetLinkController::class, 'create'])->name('student.password.request');
@@ -68,63 +76,100 @@ Route::middleware([LogoutIfAuthenticated::class, 'guest'])->group(function () {
     Route::get('/student/reset-password/{token}', [StudentPasswordResetLinkController::class, 'edit'])->name('student.password.reset');
     Route::post('/student/reset-password', [StudentPasswordResetLinkController::class, 'update'])->name('student.password.update');
 
+
     // --- Admin Password Reset ---
     Route::get('/admin/forgot-password', [AdminPasswordResetLinkController::class, 'create'])->name('admin.password.request');
     Route::post('/admin/forgot-password', [AdminPasswordResetLinkController::class, 'store'])->name('admin.password.email');
     Route::get('/admin/reset-password/{token}', [AdminPasswordResetLinkController::class, 'edit'])->name('admin.password.reset');
     Route::post('/admin/reset-password', [AdminPasswordResetLinkController::class, 'update'])->name('admin.password.update');
 
+
     Route::get('student-password-reset-confirmation', function () {
         return view('auth.student-password-reset-confirmation');
     })->name('student.password.reset.confirmation');
+
 
     Route::get('admin-password-reset-confirmation', function () {
         return view('auth.admin-password-reset-confirmation');
     })->name('admin.password.reset.confirmation');
 });
 
+
 Route::get('/notification', function () {
     return view('components.general-components.notification');
 });
 
 
+
+
 // ----------------------------------------
 // Authenticated Routes
 // ----------------------------------------
-Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(function () {
+Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiveStatus::class])->group(function () {
     // ---------------- Super Admin ----------------
-    Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
-    Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])->name('deactivated.accounts');
+    
+    // Dashboard & Announcements
+    Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])
+        ->name('super-admin.dashboard');
+    Route::get('/super-admin/announcements/archive', [SuperAdminController::class, 'showDashboard'])
+        ->name('super-admin.announcementArchive');
+    
+    // Announcement CRUD operations
+    Route::post('/super-admin/announcements', [AnnouncementController::class, 'store'])
+        ->name('super-admin.announcements.store');
+    //Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])
+       // ->name('super-admin.announcements.update');
+    Route::post('/super-admin/announcements/{id}/archive', [AnnouncementController::class, 'moveToArchive'])
+        ->name('super-admin.announcements.archive');
+    Route::post('/super-admin/announcements/{id}/restore', [AnnouncementController::class, 'restore'])
+        ->name('super-admin.announcements.restore');
+    Route::delete('/super-admin/announcements/{id}/delete', [AnnouncementController::class, 'destroy'])
+        ->name('super-admin.announcements.delete');
+
+    // Other super admin routes...
+    Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
+        ->name('deactivated.accounts');
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
     Route::post('/super-admin/reactivate-user/{user}', [UserController::class, 'reactivateUser'])->name('reactivate.user');
     Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])
         ->name('deactivated.accounts');
 
+
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
     Route::post('/super-admin/deactivate-user', [SuperAdminController::class, 'deactivateUser'])->name('super-admin.deactivate-user');
+
 
     Route::post('/super-admin/reactivate-user', [SuperAdminController::class, 'reactivateUser'])
         ->name('super-admin.reactivate-user')
         ->middleware('auth');
 
 
+    Route::get('/super-admin/settings', [SettingsController::class, 'viewSuperAdminSettings'])->name('superadmin.settings');
+    Route::post('/super-admin/settings/update-profile-picture', [SettingsController::class, 'updateProfilePicture'])->name('superadmin.settings.update-profile-picture');
+    Route::post('/super-admin/settings/change-password', [SettingsController::class, 'changePassword'])->name('superadmin.settings.change-password');
+    Route::post('/super-admin/settings/remove-profile', [SettingsController::class, 'removeProfilePicture'])->name('superadmin.settings.remove-profile-picture');
+    Route::post('/super-admin/settings/send-recovery-code', [SettingsController::class, 'sendRecoveryCode'])->name('superadmin.settings.sendRecoveryCode');
+    Route::post('/super-admin/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('superadmin.settings.verifyRecoveryCode');
+    Route::post('/super-admin/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('superadmin.settings.removeRecoveryEmail');  
     // Super Admin Reports
     Route::get('/super-admin/reports', function () {
         return view('super-admin.super-admin-component.reports');
     })->name('super-admin.reports');
 
+
     Route::get('/super-admin/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('super-admin.reports');
+
 
     Route::get('/super-admin/activity-logs', [App\Http\Controllers\SuperAdminController::class, 'activityLogs'])->name('super-admin.activity-logs');
 
 });
 
-Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
+Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStatus::class])->group(function () {
     // ---------------- Admin ----------------
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'showDashboard'])->name('admin.dashboard');
     Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
-    Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
+    //Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
     Route::get('/admin/announcement-archive', [AnnouncementController::class, 'archive'])->name('admin.announcementArchive');
     Route::post('/admin/announcements/{id}/archive', [AnnouncementController::class, 'moveToArchive'])->name('admin.announcements.archive');
     Route::post('/admin/announcements/{id}/restore', [AnnouncementController::class, 'restore'])->name('admin.announcements.restore');
@@ -142,6 +187,7 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(functio
     Route::post('admin/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('admin.settings.verifyRecoveryCode');
     Route::post('admin/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('admin.settings.removeRecoveryEmail');
 
+
     // Document processing
     Route::get('/admin/documents', [DocumentReviewController::class, 'index'])->name('admin.documents');
     Route::get('/admin/documents/{id}/details', [DocumentReviewController::class, 'getDetails'])->name('admin.documents.details');
@@ -155,7 +201,7 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(functio
     Route::post('/admin/archive-documents', [AdminDocumentController::class, 'archiveDocuments'])->name('admin.archiveDocuments');
 });
 // ---------------- Student ----------------
-Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(function () {
+Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class])->group(function () {
     Route::get('/student/dashboard', [StudentDashboardController::class, 'showStudentDashboard'])->name('student.dashboard');
     Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
@@ -172,9 +218,12 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(funct
     Route::get('/student/archivePage', [StudentDocumentController::class, 'archivePage'])->name('student.archivePage');
 });
 
-Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiveStatus::class])->group(function () {
+
+
 
     // ---------------- Shared Routes ----------------
+
 
     // Student Logout
     Route::post('/student/logout', [StudentLoginController::class, 'logout'])->name('student.logout');
@@ -183,6 +232,9 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     // Super Admin Logout
     Route::post('/superadmin/logout', [SuperAdminLoginController::class, 'logout'])->name('superadmin.logout');
     Route::get('/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
+    // Announcements ID
+    Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])->name('announcements.update');
+
 
     // Calendar
     Route::get('/calendar', [EventController::class, 'index'])->name('calendar.index');
@@ -196,6 +248,12 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::get('/calendar/approved-proposals', [EventController::class, 'getApprovedProposals'])->name('calendar.approved-proposals');
     Route::post('/calendar/reschedule-proposal', [EventController::class, 'rescheduleApprovedProposal'])->name('calendar.reschedule-proposal');
     Route::get('/calendar/announcements', [App\Http\Controllers\EventController::class, 'getCalendarAnnouncements'])->name('calendar.announcements');
+
+    // ----------------------------------------
+// Calendar IndexTwo (Shared)
+// ----------------------------------------
+Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->name('calendar.indexTwo');
+
     // User
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
@@ -205,16 +263,21 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::post('/check-username', [UserController::class, 'checkUsername'])->name('check-username');
     Route::get('/check-organizations', [UserController::class, 'checkOrganizations'])->name('check.organizations');
 
+
     Route::get('/admin/documentReview', [DocumentReviewController::class, 'index'])->name('admin.documentReview');
+
 
     Route::get('/admin/review', function () {
         return view('admin.review');
     })->name('admin.review');
 
+
     Route::post('/users', [App\Http\Controllers\UserController::class, 'store'])->name('users.store');
+
 
     // Submit Document Route
     Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
+
 
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
     // Dashboard Route
@@ -222,14 +285,18 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
         return view('student.dashboard');
     })->name('dashboard');
 
+
     Route::get('/admin/documentArchive', function () {
         return view('admin.documentArchive');
     })->name('admin.documentArchive');
 
 
+
+
     // Route for the document preview page (admin)
     Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
 });
+
 
 // ----------------------------------------
 // Comments (Shared)
@@ -237,6 +304,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
 Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
 Route::post('/comments', [CommentController::class, 'studentstore'])->name('comments.studentstore');
 Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
+
 
 // ----------------------------------------
 // Notifications (Shared)
@@ -253,12 +321,9 @@ Route::middleware(['auth', 'role:student'])->group(function () {
     Route::get('/notifications', [StudentNotificationController::class, 'index'])->name('student.notifications.index');
 });
 
-// ----------------------------------------
-// Calendar IndexTwo (Shared)
-// ----------------------------------------
-Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->name('calendar.indexTwo');
 
 // ----------------------------------------
+
 // Document Viewing (Shared)
 // ----------------------------------------
 Route::get('/documents/{filename}', function ($filename) {
@@ -266,11 +331,13 @@ Route::get('/documents/{filename}', function ($filename) {
     header("Cross-Origin-Embedder-Policy: require-corp");
     header("Cross-Origin-Opener-Policy: same-origin");
 
+
     // Look in different possible storage locations
     $paths = [
         storage_path('app/public/documents/' . $filename),
         public_path('storage/documents/' . $filename),
     ];
+
 
     // Find the file in one of the possible locations
     $filePath = null;
@@ -281,14 +348,17 @@ Route::get('/documents/{filename}', function ($filename) {
         }
     }
 
+
     // Return 404 if file not found
     if (!$filePath) {
         return response()->json(['error' => 'File not found'], 404);
     }
 
+
     // Set appropriate headers to ensure in-browser display
     $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
     $contentType = 'application/octet-stream';
+
 
     // Set content type based on file extension
     if ($extension === 'pdf') {
@@ -300,6 +370,7 @@ Route::get('/documents/{filename}', function ($filename) {
     } elseif ($extension === 'doc') {
         $contentType = 'application/msword';
     }
+
 
     // Return the file with headers that encourage browsers to display it
     return response()->file($filePath, [
@@ -314,22 +385,27 @@ Route::get('/documents/{filename}', function ($filename) {
     ]);
 })->name('document.view')->middleware('auth');
 
+
 // Add specific route for comment attachments
 Route::get('/storage/comment_attachments/{filename}', function ($filename) {
     // Set headers for WebAssembly threads support
     header("Cross-Origin-Embedder-Policy: require-corp");
     header("Cross-Origin-Opener-Policy: same-origin");
 
+
     $path = storage_path('app/public/comment_attachments/' . $filename);
+
 
     // Return 404 if file not found
     if (!file_exists($path)) {
         return response()->json(['error' => 'File not found'], 404);
     }
 
+
     // Set appropriate headers based on file extension
     $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
     $contentType = 'application/octet-stream';
+
 
     if ($extension === 'pdf') {
         $contentType = 'application/pdf';
@@ -340,6 +416,7 @@ Route::get('/storage/comment_attachments/{filename}', function ($filename) {
     } elseif ($extension === 'doc') {
         $contentType = 'application/msword';
     }
+
 
     // Return the file with appropriate headers
     return response()->file($path, [
@@ -354,13 +431,16 @@ Route::get('/storage/comment_attachments/{filename}', function ($filename) {
     ]);
 })->name('comment.attachment.view')->middleware('auth');
 
+
 // Debugger
 Route::get('/debug-documents', function () {
     $path1 = storage_path('app/public/documents');
     $path2 = public_path('storage/documents');
 
+
     $files1 = File::exists($path1) ? File::files($path1) : [];
     $files2 = File::exists($path2) ? File::files($path2) : [];
+
 
     return [
         'storage_path_exists' => File::exists($path1),
@@ -370,13 +450,16 @@ Route::get('/debug-documents', function () {
     ];
 })->middleware('auth');
 
+
 // WebViewer assets
 Route::get('/webviewer/{path}', function ($path) {
     $fullPath = public_path('webviewer/' . $path);
 
+
     if (!file_exists($fullPath)) {
         return response()->json(['error' => 'WebViewer asset not found'], 404);
     }
+
 
     $mime = match (pathinfo($path, PATHINFO_EXTENSION)) {
         'wasm' => 'application/wasm',
@@ -387,6 +470,7 @@ Route::get('/webviewer/{path}', function ($path) {
         default => mime_content_type($fullPath)
     };
 
+
     return response()->file($fullPath, [
         'Content-Type' => $mime,
         'Cross-Origin-Embedder-Policy' => 'require-corp',
@@ -394,20 +478,26 @@ Route::get('/webviewer/{path}', function ($path) {
     ]);
 })->where('path', '.*');
 
+
 // ----------------------------------------
 // Records (Shared)
 // ----------------------------------------
 Route::get('/records/{id}', [StudentTrackerController::class, 'show'])->name('records.show');
 
 
+
+
 Route::get('/loading', function () {
     return view('loading');
 });
+
 
 // Redirect /login to landing page
 Route::get('/login', function () {
     return redirect()->route('landing');
 })->name('login');
+
+
 
 
 Route::post('/logout', function () {
@@ -417,18 +507,14 @@ Route::post('/logout', function () {
     return redirect('/');
 })->name('logout');
 
-// Super Admin Settings Routes
-Route::middleware(['auth', 'role:super-admin'])->group(function () {
-    Route::get('/super-admin/settings', [SuperAdminSettingsController::class, 'index'])->name('super-admin.settings');
-    Route::post('/super-admin/settings/update-profile', [SuperAdminSettingsController::class, 'updateProfile'])->name('super-admin.settings.update-profile');
-    Route::post('/super-admin/settings/change-password', [SuperAdminSettingsController::class, 'changePassword'])->name('super-admin.settings.change-password');
-    Route::post('/super-admin/settings/change-email', [SuperAdminSettingsController::class, 'changeEmail'])->name('super-admin.settings.change-email');
-});
+
+
 
 // Document Export Route
 Route::get('/admin/document-export', [App\Http\Controllers\DocumentExportController::class, 'export'])
     ->name('admin.document.export')
     ->middleware('auth');
+
 
 // Report Viewing and Management
 Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(function () {
@@ -436,9 +522,15 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
         return view('super-admin.reports.index');
     })->name('reports.index');
 
+
     Route::get('/reports/{report}', [SuperAdminController::class, 'showReport'])->name('reports.show');
+
 
     Route::post('/reports/{report}/mark-as-viewed', [SuperAdminController::class, 'markReportAsViewed'])
         ->name('reports.mark-viewed');
 });
+
+
+
+
 
