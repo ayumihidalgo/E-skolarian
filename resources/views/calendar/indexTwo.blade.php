@@ -362,6 +362,12 @@ function initCalendar() {
             fixedWeekCount: false,
             selectable: true,
             editable: true,
+
+            eventTimeFormat: {
+            hour: 'numeric',
+            minute: '2-digit',
+            meridiem: 'short'  
+        },
             
             // Complete events function
             events: function(fetchInfo, successCallback, failureCallback) {
@@ -537,7 +543,16 @@ function openAnnouncementDetailsModal(event) {
     const actionContainer = document.getElementById('event-action-buttons');
     
     if (titleElement) {
-        titleElement.textContent = event.title;
+        // Use full title and apply word wrapping styles for announcements only
+        const fullTitle = event.extendedProps.full_title || event.title.replace('📢 ', '');
+        titleElement.textContent = fullTitle;
+        
+        // Apply word wrapping styles specifically for announcements
+        titleElement.style.wordWrap = 'break-word';
+        titleElement.style.overflowWrap = 'break-word';
+        titleElement.style.whiteSpace = 'normal';
+        titleElement.style.maxWidth = '100%';
+        titleElement.style.lineHeight = '1.4';
     }
     
     // Format and display the date
@@ -554,7 +569,7 @@ function openAnnouncementDetailsModal(event) {
                     dateStr += ' - ' + endDate.toLocaleDateString('en-US', options);
                 }
             } else {
-                const timeOptions = { ...options, hour: 'numeric', minute: '2-digit' };
+                const timeOptions = { ...options, hour: 'numeric', minute: '2-digit', hour12: true };
                 dateStr = startDate.toLocaleDateString('en-US', timeOptions);
                 if (endDate) {
                     dateStr += ' - ' + endDate.toLocaleDateString('en-US', timeOptions);
@@ -572,29 +587,20 @@ function openAnnouncementDetailsModal(event) {
     // Show announcement-specific content
     if (actionContainer) {
         actionContainer.innerHTML = `
-            <div class="bg-gray-50 p-3 rounded-lg mb-4">
-                <div class="text-sm text-gray-600 mb-2">
-                    <strong>Posted by:</strong> ${event.extendedProps.poster || 'Unknown'}<br>
-                    ${event.extendedProps.deadline_text ? '<strong>Deadline:</strong> ' + event.extendedProps.deadline_text : ''}
-                </div>
-                <div class="text-sm text-gray-700">
-                    <strong>Content:</strong><br>
-                    ${event.extendedProps.content || 'No content available'}
-                </div>
+            <div class="text-sm text-gray-600 mb-2" style="word-wrap: break-word; overflow-wrap: break-word;">
+                <strong>Posted by:</strong> ${event.extendedProps.poster || 'Unknown'}<br>
+                <strong>Deadline:</strong> ${event.extendedProps.deadline_text || ''}
             </div>
-            <div class="text-xs text-gray-500 italic">
-                Note: This is a scheduled announcement. To edit or delete, go to the Admin Dashboard.
-            </div>
+            <p class="text-xs text-orange-600 font-medium">📢 Deadline Announcement.</p>
         `;
     }
     
-    // Show modal
+    // Show modal with animation
     modal.classList.remove('hidden');
-    if (modalContent) {
-        setTimeout(() => {
-            modalContent.classList.add('modal-visible');
-        }, 10);
-    }
+    setTimeout(() => {
+        modalContent.classList.remove('modal-hidden');
+        modalContent.classList.add('modal-visible');
+    }, 10);
 }
 
 

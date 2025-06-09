@@ -327,6 +327,15 @@ public function getCalendarAnnouncements()
         $announcementEvents = $announcements->map(function($announcement) {
             $deadline = Carbon::parse($announcement->deadline);
             
+
+            $title = $announcement->title;
+            $maxTitleLength = 60; // Set maximum characters for display
+            
+            if (strlen($title) > $maxTitleLength) {
+                $displayTitle = substr($title, 0, $maxTitleLength) . '...';
+            } else {
+                $displayTitle = $title;
+            }
             return [
                 'id' => 'announcement_' . $announcement->id,
                 'title' => '📢 ' . $announcement->title,
@@ -399,6 +408,8 @@ private function getScheduledAnnouncements()
             // Use scheduled date as start, deadline as end (if exists)
             $startDate = $scheduledDate;
             $endDate = $deadline;
+
+            
             
             return [
                 'id' => 'announcement_' . $announcement->id,
