@@ -7,6 +7,26 @@
     <div class="max-h-screen bg-white bg-opacity-30 px-15 py-8">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-[35px] font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
+         @if (session('success'))
+                <div id="Toast"
+                    class="fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-green-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+                    role="alert">
+                    <div class="w-full flex justify-between">
+                        <div class="flex items-center gap-4">
+                            <img src="{{ asset('images/successful.svg') }}" alt="Success Icon" id="docTypeIcon"
+                                class="">
+                            <div>
+                                <h6 class="font-bold font-['Manrope']">
+                                    {{ session('success') }}
+                                </h6>
+                            </div>
+                        </div>
+                        <button type="button"
+                            class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+                            onclick="document.getElementById('Toast').style.display='none';">&times;</button>
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Add User Button -->
