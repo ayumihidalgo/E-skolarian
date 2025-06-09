@@ -6,198 +6,367 @@
         <div class="flex-grow mb-10">
             <!-- Main Content -->
             <div class="flex-grow p-6">
-                <div class="">
-                    <h1 class="text-2xl font-['Lexend'] font-semibold mb-6">Document Submission</h1>
+                <h1 class="text-2xl font-['Lexend'] font-semibold mb-4">Document Submission</h1>
 
-                    <form class="space-y-6 font-['Manrope']" action="{{ route('submit.document') }}" method="POST"
-                        enctype="multipart/form-data">
-                        @csrf
-                        <!-- Receiver, Subject, Doc Type -->
+                <form class="font-['Manrope']" action="{{ route('submit.document') }}" method="POST"
+                    enctype="multipart/form-data">
+                    @csrf
+                    <!-- Receiver, Subject, Doc Type, Semester A.Y. -->
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <!-- Left Side -->
+                        <div class="flex flex-col gap-4 w-full md:w-2/3">
+                            <!-- Receiver Button -->
+                            <div class="relative w-full">
+                                <button type="button" id="receiverButton" aria-expanded
+                                    class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                    <span class="font-semibold text-gray-500">
+                                        To<span class="required-indicator text-red-500"> *</span>:
+                                        <span id="receiverSelected" class="font-semibold text-black"></span>
+                                    </span>
+                                    <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
+                                        id="receiverArrow" class="w-8 h-3">
+                                </button>
+
+                                <!-- Dropdown List -->
+                                <ul role="listbox" id="receiverDropdown"
+                                    class="hidden absolute z-10 w-full bg-white text-black border border-gray-300 rounded-[11px] shadow-md mt-1">
+                                    @foreach ($adminUsers as $admin)
+                                        <li tabindex="0" role="option"
+                                            class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                            onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->role_name }}')">
+                                            {{ $admin->role_name }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+
+                                <input type="hidden" name="received_by" id="receiverInput">
+                            </div>
+
+                            <!-- Subject Field -->
+                            <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full">
+                                <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span
+                                        class="required-indicator text-red-500"> *</span>:</span>
+                                <input type="text" id="subject" name="subject" autocomplete="off"
+                                    class="flex-1 font-semibold focus:outline-none" maxlength="255">
+                            </div>
+
+                            <!-- Semester A.Y. Dropdown for Mobile -->
+                            <div class="relative w-full md:hidden">
+                                <button type="button" id="academicYearButtonMobile" aria-expanded
+                                    class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                    <span class="font-semibold text-gray-500">
+                                        Semester A.Y.<span class="required-indicator text-red-500"> *</span>:
+                                        <span id="academicYearSelectedMobile" class="font-semibold text-black"></span>
+                                    </span>
+                                    <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
+                                        id="academicYearArrowMobile" class="w-8 h-3">
+                                </button>
+
+                                <ul role="listbox" id="academicYearDropdownMobile"
+                                    class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md max-h-60 overflow-y-auto">
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Right Side -->
+                        <div class="flex flex-col gap-4 w-full md:w-1/3">
+                            <!-- Document Type Button -->
+                            <div class="relative w-full">                                    
+                                <button type="button" id="docTypeButton" aria-expanded
+                                    class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white border-2 border-[#7A1212] hover:border-[#a31515] p-2 rounded-[8px] cursor-pointer transition">
+                                    <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
+                                        class="w-5 h-5">
+                                    <span id="docTypeSelected">Document Type</span>
+
+                                    <!-- Dropdown Arrow aligned to the right -->
+                                    <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
+                                        class="absolute right-2 w-8 h-3">
+                                </button>
+
+                                <!-- Dropdown List -->
+                                <ul role="listbox" id="docTypeDropdown"
+                                    class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
+                                    @foreach ([
+                                        'Event Proposal',
+                                        'General Plan of Activities',
+                                        'Reports of Proceedings',
+                                        'Constitution and By-Laws',
+                                        'Fundraising Activities',
+                                        'Request Letter',
+                                        'Petition and Concern',
+                                        'Memorandum of Agreement',
+                                        'Off Campus Activities',
+                                        'Other'
+                                    ] as $type)
+                                        <li tabindex="0" role="option"
+                                            class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                            onclick="selectDocType('{{ $type }}')">
+                                            {{ $type }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+
+                                <!-- Hidden input for document type -->
+                                <input type="hidden" name="type" id="docTypeInput">
+                            </div>
+
+                            <!-- Document Type Field if "Other" is Selected -->
+                            <div id="othersDocTypeContainer" class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full" hidden>
+                                <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Document Type<span
+                                        class="required-indicator text-red-500"> *</span>:</span>
+                                <input type="text" name="other_type" id="othersDocTypeInput" autocomplete="off"
+                                    class="flex-1 font-semibold focus:outline-none" maxlength="50">
+                            </div>
+                            
+                            <!-- Semester A.Y. Dropdown for Desktop -->
+                            <div class="relative w-full hidden md:block">
+                                <button type="button" id="academicYearButton" aria-expanded
+                                    class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                    <span class="font-semibold text-gray-500">
+                                        Semester A.Y.<span class="required-indicator text-red-500"> *</span>:
+                                        <span id="academicYearSelected" class="font-semibold text-black"></span>
+                                    </span>
+                                    <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
+                                        id="academicYearArrow" class="w-8 h-3">
+                                </button>
+
+                                <ul role="listbox" id="academicYearDropdown"
+                                    class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md max-h-60 overflow-y-auto">
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Shared Hidden Input for Academic Year -->
+                        <input type="hidden" name="academic_year" id="academicYearInput">
+                    </div>
+
+                    <!-- Overview Field -->
+                    <div class="flex flex-col gap-1 border-2 border-gray-500 p-2 rounded-[8px] mb-4">
+                        <label for="overview" class="font-semibold text-gray-500">Overview<span
+                                class="required-indicator text-red-500"> *</span>:</label>
+
+                        <textarea id="overview" name="overview"
+                            class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
+                            oninput="overviewUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
+
+                        <div class="text-sm text-gray-500 text-right">
+                            <span id="overview-counter">0</span>/255
+                        </div>
+                    </div>
+
+                    <!-- Only shows for Event Proposals -->
+                    <div id="event_proposal_container" class="space-y-4 mb-4 hidden">
+                        <!-- Venue Field-->
+                        <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                            <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Venue<span
+                            class="required-indicator text-red-500"> *</span>:</span>
+                            <input type="text" id="venue" name="venue" autocomplete="off"
+                            class="flex-1 font-semibold focus:outline-none" maxlength="100">
+                        </div>
+                        
+                        <!-- Proposed Date & Time Field and Hours Field-->
                         <div class="flex flex-col md:flex-row gap-4">
                             <!-- Left Side -->
-                            <div class="flex flex-col gap-4 w-full md:w-2/3 relative">
-                                <!-- Receiver Button -->
-                                <div class="relative w-full">
-                                    <button type="button" id="receiverButton" aria-expanded
-                                        class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative focus:outline-none flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
-                                        <span class="font-semibold text-gray-500">
-                                            To<span class="required-indicator text-red-500"> *</span>:
-                                            <span id="receiverSelected" class="font-semibold text-black"></span>
-                                        </span>
-                                        <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
-                                            id="receiverArrow" class="w-8 h-3">
-                                    </button>
-
-                                    <!-- Dropdown List -->
-                                    <ul role="listbox" id="receiverDropdown"
-                                        class="hidden absolute z-10 w-full bg-white text-black border border-gray-300 rounded-[11px] shadow-md mt-1">
-                                        @foreach ($adminUsers as $admin)
-                                            <li tabindex="0" role="option"
-                                                class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                                onclick="selectReceiver('{{ $admin->id }}', '{{ $admin->role_name }}')">
-                                                {{ $admin->role_name }}
-                                            </li>
-                                        @endforeach
-                                    </ul>
-
-                                    <input type="hidden" name="received_by" id="receiverInput">
-                                </div>
-
-                                <!-- Subject Field -->
-                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full">
-                                    <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span
-                                            class="required-indicator text-red-500"> *</span>:</span>
-                                    <input type="text" id="subject" name="subject" autocomplete="off"
-                                        class="flex-1 font-semibold focus:outline-none" maxlength="100">
-                                </div>
-                            </div>
-
-                            <!-- Right Side -->
-                            <div class="flex flex-col gap-4 w-full md:w-1/3 relative">
-                                <div class="">
-                                    <!-- Receiver Button -->
-                                    <div class="relative w-full">
-                                        <!-- Document Type Button -->
-                                        <button type="button" id="docTypeButton" aria-expanded
-                                            class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white border-2 border-[#7A1212] hover:border-[#a31515] p-2 rounded-[8px] cursor-pointer transition">
-                                            <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
-                                                class="w-5 h-5">
-                                            <span id="docTypeSelected">Document Type</span>
-
-                                            <!-- Dropdown Arrow aligned to the right -->
-                                            <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
-                                                class="absolute right-4 w-8 h-3">
-                                        </button>
-
-                                        <!-- Dropdown List -->
-                                        <ul role="listbox" id="docTypeDropdown"
-                                            class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
-                                            @foreach ([
-                                                'Event Proposal',
-                                                'General Plan of Activities',
-                                                'Calendar of Activities',
-                                                'Accomplishment Report',
-                                                'Constitution and By-Laws',
-                                                'Request Letter',
-                                                'Off Campus',
-                                                'Petition and Concern',
-                                                'Others'
-                                            ] as $type)
-                                                <li tabindex="0" role="option"
-                                                    class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
-                                                    onclick="selectDocType('{{ $type }}')">
-                                                    {{ $type }}
-                                                </li>
-                                            @endforeach
-                                        </ul>
-
-                                        <!-- Hidden input for form submission -->
-                                        <input type="hidden" name="type" id="docTypeInput">
-                                    </div>
-                                    
-                                    
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Summary -->
-                        <div class="flex flex-col gap-1 border-2 border-gray-500 p-2 rounded-[8px]">
-                            <label for="summary" class="font-semibold text-gray-500">Summary<span
-                                    class="required-indicator text-red-500"> *</span>:</label>
-
-                            <textarea id="summary" name="summary"
-                                class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
-                                oninput="summaryUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
-
-                            <div class="text-sm text-gray-500 text-right">
-                                <span id="summary-counter">0</span>/255
-                            </div>
-                        </div>
-
-                        <!-- Event Title (Only shows for Event Proposals) -->
-                        <div id="event-title-container"
-                            class="flex items-center border-b-2 border-gray-500 py-3 w-full hidden">
-                            <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Event Title<span
+                            <div class="flex flex-col gap-4 w-full md:w-1/2">
+                                <!-- Proposed Date & Time Field -->
+                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                                    <span class="text-gray-500 font-semibold mr-2">Proposed Date & Time<span
                                     class="required-indicator text-red-500"> *</span>:</span>
-                            <input type="text" id="event-title" name="event-title" autocomplete="off"
-                                class="flex-1 font-semibold focus:outline-none" maxlength="60">
-                        </div>
-
-                        <!-- Event Description (Only shows for Event Proposals) -->
-                        <div id="event-desc-container" class="flex flex-col gap-1 hidden">
-                            <label for="event-desc" class="font-semibold text-gray-500">Event Description<span
-                                    class="required-indicator text-red-500"> *</span>:</label>
-
-                            <textarea id="event-desc" name="event-desc"
-                                class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
-                                oninput="eventDescUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
-
-                            <div class="text-sm text-gray-500 text-right border-b-2 border-gray-500">
-                                <span id="event-desc-counter">0</span>/255
+                                    <input type="datetime-local" id="proposed_date_time" name="proposed_date_time"
+                                    class="flex-1 font-semibold focus:outline-none">
+                                </div>
+                            </div>
+                            
+                            <!-- Right Side -->
+                            <div class="flex flex-col gap-4 w-full md:w-1/2">
+                                <!-- Hours Field -->
+                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                                    <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">No. of Hours<span
+                                    class="required-indicator text-red-500"> *</span>:</span>
+                                    <input type="number" id="hours" name="hours" min="1" step="1" autocomplete="off"
+                                    class="flex-1 font-semibold focus:outline-none">
+                                </div>
                             </div>
                         </div>
+                    
+                        <!-- Attendees Field and Attendees Range Field -->
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <!-- Left Side -->
+                            <div class="flex flex-col gap-4 w-full md:w-1/2">
+                                <!-- Attendees Field -->
+                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                                    <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Attendees<span
+                                    class="required-indicator text-red-500"> *</span>:</span>
+                                    <input type="text" id="attendees" name="attendees" autocomplete="off"
+                                    class="flex-1 font-semibold focus:outline-none" maxlength="50" placeholder="Course/Year/Section">
+                                </div>
+                            </div>
+                            
+                            <!-- Right Side -->
+                            <div class="relative w-full md:w-1/2">
+                                <!-- Attendees Range Button -->
+                                <button type="button" id="attendeesRangeButton" aria-expanded
+                                    class="relative w-full text-left border-2 border-gray-500 p-2 rounded-[8px] flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                    <span class="font-semibold text-gray-500">
+                                        Expected No. of Attendees<span class="required-indicator text-red-500"> *</span>:
+                                        <span id="attendeesRangeSelected" class="font-semibold text-black"></span>
+                                    </span>
+                                    <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
+                                        id="attendeesRangeArrow" class="absolute right-2 w-8 h-3">
+                                </button>
 
-                        <!-- File Upload -->
-                        <div class="space-y-2 w-full md:w-[400px]">
-                            <div
-                                class="flex items-center w-full overflow-hidden rounded-[12px] bg-white border border-gray-400">
-                                <!-- Upload Button (Left side) -->
-                                <label tabindex="0" for="fileUpload"
-                                    class="flex items-center gap-2 bg-[#7A1212] text-white font-semibold rounded-[12px] px-4 py-2 cursor-pointer hover:bg-[#a31515]">
-                                    <img src="{{ asset('images/upload-icon.svg') }}" alt="Upload Icon" id="docTypeIcon"
-                                        class="w-4 h-4">
-                                    Upload File
+                                <!-- Dropdown List -->
+                                <ul role="listbox" id="attendeesRangeDropdown"
+                                    class="hidden absolute z-10 mt-1 w-full bg-white text-black rounded-[11px] shadow-md">
+                                    @foreach (['10-50', '50-100', '100-250', '250-500', 'Above 500'] as $attendees_range)
+                                        <li tabindex="0" role="option"
+                                            class="px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold"
+                                            onclick="selectAttendeesRange('{{ $attendees_range }}')">
+                                            {{ $attendees_range }}
+                                        </li>
+                                    @endforeach
+                                </ul>
+
+                                <!-- Hidden input for attendees range -->
+                                <input type="hidden" name="attendees_range" id="attendeesRangeInput">
+                            </div>
+                        </div>                        
+                    
+                        <!-- Fees Field-->
+                        <div class="flex items-center w-full flex-wrap md:flex">
+                            <span class="text-gray-500 font-semibold mr-2">
+                                Fee/Contributions per Student/Participant (if applicable):
+                            </span>
+                            
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-gray-500">₱</span>
+                                <input type="number" id="fees" name="fees" min="0" step="0.01" autocomplete="off"
+                                class="pl-6 w-full border-2 border-gray-500 font-semibold rounded-[8px] px-2 py-1 focus:outline-none">
+                            </div>
+                            
+                            <div class="ml-4">
+                                <label class="flex items-center space-x-1">
+                                    <input type="checkbox" id="fee_none" name="fee_none" class="form-checkbox font-semibold border-2 border-gray-500 rounded-[8px] h-5 w-5">
+                                    <span class="text-gray-500 font-semibold whitespace-nowrap">None</span>
                                 </label>
-
-                                <!-- Hidden File Input -->
-                                <input type="file" id="fileUpload" name="file_upload[]" class="hidden"
-                                    onchange="validateFile(this)" multiple>
-
-                                <!-- Filename Display (Right side) -->
-                                <div id="fileName" class="flex-1 px-3 py-2 text-sm text-gray-500 truncate">No File Chosen
-                                </div>
-                            </div>
-
-                            <p class="text-sm text-gray-500">Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC</p>
-                        </div>
-
-                        <!-- Buttons -->
-                        <div class="flex flex-col md:flex-row gap-4 justify-end">
-                            <button id="mainSubmitButton" type="button" onclick="showConfirmPopup(event)"
-                                class="order-1 md:order-2 w-full font-semibold bg-gray-500 text-white px-6 py-2 rounded-[12px] md:w-auto cursor-not-allowed transition"
-                                disabled>Submit</button>
-
-                            <button type="button" onclick="window.location.href='{{ route('student.dashboard') }}'"
-                                class="order-2 md:order-1 w-full font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] md:w-auto cursor-pointer transition">Back
-                                to Home</button>
-                        </div>
-
-                        <!-- Confirmation Popup -->
-                        <div id="confirmPopup" class="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 hidden">
-                            <div
-                                class="bg-white rounded-xl p-6 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl shadow-lg text-gray-800">
-                                <div class="flex justify-between items-start mb-4">
-                                    <h2 class="text-lg font-semibold">Document Submission Confirmation</h2>
-                                    <button type="button" onclick="closeConfirmPopup()"
-                                        class="text-gray-500 hover:text-gray-700 text-3xl leading-none cursor-pointer self-center">&times;</button>
-                                </div>
-
-                                <p class="mb-6">Are you sure you want to submit this document? Once submitted, you may not be
-                                    able to make further changes.</p>
-
-                                <div class="flex justify-end space-x-2">
-                                    <button onclick="closeConfirmPopup()"
-                                        class="font-semibold px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer"
-                                        type="button">Cancel</button>
-                                    <button id="confirmSubmitBtn" type="submit" onclick="handleConfirmSubmit(this)"
-                                        class="font-semibold px-4 py-2 bg-[#7A1212] text-white rounded-md hover:bg-[#a31515] cursor-pointer">
-                                        Submit
-                                    </button>
-                                </div>
                             </div>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                        
+                    <div id="event_attachments_container" class="text-gray-500 font-semibold mb-4 hidden">
+                        <div class="flex items-center w-full md:flex md:w-[400px]">
+                            <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Attachments<span
+                                class="required-indicator text-red-500"> *</span>:</span>
+                        </div>
+                        
+                        <div class="flex w-full ml-2 md:flex items-start">
+                            <ul class="list-disc list-inside">
+                                <li>Request Letter with Proposal Details and Program of Activities (Required)</li>
+                                <li>Detailed Budgeted Expenses (if applicable)</li>
+                                <li>Profile of Resource Speaker (if applicable)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- File Upload Field -->
+                    <div class="space-y-2 w-full mb-4">
+                        <!-- Mobile Upload Button (Visible only on small screens) -->
+                        <div class="block md:hidden space-y-2">
+                            <label for="fileUpload" tabindex="0"
+                                class="flex items-center justify-center gap-2 bg-[#7A1212] text-white font-semibold rounded-[12px] px-6 py-2 cursor-pointer hover:bg-[#a31515]">
+                                <img src="{{ asset('images/upload-icon.svg') }}" alt="Upload Icon" class="w-5 h-5">
+                                <span>Upload File(s)</span>
+                            </label>
+                            <input type="file" id="fileUpload" name="file_upload[]" class="hidden" multiple>
+
+                            <p class="text-sm text-gray-500">
+                                Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC. Maximum of 30 Files
+                            </p>
+                        </div>
+
+                        <!-- Dropzone Area (Visible only on medium+ screens) -->
+                        <div class="hidden md:block">
+                            <div id="desktopDropzone"
+                                class="dropzone dz-clickable w-full border-2 border-dashed border-gray-500 rounded-lg p-6 text-center">
+                                <div class="dz-message flex flex-col items-center justify-center text-gray-500">
+                                    <img src="{{ asset('images/photo-upload-icon.svg') }}" alt="Upload Icon" class="w-12 h-12 mb-2">
+                                    <p>
+                                        <strong class="text-black">Drop your files here</strong> or
+                                        <span class="text-[#7A1212] font-semibold cursor-pointer">browse</span>
+                                    </p>
+                                    <p class="text-sm mt-1">
+                                        Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC. Maximum of 30 Files
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Shared Preview Area -->
+                        <div id="filePreviewArea" class="w-full space-y-2 mt-4"></div>
+
+                        <!-- Custom Dropzone Preview Template -->
+                        <div id="custom-preview-template" class="hidden">
+                            <div class="dz-preview bg-white rounded-lg border p-3 shadow-sm">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <img src="{{ asset('images/uploaded-file-icon.svg') }}" alt="Uploaded File"/>
+                                        <div>
+                                            <span class="dz-filename text-sm font-medium block"><span data-dz-name></span></span>
+                                            <span class="dz-size text-xs text-gray-500" data-dz-size></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-2 items-start">
+                                        <img src="{{ asset('images/check-circle-icon.svg') }}" alt="Success"
+                                            class="w-4 h-4 dz-success-icon hidden" />
+                                        <img src="{{ asset('images/trash-icon.svg') }}" alt="Remove"
+                                            class="w-4 h-4 cursor-pointer dz-remove" data-dz-remove title="Remove File"/>
+                                    </div>
+                                </div>
+                                
+                                <div class="relative w-full bg-gray-200 h-2 rounded">
+                                    <div class="bg-blue-600 h-2 rounded dz-upload" data-dz-uploadprogress style="width: 100%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="flex flex-col md:flex-row gap-4 justify-end">
+                        <button id="mainSubmitButton" type="button" onclick="showConfirmPopup(event)"
+                            class="order-1 md:order-2 w-full font-semibold bg-gray-500 text-white px-6 py-2 rounded-[12px] md:w-auto cursor-not-allowed transition"
+                            disabled>Submit</button>
+
+                        <button type="button" onclick="window.location.href='{{ route('student.dashboard') }}'"
+                            class="order-2 md:order-1 w-full font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] md:w-auto cursor-pointer transition">Back
+                            to Home</button>
+                    </div>
+
+                    <!-- Confirmation Popup -->
+                    <div id="confirmPopup" class="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 hidden">
+                        <div
+                            class="bg-white rounded-xl p-6 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl shadow-lg text-gray-800">
+                            <div class="flex justify-between items-start mb-4">
+                                <h2 class="text-lg font-semibold">Document Submission Confirmation</h2>
+                                <button type="button" onclick="closeConfirmPopup()"
+                                    class="text-gray-500 hover:text-gray-700 text-3xl leading-none cursor-pointer self-center">&times;</button>
+                            </div>
+
+                            <p class="mb-6">Are you sure you want to submit this document? Once submitted, you may not be
+                                able to make further changes.</p>
+
+                            <div class="flex justify-end space-x-2">
+                                <button onclick="closeConfirmPopup()"
+                                    class="font-semibold px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 cursor-pointer"
+                                    type="button">Cancel</button>
+                                <button id="confirmSubmitBtn" type="submit" onclick="handleConfirmSubmit(this)"
+                                    class="font-semibold px-4 py-2 bg-[#7A1212] text-white rounded-md hover:bg-[#a31515] cursor-pointer">
+                                    Submit
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
         @include('components.footer')
@@ -282,13 +451,32 @@
             input: document.getElementById('receiverInput')
         };
 
-        const eventTitleContainer = document.getElementById('event-title-container');
-        const eventDescContainer = document.getElementById('event-desc-container');
-        const summaryInput = document.getElementById('summary');
-        const summaryCounter = document.getElementById('summary-counter');
-        const eventDescInput = document.getElementById('event-desc');
-        const eventDescCounter = document.getElementById('event-desc-counter');
-        const fileNameDisplay = document.getElementById('fileName');
+        const academicYear = {
+            button: document.getElementById('academicYearButton'),
+            dropdown: document.getElementById('academicYearDropdown'),
+            selected: document.getElementById('academicYearSelected'),
+            input: document.getElementById('academicYearInput')
+        };
+
+        const academicYearMobile = {
+            button: document.getElementById('academicYearButtonMobile'),
+            dropdown: document.getElementById('academicYearDropdownMobile'),
+            selected: document.getElementById('academicYearSelectedMobile'),
+            input: document.getElementById('academicYearInput')
+        };
+
+        const attendeesRange = {
+            button: document.getElementById('attendeesRangeButton'),
+            dropdown: document.getElementById('attendeesRangeDropdown'),
+            selected: document.getElementById('attendeesRangeSelected'),
+            input: document.getElementById('attendeesRangeInput')
+        };
+
+        const eventProposalContainer = document.getElementById('event_proposal_container');
+        const eventAttachmentsContainer = document.getElementById('event_attachments_container');
+        const overviewInput = document.getElementById('overview');
+        const overviewCounter = document.getElementById('overview-counter');
+        const feesNoneCheckbox = document.getElementById("fee_none");
 
         // Arrow keys navigation for dropdowns
         function setupAccessibleDropdown(button, dropdown, onSelect) {
@@ -330,7 +518,8 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             setupAccessibleDropdown(docType.button, docType.dropdown, selectDocType);
-            setupAccessibleDropdown(receiver.button, receiver.dropdown, selectReceiver);
+            setupAccessibleDropdown(receiver.button, receiver.dropdown, selectReceiver);            
+            setupAccessibleDropdown(attendeesRange.button, attendeesRange.dropdown, selectAttendeesRange);
         });
 
         // Prevent form submission on Enter keypress except from inside the confirmation popup
@@ -344,19 +533,100 @@
         document.addEventListener("DOMContentLoaded", function() {
             document.getElementById("subject").addEventListener("keydown", function(e) {
                 if (e.key === "Enter") {
-                    e.preventDefault(); // Prevent form submission
+                    e.preventDefault();
                 }
             });
-            document.getElementById("event-title").addEventListener("keydown", function(e) {
+            document.getElementById("othersDocTypeInput").addEventListener("keydown", function(e) {
                 if (e.key === "Enter") {
-                    e.preventDefault(); // Prevent form submission
+                    e.preventDefault();
                 }
             });
+            document.getElementById("venue").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                }
+            });
+            document.getElementById("hours").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                }
+            });
+            document.getElementById("attendees").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                }
+            });
+            document.getElementById("fees").addEventListener("keydown", function(e) {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                }
+            });
+            if (feesNoneCheckbox) {
+                document.getElementById("fee_none").addEventListener("keydown", function (e) {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        feesNoneCheckbox.checked = !feesNoneCheckbox.checked;
+                        feesNoneCheckbox.dispatchEvent(new Event('change', { bubbles: true })); // Fire change event manually
+                    }
+                });
+            }
+        });
+
+        // Limits inputs for hours field to positive integers (x > 0)
+        const hoursInput = document.getElementById('hours');
+
+        hoursInput.addEventListener('keydown', function (e) {
+            const invalidKeys = ["-", "e", "E", "+", "."];
+            const isZero = e.key === "0" && this.value.length === 0;
+
+            if (invalidKeys.includes(e.key) || isZero) {
+                e.preventDefault();
+            }
+        });
+
+        hoursInput.addEventListener('paste', function (e) {
+            const pasteData = e.clipboardData.getData('text');
+            if (!/^[1-9][0-9]*$/.test(pasteData)) {
+                e.preventDefault();
+            }
+        });
+
+        hoursInput.addEventListener('input', function (e) {
+            // Immediately remove any invalid input (example: 0000)
+            if (!/^[1-9][0-9]*$/.test(this.value)) {
+                this.value = '';
+            }
+        });
+
+        // Limits inputs for fees field to positive integers w/ 0 (x >= 0)
+        const feesInput = document.getElementById('fees');
+
+        feesInput.addEventListener('keydown', function (e) {
+            const invalidKeys = ["-", "e", "E", "+"];
+
+            if (invalidKeys.includes(e.key)) {
+                e.preventDefault();
+            }
+
+            // Only one decimal point
+            if (e.key === "." && this.value.includes(".")) {
+                e.preventDefault();
+            }
+        });
+
+        feesInput.addEventListener('paste', function (e) {
+            const pasteData = e.clipboardData.getData('text');
+            if (!/^\d+(\.\d{1,2})?$/.test(pasteData)) {
+                e.preventDefault();
+            }
         });
 
         // Toggle dropdown visibility
         docType.button.addEventListener('click', () => toggleDropdown(docType.dropdown));
         receiver.button.addEventListener('click', () => toggleDropdown(receiver.dropdown));
+        academicYear.button.addEventListener('click', () => toggleDropdown(academicYear.dropdown));
+        academicYearMobile.button.addEventListener('click', () => toggleDropdown(academicYearMobile.dropdown));
+        attendeesRange.button.addEventListener('click', () => toggleDropdown(attendeesRange.dropdown));
 
         function toggleDropdown(dropdown) {
             dropdown.classList.toggle('hidden');
@@ -366,70 +636,6 @@
                     setTimeout(() => firstItem.focus(), 0);
                 }
             }
-        }
-
-        // File Upload Validation
-        function validateFile(input) {
-            const files = input.files;
-            const fileNameDisplay = document.getElementById('fileName');
-
-            if (!files.length) {
-                fileNameDisplay.textContent = "No File Chosen";
-                return;
-            }
-
-            const validTypes = [
-                'application/pdf', //PDF
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-                'application/msword' // DOC
-            ];
-
-            const maxSize = 5 * 1024 * 1024;
-            const maxFiles = 30;
-
-            if (files.length > maxFiles) {
-                hideAllToasts();
-                showToast('error', `Upload limit reached. Please remove some files before uploading new ones.`);
-                input.value = "";
-                fileNameDisplay.textContent = "No File Chosen";
-                return;
-            }
-
-            let errorShown = false;
-            let fileNames = [];
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-
-                if (!validTypes.includes(file.type)) {
-                    hideAllToasts();
-                    showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
-                    input.value = "";
-                    fileNameDisplay.textContent = "No File Chosen";
-                    errorShown = true;
-                    break;
-                }
-
-                if (file.size > maxSize) {
-                    hideAllToasts();
-                    showToast('error', "File size must not exceed 5 mb.");
-                    input.value = "";
-                    fileNameDisplay.textContent = "No File Chosen";
-                    errorShown = true;
-                    break;
-                }
-
-                fileNames.push(file.name);
-            }
-
-            if (!errorShown) {
-                fileNameDisplay.textContent = fileNames.join(', ');
-            }
-        }
-
-        // Show file name
-        window.showFileName = function(input) {
-            fileNameDisplay.textContent = input.files.length > 0 ? input.files[0].name : 'No File Chosen';
         }
 
         // Dynamic Toast Message
@@ -499,13 +705,77 @@
             hideToast('fail');
         }
 
+        // Populates the academic year field dropdown list with semesters from 1990 up to the current year
+        function populateAcademicYearDropdown(dropdownId, isMobile) {
+            const dropdown = document.getElementById(dropdownId);
+            dropdown.innerHTML = '';
+
+            const today = new Date();
+            const currentMonth = today.getMonth(); // 0 = January, 7 = August
+            let currentAcademicYearStart;
+
+            // Academic year starts in August
+            if (currentMonth >= 7) {
+                currentAcademicYearStart = today.getFullYear();
+            } else {
+                currentAcademicYearStart = today.getFullYear() - 1;
+            }
+
+            const endYear = 1990;
+            const terms = ['1st Semester', '2nd Semester', 'Midyear'];
+
+            // Loop from current academic year down to end year (1990)
+            for (let year = currentAcademicYearStart; year >= endYear; year--) {
+                for (let term of terms) {
+                    const label = `${year}-${year + 1} ${term}`;
+                    const li = document.createElement('li');
+                    li.setAttribute('tabindex', '0');
+                    li.setAttribute('role', 'option');
+                    li.className = 'px-4 py-2 hover:bg-gray-100 cursor-pointer font-semibold';
+                    li.textContent = label;
+                    li.onclick = () => selectAcademicYear(label, isMobile);
+                    dropdown.appendChild(li);
+                }
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            populateAcademicYearDropdown('academicYearDropdown', false); // desktop
+            populateAcademicYearDropdown('academicYearDropdownMobile', true); // mobile
+
+            // Setup dropdowns after population of academic year dropdown list
+            setupAccessibleDropdown(academicYear.button, academicYear.dropdown, selectAcademicYear);
+            setupAccessibleDropdown(academicYearMobile.button, academicYearMobile.dropdown, selectAcademicYear);
+        });
+
         // Show receiver name in the dropdown
         window.selectReceiver = function(id, role) {
             const displayText = `${role}`;
-            receiver.selected.innerHTML = displayText; // Use innerHTML to apply styling
+            receiver.selected.innerHTML = displayText;
             receiver.input.value = id;
             receiver.dropdown.classList.add('hidden');
             receiverAutoSelected = true; // Disables auto-select receiver
+        }
+
+        // Show academic year in the dropdown
+        window.selectAcademicYear = function (value, isMobile) {
+            const target = isMobile ? academicYearMobile : academicYear;
+            target.selected.textContent = value;
+            target.input.value = value;
+            target.dropdown.classList.add('hidden');
+
+            // Fire change event manually
+            target.input.dispatchEvent(new Event('change', { bubbles: true }));
+        };
+
+        // Show attendees range in the dropdown
+        window.selectAttendeesRange = function(value) {
+            attendeesRange.selected.innerHTML = value;
+            attendeesRange.input.value = value;
+            attendeesRange.dropdown.classList.add('hidden');
+
+            // Fire change event manually
+            attendeesRange.input.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
         // Select doc type
@@ -516,11 +786,25 @@
 
             // Show/hide Event-specific fields
             if (value === 'Event Proposal') {
-                eventTitleContainer.classList.remove('hidden');
-                eventDescContainer.classList.remove('hidden');
+                eventProposalContainer.classList.remove('hidden');
+                eventAttachmentsContainer.classList.remove('hidden');
             } else {
-                eventTitleContainer.classList.add('hidden');
-                eventDescContainer.classList.add('hidden');
+                eventProposalContainer.classList.add('hidden');
+                eventAttachmentsContainer.classList.add('hidden');
+            }
+
+            // Show/hide 'Other' input field
+            const othersDocTypeContainer = document.getElementById('othersDocTypeContainer');
+            const othersDocTypeInput = document.getElementById('othersDocTypeInput');
+
+            if (value === 'Other') {
+                othersDocTypeContainer.hidden = false;
+                othersDocTypeInput.name = 'type'; // Main submission field
+                othersDocTypeInput.focus();
+                docType.input.value = ''; // Clear main hidden input to avoid duplication
+            } else {
+                othersDocTypeContainer.hidden = true;
+                othersDocTypeInput.name = 'other_type'; // Avoid conflicting name
             }
         }
 
@@ -532,16 +816,20 @@
             if (!receiver.button.contains(e.target) && !receiver.dropdown.contains(e.target)) {
                 receiver.dropdown.classList.add('hidden');
             }
+            if (!academicYear.button.contains(e.target) && !academicYear.dropdown.contains(e.target)) {
+                academicYear.dropdown.classList.add('hidden');
+            }
+            if (!academicYearMobile.button.contains(e.target) && !academicYearMobile.dropdown.contains(e.target)) {
+                academicYearMobile.dropdown.classList.add('hidden');
+            }
+            if (!attendeesRange.button.contains(e.target) && !attendeesRange.dropdown.contains(e.target)) {
+                attendeesRange.dropdown.classList.add('hidden');
+            }
         });
 
-        // Summary character counter
-        window.summaryUpdateCounter = function() {
-            summaryCounter.textContent = summaryInput.value.length;
-        }
-
-        // Event description character counter
-        window.eventDescUpdateCounter = function() {
-            eventDescCounter.textContent = eventDescInput.value.length;
+        // Overview character counter
+        window.overviewUpdateCounter = function() {
+            overviewCounter.textContent = overviewInput.value.length;
         }
 
         // Confirming Submission Toast Message
@@ -551,7 +839,7 @@
             popup.classList.remove('hidden');
 
             const focusableElements = popup.querySelectorAll(
-                'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                'button:not([disabled]), [href], input, textarea, [tabindex]:not([tabindex="-1"])');
             const firstEl = focusableElements[0];
             const lastEl = focusableElements[focusableElements.length - 1];
 
@@ -595,22 +883,45 @@
             const requiredFields = {
                 receiver: () => document.getElementById('receiverInput').value.trim() !== '',
                 subject: () => document.getElementById('subject').value.trim() !== '',
-                docType: () => document.getElementById('docTypeInput').value.trim() !== '',
-                summary: () => document.getElementById('summary').value.trim() !== '',
+                docType: () => {
+                    const docTypeValue = document.getElementById('docTypeSelected').textContent.trim();
+                    if (docTypeValue === 'Other') {
+                        return requiredFields.otherType(); // ensure the user typed something
+                    }
+                    return document.getElementById('docTypeInput').value.trim() !== '';
+                },
+                otherType: () => document.getElementById('othersDocTypeInput').value.trim() !== '',
+                academicYear: () => document.getElementById('academicYearInput').value.trim() !== '',
+                overview: () => document.getElementById('overview').value.trim() !== '',
+                venue: () => document.getElementById('venue').value.trim() !== '',
+                proposed_date_time: () => document.getElementById('proposed_date_time').value.trim() !== '',
+                hours: () => document.getElementById('hours').value.trim() !== '',
+                attendees: () => document.getElementById('attendees').value.trim() !== '',
+                attendeesRange: () => document.getElementById('attendeesRangeInput').value.trim() !== '',
+                fees: () => document.getElementById('fees').value.trim() !== '',
                 file: () => document.getElementById('fileUpload').files.length > 0,
-                eventTitle: () => document.getElementById('event-title').value.trim() !== '',
-                eventDesc: () => document.getElementById('event-desc').value.trim() !== '',
             };
 
             const submitButton = document.getElementById('mainSubmitButton');
             const docTypeInput = document.getElementById('docTypeInput');
+            const feeInput = document.getElementById('fees');
+            const feeNoneCheckbox = document.querySelector('input[name="fee_none"]');
 
-            function validateForm() {
+            window.validateForm = function validateForm() {
+                // If "Other" is selected, use the value from the text input
+                const docTypeSelected = document.getElementById('docTypeSelected').textContent.trim();
+                const othersInput = document.getElementById('othersDocTypeInput');
+
+                if (docTypeSelected === 'Other') {
+                    docTypeInput.value = othersInput.value.trim(); // overwrite hidden input value
+                }
+
                 const isEventProposal = docTypeInput.value === 'Event Proposal';
                 const baseValid = requiredFields.receiver() && requiredFields.subject() &&
-                    requiredFields.docType() && requiredFields.summary() && requiredFields.file();
+                    requiredFields.docType() && requiredFields.academicYear() && requiredFields.overview() && requiredFields.file();
                 const eventValid = !isEventProposal || (
-                    requiredFields.eventTitle() && requiredFields.eventDesc()
+                    requiredFields.venue() && requiredFields.proposed_date_time() && requiredFields.hours()
+                    && requiredFields.attendees() && requiredFields.attendeesRange() && (feeNoneCheckbox.checked || requiredFields.fees())
                 );
 
                 const allValid = baseValid && eventValid;
@@ -626,8 +937,9 @@
             }
 
             const inputsToWatch = [
-                'receiverInput', 'subject', 'docTypeInput', 'summary',
-                'event-title', 'event-desc', 'fileUpload'
+                'receiverInput', 'subject', 'docTypeInput', 'othersDocTypeInput',
+                'academicYearInput', 'overview', 'venue', 'proposed_date_time',
+                'hours', 'attendees', 'attendeesRangeInput', 'fees', 'fileUpload'
             ];
 
             inputsToWatch.forEach(id => {
@@ -636,6 +948,20 @@
                     element.addEventListener('input', validateForm);
                     element.addEventListener('change', validateForm);
                 }
+            });
+
+            // "None" checkbox functionality for fees field
+            feeNoneCheckbox.addEventListener('change', function () {
+                if (this.checked) {
+                    feeInput.readOnly = true;
+                    feeInput.classList.add('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                    feeInput.value = 0;
+                } else {
+                    feeInput.readOnly = false;
+                    feeInput.classList.remove('bg-gray-200', 'text-gray-500', 'cursor-not-allowed');
+                }
+
+                validateForm();
             });
 
             // Re-validate when document type is changed via your selectDocType function
@@ -656,6 +982,132 @@
 
             // Called on page load just in case
             validateForm();
+        });
+    </script>
+
+    <!-- Dropzone JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+    <script>
+        Dropzone.autoDiscover = false;
+
+        const fileInput = document.getElementById("fileUpload");
+        const MAX_FILES = 30;
+        const MAX_FILE_SIZE_MB = 5;
+        const ALLOWED_TYPES = [
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword'
+        ];
+        const previewTemplate = document.getElementById("custom-preview-template").innerHTML;
+
+        const myDropzone = new Dropzone("#desktopDropzone", {
+            url: "#",
+            autoProcessQueue: false,
+            clickable: true,
+            maxFiles: MAX_FILES,
+            maxFilesize: MAX_FILE_SIZE_MB,
+            previewsContainer: "#filePreviewArea",
+            previewTemplate: previewTemplate,
+
+            accept(file, done) {
+                done(); // allow everything, we'll validate in "addedfile"
+            },
+
+            init() {
+                const dz = this;
+
+                dz.on("addedfile", function (file) {
+                    // Validate
+                    if (!ALLOWED_TYPES.includes(file.type)) {
+                        dz.removeFile(file);
+                        hideAllToasts();
+                        showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
+                        return;
+                    }
+
+                    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                        dz.removeFile(file);
+                        hideAllToasts();
+                        showToast('error', "File size must not exceed 5 MB.");
+                        return;
+                    }
+
+                    if (dz.files.length > MAX_FILES) {
+                        dz.removeFile(file);
+                        hideAllToasts();
+                        showToast('error', `Upload limit reached. Max ${MAX_FILES} files.`);
+                        return;
+                    }
+
+                    // Show success icon
+                    const successIcon = file.previewElement.querySelector(".dz-success-icon");
+                    if (successIcon) successIcon.classList.remove("hidden");
+
+                    // Update file input
+                    const dt = new DataTransfer();
+                    dz.files.forEach(f => dt.items.add(f));
+                    fileInput.files = dt.files;
+
+                    // Trigger change again to re-render previews
+                    validateForm();
+                });
+
+                dz.on("removedfile", function (removedFile) {
+                    const dt = new DataTransfer();
+                    dz.files.forEach(f => {
+                        if (f !== removedFile) {
+                            dt.items.add(f);
+                        }
+                    });
+                    fileInput.files = dt.files;
+
+                    // Trigger change again to re-render previews
+                    validateForm();
+                });
+            }
+        });
+
+        // Mobile input handler
+        fileInput.addEventListener("change", function () {
+            const files = Array.from(this.files);
+
+            let added = 0;
+
+            files.forEach(file => {
+                if (!ALLOWED_TYPES.includes(file.type)) {
+                    showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
+                    return;
+                }
+
+                if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                    showToast('error', "File size must not exceed 5 MB.");
+                    return;
+                }
+
+                if (myDropzone.files.length >= MAX_FILES) {
+                    showToast('error', `Upload limit reached. Max ${MAX_FILES} files.`);
+                    return;
+                }
+
+                myDropzone.addFile(file);
+                added++;
+            });
+
+            // Reset input so same files can be selected again
+            this.value = "";
+        });
+
+        // Override mobile trash icons via event delegation (if needed)
+        document.getElementById("filePreviewArea").addEventListener("click", function (e) {
+            if (e.target && e.target.matches(".dz-remove")) {
+                const previewEl = e.target.closest(".dz-preview");
+                if (previewEl) {
+                    const file = myDropzone.files.find(f => f.previewElement === previewEl);
+                    if (file) {
+                        myDropzone.removeFile(file);
+                    }
+                }
+            }
         });
     </script>
 @endsection
