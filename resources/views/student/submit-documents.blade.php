@@ -269,27 +269,66 @@
                     </div>
 
                     <!-- File Upload Field -->
-                    <div class="space-y-2 w-full md:w-[400px]">
-                        <div
-                            class="flex items-center w-full overflow-hidden rounded-[12px] bg-white border border-gray-400">
-                            <!-- Upload Button (Left side) -->
-                            <label tabindex="0" for="fileUpload"
-                                class="flex items-center gap-2 bg-[#7A1212] text-white font-semibold rounded-[12px] px-4 py-2 cursor-pointer hover:bg-[#a31515]">
-                                <img src="{{ asset('images/upload-icon.svg') }}" alt="Upload Icon" id="docTypeIcon"
-                                    class="w-4 h-4">
-                                Upload File
+                    <div class="space-y-2 w-full mb-4">
+                        <!-- Mobile Upload Button (Visible only on small screens) -->
+                        <div class="block md:hidden space-y-2">
+                            <label for="fileUpload" tabindex="0"
+                                class="flex items-center justify-center gap-2 bg-[#7A1212] text-white font-semibold rounded-[12px] px-6 py-2 cursor-pointer hover:bg-[#a31515]">
+                                <img src="{{ asset('images/upload-icon.svg') }}" alt="Upload Icon" class="w-5 h-5">
+                                <span>Upload File(s)</span>
                             </label>
+                            <input type="file" id="fileUpload" name="file_upload[]" class="hidden" multiple>
 
-                            <!-- Hidden File Input -->
-                            <input type="file" id="fileUpload" name="file_upload[]" class="hidden"
-                                onchange="validateFile(this)" multiple>
+                            <p class="text-sm text-gray-500">
+                                Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC. Maximum of 30 Files
+                            </p>
+                        </div>
 
-                            <!-- Filename Display (Right side) -->
-                            <div id="fileName" class="flex-1 px-3 py-2 text-sm text-gray-500 truncate">No File Chosen
+                        <!-- Dropzone Area (Visible only on medium+ screens) -->
+                        <div class="hidden md:block">
+                            <div id="desktopDropzone"
+                                class="dropzone dz-clickable w-full border-2 border-dashed border-gray-500 rounded-lg p-6 text-center">
+                                <div class="dz-message flex flex-col items-center justify-center text-gray-500">
+                                    <img src="{{ asset('images/photo-upload-icon.svg') }}" alt="Upload Icon" class="w-12 h-12 mb-2">
+                                    <p>
+                                        <strong class="text-black">Drop your files here</strong> or
+                                        <span class="text-[#7A1212] font-semibold cursor-pointer">browse</span>
+                                    </p>
+                                    <p class="text-sm mt-1">
+                                        Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC. Maximum of 30 Files
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
-                        <p class="text-sm text-gray-500">Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC</p>
+                        <!-- Shared Preview Area -->
+                        <div id="filePreviewArea" class="w-full space-y-2 mt-4"></div>
+
+                        <!-- Custom Dropzone Preview Template -->
+                        <div id="custom-preview-template" class="hidden">
+                            <div class="dz-preview bg-white rounded-lg border p-3 shadow-sm">
+                                <div class="flex justify-between items-start mb-1">
+                                    <div class="flex items-center gap-2">
+                                        <img src="{{ asset('images/uploaded-file-icon.svg') }}" alt="Uploaded File"/>
+                                        <div>
+                                            <span class="dz-filename text-sm font-medium block"><span data-dz-name></span></span>
+                                            <span class="dz-size text-xs text-gray-500" data-dz-size></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex gap-2 items-start">
+                                        <img src="{{ asset('images/check-circle-icon.svg') }}" alt="Success"
+                                            class="w-4 h-4 dz-success-icon hidden" />
+                                        <img src="{{ asset('images/trash-icon.svg') }}" alt="Remove"
+                                            class="w-4 h-4 cursor-pointer dz-remove" data-dz-remove title="Remove File"/>
+                                    </div>
+                                </div>
+                                
+                                <div class="relative w-full bg-gray-200 h-2 rounded">
+                                    <div class="bg-blue-600 h-2 rounded dz-upload" data-dz-uploadprogress style="width: 100%;"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Buttons -->
@@ -438,7 +477,6 @@
         const overviewInput = document.getElementById('overview');
         const overviewCounter = document.getElementById('overview-counter');
         const feesNoneCheckbox = document.getElementById("fee_none");
-        const fileNameDisplay = document.getElementById('fileName');
 
         // Arrow keys navigation for dropdowns
         function setupAccessibleDropdown(button, dropdown, onSelect) {
@@ -598,70 +636,6 @@
                     setTimeout(() => firstItem.focus(), 0);
                 }
             }
-        }
-
-        // File Upload Validation
-        function validateFile(input) {
-            const files = input.files;
-            const fileNameDisplay = document.getElementById('fileName');
-
-            if (!files.length) {
-                fileNameDisplay.textContent = "No File Chosen";
-                return;
-            }
-
-            const validTypes = [
-                'application/pdf', //PDF
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // DOCX
-                'application/msword' // DOC
-            ];
-
-            const maxSize = 5 * 1024 * 1024;
-            const maxFiles = 30;
-
-            if (files.length > maxFiles) {
-                hideAllToasts();
-                showToast('error', `Upload limit reached. Please remove some files before uploading new ones.`);
-                input.value = "";
-                fileNameDisplay.textContent = "No File Chosen";
-                return;
-            }
-
-            let errorShown = false;
-            let fileNames = [];
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-
-                if (!validTypes.includes(file.type)) {
-                    hideAllToasts();
-                    showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
-                    input.value = "";
-                    fileNameDisplay.textContent = "No File Chosen";
-                    errorShown = true;
-                    break;
-                }
-
-                if (file.size > maxSize) {
-                    hideAllToasts();
-                    showToast('error', "File size must not exceed 5 mb.");
-                    input.value = "";
-                    fileNameDisplay.textContent = "No File Chosen";
-                    errorShown = true;
-                    break;
-                }
-
-                fileNames.push(file.name);
-            }
-
-            if (!errorShown) {
-                fileNameDisplay.textContent = fileNames.join(', ');
-            }
-        }
-
-        // Show file name
-        window.showFileName = function(input) {
-            fileNameDisplay.textContent = input.files.length > 0 ? input.files[0].name : 'No File Chosen';
         }
 
         // Dynamic Toast Message
@@ -933,7 +907,7 @@
             const feeInput = document.getElementById('fees');
             const feeNoneCheckbox = document.querySelector('input[name="fee_none"]');
 
-            function validateForm() {
+            window.validateForm = function validateForm() {
                 // If "Other" is selected, use the value from the text input
                 const docTypeSelected = document.getElementById('docTypeSelected').textContent.trim();
                 const othersInput = document.getElementById('othersDocTypeInput');
@@ -1008,6 +982,132 @@
 
             // Called on page load just in case
             validateForm();
+        });
+    </script>
+
+    <!-- Dropzone JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.9.3/min/dropzone.min.js"></script>
+    <script>
+        Dropzone.autoDiscover = false;
+
+        const fileInput = document.getElementById("fileUpload");
+        const MAX_FILES = 30;
+        const MAX_FILE_SIZE_MB = 5;
+        const ALLOWED_TYPES = [
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/msword'
+        ];
+        const previewTemplate = document.getElementById("custom-preview-template").innerHTML;
+
+        const myDropzone = new Dropzone("#desktopDropzone", {
+            url: "#",
+            autoProcessQueue: false,
+            clickable: true,
+            maxFiles: MAX_FILES,
+            maxFilesize: MAX_FILE_SIZE_MB,
+            previewsContainer: "#filePreviewArea",
+            previewTemplate: previewTemplate,
+
+            accept(file, done) {
+                done(); // allow everything, we'll validate in "addedfile"
+            },
+
+            init() {
+                const dz = this;
+
+                dz.on("addedfile", function (file) {
+                    // Validate
+                    if (!ALLOWED_TYPES.includes(file.type)) {
+                        dz.removeFile(file);
+                        hideAllToasts();
+                        showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
+                        return;
+                    }
+
+                    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                        dz.removeFile(file);
+                        hideAllToasts();
+                        showToast('error', "File size must not exceed 5 MB.");
+                        return;
+                    }
+
+                    if (dz.files.length > MAX_FILES) {
+                        dz.removeFile(file);
+                        hideAllToasts();
+                        showToast('error', `Upload limit reached. Max ${MAX_FILES} files.`);
+                        return;
+                    }
+
+                    // Show success icon
+                    const successIcon = file.previewElement.querySelector(".dz-success-icon");
+                    if (successIcon) successIcon.classList.remove("hidden");
+
+                    // Update file input
+                    const dt = new DataTransfer();
+                    dz.files.forEach(f => dt.items.add(f));
+                    fileInput.files = dt.files;
+
+                    // Trigger change again to re-render previews
+                    validateForm();
+                });
+
+                dz.on("removedfile", function (removedFile) {
+                    const dt = new DataTransfer();
+                    dz.files.forEach(f => {
+                        if (f !== removedFile) {
+                            dt.items.add(f);
+                        }
+                    });
+                    fileInput.files = dt.files;
+
+                    // Trigger change again to re-render previews
+                    validateForm();
+                });
+            }
+        });
+
+        // Mobile input handler
+        fileInput.addEventListener("change", function () {
+            const files = Array.from(this.files);
+
+            let added = 0;
+
+            files.forEach(file => {
+                if (!ALLOWED_TYPES.includes(file.type)) {
+                    showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
+                    return;
+                }
+
+                if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                    showToast('error', "File size must not exceed 5 MB.");
+                    return;
+                }
+
+                if (myDropzone.files.length >= MAX_FILES) {
+                    showToast('error', `Upload limit reached. Max ${MAX_FILES} files.`);
+                    return;
+                }
+
+                myDropzone.addFile(file);
+                added++;
+            });
+
+            // Reset input so same files can be selected again
+            this.value = "";
+        });
+
+        // Override mobile trash icons via event delegation (if needed)
+        document.getElementById("filePreviewArea").addEventListener("click", function (e) {
+            if (e.target && e.target.matches(".dz-remove")) {
+                const previewEl = e.target.closest(".dz-preview");
+                if (previewEl) {
+                    const file = myDropzone.files.find(f => f.previewElement === previewEl);
+                    if (file) {
+                        myDropzone.removeFile(file);
+                    }
+                }
+            }
         });
     </script>
 @endsection
