@@ -14,7 +14,14 @@ class Document extends Model
         'subject',
         'type',
         'control_tag',
-        'summary',
+        'overview',
+        'academic_year',
+        'venue',
+        'proposed_date_time',
+        'hours',
+        'attendees',
+        'attendees_range',
+        'fees',
         'status',
     ];
 }

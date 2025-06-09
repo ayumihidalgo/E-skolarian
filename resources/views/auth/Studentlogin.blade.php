@@ -123,8 +123,9 @@
     @endphp
 </head>
 
-@include('loading')
 <body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] md:bg-[var(--secondary-color)] font-['Manrope'] font-bold">
+    @include('loading')
+
     <div id="bgA" class="fixed inset-0 z-0 transition-all duration-1000 ease-in-out opacity-100" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: center;"></div>
     <div id="bgB" class="fixed inset-0 z-0 transition-opacity duration-1000 ease-in-out opacity-0"></div>
     <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md md:absolute relative">
@@ -892,15 +893,15 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // Listen for input on required fields
-  reportForm.email.addEventListener('input', () => {
-    isDirty = true;
+    reportForm.email.addEventListener('input', () => {
+    isDirty = reportForm.email.value.trim().length > 0 || reportForm.description.value.trim().length > 0;
     validateInputs();
-  });
+    });
 
-  reportForm.description.addEventListener('input', () => {
-    isDirty = true;
+    reportForm.description.addEventListener('input', () => {
+    isDirty = reportForm.email.value.trim().length > 0 || reportForm.description.value.trim().length > 0;
     validateInputs();
-  });
+    });
 
   // Cancel button logic with confirmation if dirty
   cancelReportBtn.addEventListener('click', () => {
@@ -1030,6 +1031,16 @@ function closeErrorModal() {
     const form = document.querySelector('form');
     form.addEventListener('submit', function () {
         isSafeExit = true;
+    });
+
+    // Hide loader on bfcache restore
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }
     });
 
 </script>

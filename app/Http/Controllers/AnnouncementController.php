@@ -8,6 +8,24 @@ use Illuminate\Support\Facades\Auth;
 
 class AnnouncementController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware(function ($request, $next) {
+            if (auth()->user()->role === 'admin' || auth()->user()->role === 'super admin') {
+                return $next($request);
+            }
+            return abort(403);
+        });
+    }
+
+    private function getRedirectRoute()
+    {
+        return auth()->user()->role === 'super admin'
+            ? 'super-admin.dashboard'
+            : 'admin.dashboard';
+    }
+
     public function store(Request $request)
     {
         $request->validate([
@@ -31,14 +49,9 @@ class AnnouncementController extends Controller
             $announcement->audience_students = null;
         }
 
-        // Save deadline if scheduled
         if ($request->schedule && $request->schedule_date) {
             $deadline = $request->schedule_date;
-            if ($request->schedule_time) {
-                $deadline .= ' ' . $request->schedule_time;
-            } else {
-                $deadline .= ' 00:00:00';
-            }
+            $deadline .= $request->schedule_time ? ' ' . $request->schedule_time : ' 00:00:00';
             $announcement->deadline = $deadline;
         } else {
             $announcement->deadline = null;
@@ -46,7 +59,6 @@ class AnnouncementController extends Controller
 
         $announcement->save();
 
-        // Log the data being saved
         \Log::info('Announcement created', [
             'title' => $announcement->title,
             'content' => $announcement->content,
@@ -56,10 +68,9 @@ class AnnouncementController extends Controller
             'deadline' => $announcement->deadline,
         ]);
 
-        // Trigger NewAnnouncement event
         event(new \App\Events\NewAnnouncement($announcement, $announcement->audience, $announcement->audience_students));
 
-        return redirect()->route('admin.dashboard')->with('success', 'Announcement posted!');
+        return redirect()->route($this->getRedirectRoute())->with('success', 'Announcement posted!');
     }
 
     public function update(Request $request, $id)
@@ -85,14 +96,9 @@ class AnnouncementController extends Controller
             $announcement->audience_students = null;
         }
 
-        // Save deadline if scheduled
         if ($request->schedule && $request->schedule_date) {
             $deadline = $request->schedule_date;
-            if ($request->schedule_time) {
-                $deadline .= ' ' . $request->schedule_time;
-            } else {
-                $deadline .= ' 00:00:00';
-            }
+            $deadline .= $request->schedule_time ? ' ' . $request->schedule_time : ' 00:00:00';
             $announcement->deadline = $deadline;
         } else {
             $announcement->deadline = null;
@@ -100,13 +106,12 @@ class AnnouncementController extends Controller
 
         $announcement->save();
 
-        return redirect()->back()->with('success', 'Announcement changed successfully!');
+        return redirect()->route($this->getRedirectRoute())->with('success', 'Announcement changed successfully!');
     }
 
     public function archive(Request $request)
     {
-        // Redirect to admin dashboard with archive tab active
-        return redirect()->route('admin.dashboard', ['archive' => 1]);
+        return redirect()->route($this->getRedirectRoute(), ['archive' => 1]);
     }
 
     public function moveToArchive($id)
@@ -115,8 +120,7 @@ class AnnouncementController extends Controller
         $announcement->archived = true;
         $announcement->save();
 
-        // Redirect to dashboard with archive tab active
-        return redirect()->route('admin.dashboard', ['archive' => 1])
+        return redirect()->route($this->getRedirectRoute(), ['archive' => 1])
             ->with('success', 'Announcement moved to archive!');
     }
 
@@ -126,7 +130,7 @@ class AnnouncementController extends Controller
         $announcement->archived = false;
         $announcement->save();
 
-        return redirect()->route('admin.dashboard', ['archive' => 1])
+        return redirect()->route($this->getRedirectRoute(), ['archive' => 1])
             ->with('success', 'Announcement restored successfully!');
     }
 
@@ -135,7 +139,7 @@ class AnnouncementController extends Controller
         $announcement = Announcement::findOrFail($id);
         $announcement->delete();
 
-        return redirect()->route('admin.dashboard', ['archive' => 1])
+        return redirect()->route($this->getRedirectRoute(), ['archive' => 1])
             ->with('success', 'Announcement permanently deleted!');
     }
 }

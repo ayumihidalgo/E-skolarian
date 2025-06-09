@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\ActivityLog; // Import ActivityLog model
-use App\Models\ProblemReport; // Import ProblemReport model
+use App\Models\ActivityLog;
+use App\Models\ProblemReport;
+use App\Models\Announcement;
 use Illuminate\Http\Request;
 use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Log;
@@ -12,13 +13,68 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 use App\LogsActivity;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class SuperAdminController extends Controller
 {
 
     use LogsActivity;
+
     public function showDashboard(Request $request)
     {
+        // Get sort parameters
+        $sortField = $request->query('sort', 'created_at');
+        $sortDirection = $request->query('direction', 'desc');
+        $showArchive = $request->query('archive', false);
+
+        // Fetch announcements data
+        $sevenDaysAgo = Carbon::now()->subDays(7);
+
+        // Latest Announcements Query
+        $latestAnnouncements = Announcement::with('user')
+            ->where(function ($query) use ($sevenDaysAgo) {
+                $query->where(function ($q) use ($sevenDaysAgo) {
+                    // No deadline: show if within 7 days
+                    $q->whereNull('deadline')
+                      ->where('created_at', '>=', $sevenDaysAgo);
+                })
+                ->orWhere(function ($q) {
+                    // With deadline: show if deadline not yet passed
+                    $q->whereNotNull('deadline')
+                      ->where('deadline', '>=', Carbon::now());
+                });
+            })
+            ->where('archived', false)
+            ->latest()
+            ->get();
+
+        // Previous Announcements Query
+        $previousAnnouncements = Announcement::with('user')
+            ->where(function ($query) use ($sevenDaysAgo) {
+                $query->where(function ($q) use ($sevenDaysAgo) {
+                    // No deadline: move to previous after 7 days
+                    $q->whereNull('deadline')
+                      ->where('created_at', '<', $sevenDaysAgo);
+                })
+                ->orWhere(function ($q) {
+                    $q->whereNotNull('deadline')
+                      ->where('deadline', '<', Carbon::now());
+                });
+            })
+            ->where('archived', false)
+            ->latest()
+            ->get();
+
+        // Archived Announcements Query
+        $archivedAnnouncements = Announcement::with('user')
+            ->where('archived', true)
+            ->latest()
+            ->get();
+
+            // Determine which tab to show
+        $showArchive = $request->query('archive', false);
+
         // Get sort parameters
         $sortField = $request->query('sort', 'created_at');
         $sortDirection = $request->query('direction', 'desc');
@@ -46,8 +102,17 @@ class SuperAdminController extends Controller
         ->take(5)
         ->get();
 
-        // Return view with all necessary data
-        return view('super-admin.dashboard', compact('users', 'sortField', 'sortDirection', 'activities'));
+        // Return view with all data
+        return view('super-admin.dashboard', compact(
+            'users',
+            'sortField',
+            'sortDirection',
+            'activities',
+            'latestAnnouncements',
+            'previousAnnouncements',
+            'archivedAnnouncements',
+            'showArchive'
+        ));
     }
 
     /**

@@ -97,8 +97,9 @@
     </script>
 </head>
 
-@include('loading');
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
+    @include('loading')
+
     {{-- Modal for expired token --}}
     @if (!empty($tokenExpired) && $tokenExpired)
         <div id="expiredModal" class="fixed inset-0 flex items-center flex-col justify-center bg-black/80 z-50">
@@ -153,7 +154,7 @@
                             </button>
                         </label>
                         <p id="password-requirements" class="hidden text-red-600 text-xs mt-2 w-full rounded-full max-w-[380px] mx-auto pl-[10px] font-[Lexend] font-normal">
-                            *Password must be at least 8 characters long and contain an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#).
+                            *Password must not contain spaces and must be at least 8 characters long and contain an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#).
                         </p>
                     </div>
 
@@ -231,6 +232,40 @@
 
         let serverErrorPassword = (hasFormErrors === true || hasFormErrors === 'true');
         let serverErrorConfirmPass = (hasFormErrors === true || hasFormErrors === 'true');
+
+        const spaceErrorMessage = document.createElement('p');
+        spaceErrorMessage.className = 'w-full rounded-full max-w-[380px] mx-auto text-xs mt-2 text-red-500 pl-[10px] font-[Lexend] font-normal';
+        spaceErrorMessage.textContent = '*Password must not contain spaces';
+        spaceErrorMessage.style.display = 'none';
+        passwordLabel.parentNode.insertBefore(spaceErrorMessage, passwordLabel.nextSibling);
+
+        function checkForSpaces(input, label) {
+            if (/\s/.test(input.value)) {
+                spaceErrorMessage.style.display = '';
+                label.classList.add('ring-3', '!ring-red-600');
+                submitButton.disabled = true;
+                return true;
+            } else {
+                spaceErrorMessage.style.display = 'none';
+                label.classList.remove('ring-3', '!ring-red-600');
+                return false;
+            }
+        }
+
+        // Prevent space character on keydown
+        [passwordInput, confirmPasswordInput].forEach((input, idx) => {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    checkForSpaces(input, idx === 0 ? passwordLabel : confirmPasswordLabel);
+                }
+            });
+            // Also check on input (for paste)
+            input.addEventListener('input', function() {
+                checkForSpaces(input, idx === 0 ? passwordLabel : confirmPasswordLabel);
+                validateForm();
+            });
+        });
 
         const requirements = {
             length: document.getElementById('length'),
@@ -422,6 +457,16 @@
     const form = document.querySelector('form');
     form.addEventListener('submit', function () {
         window.isSafeExit = true;
+    });
+
+    // Hide loader on bfcache restore
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }
     });
 
         </script>
