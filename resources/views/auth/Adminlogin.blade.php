@@ -887,13 +887,13 @@
 
     // Listen for input on required fields
     reportForm.email.addEventListener('input', () => {
-        isDirty = true;
-        validateInputs();
+    isDirty = reportForm.email.value.trim().length > 0 || reportForm.description.value.trim().length > 0;
+    validateInputs();
     });
 
     reportForm.description.addEventListener('input', () => {
-        isDirty = true;
-        validateInputs();
+    isDirty = reportForm.email.value.trim().length > 0 || reportForm.description.value.trim().length > 0;
+    validateInputs();
     });
 
     // Cancel button logic with confirmation if dirty
