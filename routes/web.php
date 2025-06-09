@@ -30,6 +30,7 @@ use App\Http\Controllers\StudentDashboardController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SuperAdmin\SuperAdminSettingsController;
 use App\Http\Middleware\LogoutIfAuthenticated;
+use App\Http\Middleware\CheckActiveStatus;
 
 // Guest routes for login selection
 Route::middleware([LogoutIfAuthenticated::class, 'guest'])->group(function () {
@@ -91,7 +92,7 @@ Route::get('/notification', function () {
 // ----------------------------------------
 // Authenticated Routes
 // ----------------------------------------
-Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(function () {
+Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiveStatus::class])->group(function () {
     // ---------------- Super Admin ----------------
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])->name('super-admin.dashboard');
     Route::get('/super-admin/deactivated-accounts', [UserController::class, 'deactivatedUsers'])->name('deactivated.accounts');
@@ -120,7 +121,7 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
 
 });
 
-Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(function () {
+Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStatus::class])->group(function () {
     // ---------------- Admin ----------------
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'showDashboard'])->name('admin.dashboard');
     Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
@@ -155,7 +156,7 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class])->group(functio
     Route::post('/admin/archive-documents', [AdminDocumentController::class, 'archiveDocuments'])->name('admin.archiveDocuments');
 });
 // ---------------- Student ----------------
-Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(function () {
+Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class])->group(function () {
     Route::get('/student/dashboard', [StudentDashboardController::class, 'showStudentDashboard'])->name('student.dashboard');
     Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
@@ -172,7 +173,7 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class])->group(funct
     Route::get('/student/archivePage', [StudentDocumentController::class, 'archivePage'])->name('student.archivePage');
 });
 
-Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiveStatus::class])->group(function () {
 
     // ---------------- Shared Routes ----------------
 
@@ -196,6 +197,12 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class])->group(fu
     Route::get('/calendar/approved-proposals', [EventController::class, 'getApprovedProposals'])->name('calendar.approved-proposals');
     Route::post('/calendar/reschedule-proposal', [EventController::class, 'rescheduleApprovedProposal'])->name('calendar.reschedule-proposal');
     Route::get('/calendar/announcements', [App\Http\Controllers\EventController::class, 'getCalendarAnnouncements'])->name('calendar.announcements');
+
+    // ----------------------------------------
+// Calendar IndexTwo (Shared)
+// ----------------------------------------
+Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->name('calendar.indexTwo');
+
     // User
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('users.update');
@@ -252,11 +259,6 @@ Route::post('/notifications/delete-all', [NotificationController::class, 'delete
 Route::middleware(['auth', 'role:student'])->group(function () {
     Route::get('/notifications', [StudentNotificationController::class, 'index'])->name('student.notifications.index');
 });
-
-// ----------------------------------------
-// Calendar IndexTwo (Shared)
-// ----------------------------------------
-Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->name('calendar.indexTwo');
 
 // ----------------------------------------
 // Document Viewing (Shared)
