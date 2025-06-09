@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use App\LogsActivity;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
 
 class AdminLoginController extends Controller
 {
@@ -63,6 +65,14 @@ class AdminLoginController extends Controller
         $request->session()->put('user_id', Auth::id());
         $request->session()->put('user_role', Auth::user()->role);
         $request->session()->put('user_email', Auth::user()->email);
+
+        // Logout all other sessions for this user except the current one
+        $currentSessionId = Session::getId();
+        $userId = Auth::id();
+        DB::table('sessions')
+            ->where('user_id', $userId)
+            ->where('id', '!=', $currentSessionId)
+            ->delete();
 
         $this->logActivity(
             'Login',

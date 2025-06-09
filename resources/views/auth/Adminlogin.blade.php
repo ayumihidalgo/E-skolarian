@@ -127,9 +127,9 @@
         $randomImage = asset("images/PUP_Bg$randomIndex.jpg");
     @endphp
 </head>
-
-@include('loading');
 <body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] md:bg-[var(--secondary-color)] font-['Manrope'] font-bold">
+    @include('loading')
+
     <div id="bgA" class="fixed inset-0 z-0 transition-all duration-1000 ease-in-out opacity-100" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: center;"></div>
     <div id="bgB" class="fixed inset-0 z-0 transition-opacity duration-1000 ease-in-out opacity-0"></div>
     <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md md:absolute relative">
@@ -639,6 +639,15 @@
         const emailLabel = document.getElementById('emailLabel');
         const emailWarning = document.getElementById('emailLengthWarning');
 
+        let emailFormatWarning = document.getElementById('emailFormatWarning');
+
+        if (!emailFormatWarning) {
+            emailFormatWarning = document.createElement('div');
+            emailFormatWarning.id = 'emailFormatWarning';
+            emailFormatWarning.className = 'text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden';
+            emailInput.parentNode.parentNode.appendChild(emailFormatWarning);
+        }
+
         const passwordLabel = document.getElementById('passwordLabel');
         const passwordWarning = document.getElementById('passwordLengthWarning');
 
@@ -653,6 +662,10 @@
         let serverErrorEmail = hasFormErrors;
         let serverErrorPassword = hasFormErrors;
 
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,10}$/.test(email);
+        }
+
         function validateInputs() {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
@@ -660,8 +673,24 @@
             const isEmailTooLong = email.length > 50;
             const isPasswordTooLong = password.length > 50;
 
-            const isEmailValid = email.length > 0 && !isEmailTooLong;
+            const isEmailValid = email.length > 0 && !isEmailTooLong && isValidEmail(email);
             const isPasswordValid = password.length > 0 && !isPasswordTooLong;
+
+             if (email.length > 0 && isEmailTooLong) {
+                emailLabel.classList.add('ring-3', '!ring-red-600');
+                emailWarning.classList.remove('hidden');
+            } else {
+                emailWarning.classList.add('hidden');
+            }
+
+            // Email format warning
+            if (email.length > 0 && !isEmailTooLong && !isValidEmail(email)) {
+                emailLabel.classList.add('ring-3', '!ring-red-600');
+                emailFormatWarning.textContent = 'Invalid email format. Please check your email address.';
+                emailFormatWarning.classList.remove('hidden');
+            } else {
+                emailFormatWarning.classList.add('hidden');
+            }
 
             if (!serverErrorEmail) {
                 if (email.length > 0 && isEmailTooLong) {
@@ -858,13 +887,13 @@
 
     // Listen for input on required fields
     reportForm.email.addEventListener('input', () => {
-        isDirty = true;
-        validateInputs();
+    isDirty = reportForm.email.value.trim().length > 0 || reportForm.description.value.trim().length > 0;
+    validateInputs();
     });
 
     reportForm.description.addEventListener('input', () => {
-        isDirty = true;
-        validateInputs();
+    isDirty = reportForm.email.value.trim().length > 0 || reportForm.description.value.trim().length > 0;
+    validateInputs();
     });
 
     // Cancel button logic with confirmation if dirty
@@ -997,6 +1026,16 @@
     function closeErrorModal() {
         document.getElementById('errorModal').classList.add('hidden');
     }
+
+    // Hide loader on bfcache restore
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }
+    });
 </script>
 
     </body>

@@ -62,9 +62,9 @@
         });
     </script>
 </head>
-
-@include('loading')
 <body id="box" class="min-h-screen flex flex-col justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] font-['Manrope'] font-bold">
+    @include('loading')
+
     <div id="formWrapper" class="max-md:p-[20px] max-md:max-w-md max-md:mx-auto">
         <div id="formContainer" class="opacity-0 flex flex-row md:w-[85%] md:h-[630px] mx-auto px-6 p-4 md:backdrop-blur-xs md:transition-all md:duration-1000">
             <div class="flex flex-col justify-center items-center basis-[45%] bg-[#F5D4D4A6] md:rounded-l-[100px] p-5 max-md:hidden">
@@ -93,6 +93,9 @@
                             </label>
                             <div id="emailLengthWarning" class="text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden absolute">
                                 <p>*Email must not exceed 50 characters.</p>
+                            </div>
+                            <div id="emailFormatWarning" class="text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden absolute">
+                                <p>*Invalid email format. Please check your email address.</p>
                             </div>
                         </div>
                         <!-- Password -->
@@ -354,6 +357,19 @@
         let serverErrorEmail = hasFormErrors;
         let serverErrorPassword = hasFormErrors;
 
+        let emailFormatWarning = document.getElementById('emailFormatWarning');
+        if (!emailFormatWarning) {
+            emailFormatWarning = document.createElement('div');
+            emailFormatWarning.id = 'emailFormatWarning';
+            emailFormatWarning.className = 'text-red-600 text-sm mt-0.5 pl-[10px] font-[Lexend] font-normal hidden absolute';
+            emailInput.parentNode.parentNode.appendChild(emailFormatWarning);
+        }
+
+        function isValidEmail(email) {
+            // Only allow TLDs with 2-10 letters (no numbers)
+            return /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,10}$/.test(email);
+        }
+
         function validateInputs() {
             const email = emailInput.value.trim();
             const password = passwordInput.value.trim();
@@ -361,8 +377,25 @@
             const isEmailTooLong = email.length > 50;
             const isPasswordTooLong = password.length > 50;
 
-            const isEmailValid = email.length > 0 && !isEmailTooLong;
+            const isEmailValid = email.length > 0 && !isEmailTooLong && isValidEmail(email);
             const isPasswordValid = password.length > 0 && !isPasswordTooLong;
+
+            // Email length warning
+            if (email.length > 0 && isEmailTooLong) {
+                emailLabel.classList.add('ring-3', '!ring-red-600');
+                emailWarning.classList.remove('hidden');
+            } else {
+                emailWarning.classList.add('hidden');
+            }
+
+            // Email format warning
+            if (email.length > 0 && !isEmailTooLong && !isValidEmail(email)) {
+                emailLabel.classList.add('ring-3', '!ring-red-600');
+                emailFormatWarning.textContent = 'Invalid email format. Please check your email address.';
+                emailFormatWarning.classList.remove('hidden');
+            } else {
+                emailFormatWarning.classList.add('hidden');
+            }
 
             if (!serverErrorEmail) {
                 if (email.length > 0 && isEmailTooLong) {
@@ -436,9 +469,18 @@
         });
 
         form.addEventListener('submit', function (e) {
-            if (emailInput.value.length > 50 || passwordInput.value.length > 50) {
+            const email = emailInput.value.trim();
+            if (email.length > 50 || passwordInput.value.length > 50) {
                 e.preventDefault();
                 alert('Email or password exceeds the allowed length.');
+                return;
+            }
+            if (!isValidEmail(email)) {
+                e.preventDefault();
+                emailLabel.classList.add('ring-3', '!ring-red-600');
+                emailFormatWarning.textContent = 'Invalid email format. Please check your email address.';
+                emailFormatWarning.classList.remove('hidden');
+                return;
             }
                 // Disable button to prevent multiple submissions
             signInButton.disabled = true;
@@ -558,6 +600,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }, 1000);
 });
 
+
 function termModal() {
     document.getElementById('termsModal').classList.remove('hidden');
     document.getElementById('termsModal').classList.add('flex');
@@ -567,6 +610,16 @@ function privacyModal() {
     document.getElementById('privacyModal').classList.remove('hidden');
     document.getElementById('privacyModal').classList.add('flex');
 }
+
+// Hide loader on bfcache restore
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        const loader = document.getElementById('loader');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+    }
+});
 </script>
 
     </body>

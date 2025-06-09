@@ -85,12 +85,21 @@
                     }, 500);
                 }, 3000);
             });
+
+    // Handle "Back to Forgot Password" in expired token modal
+    const backToForgot = document.querySelector('#expiredModal a[href="{{ route('student.password.request') }}"]');
+    if (backToForgot) {
+        backToForgot.addEventListener('click', function(e) {
+            window.isSafeExit = true; // Set global flag
+        });
+    }
         });
     </script>
 </head>
 
-@include('loading');
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
+    @include('loading')
+
     {{-- Modal for expired token --}}
     @if (!empty($tokenExpired) && $tokenExpired)
         <div id="expiredModal" class="fixed inset-0 flex items-center flex-col justify-center bg-black/80 z-50">
@@ -102,7 +111,7 @@
                 <div class="w-[80%] mx-auto">
                     <h2 class="text-xl font-[Lexend] mb-4 text-[var(--secondary-color)]">RESET TOKEN EXPIRED</h2>
                     <p class="mb-6 font-[Manrope] font-normal">Your password reset link has expired or is invalid. Please request a new one.</p>
-                    <a href="{{ route('student.login.form') }}" class="inline-block px-6 py-2 bg-[var(--secondary-color)] text-white rounded-full font-bold hover:bg-[var(--primary-color)] transition">Back to Login</a>
+                    <a href="{{ route('student.password.request') }}" class="inline-block px-6 py-2 bg-[var(--secondary-color)] text-white rounded-full font-bold hover:bg-[var(--primary-color)] transition">Back to Forgot Password</a>
                 </div>
             </div>
         </div>
@@ -111,6 +120,14 @@
             document.addEventListener('DOMContentLoaded', function() {
                 document.querySelector('form').style.filter = 'blur(2px)';
                 document.querySelector('form').style.pointerEvents = 'none';
+
+                // Prevent beforeunload when clicking "Back to Forgot Password"
+                const backToForgot = document.querySelector('#expiredModal a[href="{{ route('student.password.request') }}"]');
+                if (backToForgot) {
+                    backToForgot.addEventListener('click', function(e) {
+                        window.isSafeExit = true; // Set global flag
+                    });
+                }
             });
         </script>
     @endif
@@ -137,7 +154,7 @@
                             </button>
                         </label>
                         <p id="password-requirements" class="hidden text-red-600 text-xs mt-2 w-full rounded-full max-w-[380px] mx-auto pl-[10px] font-[Lexend] font-normal">
-                            *Password must be at least 8 characters long and contain an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#).
+                            *Password must not contain spaces and must be at least 8 characters long and contain an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#).
                         </p>
                     </div>
 
@@ -215,6 +232,40 @@
 
         let serverErrorPassword = (hasFormErrors === true || hasFormErrors === 'true');
         let serverErrorConfirmPass = (hasFormErrors === true || hasFormErrors === 'true');
+
+        const spaceErrorMessage = document.createElement('p');
+        spaceErrorMessage.className = 'w-full rounded-full max-w-[380px] mx-auto text-xs mt-2 text-red-500 pl-[10px] font-[Lexend] font-normal';
+        spaceErrorMessage.textContent = '*Password must not contain spaces';
+        spaceErrorMessage.style.display = 'none';
+        passwordLabel.parentNode.insertBefore(spaceErrorMessage, passwordLabel.nextSibling);
+
+        function checkForSpaces(input, label) {
+            if (/\s/.test(input.value)) {
+                spaceErrorMessage.style.display = '';
+                label.classList.add('ring-3', '!ring-red-600');
+                submitButton.disabled = true;
+                return true;
+            } else {
+                spaceErrorMessage.style.display = 'none';
+                label.classList.remove('ring-3', '!ring-red-600');
+                return false;
+            }
+        }
+
+        // Prevent space character on keydown
+        [passwordInput, confirmPasswordInput].forEach((input, idx) => {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    checkForSpaces(input, idx === 0 ? passwordLabel : confirmPasswordLabel);
+                }
+            });
+            // Also check on input (for paste)
+            input.addEventListener('input', function() {
+                checkForSpaces(input, idx === 0 ? passwordLabel : confirmPasswordLabel);
+                validateForm();
+            });
+        });
 
         const requirements = {
             length: document.getElementById('length'),
@@ -366,34 +417,56 @@
         modal.classList.remove('hidden');
     } else {
         // If not dirty, navigate immediately without modal
-        isSafeExit = true; // mark as safe exit to skip beforeunload
-        window.location.href = "{{ route('student.login') }}";
+        window.isSafeExit = true; // Use window-scoped variable
+        setTimeout(function() {
+            window.location.href = "{{ route('student.login') }}";
+        }, 10);
     }
 });
 
     // If user confirms going back
     document.getElementById('confirmLeave').addEventListener('click', function () {
-        isSafeExit = true; // Allow leaving without beforeunload
-        window.location.href = "{{ route('student.login.form') }}";
+        window.isSafeExit = true; // Use window-scoped variable
+        setTimeout(function() {
+            window.location.href = "{{ route('student.login.form') }}";
+        }, 10);
     });
 
-    // Cancel going back
-    document.getElementById('cancelLeave').addEventListener('click', function () {
-        document.getElementById('unsavedChangesModal').classList.add('hidden');
-    });
+    // Also for "Back to Forgot Password" in expired token modal
+    const backToForgot = document.querySelector('#expiredModal a[href="{{ route('student.password.request') }}"]');
+    if (backToForgot) {
+        backToForgot.addEventListener('click', function(e) {
+            window.isSafeExit = true;
+            // No need for setTimeout here if it's a normal anchor, but you can add for consistency:
+            setTimeout(function() {
+                // Let the anchor work as normal
+                window.location.href = "{{ route('student.password.request') }}";
+            }, 10);
+        });
+    }
 
     // Trigger beforeunload only if NOT a safe exit
     window.addEventListener('beforeunload', function (e) {
-        if (!isSafeExit) {
-            e.preventDefault();
-            e.returnValue = ''; // Needed for Chrome/Edge
-        }
-    });
+    if (!window.isSafeExit) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
 
     // Also make sure form submission sets safe exit
     const form = document.querySelector('form');
     form.addEventListener('submit', function () {
-        isSafeExit = true;
+        window.isSafeExit = true;
+    });
+
+    // Hide loader on bfcache restore
+    window.addEventListener('pageshow', (event) => {
+        if (event.persisted) {
+            const loader = document.getElementById('loader');
+            if (loader) {
+                loader.style.display = 'none';
+            }
+        }
     });
 
         </script>

@@ -16,7 +16,7 @@ class CreateDocumentVersionsTable extends Migration
             $table->unsignedBigInteger('document_id');
             $table->unsignedBigInteger('uploaded_by');
             $table->integer('version');
-            $table->string('file_path');
+            $table->string('document_url');
             $table->text('comments')->nullable();
             $table->timestamp('submitted_at');
 
@@ -26,7 +26,7 @@ class CreateDocumentVersionsTable extends Migration
                   ->onDelete('cascade');
 
             $table->foreign('uploaded_by')
-                  ->references('user_id')->on('submitted_documents') // Can be ->references('id')->on('users')
+                  ->references('id')->on('users')
                   ->onDelete('cascade');
         });
     }
