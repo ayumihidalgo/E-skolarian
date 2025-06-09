@@ -21,71 +21,69 @@ class AdminLoginController extends Controller
     }
 
     public function login(Request $request)
-    {
-        // Manually trim the inputs to remove leading and trailing spaces
-        $request->merge([
-            'email' => trim($request->input('email')),
-            'password' => trim($request->input('password')),
-        ]);
+{
+    // Manually trim inputs
+    $request->merge([
+        'email' => trim($request->input('email')),
+        'password' => trim($request->input('password')),
+    ]);
 
-        // Validation rules
-        $credentials = $request->validate([
-            'email' => ['required', 'email', 'max:50'],
-            'password' => ['required', 'max:50'],
-        ]);
+    // Validate input
+    $request->validate([
+        'email' => ['required', 'email', 'max:50'],
+        'password' => ['required', 'max:50'],
+    ]);
 
-        // Check if the user has exceeded the allowed number of login attempts
-        if ($this->hasTooManyLoginAttempts($request)) {
-            $seconds = $this->secondsRemainingForLockout($request);
-
-            if ($seconds != 300) {
-                $seconds = $this->decayMinutes * 60;
-            }
-
-            return back()->withErrors([
-                'lockout_time' => $seconds,
-            ]);
+    // Lockout check
+    if ($this->hasTooManyLoginAttempts($request)) {
+        $seconds = $this->secondsRemainingForLockout($request);
+        if ($seconds != 300) {
+            $seconds = $this->decayMinutes * 60;
         }
-
-        $remember = $request->has('remember'); // <-- Add this line
-
-        // Attempt to authenticate the user (admin only)
-        if (Auth::attempt([
-            'email' => $credentials['email'],
-            'password' => $credentials['password'],
-            'role' => 'admin',
-            'active' => 1,
-        ], $remember)) {
-            // Successful login - clear attempts
-            $this->clearLoginAttempts($request);
-
-            $request->session()->regenerate();
-            $request->session()->put('user_id', Auth::id());
-            $request->session()->put('user_role', Auth::user()->role);
-            $request->session()->put('user_email', Auth::user()->email);
-
-             // Log the successful login
-            $user = Auth::user();
-            $this->logActivity(
-                'Login',
-                'User',
-                "{$user->role_name} successfully logged in."
-            );
-            return redirect('/admin/dashboard');
-        }
-
-        // Increment login attempts with 5 minutes decay time
-        $this->incrementLoginAttempts($request);
-
-        // Calculate remaining attempts
-        $key = $this->throttleKey($request);
-        $attempts = RateLimiter::attempts($key);
-        $remaining = max(0, $this->maxAttempts - $attempts);
 
         return back()->withErrors([
-            'email' => '*Incorrect email or password. You only have ' . ($remaining + 1) . ' remaining attempts before lockout.',
+            'lockout_time' => $seconds,
         ]);
     }
+
+    $remember = $request->has('remember');
+
+    // Try to find the user by either email or recovery_email
+    $user = \App\Models\User::where(function ($query) use ($request) {
+        $query->where('email', $request->email)
+              ->orWhere('recovery_email', $request->email);
+    })->where('role', 'admin')
+      ->where('active', 1)
+      ->first();
+
+    if ($user && Auth::attempt(['email' => $user->email, 'password' => $request->password, 'role' => 'admin', 'active' => 1], $remember)) {
+        // Successful login
+        $this->clearLoginAttempts($request);
+        $request->session()->regenerate();
+        $request->session()->put('user_id', Auth::id());
+        $request->session()->put('user_role', Auth::user()->role);
+        $request->session()->put('user_email', Auth::user()->email);
+
+        $this->logActivity(
+            'Login',
+            'User',
+            "{$user->role_name} successfully logged in."
+        );
+
+        return redirect('/admin/dashboard');
+    }
+
+    // Failed login
+    $this->incrementLoginAttempts($request);
+    $key = $this->throttleKey($request);
+    $attempts = RateLimiter::attempts($key);
+    $remaining = max(0, $this->maxAttempts - $attempts);
+
+    return back()->withErrors([
+        'email' => '*Incorrect email or password. You only have ' . ($remaining + 1) . ' remaining attempts before lockout.',
+    ]);
+}
+
 
     public function logout(Request $request)
     {

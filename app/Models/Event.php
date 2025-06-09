@@ -15,6 +15,10 @@ class Event extends Model
         'status',
         'created_by'
     ];
+    protected $casts = [
+        'start' => 'datetime',
+        'end' => 'datetime',
+    ];
 
     public function creator(): BelongsTo
     {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\ActivityLog; // Import ActivityLog model
+use App\Models\ProblemReport; // Import ProblemReport model
 use Illuminate\Http\Request;
 use App\Mail\UserNotificationMail;
 use Illuminate\Support\Facades\Log;
@@ -36,8 +37,17 @@ class SuperAdminController extends Controller
             ->orderBy($sortField, $sortDirection)
             ->paginate(6); // Adjust number per page as needed
 
-        // Return the view with the users data and sort parameters
-        return view('super-admin.dashboard', compact('users', 'sortField', 'sortDirection'));
+        // Fetch activities with proper eager loading
+        $activities = ActivityLog::with(['user' => function($query) {
+            $query->select('id', 'username', 'role_name', 'role');
+        }])
+        ->select('id', 'user_id', 'description', 'created_at', 'user_role_name')
+        ->orderBy('created_at', 'desc')
+        ->take(5)
+        ->get();
+
+        // Return view with all necessary data
+        return view('super-admin.dashboard', compact('users', 'sortField', 'sortDirection', 'activities'));
     }
 
     /**
@@ -198,8 +208,36 @@ class SuperAdminController extends Controller
 
     public function activityLogs()
     {
-        $activities = ActivityLog::with('user')->orderBy('created_at', 'desc')->paginate(10);
+        $activities = ActivityLog::with('user')->orderBy('created_at', 'desc')->paginate(8);
         return view('super-admin.actLogPage', compact('activities'));
     }
 
+    public function index()
+    {
+        // Fetch activities with proper eager loading
+        $activities = ActivityLog::with(['user' => function($query) {
+            $query->select('id', 'username', 'role_name', 'role');
+        }])
+        ->select('id', 'user_id', 'description', 'created_at', 'user_role_name')
+        ->orderBy('created_at', 'desc')
+        ->take(5)
+        ->get();
+
+        return view('super-admin.dashboard', compact('activities'));
+    }
+
+    public function markReportAsViewed(ProblemReport $report)
+    {
+        $report->update(['viewed' => true]);
+        
+        // Get the new count of unviewed reports
+        $newCount = ProblemReport::where('viewed', false)
+                                ->where('created_at', '>=', now()->subDay())
+                                ->count();
+        
+        return response()->json([
+            'success' => true,
+            'newCount' => $newCount
+        ]);
+    }
 }

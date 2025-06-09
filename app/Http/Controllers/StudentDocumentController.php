@@ -66,7 +66,7 @@ class StudentDocumentController extends Controller
         $query = DB::table('submitted_documents')
             ->where('user_id', $userId)
             ->whereNull('archived_at') // Exclude archived documents
-            ->whereIn('status', ['Approved', 'Rejected']); // show Approved or Rejected
+            ->whereIn('status', ['Approved']); // show Approved 
         
         // Apply type filter
         if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {
@@ -108,5 +108,59 @@ class StudentDocumentController extends Controller
         }
             
         return view('student.documentHistory', compact('documents'));
+    }
+
+    public function archivePage(Request $request)
+    {
+        $userId = Auth::id();
+
+        // Build query for archived documents that belong to this student
+        $query = DB::table('submitted_documents')
+            ->where('user_id', $userId)
+            ->whereNotNull('archived_at'); // Only archived documents
+
+        // Apply type filter
+        if ($request->has('type') && $request->type !== 'All' && $request->type !== 'Type') {
+            $query->where('type', $request->type);
+        }
+
+        // Apply search filter
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('subject', 'like', "%{$search}%")
+                  ->orWhere('control_tag', 'like', "%{$search}%")
+                  ->orWhere('type', 'like', "%{$search}%");
+            });
+        }
+
+        // Apply sorting
+        if ($request->has('sort_by')) {
+            $column = $request->sort_by;
+            $direction = $request->has('sort_dir') ? $request->sort_dir : 'asc';
+            $query->orderBy($column, $direction);
+        } else {
+            // Default sort by archived date
+            $query->orderBy('archived_at', 'desc');
+        }
+
+        // Get paginated results
+        $documents = $query->paginate(6)->appends($request->except('page'));
+
+        // Organization mapping for student (assuming ELITE)
+        $orgMap = [
+            'ELITE' => 'Eligible League of Information Technology Enthusiasts',
+        ];
+
+        $tagColors = [
+            'IT' => 'text-orange-500',
+        ];
+
+        // Handle AJAX requests
+        if ($request->ajax()) {
+            return view('student.archivePage', compact('documents', 'orgMap', 'tagColors'))->render();
+        }
+
+        return view('student.archivePage', compact('documents', 'orgMap', 'tagColors'));
     }
 }

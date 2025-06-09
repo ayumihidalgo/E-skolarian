@@ -53,23 +53,21 @@
             const nextIndex = (currentIndex + 1) % images.length;
             const nextImage = images[nextIndex];
 
-            if (window.innerWidth >= 768) {
-                if (showingA) {
-                    setLayerBackground(bgB, nextImage);
-                    bgB.classList.remove('opacity-0');
-                    bgB.classList.add('opacity-100');
-                    bgA.classList.remove('opacity-100');
-                    bgA.classList.add('opacity-0');
-                } else {
-                    setLayerBackground(bgA, nextImage);
-                    bgA.classList.remove('opacity-0');
-                    bgA.classList.add('opacity-100');
-                    bgB.classList.remove('opacity-100');
-                    bgB.classList.add('opacity-0');
-                }
-                showingA = !showingA;
-                currentIndex = nextIndex;
+            if (showingA) {
+                setLayerBackground(bgB, nextImage);
+                bgB.classList.remove('opacity-0');
+                bgB.classList.add('opacity-100');
+                bgA.classList.remove('opacity-100');
+                bgA.classList.add('opacity-0');
+            } else {
+                setLayerBackground(bgA, nextImage);
+                bgA.classList.remove('opacity-0');
+                bgA.classList.add('opacity-100');
+                bgB.classList.remove('opacity-100');
+                bgB.classList.add('opacity-0');
             }
+            showingA = !showingA;
+            currentIndex = nextIndex;
         }
 
         window.addEventListener('load', () => {
@@ -132,20 +130,20 @@
 
 @include('loading');
 <body id="box" class="min-h-screen flex flex-col items-center justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] md:bg-[var(--secondary-color)] font-['Manrope'] font-bold">
-    <div id="bgA" class="absolute inset-0 transition-all duration-1000 ease-in-out opacity-100 max-md:hidden" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: center;"></div>
-    <div id="bgB" class="absolute inset-0 transition-opacity duration-1000 ease-in-out opacity-0 max-md:hidden"></div>
+    <div id="bgA" class="fixed inset-0 z-0 transition-all duration-1000 ease-in-out opacity-100" style="background: linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ $randomImage }}'); background-size: cover; background-repeat: no-repeat; background-position: center;"></div>
+    <div id="bgB" class="fixed inset-0 z-0 transition-opacity duration-1000 ease-in-out opacity-0"></div>
     <div id="formWrapper" class="w-full h-full max-md:p-[20px] max-md:max-w-md md:absolute relative">
-        <div id="formContainer" class="opacity-0 flex flex-col items-center justify-center h-full px-6 bg-[#D9D9D9]/70 p-4 md:w-[50%] md:max-w-[600px] md:rounded-l-[100px] md:backdrop-blur-xs md:bg-white/80 md:transition-all md:duration-1000 md:absolute md:right-0 md:top-0 md:bottom-0">
+        <div id="formContainer" class="opacity-0 flex flex-col items-center justify-center h-full px-6 bg-[#FFFFFFCC] p-4 md:w-[50%] md:max-w-[600px] rounded-4xl md:rounded-r-none md:rounded-l-[80px] md:backdrop-blur-xs md:transition-all md:duration-1000 md:absolute md:right-0 md:top-0 md:bottom-0">
             <div class="h-35 flex items-center">
                 <img class="mx-auto h-19 md:h-22" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
             </div>
-            <h1 class="font-[Lexend] text-[#7A1212] text-3xl md:pt-6">ADMIN LOGIN</h1>
+            <h1 class="font-[Lexend] text-[#7A1212] text-2xl md:text-3xl text-center md:pt-6">ADMIN LOGIN</h1>
             <div class="w-full max-w-[400px] mx-auto pt-14 md:pt-10">
-                <form method="POST" action="{{ route('admin.login') }}" class="space-y-4 md:space-y-2">
+                <form method="POST" action="{{ route('admin.login') }}" class="space-y-2 pb-10">
                     @csrf
                     <input type="hidden" name="role" id="role" value="admin">
                     <!-- Email -->
-                    <div class="pb-6">
+                    <div class="pb-10">
                         <label id="emailLabel" class="w-full rounded-2xl px-3 py-2 md:p-4 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
                             <input type="email" id="emailInput" name="email" placeholder="Email Address" required
                                 class="w-0 flex-grow outline-none mr-3" maxlength="100">
@@ -293,9 +291,9 @@
 
 
                     <!-- Submit -->
-                    <div class="pt-8 flex justify-center">
+                    <div class="pt-4 md:pt-8 flex justify-center">
                         <button type="submit" id="signInButton"
-                            class="opacity-50 w-full rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-2 md:py-4  hover:bg-[var(--primary-color)] transition font-semibold">
+                            class="opacity-50 w-full max-md:max-w-[280px] rounded-full md:rounded-2xl mx-auto bg-[var(--secondary-color)] cursor-pointer text-white py-4 hover:bg-[var(--primary-color)] transition font-semibold">
                             Sign In
                         </button>
                     </div>
@@ -308,7 +306,34 @@
                             Privacy Policy
                         </button>
                     </div>
+
+                    <!-- Return to Main Page -->
+                    <div class="flex justify-center pt-4 md:absolute md:top-0 md:right-5">
+                        <a class="font-[Manrope] font-normal text-[var(--secondary-color)] underline" href="{{ route('landing') }}">Return to Main Page</a>
+                        <svg width="25" height="25" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <g clip-path="url(#clip0_9223_23095)">
+                            <path d="M27.1521 16.9427C27.4021 16.6927 27.5425 16.3536 27.5425 16.0001C27.5425 15.6465 27.4021 15.3074 27.1521 15.0574L19.6094 7.51472C19.4864 7.38737 19.3393 7.28579 19.1766 7.21592C19.014 7.14604 18.839 7.10925 18.662 7.10772C18.4849 7.10618 18.3094 7.13991 18.1455 7.20696C17.9816 7.274 17.8328 7.373 17.7076 7.49819C17.5824 7.62338 17.4834 7.77225 17.4163 7.93611C17.3493 8.09997 17.3156 8.27555 17.3171 8.45259C17.3186 8.62962 17.3554 8.80458 17.4253 8.96726C17.4952 9.12993 17.5968 9.27706 17.7241 9.40005L22.9908 14.6667H5.33343C4.97981 14.6667 4.64067 14.8072 4.39062 15.0572C4.14057 15.3073 4.0001 15.6464 4.0001 16.0001C4.0001 16.3537 4.14057 16.6928 4.39062 16.9429C4.64067 17.1929 4.97981 17.3334 5.33343 17.3334H22.9908L17.7241 22.6001C17.4812 22.8515 17.3468 23.1883 17.3499 23.5379C17.3529 23.8875 17.4931 24.2219 17.7403 24.4691C17.9876 24.7164 18.322 24.8566 18.6716 24.8596C19.0212 24.8627 19.358 24.7283 19.6094 24.4854L27.1521 16.9427Z" fill="#7A1212"/>
+                            </g>
+                            <defs>
+                            <clipPath id="clip0_9223_23095">
+                            <rect width="32" height="32" fill="white" transform="matrix(0 1 -1 0 32 0)"/>
+                            </clipPath>
+                            </defs>
+                        </svg>
+                    </div>
                 </form>
+
+                <!-- Report Button -->
+                <button id="reportBtn"
+                    class="absolute bottom-10 md:bottom-5 right-10 md:right-5 bg-transparent rounded-full w-6 h-6 md:w-8 md:h-8 shadow-none focus:outline-none z-50 flex items-center justify-center cursor-pointer"
+                    title="Report a Problem">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-full h-full">
+                        <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
+                            fill="transparent" stroke="black" stroke-width="2.5"/>
+                        <rect x="11" y="8" width="2" height="4" fill="black" />
+                        <rect x="11" y="14" width="2" height="2" fill="black" />
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -519,15 +544,29 @@
             @csrf
             <div class="mb-7">
                 <label class="pl-[9px] block font-semibold mb-1">PUP Webmail<span class="text-red-600">*</span></label>
-                <input id="emailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
+                <input id="webmailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
                 <p id="webmailLengthWarning" class="text-red-600 mt-1 hidden">*Webmail must not exceed 50 characters.</p>
             </div>
 
-            <div class="mb-3">
-                <label class="pl-[9px] block font-semibold mb-1">Problem Description<span class="text-red-600">*</span></label>
-                <textarea name="description" placeholder="Describe the problem here..." class="w-full border rounded-lg px-3 py-2 bg-white" rows="4" required maxlength="251"></textarea>
-                <p id="descLengthWarning" class="text-red-600 mt-1 hidden">*Description must be 250 characters or less.</p>
-            </div >
+            <div class="mb-3 relative">
+            <label class="pl-[9px] block font-semibold mb-1">Problem Description<span class="text-red-600">*</span></label>
+            <textarea
+                id="descriptionInput"
+                name="description"
+                placeholder="Describe the problem here..."
+                class="w-full border rounded-lg px-3 py-2 bg-white resize-none"
+                rows="4"
+                maxlength="255"
+                required
+            ></textarea>
+            <!-- Counter inside the textarea wrapper -->
+            <span
+                id="descCounter"
+                class="absolute bottom-2 right-3 text-xs text-gray-500 select-none pointer-events-none"
+            >0 / 255</span>
+            <p id="descLengthWarning" class="text-red-600 mt-1 hidden">*Description must be 255 characters or less.</p>
+            </div>
+
             <div class="mb-7">
                 <label class="pl-[9px] block font-semibold mb-1">Attach a File (optional)</label>
                 <input id="fileInput" type="file" name="screenshot" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
@@ -590,18 +629,6 @@
     </div>
 </div>
 
-<!-- Report Button -->
-<button id="reportBtn"
-  class="fixed bottom-4 right-4 bg-transparent rounded-full w-9 h-9 shadow-none focus:outline-none z-50 flex items-center justify-center cursor-pointer"
-  title="Report a Problem">
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-full h-full">
-    <path d="M7.757 2h8.486l5.757 5.757v8.486l-5.757 5.757H7.757L2 16.243V7.757L7.757 2z"
-          fill="transparent" stroke="black" stroke-width="2.5"/>
-    <rect x="11" y="8" width="2" height="4" fill="black" />
-    <rect x="11" y="14" width="2" height="2" fill="black" />
-  </svg>
-</button>
-
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const hasFormErrors = {!! json_encode($errors->any()) !!};
@@ -617,6 +644,11 @@
 
         const signInButton = document.getElementById('signInButton');
         const form = emailInput.closest('form');
+
+        document.querySelectorAll("input").forEach((field) => {
+            field.addEventListener("dragover", (e) => e.preventDefault());
+            field.addEventListener("drop", (e) => e.preventDefault());
+        });
 
         let serverErrorEmail = hasFormErrors;
         let serverErrorPassword = hasFormErrors;
@@ -760,7 +792,7 @@
     const desc = reportForm.description.value.trim();
 
     const maxEmailLength = 50;
-    const maxDescLength = 250;
+    const maxDescLength = 255;
 
     const isEmailTooLong = email.length > maxEmailLength;
     const isDescTooLong = desc.length > maxDescLength;
@@ -780,6 +812,39 @@
         disableSubmit();
     }
     }
+
+    const webmailInput = document.getElementById('webmailInput');
+
+     // Prevent spaces in email
+    webmailInput.addEventListener('keydown', function (e) {
+        if (e.key === ' ') e.preventDefault();
+        });
+
+    webmailInput.addEventListener('paste', function (e) {
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        if (/\s/.test(pastedText)) {
+            e.preventDefault();
+            alert('Spaces are not allowed in the email address.');
+        }
+    });
+
+    const descriptionInput = document.getElementById('descriptionInput');
+    const descCounter = document.getElementById('descCounter');
+    const descWarning = document.getElementById('descLengthWarning');
+
+    descriptionInput.addEventListener('input', () => {
+        const currentLength = descriptionInput.value.length;
+        descCounter.textContent = `${currentLength} / 255`;
+
+        if (currentLength > 255) {
+            descWarning.classList.remove('hidden');
+        } else {
+            descWarning.classList.add('hidden');
+        }
+    });
+
+    // Initialize counter on load if there's pre-filled text
+    descCounter.textContent = `${descriptionInput.value.length} / 255`;
 
 
     // On modal open: reset form, reset flags, disable submit and validate inputs

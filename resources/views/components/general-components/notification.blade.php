@@ -118,14 +118,14 @@
                     @endphp
                     <a href="{{ $link }}" class="block">
               <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
-    <div class="flex items-start justify-between">
-        <a href="{{ $link }}" class="flex items-start space-x-2 flex-1">
+    <div class="flex items-start justify-between gap-3">
+        <a href="{{ $link }}" class="flex items-start space-x-2 flex-1 min-w-0">
             <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
             </svg>
-            <div class="flex flex-col">
-                <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
-                <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
+            <div class="flex flex-col min-w-0 flex-1">
+                <p class="font-bold text-black text-sm sm:text-base truncate">{{ Str::limit($notification->title, 50) }}</p>
+                <p class="text-xs sm:text-sm text-gray-500 break-words">{{ Str::limit($notification->message, 100) }}</p>
                 <p class="text-xs text-gray-400 mt-2">
                     @if($notification->created_at->isToday())
                         Today at {{ $notification->created_at->format('h:i A') }}
@@ -139,7 +139,7 @@
                 </p>
             </div>
         </a>
-        <div class="flex items-center">
+        <div class="flex items-start pt-1 flex-shrink-0">
             <input type="checkbox" 
                 class="notification-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
                 data-notification-id="{{ $notification->id }}"
@@ -168,14 +168,14 @@
                     @endphp
                     <a href="{{ $link }}" class="block">
      <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
-    <div class="flex items-start justify-between">
-        <a href="{{ $link }}" class="flex items-start space-x-2 flex-1">
-            <svg class="text-gray-400 flex-shrink-0 mt-1" width="1rem" height="1rem" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div class="flex items-start justify-between gap-3">
+        <a href="{{ $link }}" class="flex items-start space-x-2 flex-1 min-w-0">
+            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
             </svg>
-            <div class="flex flex-col">
-                <p class="font-bold text-black text-sm sm:text-base">{{ $notification->title }}</p>
-                <p class="text-xs sm:text-sm text-gray-500">{{ $notification->message }}</p>
+            <div class="flex flex-col min-w-0 flex-1">
+                <p class="font-bold text-black text-sm sm:text-base truncate">{{ Str::limit($notification->title, 50) }}</p>
+                <p class="text-xs sm:text-sm text-gray-500 break-words">{{ Str::limit($notification->message, 100) }}</p>
                 <p class="text-xs text-gray-400 mt-2">
                     @if($notification->created_at->isToday())
                         Today at {{ $notification->created_at->format('h:i A') }}
@@ -189,7 +189,7 @@
                 </p>
             </div>
         </a>
-        <div class="flex items-center">
+        <div class="flex items-start pt-1 flex-shrink-0">
             <input type="checkbox" 
                 class="notification-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
                 data-notification-id="{{ $notification->id }}"
@@ -205,7 +205,7 @@
             <div class="flex items-center justify-center h-full text-center">
                 <div class="text-gray-500 text-sm sm:text-base">
                     @if(Auth::check())
-                        Hello, {{ Auth::user()->username }}! <br> You have no notifications.
+                        Hi, {{ Auth::user()->username }}! <br> No notifications for you.
                     @else
                         Hello, Guest! Please log in to see your notifications.
                     @endif
@@ -582,26 +582,34 @@
             const ids = getSelectedNotificationIds();
             if (ids.length === 0) return;
             showConfirmationModal('Mark selected notifications as read?', function() {
-                bulkAction('markAsRead', ids);
+            bulkAction('markAsRead', ids).then(() => {
+                window.location.reload();
+            });
             }, 'Mark as Read');
         });
         document.getElementById('markAsUnreadBtn').addEventListener('click', function() {
             const ids = getSelectedNotificationIds();
             if (ids.length === 0) return;
             showConfirmationModal('Mark selected notifications as unread?', function() {
-                bulkAction('markAsUnread', ids);
+            bulkAction('markAsUnread', ids).then(() => {
+                window.location.reload();
+            });
             }, 'Mark as Unread');
         });
         document.getElementById('deleteBtn').addEventListener('click', function() {
             const ids = getSelectedNotificationIds();
             if (ids.length === 0) return;
             showConfirmationModal('Delete selected notifications?', function() {
-                bulkAction('delete', ids);
+            bulkAction('delete', ids).then(() => {
+                window.location.reload();
+            });
             }, 'Delete Notifications');
         });
         document.getElementById('deleteAllBtn').addEventListener('click', function() {
             showConfirmationModal('Clear All notifications? This cannot be undone.', function() {
-                bulkAction('deleteAll', []);
+            bulkAction('deleteAll', []).then(() => {
+                window.location.reload();
+            });
             }, 'Clear All Notifications');
         });
 

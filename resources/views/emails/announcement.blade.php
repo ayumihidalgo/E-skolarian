@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>{{ $notification->title }}</title>
+    <title>{{ $announcement->title }}</title>
     <style>
         * {
             margin: 0;
@@ -54,12 +54,21 @@
             padding-top: 20px;
         }
 
-        .notification-message {
+        .announcement-message {
             background-color: #f9f9f9;
             padding: 15px;
             border-radius: 5px;
             margin: 20px 0;
             border: 1px solid #eaeaea;
+        }
+
+        .deadline-info {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid #ffeaa7;
+            color: #856404;
         }
 
         .action-button {
@@ -118,23 +127,28 @@
             <img class="logo" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
         </div>
         <div class="body-card">
-            <h1>{{ $notification->title }}</h1>
+            <h1>New Announcement</h1>
             
             <p class="first-p">
-                You have received a new notification from the E-Skolarian system.
+                You have received a new announcement from the E-Skolarian system.
             </p>
             
-            <div class="notification-message" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
-                {{ $notification->message }}
+            <div class="announcement-message" style="overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
+                <span style="font-weight: 500;"><strong>{{ $announcement->title }}</strong></span><br><br>
+                {{ $announcement->content }}
             </div>
             
-            @if(!empty($notification->url))
-                <a class="action-button" href="{{ $notification->url }}">View Details</a>
-                <a href="{{ $notification->url }}" class="view-url">{{ $notification->url }}</a>
+            @if($announcement->deadline)
+                <div class="deadline-info">
+                    <strong>Deadline:</strong> {{ \Carbon\Carbon::parse($announcement->deadline)->format('F j, Y \a\t g:i A') }}
+                </div>
             @endif
             
+            <a class="action-button" href="{{ route('student.dashboard') }}">View Dashboard</a>
+            <a href="{{ route('student.dashboard') }}" class="view-url">{{ route('student.dashboard') }}</a>
+            
             <p class="last-p">
-                This notification was sent on {{ $notification->created_at->format('F j, Y \a\t g:i A') }}.
+                This announcement was posted on {{ $announcement->created_at->format('F j, Y \a\t g:i A') }}.
             </p>
         </div>
         <hr>

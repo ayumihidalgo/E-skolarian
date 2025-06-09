@@ -7,13 +7,85 @@ window.openCommentAttachmentPreview = openCommentAttachmentPreview;
 window.sortTable = sortTable;
 
 const MESSAGE_CHARACTER_LIMITS = {
-    'adminMessage': 500,           // For forwarding messages
     'resubmissionMessage': 1000,   // For resubmission feedback (needs more detail)
-    'rejectionMessage': 1000,      // For rejection reasons (needs more detail)
     'approvalMessage': 500         // For approval messages
 };
 
+// Toast timeout storage
+let documentActionToastTimeout = null;
+window.ASSET_URLS = window.ASSET_URLS || {
+  successIcon: '/images/successful.svg',
+  errorIcon: '/images/error.svg'
+};
+
 // __________________________HELPER FUNCTIONS______________________________________
+function repositionActionButtons() {
+    const container = document.getElementById('actionButtonsContainer');
+    const statusSection = document.getElementById('statusSection');
+    const headerButtonArea = document.querySelector('#detailsView .flex.justify-end');
+    
+    if (!container) return; // Exit if container not found
+    
+    // Store the visibility state before moving
+    const wasHidden = container.classList.contains('hidden');
+    
+    if (window.innerWidth < 768) { // Mobile view
+        // Append to the status section specifically
+        if (statusSection && container) {
+            statusSection.appendChild(container);
+        }
+    } else { // Desktop view
+        // Move back to header area for desktop
+        if (headerButtonArea && container) {
+            headerButtonArea.prepend(container);
+        }
+    }
+
+    console.log("Is button hidden:", wasHidden);
+
+    // Restore the visibility state after moving
+    if (wasHidden) {
+        container.classList.add('hidden');
+    } else {
+        // Additional check for document status, regardless of previous visibility
+        const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+        const returnedStatusIndicator = document.getElementById('returnedStatusIndicator');
+        
+        // If any status indicator is visible, the buttons should be hidden
+        if ((processedStatusIndicator && !processedStatusIndicator.classList.contains('hidden')) || 
+            (returnedStatusIndicator && !returnedStatusIndicator.classList.contains('hidden'))) {
+            container.classList.add('hidden');
+        } else {
+            container.classList.remove('hidden'); // Only show if document is not processed
+        }
+    }
+}
+
+// Run on page load and window resize
+document.addEventListener('DOMContentLoaded', function() {
+    // Original repositionActionButtons call
+    repositionActionButtons();
+    
+    // Also observe changes to status indicators
+    const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+    const returnedStatusIndicator = document.getElementById('returnedStatusIndicator');
+    
+    if (processedStatusIndicator) {
+        const observer = new MutationObserver(function(mutations) {
+            repositionActionButtons();
+        });
+        observer.observe(processedStatusIndicator, { attributes: true, attributeFilter: ['class'] });
+    }
+    
+    if (returnedStatusIndicator) {
+        const observer = new MutationObserver(function(mutations) {
+            repositionActionButtons();
+        });
+        observer.observe(returnedStatusIndicator, { attributes: true, attributeFilter: ['class'] });
+    }
+});
+window.addEventListener('resize', repositionActionButtons);
+
 let currentDocumentId = null;
 // Function to clear input fields in modals
 function clearModalInputs(modalId) {
@@ -64,6 +136,8 @@ function setButtonLoading(buttonId, isLoading, modalId = null) {
     } else {
         // Restore original text
         button.innerHTML = originalText;
+        button.classList.add('cursor-pointer');
+        button.classList.remove('cursor-not-allowed');
         button.disabled = false;
         
         // Re-enable related close/cancel buttons if a modal ID is provided
@@ -80,10 +154,8 @@ function disableModalCloseButtons(modalId, disable) {
     
     // Map of modals to their close/cancel button IDs
     const modalButtonMap = {
-        'sendToAdminModal': ['closeSendToAdminModalBtn'],
-        'resubmissionModal': ['closeResubmissionModalBtn'],
-        'rejectConfirmationModal': ['closeRejectConfirmationModalBtn'],
-        'finalRejectConfirmationModal': ['closeFinalRejectModalBtn', 'cancelFinalRejectBtn'],
+        'returnModal': ['closeReturnModalBtn'],
+        'finalReturnConfirmationModal': ['closeFinalReturnModalBtn', 'cancelFinalReturnBtn'],
         'finalizeConfirmationModal': ['closeFinalizeModalBtn', 'cancelFinalizeBtn'],
         'approvalMessageModalBtn' : ['closeApprovalMessageModalBtn']
     };
@@ -174,7 +246,7 @@ function updateCharacterCount(input, counter, limit) {
  */
 function fixModalLabelOverlap() {
   // Get all message fields with floating labels
-  const messageFields = document.querySelectorAll('#adminMessage, #resubmissionMessage, #rejectionMessage');
+  const messageFields = document.querySelectorAll('#resubmissionMessage');
   
   // Process each field
   messageFields.forEach(field => {
@@ -220,6 +292,170 @@ function fixModalLabelOverlap() {
     }
   });
 }
+
+// Track unsaved changes in modals
+let hasUnsavedChanges = false;
+const formsToTrack = [
+    { inputId: 'resubmissionMessage', modalId: 'returnModal' },
+    { inputId: 'approvalMessage', modalId: 'finalApprovalMessageModal' }
+];
+
+// Function to set up unsaved changes tracking
+function setupUnsavedChangesTracking() {
+    // Track changes in modal textareas and inputs
+    formsToTrack.forEach(form => {
+        const input = document.getElementById(form.inputId);
+        if (input) {
+            // Set initial state when modal opens
+            const modal = document.getElementById(form.modalId);
+            if (modal) {
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.attributeName === 'class' && 
+                            !modal.classList.contains('hidden')) {
+                            // Modal just opened - reset the input's original value
+                            input.setAttribute('data-original-value', input.value);
+                            checkForChanges(input);
+                        }
+                    });
+                });
+                
+                observer.observe(modal, { attributes: true });
+            }
+            
+            // Track changes while typing
+            input.addEventListener('input', () => {
+                checkForChanges(input);
+            });
+            
+            // Reset tracking when the form is submitted successfully
+            const submitButtons = getSubmitButtonsForInput(form.inputId);
+            submitButtons.forEach(buttonId => {
+                const button = document.getElementById(buttonId);
+                if (button) {
+                    button.addEventListener('click', () => {
+                        // Only consider this as a form submission intent - actual success
+                        // will be handled later in the response handlers
+                        hasUnsavedChanges = false;      
+                        // Also reset the original value to match current value
+                        // to prevent re-triggering the unsaved changes
+                        const formInputId = form.inputId;
+                        const formInput = document.getElementById(formInputId);
+                        if (formInput) {
+                            formInput.setAttribute('data-original-value', formInput.value);
+                        }
+                    });
+                }
+            });
+        }
+    });
+    
+    // Add close modal button handlers to check for unsaved changes
+    document.querySelectorAll('[id$="ModalBtn"], [id^="cancel"], [id^="close"]').forEach(button => {
+        if (button && !button.hasUnsavedChangesHandler) {
+            // Instead of modifying onclick, add a capturing event listener that runs BEFORE any other click handlers
+            button.addEventListener('click', function(e) {
+                if (hasUnsavedChanges) {
+                    if (!confirm('You have unsaved changes. Are you sure you want to close this window?')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
+                    }
+                    // If user confirmed, reset the tracking
+                    hasUnsavedChanges = false;
+                }
+            }, true); // true means use capturing phase (runs before regular handlers)
+            
+            button.hasUnsavedChangesHandler = true;
+        }
+    });
+
+    // Add the beforeunload event listener to the window
+    window.addEventListener('beforeunload', function(e) {
+        if (hasUnsavedChanges) {
+            // The message text is determined by the browser and can't be customized for security reasons
+            const confirmationMessage = 'You have unsaved changes. If you leave now, your changes will be lost.';
+            e.returnValue = confirmationMessage;
+            return confirmationMessage;
+        }
+    });
+    
+    // Reset tracking when modals are closed
+    document.querySelectorAll('.modal, [id$="Modal"]').forEach(modal => {
+        if (modal) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.attributeName === 'class' && 
+                        modal.classList.contains('hidden')) {
+                        // Modal was just closed - reset tracking
+                        hasUnsavedChanges = false;
+                    }
+                });
+            });
+            
+            observer.observe(modal, { attributes: true });
+        }
+    });
+}
+
+// Helper function to check if an input has unsaved changes
+function checkForChanges(input) {
+    const originalValue = input.getAttribute('data-original-value') || '';
+    const currentValue = input.value || '';
+    
+    // Only mark as having changes if the field actually has content
+    // This prevents warnings when closing empty modals
+    if (currentValue.trim() !== originalValue.trim() && currentValue.trim() !== '') {
+        hasUnsavedChanges = true;
+    } else {
+        // Check if any other tracked inputs have changes before setting to false
+        let anyOtherChanges = false;
+        formsToTrack.forEach(form => {
+            const otherInput = document.getElementById(form.inputId);
+            if (otherInput && otherInput !== input) {
+                const otherOriginal = otherInput.getAttribute('data-original-value') || '';
+                const otherCurrent = otherInput.value || '';
+                if (otherCurrent.trim() !== otherOriginal.trim() && otherCurrent.trim() !== '') {
+                    anyOtherChanges = true;
+                }
+            }
+        });
+        
+        hasUnsavedChanges = anyOtherChanges;
+    }
+}
+
+// Helper function to map input IDs to their submit button IDs
+function getSubmitButtonsForInput(inputId) {
+    const buttonMap = {
+        'resubmissionMessage': ['submitReturnBtn'],
+        'approvalMessage': ['sendApprovalMessageBtn']
+    };
+    
+    return buttonMap[inputId] || [];
+}
+
+// Initialize unsaved changes tracking when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    setupUnsavedChangesTracking();
+    setupCharacterLimits();
+    fixModalLabelOverlap();
+    
+    // Reset unsaved changes flag after successful form submissions
+    const originalShowToast = window.showDocumentActionToast;
+    
+    if (typeof originalShowToast === 'function') {
+        window.showDocumentActionToast = function(action, message = '', isSuccess = true) {
+            // If the action was successful, reset the unsaved changes flag
+            if (isSuccess) {
+                hasUnsavedChanges = false;
+            }
+            
+            // Call the original function
+            return originalShowToast(action, message, isSuccess);
+        };
+    }
+});
 
 // -------------------------------------------------------------
 // ------Document Viewer Functionality--------
@@ -323,6 +559,36 @@ document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('searchInput');
         const organizationFilter = document.getElementById('organizationFilter');
         const documentTypeFilter = document.getElementById('documentTypeFilter');
+        const searchButton = document.getElementById('searchButton');
+        const clearButton = document.getElementById('clearButton');
+        
+        // Initialize from URL parameters on page load
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Set search input from URL
+        if (searchInput && urlParams.has('search')) {
+            searchInput.value = urlParams.get('search');
+        }
+        
+        // Set organization filter from URL
+        if (organizationFilter && urlParams.has('organization')) {
+            const orgValue = urlParams.get('organization');
+            // Check if the option exists before setting it
+            const optionExists = Array.from(organizationFilter.options).some(option => option.value === orgValue);
+            if (optionExists) {
+                organizationFilter.value = orgValue;
+            }
+        }
+        
+        // Set document type filter from URL
+        if (documentTypeFilter && urlParams.has('documentType')) {
+            const docTypeValue = urlParams.get('documentType');
+            // Check if the option exists before setting it
+            const optionExists = Array.from(documentTypeFilter.options).some(option => option.value === docTypeValue);
+            if (optionExists) {
+                documentTypeFilter.value = docTypeValue;
+            }
+        }
         
         if (searchInput && organizationFilter && documentTypeFilter) {
             // Remove existing event listeners first (to prevent duplicates)
@@ -346,34 +612,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (event.key === 'Enter') {
                     event.preventDefault();
                     clearTimeout(searchTimeout);
-                    
-                    if (searchInput.value.trim() === '') {
-                        // Reset filters and update URL
-                        history.pushState(null, '', window.location.pathname);
-                        
-                        // Refresh the page content with no filters
-                        fetch(window.location.pathname, {
-                            headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        })
-                        .then(response => response.text())
-                        .then(html => {
-                            updateTableContent(html);
-                        });
-                    } else {
-                        submitAjaxSearch();
-                    }
+                    submitAjaxSearch();
                 }
             }
             searchInput.addEventListener('keydown', handleSearchKeydown);
             
-            // Add filter change listeners
+            // Add filter change listeners - apply filters immediately
             function handleFilterChange() {
+                // Clear any pending search timeout
+                clearTimeout(searchTimeout);
+                // Apply the combined search and filters
                 submitAjaxSearch();
             }
             organizationFilter.addEventListener('change', handleFilterChange);
             documentTypeFilter.addEventListener('change', handleFilterChange);
+            
+            // Add search button handler if it exists
+            if (searchButton) {
+                searchButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    clearTimeout(searchTimeout);
+                    submitAjaxSearch();
+                });
+            }
+            
+            // Add clear button handler if it exists
+            if (clearButton) {
+                clearButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Reset all filters and search
+                    searchInput.value = '';
+                    organizationFilter.selectedIndex = 0; // Use selectedIndex to reset to first option
+                    documentTypeFilter.selectedIndex = 0; // Use selectedIndex to reset to first option
+                    
+                    // Reset URL and refresh content
+                    history.pushState(null, '', window.location.pathname);
+                    
+                    // Refresh the page content with no filters
+                    fetch(window.location.pathname, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        updateTableContent(html);
+                    });
+                });
+            }
             
             // Initialize event listeners for the table
             attachRowEventListeners();
@@ -390,56 +676,69 @@ document.addEventListener('DOMContentLoaded', function() {
         // Show loading indicator
         showLoader();
         
-        // Initialize search parameters
+        // Initialize search parameters with current values
         let searchParams = new URLSearchParams();
         
-        // Check for full date format (MM/DD/YYYY)
-        const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-        const fullDateMatch = searchTerm.match(fullDatePattern);
-        
-        if (fullDateMatch) {
-            // Extract values for validation
-            const month = parseInt(fullDateMatch[1], 10);
-            const day = parseInt(fullDateMatch[2], 10);
-            const year = parseInt(fullDateMatch[3], 10);
+        // Always include the search term if it exists (even when empty)
+        if (searchTerm) {
+            // Check for full date format (MM/DD/YYYY)
+            const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+            const fullDateMatch = searchTerm.match(fullDatePattern);
             
-            // Validate date values
-            if (isValidDate(month, day, year)) {
-                // Format as MM/DD/YYYY for consistency
-                searchParams.append('fullDate', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`);
-            } else {
-                // If invalid date, just use as regular search term
-                searchParams.append('search', searchTerm);
-            }
-        } else {
-            // Check for month/day pattern (M/D or MM/DD)
-            const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
-            const monthDayMatch = searchTerm.match(monthDayPattern);
-            
-            if (monthDayMatch && searchTerm.length <= 5) {
+            if (fullDateMatch) {
                 // Extract values for validation
-                const month = parseInt(monthDayMatch[1], 10);
-                const day = parseInt(monthDayMatch[2], 10);
+                const month = parseInt(fullDateMatch[1], 10);
+                const day = parseInt(fullDateMatch[2], 10);
+                const year = parseInt(fullDateMatch[3], 10);
                 
-                // Validate month and day values
-                if (isValidDate(month, day, new Date().getFullYear())) {
-                    // Format as MM/DD for consistency
-                    searchParams.append('monthDayPattern', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`);
+                // Validate date values
+                if (isValidDate(month, day, year)) {
+                    // Format as MM/DD/YYYY for consistency
+                    searchParams.append('fullDate', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`);
                 } else {
-                    // If invalid month/day, just use as regular search term
+                    // If invalid date, just use as regular search term
                     searchParams.append('search', searchTerm);
                 }
             } else {
-                // Not a date pattern, use as direct search term
-                searchParams.append('search', searchTerm);
+                // Check for month/day pattern (M/D or MM/DD)
+                const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
+                const monthDayMatch = searchTerm.match(monthDayPattern);
+                
+                if (monthDayMatch && searchTerm.length <= 5) {
+                    // Extract values for validation
+                    const month = parseInt(monthDayMatch[1], 10);
+                    const day = parseInt(monthDayMatch[2], 10);
+                    
+                    // Validate month and day values
+                    if (isValidDate(month, day, new Date().getFullYear())) {
+                        // Format as MM/DD for consistency
+                        searchParams.append('monthDayPattern', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`);
+                    } else {
+                        // If invalid month/day, just use as regular search term
+                        searchParams.append('search', searchTerm);
+                    }
+                } else {
+                    // Not a date pattern, use as direct search term
+                    searchParams.append('search', searchTerm);
+                }
             }
+        } else {
+            // If search is empty but we're coming from a search action, 
+            // explicitly include empty search to clear previous search
+            searchParams.append('search', '');
         }
         
-        // Always add filter values
-        searchParams.append('organization', organizationFilter.value || 'All');
-        searchParams.append('documentType', documentTypeFilter.value || 'All');
+        // Always add filter values, regardless of search term
+        // This is key for maintaining both filters and search simultaneously
+        if (organizationFilter.value && organizationFilter.value !== '' && organizationFilter.value !== 'All') {
+            searchParams.append('organization', organizationFilter.value);
+        }
         
-        // Update URL without page reload
+        if (documentTypeFilter.value && documentTypeFilter.value !== '' && documentTypeFilter.value !== 'All') {
+            searchParams.append('documentType', documentTypeFilter.value);
+        }
+        
+        // Update URL with all parameters
         const newUrl = window.location.pathname + '?' + searchParams.toString();
         history.pushState(null, '', newUrl);
         
@@ -451,12 +750,42 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .then(response => response.text())
         .then(html => {
+            // Preserve current filter and search values before updating content
+            const currentSearchValue = searchInput.value;
+            const currentOrgValue = organizationFilter.value;
+            const currentDocTypeValue = documentTypeFilter.value;
+            
+            // Update table content
             updateTableContent(html);
+            
+            // Restore filter and search values
+            if (searchInput) searchInput.value = currentSearchValue;
+            if (organizationFilter) organizationFilter.value = currentOrgValue || '';
+            if (documentTypeFilter) documentTypeFilter.value = currentDocTypeValue || '';
+            
             hideLoader();
         })
         .catch(error => {
             console.error('Error fetching results:', error);
             hideLoader();
+            
+            // Show error message to user
+            const tableView = document.getElementById('tableView');
+            if (tableView) {
+                tableView.innerHTML = `
+                    <div class="p-4 text-center">
+                        <div class="text-red-500 mb-2">Error loading results</div>
+                        <button id="retryButton" class="bg-[#7A1212] text-white px-4 py-2 rounded">
+                            Retry
+                        </button>
+                    </div>
+                `;
+                
+                // Add retry button functionality
+                document.getElementById('retryButton').addEventListener('click', function() {
+                    submitAjaxSearch();
+                });
+            }
         });
     }
     
@@ -469,10 +798,81 @@ document.addEventListener('DOMContentLoaded', function() {
         // Extract and update the table content
         const newTable = doc.querySelector('#tableView');
         if (newTable) {
-            document.querySelector('#tableView').innerHTML = newTable.innerHTML;
+            const tableView = document.querySelector('#tableView');
+            
+            // Get current values BEFORE replacing content
+            const searchInput = document.getElementById('searchInput');
+            const orgFilter = document.getElementById('organizationFilter');
+            const docTypeFilter = document.getElementById('documentTypeFilter');
+            
+            const searchValue = searchInput ? searchInput.value : '';
+            const orgValue = orgFilter ? orgFilter.value : '';
+            const docTypeValue = docTypeFilter ? docTypeFilter.value : '';
+            
+            // Update the table content
+            tableView.innerHTML = newTable.innerHTML;
+            
+            // Restore input values AFTER replacing content
+            const newSearchInput = document.getElementById('searchInput');
+            const newOrgFilter = document.getElementById('organizationFilter');
+            const newDocTypeFilter = document.getElementById('documentTypeFilter');
+            
+            if (newSearchInput) newSearchInput.value = searchValue;
+            
+            // Carefully restore dropdown values, checking if options exist
+            if (newOrgFilter && orgValue) {
+                const optionExists = Array.from(newOrgFilter.options).some(option => option.value === orgValue);
+                if (optionExists) {
+                    newOrgFilter.value = orgValue;
+                }
+            }
+            
+            if (newDocTypeFilter && docTypeValue) {
+                const optionExists = Array.from(newDocTypeFilter.options).some(option => option.value === docTypeValue);
+                if (optionExists) {
+                    newDocTypeFilter.value = docTypeValue;
+                }
+            }
             
             // Reattach all event listeners
             attachRowEventListeners();
+        }
+        
+        // Display "no results" message if needed
+        const tableBody = document.querySelector('tbody');
+        if (tableBody && !tableBody.querySelector('tr')) {
+            const colSpan = document.querySelectorAll('thead th').length || 6;
+            tableBody.innerHTML = `
+                <tr>
+                    <td colspan="${colSpan}" class="text-center py-4 text-gray-500">
+                        <div class="py-8">
+                            <p class="mb-4">No documents found matching your search criteria</p>
+                            <button id="clearFiltersBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">
+                                Clear All Filters
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            
+            // Add event listener to the clear filters button
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            if (clearFiltersBtn) {
+                clearFiltersBtn.addEventListener('click', function() {
+                    // Reset search and filters
+                    const searchInput = document.getElementById('searchInput');
+                    const orgFilter = document.getElementById('organizationFilter');
+                    const docTypeFilter = document.getElementById('documentTypeFilter');
+                    
+                    if (searchInput) searchInput.value = '';
+                    if (orgFilter) orgFilter.selectedIndex = 0;
+                    if (docTypeFilter) docTypeFilter.selectedIndex = 0;
+                    
+                    // Reset URL and reload
+                    history.pushState(null, '', window.location.pathname);
+                    location.reload();
+                });
+            }
         }
         
         // Make sure search and filter event listeners are reattached
@@ -506,11 +906,38 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Show loader
                     showLoader();
                     
+                    // We need to preserve search and filter params when paginating
+                    const currentUrl = new URL(url, window.location.origin);
+                    const currentParams = new URLSearchParams(currentUrl.search);
+                    
+                    // Get current search and filter values from the form
+                    const searchInput = document.getElementById('searchInput');
+                    const orgFilter = document.getElementById('organizationFilter');
+                    const docTypeFilter = document.getElementById('documentTypeFilter');
+                    
+                    // Add search parameter if it exists
+                    if (searchInput && searchInput.value.trim()) {
+                        currentParams.set('search', searchInput.value.trim());
+                    }
+                    
+                    // Add organization filter if set
+                    if (orgFilter && orgFilter.value && orgFilter.value !== 'All') {
+                        currentParams.set('organization', orgFilter.value);
+                    }
+                    
+                    // Add document type filter if set
+                    if (docTypeFilter && docTypeFilter.value && docTypeFilter.value !== 'All') {
+                        currentParams.set('documentType', docTypeFilter.value);
+                    }
+                    
+                    // Build the new URL with all parameters
+                    const newPaginationUrl = currentUrl.pathname + '?' + currentParams.toString();
+                    
                     // Update URL without page reload
-                    history.pushState(null, '', url);
+                    history.pushState(null, '', newPaginationUrl);
                     
                     // Make AJAX request for pagination
-                    fetch(url, {
+                    fetch(newPaginationUrl, {
                         headers: {
                             'X-Requested-With': 'XMLHttpRequest'
                         }
@@ -566,7 +993,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Create loader overlay
             const loader = document.createElement('div');
             loader.id = 'search-loader';
-            loader.className = 'absolute inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm';
+            loader.className = 'absolute inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-10';
             loader.style.minHeight = '200px';
             loader.innerHTML = `
                 <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
@@ -588,13 +1015,93 @@ document.addEventListener('DOMContentLoaded', function() {
     function hideLoader() {
         const loader = document.getElementById('search-loader');
         if (loader) {
-            loader.style.display = 'none';
+            loader.remove();
         }
     }
+    
+    // Handle browser back/forward buttons
+    window.addEventListener('popstate', function() {
+        // Fetch content for the new URL
+        fetch(window.location.href, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            updateTableContent(html);
+            
+            // Update filter fields to match URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Update search input
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = urlParams.get('search') || '';
+            }
+            
+            // Update organization filter
+            const organizationFilter = document.getElementById('organizationFilter');
+            if (organizationFilter) {
+                const orgValue = urlParams.get('organization') || '';
+                if (orgValue) {
+                    const optionExists = Array.from(organizationFilter.options).some(option => option.value === orgValue);
+                    if (optionExists) {
+                        organizationFilter.value = orgValue;
+                    } else {
+                        organizationFilter.selectedIndex = 0; // Default to first option if not found
+                    }
+                } else {
+                    organizationFilter.selectedIndex = 0;
+                }
+            }
+            
+            // Update document type filter
+            const documentTypeFilter = document.getElementById('documentTypeFilter');
+            if (documentTypeFilter) {
+                const docTypeValue = urlParams.get('documentType') || '';
+                if (docTypeValue) {
+                    const optionExists = Array.from(documentTypeFilter.options).some(option => option.value === docTypeValue);
+                    if (optionExists) {
+                        documentTypeFilter.value = docTypeValue;
+                    } else {
+                        documentTypeFilter.selectedIndex = 0; // Default to first option if not found
+                    }
+                } else {
+                    documentTypeFilter.selectedIndex = 0;
+                }
+            }
+        });
+    });
     
     // Make functions available globally if needed
     window.attachRowEventListeners = attachRowEventListeners;
     window.submitAjaxSearch = submitAjaxSearch;
+    
+    // Add a global function to clear filters
+    window.clearFiltersAndSearch = function() {
+        const searchInput = document.getElementById('searchInput');
+        const orgFilter = document.getElementById('organizationFilter');
+        const docTypeFilter = document.getElementById('documentTypeFilter');
+        
+        if (searchInput) searchInput.value = '';
+        if (orgFilter) orgFilter.selectedIndex = 0;
+        if (docTypeFilter) docTypeFilter.selectedIndex = 0;
+        
+        // Reset URL
+        history.pushState(null, '', window.location.pathname);
+        
+        // Reload content
+        fetch(window.location.pathname, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            updateTableContent(html);
+        });
+    };
 });
 
 // Sorting Functionality
@@ -859,222 +1366,196 @@ function updateDocumentDetailsView(docData) {
         // Status history with timeline style 
         const statusHistory = document.getElementById('statusHistory');
         const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+        const returnedStatusIndicator = document.getElementById('returnedStatusIndicator');
         const actionButtonsContainer = document.getElementById('actionButtonsContainer');
-        const forwardedStatusIndicator = document.getElementById('forwardedStatusIndicator');
 
-        // Handle forwarded document status
-        if (forwardedStatusIndicator) {
-            if (docData.forward_info && !docData.is_current_receiver) {
-                // Update forwarded status message
-                const forwardedToElement = document.getElementById('forwardedToUser');
-                if (forwardedToElement) {
-                    forwardedToElement.textContent = docData.forward_info.forwarded_to;
+        if (statusHistory && docData.timeline && Array.isArray(docData.timeline)) {
+            // Sort timeline by created_at
+            const timeline = [...docData.timeline].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+            
+            // Process timeline entries chronologically with grouping by user_role
+            let timelineHTML = '';
+            
+            // Variables to track the latest return entry (if any)
+            let hasBeenReturned = false;
+            let latestReturnEntry = null;
+            
+            // Group consecutive entries by the same user_role
+            let currentUserRole = null;
+            let currentGroupItems = [];
+            let groupedTimeline = [];
+            
+            // First pass: group entries by user_role
+            timeline.forEach((entry, index) => {
+                // Check if this is a return entry
+                if (entry.status === 'returned' || entry.action_type === 'Return') {
+                    hasBeenReturned = true;
+                    latestReturnEntry = entry;
                 }
                 
-                // Format the forwarding date
-                const forwardedDateElement = document.getElementById('forwardedDate');
-                if (forwardedDateElement && docData.forward_info.forwarded_at) {
-                    const forwardedDate = new Date(docData.forward_info.forwarded_at);
-                    forwardedDateElement.textContent = forwardedDate.toLocaleDateString('en-US', {
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    });
-                }
-                
-                // Show forwarded message
-                const forwardedMessageElement = document.getElementById('forwardedMessage');
-                if (forwardedMessageElement) {
-                    forwardedMessageElement.textContent = docData.forward_info.message || 'No message provided';
-                }
-                
-                // Show the forwarded status indicator
-                forwardedStatusIndicator.classList.remove('hidden');
-            } else {
-                // Hide the forwarded status indicator
-                forwardedStatusIndicator.classList.add('hidden');
-            }
-        }
-        
-        if (statusHistory && docData.reviews && Array.isArray(docData.reviews)) {
-            // Group reviews by reviewer
-            const grouped = {};
-            docData.reviews.forEach(r => {
-                if (!grouped[r.reviewer_name]) grouped[r.reviewer_name] = [];
-                grouped[r.reviewer_name].push(r);
-            });
-
-            // Flatten into timeline steps: always start with "Under Review", then show other statuses in order
-            let timelineSteps = [];
-            Object.entries(grouped).forEach(([reviewer, reviews]) => {
-                // Sort reviews by created_at ascending
-                reviews.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                // Always add "Under Review" as the first step (created_at)
-                timelineSteps.push({
-                    reviewer_name: reviewer,
-                    status: "Under Review",
-                    time: reviews[0].created_at
-                });
-                // Add all other statuses for this reviewer except "Under Review"
-                reviews.forEach(r => {
-                    if (r.status && r.status.toLowerCase() !== "under review") {
-                        timelineSteps.push({
-                            reviewer_name: reviewer,
-                            status: r.status,
-                            time: r.updated_at // Use updated_at for these statuses
+                if (entry.user_role !== currentUserRole) {
+                    // Start a new group when user_role changes
+                    if (currentUserRole !== null && currentGroupItems.length > 0) {
+                        // Save the previous group
+                        groupedTimeline.push({
+                            userRole: currentUserRole,
+                            entries: [...currentGroupItems]
                         });
                     }
-                });
+                    
+                    // Start a new group
+                    currentUserRole = entry.user_role;
+                    currentGroupItems = [entry];
+                } else {
+                    // Add to current group
+                    currentGroupItems.push(entry);
+                }
             });
-
-            // Sort the timeline steps by time ascending
-            timelineSteps.sort((a, b) => new Date(a.time) - new Date(b.time));
-
-            // Timeline for status history
-            let timelineHTML = '';
-            let lastOrgName = null;
-
-            // Process each step in the timeline
-            // Sort the timeline steps by time ascending first
-            timelineSteps.sort((a, b) => new Date(a.time) - new Date(b.time));
-
-            // Find the most recent step (will be used to mark as "current")
-            const latestTimeStepIndex = timelineSteps.length - 1;
-
-            timelineSteps.forEach((step, idx) => {
-                const isNewOrg = lastOrgName !== step.reviewer_name;
-                lastOrgName = step.reviewer_name;
-                
-                // Determine if this is the current step based on index
-                const isCurrent = idx === latestTimeStepIndex;
-                
-                // Set colors based on status
-                let dot = 'bg-white';
-                let statusColor = 'text-white/90';
-                
-                // Determine colors based on status
-                if (step.status === 'Under Review') {
-                    dot = isCurrent ? 'bg-yellow-400' : 'bg-white';
-                    statusColor = isCurrent ? 'text-yellow-400' : 'text-white';
-                } else if (step.status === 'Approved') {
-                    dot = 'bg-green-400';
-                    statusColor = 'text-green-400';
-                } else if (step.status === 'Rejected') {
-                    dot = 'bg-red-500';
-                    statusColor = 'text-red-500';
-                } else if (step.status === 'Resubmit') {
-                    dot = 'bg-orange-400';
-                    statusColor = 'text-orange-400';
-                } else if (step.status === 'Forwarded') {
-                    dot = 'bg-blue-400';
-                    statusColor = 'text-blue-400';
-                }
-                
-                // Format the status display text
-                let displayStatus = step.status.replace(/_/g, ' ');
-                displayStatus = displayStatus.charAt(0).toUpperCase() + displayStatus.slice(1);
-                
-                // Format timestamp
-                const displayTime = new Date(step.time).toLocaleString('en-US', { 
-                    month: 'long', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true 
+            
+            // Don't forget to add the last group
+            if (currentUserRole !== null && currentGroupItems.length > 0) {
+                groupedTimeline.push({
+                    userRole: currentUserRole,
+                    entries: [...currentGroupItems]
                 });
-                
-                // If this is a new organization and not the first one, add a spacer with a continuous line
-                if (isNewOrg && idx > 0) {
-                    timelineHTML += `
-                        <div class="flex items-start relative h-2">
-                            <span class="absolute left-1 top-0 w-px h-full bg-gray-400"></span>
-                        </div>
-                    `;
-                }
-                
-                // Generate HTML for organization/admin name (main bullet)
-                if (isNewOrg) {
-                    timelineHTML += `
-                        <div class="flex items-start relative">
-                            <span class="absolute left-1 top-4 w-px h-full bg-gray-400"></span>
-                            <span class="flex-shrink-0 w-3 h-3 rounded-full ${dot} mt-1 mr-3"></span>
-                            <div>
-                                <span class="font-bold">${step.reviewer_name || 'Unknown'}</span>
-                            </div>
-                        </div>
-                    `;
-                }
-                
-                // Generate HTML for review decision (small bullet)
-                timelineHTML += `
-                    <div class="flex items-start relative">
-                        ${idx < timelineSteps.length - 1 ? 
-                            `<span class="absolute left-1 top-4 w-px h-full bg-gray-400" style="height: calc(100% - 10px);"></span>` : 
-                            ''}
-                        <span class="flex-shrink-0 h-2 w-2 rounded-full ${dot} mt-1.5 mr-3 ml-0.5"></span>
-                        <div class="flex items-center">
-                            <span class="${statusColor}">${displayStatus}, ${displayTime}</span>
-                            ${isCurrent ? `
-                                <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    Current
-                                </span>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
-            });
-
-            if (timelineSteps.length === 0) {
-                timelineHTML = '<p class="text-gray-300">No status updates available</p>';
             }
+            
+            // Second pass: generate HTML for each group
+            groupedTimeline.forEach((group, groupIndex) => {
+                // Group header with its own bullet
+                timelineHTML += `
+                    <div class="mb-4">
+                        <div class="flex items-start">
+                            <div class="flex flex-col items-center mr-1">
+                                <div class="w-3 h-3 rounded-full bg-[#D4B2B2] mt-1.5"></div>
+                                <div class="w-[1px] flex-1 bg-[#D4B2B2]"></div>
+                            </div>
+                            <span class="font-bold text-white text-base">${group.userRole || 'Unknown'}</span>
+                        </div>
+                `;
 
+                // Group entries aligned under the same vertical line
+                group.entries.forEach((entry, entryIndex) => {
+                    const entryDate = new Date(entry.created_at);
+                    const formattedDate = entryDate.toLocaleString('en-US', {
+                        month: 'long', day: 'numeric', year: 'numeric',
+                        hour: 'numeric', minute: '2-digit', hour12: true
+                    });
+
+                    const isLatestEntry = (groupIndex === groupedTimeline.length - 1) &&
+                                        (entryIndex === group.entries.length - 1);
+
+                    let statusColor = 'text-white/90';
+                    let bgColor = 'bg-[#B07575]'
+                    switch (entry.status) {
+                        case 'under_review': 
+                            statusColor = isLatestEntry ? 'text-yellow-400' : 'text-white'; 
+                            bgColor = isLatestEntry ? 'bg-yellow-700' : 'bg-[#B07575]';
+                            break;
+                        case 'approved':     
+                            statusColor = 'text-green-400'; 
+                            bgColor = 'bg-green-700';
+                            break;
+                        case 'returned':     
+                            statusColor = 'text-orange-400'; 
+                            bgColor = 'bg-orange-700';
+                            break;
+                        default:
+                            statusColor = 'text-white/90';
+                            bgColor = 'bg-[#B07575]';
+                            break;
+                    }
+
+                    const displayStatus = entry.status.replace(/_/g, ' ')
+                        .replace(/\b\w/g, c => c.toUpperCase());
+
+                    timelineHTML += `
+                        <div class="flex items-start ml-0.5">
+                            <div class="flex flex-col items-center mr-2 -mt-2">
+                                <div class="w-[1px] h-4 bg-[#D4B2B2]"></div>
+                                <div class="w-1.5 h-1.5 rounded-full ${bgColor}"></div>
+                                ${entryIndex !== group.entries.length - 1 ? `<div class="w-[1px] h-1 bg-[#D4B2B2]"></div>` : ''}
+                            </div>
+                            <div class="text-sm ${statusColor}">
+                                ${displayStatus}, ${formattedDate}
+                                ${isLatestEntry ? `
+                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        Current
+                                    </span>` : ''}
+                            </div> 
+                        </div>
+                    `;
+                });
+
+                timelineHTML += `</div>`;
+            });
+            
+            if (timeline.length === 0) {
+                timelineHTML = '<p class="text-gray-300">No activity recorded yet</p>';
+            }
+            
             statusHistory.innerHTML = timelineHTML;
 
             // Show or hide action buttons and processed indicator based on document status
             const finalDecisionExists = docData.has_decision;
             const isCurrentReceiver = docData.is_current_receiver;
+
+            // Hide all status indicators first
+            if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
+            if (returnedStatusIndicator) returnedStatusIndicator.classList.add('hidden');
             
-            if (finalDecisionExists) {
-                // If a decision has been made, hide action buttons for everyone
+            // First handle returned status specifically
+            if (hasBeenReturned) {
+                // If document has been returned, hide action buttons
+                if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
+                
+                // Show returned status indicator
+                if (returnedStatusIndicator) {
+                    returnedStatusIndicator.classList.remove('hidden');
+                    
+                    // Format the return date
+                    const returnDate = latestReturnEntry ? 
+                        new Date(latestReturnEntry.created_at).toLocaleDateString('en-US', {
+                            month: 'long', day: 'numeric', year: 'numeric'
+                        }) : 'Unknown date';
+                    
+                    // Set the returned date and message
+                    const forwardedDateElement = document.getElementById('forwardedDate');
+                    if (forwardedDateElement) forwardedDateElement.textContent = returnDate;
+                    
+                    const forwardedMessageElement = document.getElementById('forwardedMessage');
+                    if (forwardedMessageElement && latestReturnEntry && latestReturnEntry.message) {
+                        forwardedMessageElement.textContent = latestReturnEntry.message;
+                    } else if (forwardedMessageElement) {
+                        forwardedMessageElement.textContent = 'No message provided';
+                    }
+                }
+            } 
+            // Then handle other cases
+            else if (finalDecisionExists) {
+                // If a decision has been made, hide action buttons
                 if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
                 if (processedStatusIndicator) processedStatusIndicator.classList.remove('hidden');
             } else if (!isCurrentReceiver) {
-                // If user is not the current receiver, disable buttons but show forwarded status
-                if (actionButtonsContainer) {
-                    // If user is not the current receiver, HIDE the buttons completely
-                    actionButtonsContainer.classList.add('hidden');
-                    // Disable the buttons
-                    const approveButton = document.getElementById('approveButton');
-                    const rejectButton = document.getElementById('rejectButton');
-                    
-                    if (approveButton) {
-                        approveButton.disabled = true;
-                        approveButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    }
-                    
-                    if (rejectButton) {
-                        rejectButton.disabled = true;
-                        rejectButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    }
-                }
-                if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
+                // If user is not the current receiver, hide buttons
+                if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
             } else {
                 // Current receiver and no decision made yet - show enabled action buttons
-                if (actionButtonsContainer) {
-                    actionButtonsContainer.classList.remove('hidden');
-                    // Make sure buttons are enabled
-                    const approveButton = document.getElementById('approveButton');
-                    const rejectButton = document.getElementById('rejectButton');
-                    
-                    if (approveButton) {
-                        approveButton.disabled = false;
-                        approveButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                    }
-                    
-                    if (rejectButton) {
-                        rejectButton.disabled = false;
-                        rejectButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                    }
+                if (actionButtonsContainer) actionButtonsContainer.classList.remove('hidden');
+                
+                // Make sure buttons are enabled
+                const approveButton = document.getElementById('approveButton');
+                const rejectButton = document.getElementById('rejectButton');
+                
+                if (approveButton) {
+                    approveButton.disabled = false;
+                    approveButton.classList.remove('opacity-50', 'cursor-not-allowed');
                 }
-                if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
+                
+                if (rejectButton) {
+                    rejectButton.disabled = false;
+                    rejectButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
             }
         }
     } catch (error) {
@@ -1119,6 +1600,110 @@ function timeAgo(dateString) {
 }
 
 // Comment rendering
+// function loadComments(documentId) {
+//     fetch(`/comments/${documentId}`)
+//         .then(response => response.json())
+//         .then(comments => {
+//             const container = document.getElementById('commentsContainer');
+//             if (!container) {
+//                 console.error('Comments container not found');
+//                 return;
+//             }
+            
+//             if (!Array.isArray(comments) || comments.length === 0) {
+//                 container.innerHTML = '<p class="text-gray-400">No comments yet</p>';
+//                 return;
+//             }
+            
+//             container.innerHTML = comments.map(comment => {
+//                 // Determine if there's an attachment
+//                 const hasAttachment = comment.attachment_path && comment.attachment_name;
+                
+//                 // Generate attachment HTML if needed
+//                 let attachmentHTML = '';
+//                 if (hasAttachment) {
+//                     const filePath = `/storage/${comment.attachment_path}`;
+//                     const fileName = comment.attachment_name;
+//                     const fileType = comment.attachment_type;
+//                     const fileExt = fileName.split('.').pop().toLowerCase();
+                    
+//                     // Determine icon based on file type
+//                     let icon = '';
+//                     if (fileType.startsWith('image/')) {
+//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
+//                     } else if (fileType === 'application/pdf' || fileExt === 'pdf') {
+//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
+//                     } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+//                               fileExt === 'docx' || 
+//                               fileType === 'application/msword' || 
+//                               fileExt === 'doc') {
+//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+//                     } else {
+//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+//                     }
+                    
+//                     attachmentHTML = `
+//                         <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full">
+//                             <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
+//                                 ${icon}
+//                                 <span class="text-xs truncate max-w-[200px]">${fileName}</span>
+//                             </a>
+//                         </div>
+//                     `;
+//                 }
+
+//                 // Determine profile image
+//                 let profileHTML = '';
+//                 if (comment.sender && comment.sender.profile_pic) {
+//                     // Use user's profile image
+//                     profileHTML = `
+//                         <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border border-gray-600">
+//                             <img src="/storage/${comment.sender.profile_pic}" alt="Profile" class="w-full h-full object-cover">
+//                         </div>
+//                     `;
+//                 } else {
+//                     // Use default profile icon
+//                     profileHTML = `
+//                         <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0 border border-gray-600">
+//                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+//                                 stroke="currentColor" class="w-6 h-6 text-gray-600">
+//                                 <path stroke-linecap="round" stroke-linejoin="round"
+//                                     d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
+//                             </svg>
+//                         </div>
+//                     `;
+//                 }
+                
+//                 // Format and wrap comment text to prevent overflow
+//                 const commentText = comment.comment || '';
+                
+//                 // Use timeAgo for relative timestamps
+//                 const relativeTime = timeAgo(comment.created_at);
+                
+//                 return `
+//                     <div class="pb-4 mb-4">
+//                         <div class="flex items-start gap-3">
+//                             <div class="flex-shrink-0">
+//                                 ${profileHTML}
+//                             </div>
+//                             <div class="flex-1 min-w-0"> <!-- Added min-w-0 to make sure flexbox respects child sizes -->
+//                                 <div class="flex justify-between items-center">
+//                                     <h3 class="font-bold text-white text-lg break-words">${comment.sender ? comment.sender.role_name : 'Unknown User'}</h3>
+//                                     <span class="text-white text-sm whitespace-nowrap ml-2" title="${new Date(comment.created_at).toLocaleString()}">${relativeTime}</span>
+//                                 </div>
+//                                 <p class="text-white mt-1 break-words whitespace-pre-wrap">${commentText}</p>
+//                                 ${attachmentHTML}
+//                             </div>
+//                         </div>
+//                     </div>
+//                 `;
+//             }).join('');
+//         })
+//         .catch(error => {
+//             console.error('Error loading comments:', error);
+//         });
+// }
+
 function loadComments(documentId) {
     fetch(`/comments/${documentId}`)
         .then(response => response.json())
@@ -1146,29 +1731,44 @@ function loadComments(documentId) {
                     const fileType = comment.attachment_type;
                     const fileExt = fileName.split('.').pop().toLowerCase();
                     
-                    // Determine icon based on file type
-                    let icon = '';
-                    if (fileType.startsWith('image/')) {
-                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
-                    } else if (fileType === 'application/pdf' || fileExt === 'pdf') {
-                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
-                    } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-                              fileExt === 'docx' || 
-                              fileType === 'application/msword' || 
-                              fileExt === 'doc') {
-                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
-                    } else {
-                        icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
-                    }
+                    // Check if it's an image type
+                    const isImage = fileType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif'].includes(fileExt);
                     
-                    attachmentHTML = `
-                        <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full">
-                            <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
-                                ${icon}
-                                <span class="text-xs truncate max-w-[200px]">${fileName}</span>
-                            </a>
-                        </div>
-                    `;
+                    if (isImage) {
+                        // Display image directly in the comment
+                        attachmentHTML = `
+                            <div class="mt-2 max-w-full">
+                                <div class="rounded overflow-hidden max-w-[250px] cursor-pointer" 
+                                     onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')">
+                                    <img src="${filePath}" alt="${fileName}" class="max-w-full h-auto">
+                                    <div class="text-xs text-gray-400 mt-1 truncate">${fileName}</div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // For non-image files, keep the current link format
+                        // Determine icon based on file type
+                        let icon = '';
+                        if (fileType === 'application/pdf' || fileExt === 'pdf') {
+                            icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
+                        } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                                  fileExt === 'docx' || 
+                                  fileType === 'application/msword' || 
+                                  fileExt === 'doc') {
+                            icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+                        } else {
+                            icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+                        }
+                        
+                        attachmentHTML = `
+                            <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full">
+                                <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
+                                    ${icon}
+                                    <span class="text-xs truncate max-w-[200px]">${fileName}</span>
+                                </a>
+                            </div>
+                        `;
+                    }
                 }
 
                 // Determine profile image
@@ -1207,7 +1807,7 @@ function loadComments(documentId) {
                             </div>
                             <div class="flex-1 min-w-0"> <!-- Added min-w-0 to make sure flexbox respects child sizes -->
                                 <div class="flex justify-between items-center">
-                                    <h4 class="font-bold text-white text-lg truncate">${comment.sender ? comment.sender.username : 'Unknown User'}</h4>
+                                    <h3 class="font-bold text-white text-lg break-words">${comment.sender ? comment.sender.role_name : 'Unknown User'}</h3>
                                     <span class="text-white text-sm whitespace-nowrap ml-2" title="${new Date(comment.created_at).toLocaleString()}">${relativeTime}</span>
                                 </div>
                                 <p class="text-white mt-1 break-words whitespace-pre-wrap">${commentText}</p>
@@ -1641,13 +2241,9 @@ window.closeDocumentViewer = function() {
     modal.classList.add('hidden');
 }
 
-// Approval Modal function
+// Handle Approve button
 document.addEventListener('DOMContentLoaded', function () {
     const approveButton = document.getElementById('approveButton');
-    const approvalModal = document.getElementById('approvalModal');
-    const closeApprovalModalBtn = document.getElementById('closeApprovalModalBtn');
-    const sendToAnotherAdminBtn = document.getElementById('sendToAnotherAdminBtn');
-    const finalizeApprovalBtn = document.getElementById('finalizeApprovalBtn');
 
     // Open the modal when the Approve button is clicked, but check if disabled first
     if (approveButton) {
@@ -1658,249 +2254,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             
-            // If not disabled, show the approval modal
-            approvalModal.classList.remove('hidden');
-        });
-    }
-
-    // Close the modal when the close button is clicked
-    if (closeApprovalModalBtn) {
-        closeApprovalModalBtn.addEventListener('click', function() {
-            document.getElementById('approvalModal').classList.add('hidden');
-        });
-    }
-});
-
-// Send to Another Admin functionality
-document.addEventListener('DOMContentLoaded', function () {
-    const sendToAnotherAdminBtn = document.getElementById('sendToAnotherAdminBtn');
-    const sendToAdminModal = document.getElementById('sendToAdminModal');
-    const closeSendToAdminModalBtn = document.getElementById('closeSendToAdminModalBtn');
-    const sendToAdminSubmitBtn = document.getElementById('sendToAdminSubmitBtn');
-
-    // Load admin list when the modal is opened
-    sendToAnotherAdminBtn.addEventListener('click', function () {
-        // Clear previous options except the placeholder
-        while (adminSelect.options.length > 1) {
-            adminSelect.remove(1);
-        }
-        
-        // Clear previous message
-        adminMessage.value = '';
-        
-        // Hide the approval modal
-        document.getElementById('approvalModal').classList.add('hidden');
-        
-        // Fetch available admins
-        fetch('/admin/get-admins', {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(admins => {
-            // Add admins to the select dropdown
-            admins.forEach(admin => {
-                const option = document.createElement('option');
-                option.value = admin.id;
-                option.textContent = admin.username || admin.name;
-                adminSelect.appendChild(option);
-            });
-            
-            // Show the modal
-            sendToAdminModal.classList.remove('hidden');
-        })
-        .catch(error => {
-            console.error('Error loading admins:', error);
-            alert('Failed to load administrators. Please try again.');
-        });
-    });
-
-    // Close the "Send to Another Admin" modal
-    if (closeSendToAdminModalBtn) {
-        closeSendToAdminModalBtn.addEventListener('click', function() {
-            document.getElementById('sendToAdminModal').classList.add('hidden');
-            clearModalInputs('sendToAdminModal');
-        });
-    }
-
-    // Setup real-time validation for admin select dropdown
-    const adminSelect = document.getElementById('adminSelect');
-    if (adminSelect) {
-        // Initial validation setup - runs once when the page loads
-        adminSelect.addEventListener('change', function() {
-            if (this.value) {
-                this.classList.remove('border-red-500');
-                const errorMsg = document.getElementById('adminSelectError');
-                if (errorMsg) errorMsg.remove();
-            }
-        });
-    }
-    
-    // Setup real-time validation for admin message textarea
-    const adminMessage = document.getElementById('adminMessage');
-    if (adminMessage) {
-        // Initial validation setup - runs once when the page loads
-        adminMessage.addEventListener('input', function() {
-            if (this.value.trim()) {
-                this.classList.remove('border-red-500');
-                const errorMsg = document.getElementById('adminMessageError');
-                if (errorMsg) errorMsg.remove();
-            }
-        });
-        
-        // Also add focus handler to clear error state
-        adminMessage.addEventListener('focus', function() {
-            this.classList.remove('border-red-500');
-            const errorMsg = document.getElementById('adminMessageError');
-            if (errorMsg) errorMsg.remove();
-        });
-    }
-    // Handle the "SEND" button click
-    if (sendToAdminSubmitBtn) {
-        sendToAdminSubmitBtn.addEventListener('click', function () {
-            const selectedAdmin = document.getElementById('adminSelect').value;
-            const message = document.getElementById('adminMessage').value.trim();
-            let isValid = true;
-            
-            // Validate admin selection
-            if (!selectedAdmin) {
-                // Show error styling for the select field
-                const selectField = document.getElementById('adminSelect');
-                selectField.classList.add('border-red-500');
-                
-                // Add error message below select if it doesn't exist already
-                let errorMsg = document.getElementById('adminSelectError');
-                if (!errorMsg) {
-                    errorMsg = document.createElement('p');
-                    errorMsg.id = 'adminSelectError';
-                    errorMsg.className = 'text-red-500 text-sm';
-                    errorMsg.textContent = 'Please select an admin to send the document to.';
-                    selectField.parentNode.appendChild(errorMsg);
-                }
-                
-                // Shake the select field to indicate error
-                selectField.classList.add('error-shake');
-                setTimeout(() => {
-                    selectField.classList.remove('error-shake');
-                }, 500);
-                
-                isValid = false;
-            }
-            
-            // Validate message
-            if (!message) {
-                // Show error styling
-                const messageField = document.getElementById('adminMessage');
-                messageField.classList.add('border-red-500');
-                
-                // Add error message below textarea if it doesn't exist already
-                let errorMsg = document.getElementById('adminMessageError');
-                if (!errorMsg) {
-                    errorMsg = document.createElement('p');
-                    errorMsg.id = 'adminMessageError';
-                    errorMsg.className = 'text-red-500 text-sm -mt-6';
-                    errorMsg.textContent = 'Please provide a message for the admin.';
-                    messageField.parentNode.appendChild(errorMsg);
-                }
-                
-                // Shake the message field to indicate error
-                messageField.classList.add('error-shake');
-                setTimeout(() => {
-                    messageField.classList.remove('error-shake');
-                }, 500);
-                
-                isValid = false;
-            }
-            
-            if (!isValid) return; // Stop execution if validation failed
-            
-            if (!currentDocumentId) {
-                showDocumentActionToast('forward', 'Error: Document ID is missing.', false);
-                return;
-            }
-
-            // Show loading state
-            setButtonLoading('sendToAdminSubmitBtn', true, 'sendToAdminModal');
-
-            // Send the data to the server
-            fetch(`/admin/documents/${currentDocumentId}/forward`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    forward_to: selectedAdmin,
-                    message: message
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Failed to forward document');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Show success toast
-                    showDocumentActionToast('forward');
-                    
-                    // Close the modal
-                    document.getElementById('sendToAdminModal').classList.add('hidden'); 
-                    clearModalInputs('sendToAdminModal');
-                    
-                    // Return to table view
-                    // closeDetailsPanel();
-                    
-                    // Update the UI to reflect the forwarded state
-                    // Get updated document details
-                    fetch(`/admin/documents/${currentDocumentId}/details`, {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(docData => { 
-                        // Update the status history and other details
-                        updateDocumentDetailsView(docData);
-                        
-                        // Reload comments to include any system-generated comments
-                        loadComments(currentDocumentId);
-                        
-                        // Hide action buttons since document is forwarded
-                        const actionButtonsContainer = document.getElementById('actionButtonsContainer');
-                        if (actionButtonsContainer) {
-                            actionButtonsContainer.classList.add('hidden');
-                        }
-                        
-                        // Show forwarded status if applicable
-                        const forwardedStatusIndicator = document.getElementById('forwardedStatusIndicator');
-                        if (forwardedStatusIndicator && docData.forward_info) {
-                            forwardedStatusIndicator.classList.remove('hidden');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error refreshing document details:', error);
-                    });
-                } else {
-                    showDocumentActionToast('forward', data.error || 'Failed to forward the document.', false);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showDocumentActionToast('forward', error.message || 'An error occurred while forwarding the document.', false);
-            })
-            .finally(() => {
-                // Reset button state
-                setButtonLoading('sendToAdminSubmitBtn', false, 'sendToAdminModal');
-            });
+            // If not disabled, show the approval message modal directly
+            document.getElementById('finalApprovalMessageModal').classList.remove('hidden');
         });
     }
 
@@ -1912,6 +2267,19 @@ document.addEventListener('DOMContentLoaded', function () {
               
             // Hide the modal
             document.getElementById('finalApprovalMessageModal').classList.add('hidden');
+
+            // Clear the approval message input field
+            const approvalMessage = document.getElementById('approvalMessage');
+            if (approvalMessage) {
+                approvalMessage.value = '';
+                
+                // Also reset the character counter
+                const counter = document.getElementById('approvalMessageCounter');
+                if (counter) {
+                    counter.textContent = `0/${MESSAGE_CHARACTER_LIMITS.approvalMessage}`;
+                    counter.classList.remove('text-orange-500', 'text-red-500');
+                }
+            }
             
             // Clear the input fields using the existing helper function
             clearModalInputs('finalApprovalMessageModal');
@@ -1932,17 +2300,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 
-
-// Handle "Finalize Approval" button click - show approval message modal
-finalizeApprovalBtn.addEventListener('click', function () {
-    // Hide the approval modal
-    approvalModal.classList.add('hidden');
-    
-    // Show the message modal directly instead of the confirmation modal
-    document.getElementById('finalApprovalMessageModal').classList.remove('hidden');
-});
-
-// Handle confirmation modal buttons
+// Handle close finalize approval button
 const closeFinalizeModalBtn = document.getElementById('closeFinalizeModalBtn');
 if (closeFinalizeModalBtn) {
     closeFinalizeModalBtn.addEventListener('click', function() {
@@ -1951,8 +2309,18 @@ if (closeFinalizeModalBtn) {
         if (approvalMessage && approvalMessage.value.trim() !== '') {
             // Show confirmation dialog
             if (confirm('You have unsaved changes. Are you sure you want to close this window?')) {
-                // User confirmed, clear the input field
-                approvalMessage.value = '';
+                // Clear the approval message input field
+                const approvalMessage = document.getElementById('approvalMessage');
+                if (approvalMessage) {
+                    approvalMessage.value = '';
+                    
+                    // Also reset the character counter
+                    const counter = document.getElementById('approvalMessageCounter');
+                    if (counter) {
+                        counter.textContent = `0/${MESSAGE_CHARACTER_LIMITS.approvalMessage}`;
+                        counter.classList.remove('text-orange-500', 'text-red-500');
+                    }
+                }
                 // Hide the modal
                 document.getElementById('finalizeConfirmationModal').classList.add('hidden');
             }
@@ -1971,11 +2339,23 @@ if (cancelFinalizeBtn) {
         // Hide confirmation modal
         document.getElementById('finalizeConfirmationModal').classList.add('hidden');
         
-        // Clear the approval message input field using the existing helper function
+        // Clear the approval message input field
+        const approvalMessage = document.getElementById('approvalMessage');
+        if (approvalMessage) {
+            approvalMessage.value = '';
+            
+            // Also reset the character counter
+            const counter = document.getElementById('approvalMessageCounter');
+            if (counter) {
+                counter.textContent = `0/${MESSAGE_CHARACTER_LIMITS.approvalMessage}`;
+                counter.classList.remove('text-orange-500', 'text-red-500');
+            }
+        }
+        
+        // Clear other input fields using the existing helper function
         clearModalInputs('finalApprovalMessageModal');
         
         // Reset any error states that might exist
-        const approvalMessage = document.getElementById('approvalMessage');
         if (approvalMessage) {
             approvalMessage.classList.remove('border-red-500');
         }
@@ -1987,107 +2367,6 @@ if (cancelFinalizeBtn) {
         
         // Reset the unsaved changes flag
         hasUnsavedChanges = false;
-    });
-}
-
-// Finalize approval handler
-const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
-if (confirmFinalizeBtn) {
-    confirmFinalizeBtn.addEventListener('click', function() {
-        // The existing actual approval submission code here
-        // Make sure we have a valid ID
-        if (!currentDocumentId) {
-            showDocumentActionToast('approved', "Error: Document ID is missing. Please try again.", false);
-            return;
-        }
-        
-        // Get the approval message from the input field
-        const message = document.getElementById('approvalMessage').value.trim();
-        
-        // Show loading state
-        setButtonLoading('confirmFinalizeBtn', true, 'finalizeConfirmationModal');
-        
-        // Hide the confirmation modal
-        document.getElementById('finalizeConfirmationModal').classList.add('hidden');
-        
-        // Submit the approval with the message
-        fetch(`/admin/documents/${currentDocumentId}/approve`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                message: message || 'Document approved and finalized'
-            })
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => { 
-                    throw new Error(data.error || `Server returned ${response.status}: ${response.statusText}`);
-                });
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Show success toast
-                showDocumentActionToast('approved', 'Document has been successfully approved and finalized.');
-                
-                // Update UI to reflect the approved state
-                const actionButtonsContainer = document.getElementById('actionButtonsContainer');
-                const processedStatusIndicator = document.getElementById('processedStatusIndicator');
-                
-                if (actionButtonsContainer) {
-                    actionButtonsContainer.classList.add('hidden');
-                }
-                
-                if (processedStatusIndicator) {
-                    processedStatusIndicator.classList.remove('hidden');
-                }
-                
-                // Refresh document details to show updated status
-                fetch(`/admin/documents/${currentDocumentId}/details`, {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Failed to refresh document details');
-                    }
-                    return response.json();
-                })
-                .then(docData => {
-                    // Update the status history and other details
-                    updateDocumentDetailsView(docData);
-                    
-                    // Reload comments to include any system-generated comments
-                    loadComments(currentDocumentId);
-                })
-                .catch(error => {
-                    console.error('Error refreshing document details:', error);
-                });
-                
-                // Clear the approval message
-                document.getElementById('approvalMessage').value = '';
-            } else {
-                // Show error toast with the message from the server
-                showDocumentActionToast('approved', data.message || "An unknown error occurred during approval.", false);
-            }
-        })
-        .catch(error => {
-            console.error('Approval error:', error);
-            showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
-            
-            // Re-show the confirmation modal if there was an error, so the user can try again
-            document.getElementById('finalizeConfirmationModal').classList.remove('hidden');
-        })
-        .finally(() => {
-            // Reset button state
-            setButtonLoading('confirmFinalizeBtn', false, 'finalizeConfirmationModal');
-        });
     });
 }
 
@@ -2228,59 +2507,61 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
-    // Update the original confirmation button handler to use the message from the input
+    // Finalize approve button handler to use the message from the input
     const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
     if (confirmFinalizeBtn) {
-        const originalClickHandler = confirmFinalizeBtn.onclick;
         confirmFinalizeBtn.addEventListener('click', function() {
-            // Reset the flag since we're submitting the form
-            hasUnsavedChanges = false;
-
-            // Reset original message value
-            originalApprovalMessage = '';
-
+            // Get the approval message from the input field
+            const approvalMessage = document.getElementById('approvalMessage').value.trim();
+            
+            if (!approvalMessage) {
+                showDocumentActionToast('approved', 'Please provide an approval message.', false);
+                return;
+            }
+            
             // Make sure we have a valid ID
             if (!currentDocumentId) {
                 showDocumentActionToast('approved', "Error: Document ID is missing. Please try again.", false);
                 return;
             }
             
-            // Get the approval message from the input field
-            const message = document.getElementById('approvalMessage').value.trim();
+            // Reset the flag since we're submitting the form
+            hasUnsavedChanges = false;
+            
+            // Reset original message value
+            originalApprovalMessage = '';
             
             // Show loading state
             setButtonLoading('confirmFinalizeBtn', true, 'finalizeConfirmationModal');
             
-            // Hide the confirmation modal
-            document.getElementById('finalizeConfirmationModal').classList.add('hidden');
-            
-            // The rest of the Ajax call remains the same
+            // Submit the approval request
             fetch(`/admin/documents/${currentDocumentId}/approve`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify({
-                    message: message || 'Document approved and finalized'
+                    message: approvalMessage
                 })
             })
             .then(response => {
                 if (!response.ok) {
-                    return response.json().then(data => { 
-                        throw new Error(data.error || 'Failed to approve document');
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Server error');
                     });
                 }
                 return response.json();
             })
             .then(data => {
-                // Success handling (unchanged)
                 if (data.success) {
+                    // Show success toast
                     showDocumentActionToast('approved');
-                    document.getElementById('actionButtonsContainer').classList.add('hidden');
-                    document.getElementById('processedStatusIndicator').classList.remove('hidden');
                     
-                    // Refresh document details
+                    // Close the modal
+                    document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+                    
+                    // Update the UI to reflect the approval
                     fetch(`/admin/documents/${currentDocumentId}/details`, {
                         headers: {
                             'Accept': 'application/json',
@@ -2289,86 +2570,104 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .then(response => response.json())
                     .then(docData => {
+                        // Update the status history and other details
                         updateDocumentDetailsView(docData);
+                        
+                        // Reload comments to include any system-generated comments
                         loadComments(currentDocumentId);
+                        
+                        // Update UI to show document is approved
+                        const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+                        if (actionButtonsContainer) {
+                            actionButtonsContainer.classList.add('hidden');
+                        }
+                        
+                        // Show processedStatusIndicator
+                        const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+                        if (processedStatusIndicator) {
+                            processedStatusIndicator.classList.remove('hidden');
+                        }
+                        
+                        // Ensure returnedStatusIndicator is hidden
+                        const returnedStatusIndicator = document.getElementById('returnedStatusIndicator');
+                        if (returnedStatusIndicator) {
+                            returnedStatusIndicator.classList.add('hidden');
+                        }
                     })
                     .catch(error => {
                         console.error('Error refreshing document details:', error);
                     });
                 } else {
-                    showDocumentActionToast('approved', data.error || "An unknown error occurred during approval.", false);
+                    showDocumentActionToast('approved', data.error || 'Failed to approve document.', false);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                showDocumentActionToast('approved', error.message || "An error occurred while approving the document.", false);
+                showDocumentActionToast('approved', error.message || 'An error occurred while approving the document.', false);
             })
             .finally(() => {
+                // Reset button state
                 setButtonLoading('confirmFinalizeBtn', false, 'finalizeConfirmationModal');
             });
         });
     }
 });       
 
-// Reject modal functionality
-document.addEventListener('DOMContentLoaded', function () {
-    // Get elements
+// Return button functionality
+document.addEventListener('DOMContentLoaded', function() {
     const rejectButton = document.getElementById('rejectButton');
-    const rejectModal = document.getElementById('rejectModal');
-    const closeRejectModalBtn = document.getElementById('closeRejectModalBtn');
-
-    // Open the reject modal when the Reject button is clicked, but check if disabled first
     if (rejectButton) {
         rejectButton.addEventListener('click', function(e) {
             if (this.disabled) {
                 e.preventDefault();
-                showDocumentActionToast('rejected', 'This document has already been reviewed and cannot be modified.', false);
+                showDocumentActionToast('return', 'This document has already been reviewed and cannot be modified.', false);
                 return;
             }
             
-            // If not disabled, show the rejection modal
-            rejectModal.classList.remove('hidden');
-        });
-    }
-
-    // Close the reject modal
-    if (closeRejectModalBtn) {
-        closeRejectModalBtn.addEventListener('click', function() {
-            rejectModal.classList.add('hidden');
+            // If not disabled, show the resubmission modal directly
+            document.getElementById('returnModal').classList.remove('hidden');
         });
     }
 });
 
-// Handle Request Resubmission button click
+// Handles "RETURN" Button functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const requestResubmissionBtn = document.getElementById('requestResubmissionBtn');
-    const resubmissionModal = document.getElementById('resubmissionModal');
-    const closeResubmissionModalBtn = document.getElementById('closeResubmissionModalBtn');
-    const submitResubmissionBtn = document.getElementById('submitResubmissionBtn');
-    
-    // Open resubmission modal when Request Resubmission is clicked
-    if (requestResubmissionBtn) {
-        requestResubmissionBtn.addEventListener('click', function() {
-            // Close the reject modal first
-            document.getElementById('rejectModal').classList.add('hidden');
-            // Show the resubmission modal
-            resubmissionModal.classList.remove('hidden');
-        });
-    }
+    const submitReturnBtn = document.getElementById('submitReturnBtn');
+    const closeReturnModalBtn = document.getElementById('closeReturnModalBtn');
+    const returnModal = document.getElementById('returnModal');
     
     // Close resubmission modal
-    if (closeResubmissionModalBtn) {
-        closeResubmissionModalBtn.addEventListener('click', function() {
-            document.getElementById('resubmissionModal').classList.add('hidden');
-            clearModalInputs('resubmissionModal');
+    if (closeReturnModalBtn) {
+        closeReturnModalBtn.addEventListener('click', function() {
+            document.getElementById('returnModal').classList.add('hidden');
+            clearModalInputs('returnModal');
+        });
+    }
+
+    const resubmissionMessage = document.getElementById('resubmissionMessage');
+    if (resubmissionMessage) {
+        // Add real-time validation as soon as the element is available
+        resubmissionMessage.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('border-red-500');
+                const errorMsg = document.getElementById('resubmissionMessageError');
+                if (errorMsg) errorMsg.remove();
+            }
+        });
+        
+        // Also add focus event for better UX
+        resubmissionMessage.addEventListener('focus', function() {
+            this.classList.remove('border-red-500');
+            const errorMsg = document.getElementById('resubmissionMessageError');
+            if (errorMsg) errorMsg.remove();
         });
     }
     
     // Handle submit resubmission
-    if (submitResubmissionBtn) {
-        submitResubmissionBtn.addEventListener('click', function() {
+    if (submitReturnBtn) {
+        submitReturnBtn.addEventListener('click', function() {
             const message = document.getElementById('resubmissionMessage').value.trim();
-    
+
             if (!message) {
                 // Show error styling
                 const messageField = document.getElementById('resubmissionMessage');
@@ -2401,217 +2700,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 errorMsg.remove();
             }
             
-            // Add real-time validation to remove error styling as soon as user types
-            messageField.addEventListener('input', function() {
-                if (this.value.trim()) {
-                    this.classList.remove('border-red-500');
-                    const errorMsg = document.getElementById('resubmissionMessageError');
-                    if (errorMsg) errorMsg.remove();
-                }
-            });
-            
             if (!currentDocumentId) {
-                showDocumentActionToast('resubmit', 'Error: Document ID is missing.', false);
+                showDocumentActionToast('return', 'Error: Document ID is missing.', false);
                 return;
             }
 
-            // Show loading state
-            setButtonLoading('submitResubmissionBtn', true, 'resubmissionModal');
+            // Hide the resubmission modal
+            document.getElementById('returnModal').classList.add('hidden');
             
-            // Submit the resubmission request
-            fetch(`/admin/documents/${currentDocumentId}/request-resubmission`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    message: message
-                })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        throw new Error(data.error || 'Server error');
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    // Show success toast
-                    showDocumentActionToast('resubmit');
-                    
-                    // Close the modal
-                    document.getElementById('resubmissionModal').classList.add('hidden');
-                    
-                    // Return to table view
-                    // closeDetailsPanel();
-                    
-                    // Update the UI to reflect the resubmission request
-                    fetch(`/admin/documents/${currentDocumentId}/details`, {
-                        headers: {
-                            'Accept': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(docData => {
-                        // Update the status history and other details
-                        updateDocumentDetailsView(docData);
-                        
-                        // Reload comments to include any system-generated comments
-                        loadComments(currentDocumentId);
-                        
-                        // Update UI to show document is awaiting resubmission
-                        const actionButtonsContainer = document.getElementById('actionButtonsContainer');
-                        if (actionButtonsContainer) {
-                            actionButtonsContainer.classList.add('hidden');
-                        }
-                        
-                        const processedStatusIndicator = document.getElementById('processedStatusIndicator');
-                        if (processedStatusIndicator) {
-                            processedStatusIndicator.classList.remove('hidden');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error refreshing document details:', error);
-                    });
-                } else {
-                    showDocumentActionToast('resubmit', data.error || 'Failed to send resubmission request.', false);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showDocumentActionToast('resubmit', error.message || 'An error occurred while requesting resubmission.', false);
-            })
-            .finally(() => {
-                // Reset button state
-                setButtonLoading('submitResubmissionBtn', false, 'resubmissionModal');
-            });
+            // Show the Final Reject Confirmation Modal instead of making the fetch request here
+            document.getElementById('finalReturnConfirmationModal').classList.remove('hidden');
         });
     }
 });
 
-// Handle "Confirm Reject" button click - show rejection message modal
-document.getElementById('confirmRejectBtn').addEventListener('click', function() {
-    // Hide the reject modal
-    document.getElementById('rejectModal').classList.add('hidden');
+// Finalize Return of Document Modal
+document.getElementById('finalizeReturnBtn').addEventListener('click', function() {
+    // Get the resubmission message 
+    const resubmissionMessage = document.getElementById('resubmissionMessage').value.trim();
     
-    // Show the reject confirmation modal
-    const rejectConfirmationModal = document.getElementById('rejectConfirmationModal');
-    rejectConfirmationModal.classList.remove('hidden');
-});
-
-// Close reject confirmation modal
-const closeRejectConfirmationModalBtn = document.getElementById('closeRejectConfirmationModalBtn');
-if (closeRejectConfirmationModalBtn) {
-    closeRejectConfirmationModalBtn.addEventListener('click', function() {
-        document.getElementById('rejectConfirmationModal').classList.add('hidden');
-        clearModalInputs('rejectConfirmationModal');
-    });
-}
-
-// Handle "Confirm Final Reject" button click
-document.getElementById('confirmFinalRejectBtn').addEventListener('click', function() {
-    // Get the rejection message
-    const messageField = document.getElementById('rejectionMessage');
-    const message = messageField.value.trim();
-    
-    if (!message) {
-        // Show error styling
-        messageField.classList.add('border-red-500');
-        
-        // Add error message below textarea if it doesn't exist already
-        let errorMsg = document.getElementById('rejectionMessageError');
-        if (!errorMsg) {
-            errorMsg = document.createElement('p');
-            errorMsg.id = 'rejectionMessageError';
-            errorMsg.className = 'text-red-500 text-sm -mt-6';
-            errorMsg.textContent = 'Please provide a reason for rejection.';
-            messageField.parentNode.appendChild(errorMsg);
-        }
-        
-        // Shake the message field to indicate error
-        messageField.classList.add('error-shake');
-        setTimeout(() => {
-            messageField.classList.remove('error-shake');
-        }, 500);
-        
-        return; // Stop execution
-    }
-    
-    // If validation passed, remove error styling
-    messageField.classList.remove('border-red-500');
-    const errorMsg = document.getElementById('rejectionMessageError');
-    if (errorMsg) {
-        errorMsg.remove();
-    }
-    
-    // Add real-time validation to remove error styling as soon as user types
-    messageField.addEventListener('input', function() {
-        if (this.value.trim()) {
-            this.classList.remove('border-red-500');
-            const errorMsg = document.getElementById('rejectionMessageError');
-            if (errorMsg) errorMsg.remove();
-        }
-    });
-    
-    // Hide the rejection message modal
-    document.getElementById('rejectConfirmationModal').classList.add('hidden');
-
-    // Show loading state
-    setButtonLoading('confirmFinalRejectBtn', true, 'rejectConfirmationModal');
-    
-    // Show the final confirmation modal
-    const finalRejectConfirmationModal = document.getElementById('finalRejectConfirmationModal');
-    finalRejectConfirmationModal.classList.remove('hidden');
-});
-
-// Close final reject confirmation modal
-const closeFinalRejectModalBtn = document.getElementById('closeFinalRejectModalBtn');
-if (closeFinalRejectModalBtn) {
-    closeFinalRejectModalBtn.addEventListener('click', function() {
-        document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
-    });
-}
-
-// Cancel final rejection
-const cancelFinalRejectBtn = document.getElementById('cancelFinalRejectBtn');
-if (cancelFinalRejectBtn) {
-    cancelFinalRejectBtn.addEventListener('click', function() {
-        document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
-    });
-}
-
-// Finalize rejection
-document.getElementById('finalizeRejectionBtn').addEventListener('click', function() {
-    // Get the rejection message
-    const rejectionMessage = document.getElementById('rejectionMessage').value.trim();
-    
-    if (!rejectionMessage) {
-        showDocumentActionToast('rejected', 'Please provide a reason for rejection.', false);
+    if (!resubmissionMessage) {
+        showDocumentActionToast('return', 'Please provide a reason for requesting changes.', false);
         return;
     }
 
     // Show loading state
-    setButtonLoading('finalizeRejectionBtn', true, 'finalRejectConfirmationModal');
+    setButtonLoading('finalizeReturnBtn', true, 'finalReturnConfirmationModal');
     
-    // Submit the rejection
-    fetch(`/admin/documents/${currentDocumentId}/reject`, {
+    // Submit the resubmission request
+    fetch(`/admin/documents/${currentDocumentId}/request-resubmission`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
         body: JSON.stringify({
-            message: rejectionMessage
+            message: resubmissionMessage
         })
     })
     .then(response => {
         if (!response.ok) {
             return response.json().then(data => {
-                throw new Error(data.error || 'Failed to reject document');
+                throw new Error(data.error || 'Server error');
             });
         }
         return response.json();
@@ -2619,15 +2749,12 @@ document.getElementById('finalizeRejectionBtn').addEventListener('click', functi
     .then(data => {
         if (data.success) {
             // Show success toast
-            showDocumentActionToast('rejected');
+            showDocumentActionToast('return');
             
-            // Close the modals
-            document.getElementById('finalRejectConfirmationModal').classList.add('hidden');
+            // Close the modal
+            document.getElementById('finalReturnConfirmationModal').classList.add('hidden');
             
-            // Return to table view
-            // closeDetailsPanel();
-            
-            // Update the UI to reflect the rejected state
+            // Update the UI to reflect the resubmission request
             fetch(`/admin/documents/${currentDocumentId}/details`, {
                 headers: {
                     'Accept': 'application/json',
@@ -2642,47 +2769,109 @@ document.getElementById('finalizeRejectionBtn').addEventListener('click', functi
                 // Reload comments to include any system-generated comments
                 loadComments(currentDocumentId);
                 
-                // Hide action buttons and show processed indicator
+                // Update UI to show document is awaiting resubmission
                 const actionButtonsContainer = document.getElementById('actionButtonsContainer');
                 if (actionButtonsContainer) {
                     actionButtonsContainer.classList.add('hidden');
                 }
                 
+                // Show returnedStatusIndicator instead of processedStatusIndicator
+                const returnedStatusIndicator = document.getElementById('returnedStatusIndicator');
+                if (returnedStatusIndicator) {
+                    returnedStatusIndicator.classList.remove('hidden');
+                }
+                
+                // Ensure processedStatusIndicator is hidden
                 const processedStatusIndicator = document.getElementById('processedStatusIndicator');
                 if (processedStatusIndicator) {
-                    processedStatusIndicator.classList.remove('hidden');
+                    processedStatusIndicator.classList.add('hidden');
                 }
             })
             .catch(error => {
                 console.error('Error refreshing document details:', error);
             });
         } else {
-            showDocumentActionToast('rejected', data.error || 'Failed to reject document.', false);
+            showDocumentActionToast('return', data.error || 'Failed to send resubmission request.', false);
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        showDocumentActionToast('rejected', error.message || 'An error occurred while rejecting the document.', false);
+        showDocumentActionToast('return', error.message || 'An error occurred while requesting resubmission.', false);
     })
     .finally(() => {
         // Reset button state
-        setButtonLoading('finalizeRejectionBtn', false, 'finalRejectConfirmationModal');
+        setButtonLoading('finalizeReturnBtn', false, 'finalRejectConfirmationModal');
     });
 });
 
+// Event listeners for the finalize return modal X and Cancel buttons
+document.addEventListener('DOMContentLoaded', function() {
+    // Close button (X) for the Final Return Confirmation Modal
+    const closeFinalReturnModalBtn = document.getElementById('closeFinalReturnModalBtn');
+    if (closeFinalReturnModalBtn) {
+        closeFinalReturnModalBtn.addEventListener('click', function() {
+            const resubmissionMessage = document.getElementById('resubmissionMessage');
+            // Check if there are unsaved changes in the resubmission message
+            if (resubmissionMessage && resubmissionMessage.value.trim() !== '') {
+                // Show confirmation dialog
+                if (confirm('You have unsaved changes. Are you sure you want to close this window?')) {
+                    // Clear the resubmission message input field
+                    if (resubmissionMessage) {
+                        resubmissionMessage.value = '';
+                        
+                        // Also reset the character counter
+                        const counter = document.getElementById('resubmissionMessageCounter');
+                        if (counter) {
+                            counter.textContent = `0/${MESSAGE_CHARACTER_LIMITS.resubmissionMessage}`;
+                            counter.classList.remove('text-orange-500', 'text-red-500');
+                        }
+                    }
+                    
+                    // Hide the modal
+                    document.getElementById('finalReturnConfirmationModal').classList.add('hidden');
+                    
+                    // Reset unsaved changes flag
+                    hasUnsavedChanges = false;
+                }
+                // If user cancels, the modal stays open
+            } else {
+                // No unsaved changes, just close the modal
+                document.getElementById('finalReturnConfirmationModal').classList.add('hidden');
+            }
+        });
+    }
+
+    // Cancel button for the Final Return Confirmation Modal
+    const cancelFinalReturnBtn = document.getElementById('cancelFinalReturnBtn');
+    if (cancelFinalReturnBtn) {
+        cancelFinalReturnBtn.addEventListener('click', function() {
+            // Hide the modal
+            document.getElementById('finalReturnConfirmationModal').classList.add('hidden');
+            
+            // Clear the resubmission message input field
+            const resubmissionMessage = document.getElementById('resubmissionMessage');
+            if (resubmissionMessage) {
+                resubmissionMessage.value = '';
+                
+                // Also reset the character counter
+                const counter = document.getElementById('resubmissionMessageCounter');
+                if (counter) {
+                    counter.textContent = `0/${MESSAGE_CHARACTER_LIMITS.resubmissionMessage}`;
+                    counter.classList.remove('text-orange-500', 'text-red-500');
+                }
+            }
+            
+            // Reset unsaved changes flag
+            hasUnsavedChanges = false;
+        });
+    }
+});
 
 // --------------- TOASTS ---------------
 
-// Toast timeout storage
-let documentActionToastTimeout = null;
-window.ASSET_URLS = window.ASSET_URLS || {
-  successIcon: '/images/successful.svg',
-  errorIcon: '/images/error.svg'
-};
-
 /**
  * Shows a toast notification for document actions
- * @param {string} action - The action type: 'approved', 'rejected', 'resubmit', 'forward'
+ * @param {string} action - The action type: 'approved' and 'returned'
  * @param {string} message - Optional custom message
  * @param {boolean} isSuccess - Whether the action was successful
  */
@@ -2719,23 +2908,11 @@ function showDocumentActionToast(action, message = '', isSuccess = true) {
                 ? 'The document has been approved successfully and the submitter has been notified.' 
                 : 'Failed to approve document. Please try again later.';
             break;
-        case 'rejected':
-            title = isSuccess ? 'Document Successfully Rejected' : 'Rejection Failed';
+        case 'return':
+            title = isSuccess ? 'Document Returned Successfully' : 'Return Request Failed';
             defaultMessage = isSuccess 
-                ? 'The document has been rejected and the submitter has been notified.' 
-                : 'Failed to reject document. Please try again later.';
-            break;
-        case 'resubmit':
-            title = isSuccess ? 'Resubmission Successfully Requested' : 'Resubmission Request Failed';
-            defaultMessage = isSuccess 
-                ? 'The resubmission request has been sent to the document submitter.' 
-                : 'Failed to request document resubmission. Please try again later.';
-            break;
-        case 'forward':
-            title = isSuccess ? 'Document Successfully Forwarded' : 'Forward Failed';
-            defaultMessage = isSuccess 
-                ? 'The document has been forwarded to another admin for review.' 
-                : 'Failed to forward document. Please try again later.';
+                ? 'The document has been returned to the submitter for revisions.' 
+                : 'Failed to return the document. Please try again later.';
             break;
         default:
             title = isSuccess ? 'Action Successful' : 'Action Failed';
@@ -2782,163 +2959,3 @@ function hideAllToasts() {
         hideToast('approvalFail');
     }
 }
-
-// Track unsaved changes in modals
-let hasUnsavedChanges = false;
-const formsToTrack = [
-    { inputId: 'adminMessage', modalId: 'sendToAdminModal' },
-    { inputId: 'resubmissionMessage', modalId: 'resubmissionModal' },
-    { inputId: 'rejectionMessage', modalId: 'rejectConfirmationModal' },
-    { inputId: 'approvalMessage', modalId: 'finalApprovalMessageModal' }
-];
-
-// Function to set up unsaved changes tracking
-function setupUnsavedChangesTracking() {
-    // Track changes in modal textareas and inputs
-    formsToTrack.forEach(form => {
-        const input = document.getElementById(form.inputId);
-        if (input) {
-            // Set initial state when modal opens
-            const modal = document.getElementById(form.modalId);
-            if (modal) {
-                const observer = new MutationObserver((mutations) => {
-                    mutations.forEach((mutation) => {
-                        if (mutation.attributeName === 'class' && 
-                            !modal.classList.contains('hidden')) {
-                            // Modal just opened - reset the input's original value
-                            input.setAttribute('data-original-value', input.value);
-                            checkForChanges(input);
-                        }
-                    });
-                });
-                
-                observer.observe(modal, { attributes: true });
-            }
-            
-            // Track changes while typing
-            input.addEventListener('input', () => {
-                checkForChanges(input);
-            });
-            
-            // Reset tracking when the form is submitted successfully
-            const submitButtons = getSubmitButtonsForInput(form.inputId);
-            submitButtons.forEach(buttonId => {
-                const button = document.getElementById(buttonId);
-                if (button) {
-                    button.addEventListener('click', () => {
-                        // The hasUnsavedChanges will be reset when the modal is hidden
-                        // after successful form submission
-                    });
-                }
-            });
-        }
-    });
-    
-    // Add close modal button handlers to check for unsaved changes
-    document.querySelectorAll('[id$="ModalBtn"], [id^="cancel"], [id^="close"]').forEach(button => {
-        if (button && !button.hasUnsavedChangesHandler) {
-            // Instead of modifying onclick, add a capturing event listener that runs BEFORE any other click handlers
-            button.addEventListener('click', function(e) {
-                if (hasUnsavedChanges) {
-                    if (!confirm('You have unsaved changes. Are you sure you want to close this window?')) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        return false;
-                    }
-                    // If user confirmed, reset the tracking
-                    hasUnsavedChanges = false;
-                }
-            }, true); // true means use capturing phase (runs before regular handlers)
-            
-            button.hasUnsavedChangesHandler = true;
-        }
-    });
-
-    // Add the beforeunload event listener to the window
-    window.addEventListener('beforeunload', function(e) {
-        if (hasUnsavedChanges) {
-            // The message text is determined by the browser and can't be customized for security reasons
-            const confirmationMessage = 'You have unsaved changes. If you leave now, your changes will be lost.';
-            e.returnValue = confirmationMessage;
-            return confirmationMessage;
-        }
-    });
-    
-    // Reset tracking when modals are closed
-    document.querySelectorAll('.modal, [id$="Modal"]').forEach(modal => {
-        if (modal) {
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    if (mutation.attributeName === 'class' && 
-                        modal.classList.contains('hidden')) {
-                        // Modal was just closed - reset tracking
-                        hasUnsavedChanges = false;
-                    }
-                });
-            });
-            
-            observer.observe(modal, { attributes: true });
-        }
-    });
-}
-
-// Helper function to check if an input has unsaved changes
-function checkForChanges(input) {
-    const originalValue = input.getAttribute('data-original-value') || '';
-    const currentValue = input.value || '';
-    
-    // Only mark as having changes if the field actually has content
-    // This prevents warnings when closing empty modals
-    if (currentValue.trim() !== originalValue.trim() && currentValue.trim() !== '') {
-        hasUnsavedChanges = true;
-    } else {
-        // Check if any other tracked inputs have changes before setting to false
-        let anyOtherChanges = false;
-        formsToTrack.forEach(form => {
-            const otherInput = document.getElementById(form.inputId);
-            if (otherInput && otherInput !== input) {
-                const otherOriginal = otherInput.getAttribute('data-original-value') || '';
-                const otherCurrent = otherInput.value || '';
-                if (otherCurrent.trim() !== otherOriginal.trim() && otherCurrent.trim() !== '') {
-                    anyOtherChanges = true;
-                }
-            }
-        });
-        
-        hasUnsavedChanges = anyOtherChanges;
-    }
-}
-
-// Helper function to map input IDs to their submit button IDs
-function getSubmitButtonsForInput(inputId) {
-    const buttonMap = {
-        'adminMessage': ['sendToAdminSubmitBtn'],
-        'resubmissionMessage': ['submitResubmissionBtn'],
-        'rejectionMessage': ['confirmFinalRejectBtn', 'finalizeRejectionBtn'],
-        'approvalMessage': ['sendApprovalMessageBtn']
-    };
-    
-    return buttonMap[inputId] || [];
-}
-
-// Initialize unsaved changes tracking when the DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    setupUnsavedChangesTracking();
-    setupCharacterLimits();
-    fixModalLabelOverlap();
-    
-    // Reset unsaved changes flag after successful form submissions
-    const originalShowToast = window.showDocumentActionToast;
-    
-    if (typeof originalShowToast === 'function') {
-        window.showDocumentActionToast = function(action, message = '', isSuccess = true) {
-            // If the action was successful, reset the unsaved changes flag
-            if (isSuccess) {
-                hasUnsavedChanges = false;
-            }
-            
-            // Call the original function
-            return originalShowToast(action, message, isSuccess);
-        };
-    }
-});
