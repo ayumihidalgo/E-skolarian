@@ -95,8 +95,7 @@
                 <div class="w-[80%] mx-auto">
                     <h2 class="text-xl font-[Lexend] mb-4 text-[var(--secondary-color)]">RESET TOKEN EXPIRED</h2>
                     <p class="mb-6 font-[Manrope] font-normal">Your password reset link has expired or is invalid. Please request a new one.</p>
-                    <a href="{{ route('admin.login.form') }}" class="inline-block px-6 py-2 bg-[var(--secondary-color)] text-white rounded-full font-bold hover:bg-[var(--primary-color)] transition">Back to Login</a>
-                </div>
+                    <a href="{{ route('admin.password.request') }}" class="inline-block px-6 py-2 bg-[var(--secondary-color)] text-white rounded-full font-bold hover:bg-[var(--primary-color)] transition">Back to Forgot Password</a>                </div>
             </div>
         </div>
         <script>
@@ -104,6 +103,15 @@
             document.addEventListener('DOMContentLoaded', function() {
                 document.querySelector('form').style.filter = 'blur(2px)';
                 document.querySelector('form').style.pointerEvents = 'none';
+
+                // Prevent beforeunload when clicking "Back to Forgot Password"
+                // Prevent beforeunload when clicking "Back to Forgot Password"
+                const backToForgot = document.querySelector('#expiredModal a[href="{{ route('admin.password.request') }}"]');
+                if (backToForgot) {
+                    backToForgot.addEventListener('click', function(e) {
+                        window.isSafeExit = true; // Set global flag
+                    });
+                }
             });
         </script>
     @endif
@@ -360,33 +368,78 @@
     } else {
         // If not dirty, navigate immediately without modal
         isSafeExit = true; // mark as safe exit to skip beforeunload
-        window.location.href = "{{ route('admin.login') }}";
+        setTimeout(function() {
+            window.location.href = "{{ route('admin.login') }}";
+        }, 10);
     }
 });
-    // If user confirms going back
-    document.getElementById('confirmLeave').addEventListener('click', function () {
-        isSafeExit = true; // Allow leaving without beforeunload
+
+// If user confirms going back
+document.getElementById('confirmLeave').addEventListener('click', function () {
+    isSafeExit = true; // Allow leaving without beforeunload
+    setTimeout(function() {
         window.location.href = "{{ route('admin.login') }}";
-    });
+    }, 10);
+});
 
-    // Cancel going back
-    document.getElementById('cancelLeave').addEventListener('click', function () {
-        document.getElementById('unsavedChangesModal').classList.add('hidden');
-    });
+// ...existing code...
 
-    // Trigger beforeunload only if NOT a safe exit
-    window.addEventListener('beforeunload', function (e) {
-        if (!isSafeExit) {
-            e.preventDefault();
-            e.returnValue = ''; // Needed for Chrome/Edge
-        }
-    });
+// Mark exit as safe when user clicks "Back to Login"
+document.getElementById('backToLogin').addEventListener('click', function (e) {
+    e.preventDefault();
 
-    // Also make sure form submission sets safe exit
-    const form = document.querySelector('form');
-    form.addEventListener('submit', function () {
-        isSafeExit = true;
+    if (isDirty) {
+        // Show the modal only if there are unsaved changes
+        modal.classList.remove('hidden');
+    } else {
+        // If not dirty, navigate immediately without modal
+        window.isSafeExit = true; // Use window-scoped variable
+        setTimeout(function() {
+            window.location.href = "{{ route('student.login') }}";
+        }, 10);
+    }
+});
+
+// If user confirms going back
+document.getElementById('confirmLeave').addEventListener('click', function () {
+    window.isSafeExit = true; // Use window-scoped variable
+    setTimeout(function() {
+        window.location.href = "{{ route('student.login.form') }}";
+    }, 10);
+});
+
+// Also for "Back to Forgot Password" in expired token modal
+const backToForgot = document.querySelector('#expiredModal a[href="{{ route('student.password.request') }}"]');
+if (backToForgot) {
+    backToForgot.addEventListener('click', function(e) {
+        window.isSafeExit = true;
+        // No need for setTimeout here if it's a normal anchor, but you can add for consistency:
+        setTimeout(function() {
+            // Let the anchor work as normal
+            window.location.href = "{{ route('student.password.request') }}";
+        }, 10);
     });
+}
+
+
+// Cancel going back
+document.getElementById('cancelLeave').addEventListener('click', function () {
+    document.getElementById('unsavedChangesModal').classList.add('hidden');
+});
+
+
+window.addEventListener('beforeunload', function (e) {
+    if (!window.isSafeExit) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// Also make sure form submission sets safe exit
+const form = document.querySelector('form');
+form.addEventListener('submit', function () {
+    window.isSafeExit = true;
+});
 
         </script>
 
