@@ -536,6 +536,55 @@
             }
         });
 
+        // Limits inputs for hours field to positive integers (x > 0)
+        const hoursInput = document.getElementById('hours');
+
+        hoursInput.addEventListener('keydown', function (e) {
+            const invalidKeys = ["-", "e", "E", "+", "."];
+            const isZero = e.key === "0" && this.value.length === 0;
+
+            if (invalidKeys.includes(e.key) || isZero) {
+                e.preventDefault();
+            }
+        });
+
+        hoursInput.addEventListener('paste', function (e) {
+            const pasteData = e.clipboardData.getData('text');
+            if (!/^[1-9][0-9]*$/.test(pasteData)) {
+                e.preventDefault();
+            }
+        });
+
+        hoursInput.addEventListener('input', function (e) {
+            // Immediately remove any invalid input (example: 0000)
+            if (!/^[1-9][0-9]*$/.test(this.value)) {
+                this.value = '';
+            }
+        });
+
+        // Limits inputs for fees field to positive integers w/ 0 (x >= 0)
+        const feesInput = document.getElementById('fees');
+
+        feesInput.addEventListener('keydown', function (e) {
+            const invalidKeys = ["-", "e", "E", "+"];
+
+            if (invalidKeys.includes(e.key)) {
+                e.preventDefault();
+            }
+
+            // Only one decimal point
+            if (e.key === "." && this.value.includes(".")) {
+                e.preventDefault();
+            }
+        });
+
+        feesInput.addEventListener('paste', function (e) {
+            const pasteData = e.clipboardData.getData('text');
+            if (!/^\d+(\.\d{1,2})?$/.test(pasteData)) {
+                e.preventDefault();
+            }
+        });
+
         // Toggle dropdown visibility
         docType.button.addEventListener('click', () => toggleDropdown(docType.dropdown));
         receiver.button.addEventListener('click', () => toggleDropdown(receiver.dropdown));
@@ -784,7 +833,6 @@
             } else {
                 othersDocTypeContainer.hidden = true;
                 othersDocTypeInput.name = 'other_type'; // Avoid conflicting name
-                // othersDocTypeInput.value = ''; // Clear any leftover input
             }
         }
 
