@@ -47,13 +47,22 @@ class SuperAdminLoginController extends Controller
             ]);
         }
 
-        // Attempt to authenticate the user (super admin only)
-        if (Auth::attempt([
-            'email' => $credentials['email'],
-            'password' => $credentials['password'],
+        $remember = $request->has('remember');
+
+        // Try to find the user by either email or recovery_email
+        $user = \App\Models\User::where(function ($query) use ($request) {
+            $query->where('email', $request->email)
+                  ->orWhere('recovery_email', $request->email);
+        })->where('role', 'super admin')
+          ->where('active', 1)
+          ->first();
+
+        if ($user && Auth::attempt([
+            'email' => $user->email,
+            'password' => $request->password,
             'role' => 'super admin',
             'active' => 1,
-        ])) {
+        ], $remember)) {
             // Successful login - clear attempts
             $this->clearLoginAttempts($request);
 
