@@ -62,9 +62,9 @@
         });
     </script>
 </head>
-
-@include('loading')
 <body id="box" class="min-h-screen flex flex-col justify-center bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)] font-['Manrope'] font-bold">
+    @include('loading')
+
     <div id="formWrapper" class="max-md:p-[20px] max-md:max-w-md max-md:mx-auto">
         <div id="formContainer" class="opacity-0 flex flex-row md:w-[85%] md:h-[630px] mx-auto px-6 p-4 md:backdrop-blur-xs md:transition-all md:duration-1000">
             <div class="flex flex-col justify-center items-center basis-[45%] bg-[#F5D4D4A6] md:rounded-l-[100px] p-5 max-md:hidden">

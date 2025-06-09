@@ -81,9 +81,9 @@
         });
     </script>
 </head>
-
-@include('loading')
 <body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
+    @include('loading')
+
     {{-- Modal for expired token --}}
     @if (!empty($tokenExpired) && $tokenExpired)
          <div id="expiredModal" class="fixed inset-0 flex items-center flex-col justify-center bg-black/80 z-50">
