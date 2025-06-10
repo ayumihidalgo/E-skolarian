@@ -27,7 +27,7 @@
     if (isBack && window.location.pathname === loginUrl) {
         window.location.replace(landingUrl);
     }
-    
+
        /* To carousel set of images */
        const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
@@ -740,6 +740,19 @@
             if (/\s/.test(pastedText)) {
                 e.preventDefault();
                 alert('Spaces are not allowed in the email address.');
+            }
+        });
+
+        // Prevent spaces in password
+        passwordInput.addEventListener('keydown', function (e) {
+            if (e.key === ' ') e.preventDefault();
+        });
+
+        passwordInput.addEventListener('paste', function (e) {
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            if (/\s/.test(pastedText)) {
+                e.preventDefault();
+                alert('Spaces are not allowed in the password.');
             }
         });
 
