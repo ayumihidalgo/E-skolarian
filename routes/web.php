@@ -199,6 +199,8 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
     Route::get('/admin/get-admins', [DocumentReviewController::class, 'getAdmins'])->name('admin.get-admins');
     Route::post('/admin/restore-documents', [AdminDocumentController::class, 'restoreDocuments'])->name('admin.restoreDocuments');
     Route::post('/admin/archive-documents', [AdminDocumentController::class, 'archiveDocuments'])->name('admin.archiveDocuments');
+    Route::post('/admin/select-all-documents', [AdminDocumentController::class, 'selectAllDocuments'])->name('admin.selectAllDocuments');
+    Route::post('/admin/select-all-archived-documents', [AdminDocumentController::class, 'selectAllArchivedDocuments'])->name('admin.selectAllArchivedDocuments');
 });
 // ---------------- Student ----------------
 Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class])->group(function () {
