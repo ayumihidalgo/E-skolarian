@@ -1,6 +1,6 @@
 {{-- Student sidebar component components/studentSideBarComponent.blade.php --}}
 <div id="sidebar"
-    class="fixed top-0 left-0 w-1/5 h-screen bg-[#7A1212] text-white p-6 z-50 transition-all duration-300 flex flex-col
+    class="fixed top-0 left-0 h-screen bg-[#7A1212] text-white p-6 z-50 transition-all duration-300 flex flex-col
            md:translate-x-0 max-md:w-64 max-md:-translate-x-full">
 
     <!-- Logo & Title -->
@@ -28,10 +28,9 @@
 
     <!-- Mobile Close Button (visible on mobile only) -->
     <button id="closeMobileSidebar"
-        class="absolute top-6 right-6 text-white hover:text-yellow-400 transition duration-200 md:hidden">
-        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
+        class="absolute top-11 -right-5 rounded-r-lg p-1 z-10 hidden transition-all duration-300 cursor-pointer md:hidden">
+        <img src="{{ asset('images/toggleSidebar.svg') }}" alt="Toggle Sidebar"
+            class="h-10 w-10 transition-transform duration-300" id="toggleIcon">
     </button>
 
     <nav class="flex flex-col justify-between h-full mt-6">
@@ -56,7 +55,7 @@
 </div>
 
 <!-- Mobile Sidebar Overlay -->
-<div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"></div>
+<div id="sidebarOverlay" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
 
 <!-- Updated Navigation Bar -->
 <div>
@@ -66,7 +65,9 @@
             <!-- Mobile logo (hidden on desktop) -->
             <div class="flex items-center space-x-2 md:hidden">
                 <img src="{{ asset('images/officialLogo.svg') }}" alt="Logo" class="h-8 w-8">
-                <h1 class="font-[Marcellus_SC] text-lg leading-none">E-SKOLARI<span class="text-yellow-400">★</span>N</h1>
+                <h1 class="font-[Marcellus_SC] text-sm sm:text-base leading-none">
+                    E-SKOLARI<span class="text-yellow-400">★</span>N
+                </h1>
             </div>
 
             <!-- Empty div to take up space on desktop -->
@@ -74,19 +75,19 @@
         </div>
 
         <!-- Right side content -->
-        <div class="flex items-center space-x-6">
+        <div class="flex items-center space-x-3 sm:space-x-6">
             <!-- Mobile Menu Button (6 dots) - visible on mobile only -->
             <button id="mobileMenuBtn" class="text-white hover:text-yellow-400 transition duration-200 md:hidden">
                 <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
-                    <circle cx="5" cy="5" r="2"/>
-                    <circle cx="12" cy="5" r="2"/>
-                    <circle cx="19" cy="5" r="2"/>
-                    <circle cx="5" cy="12" r="2"/>
-                    <circle cx="12" cy="12" r="2"/>
-                    <circle cx="19" cy="12" r="2"/>
-                    <circle cx="5" cy="19" r="2"/>
-                    <circle cx="12" cy="19" r="2"/>
-                    <circle cx="19" cy="19" r="2"/>
+                    <circle cx="5" cy="5" r="2" />
+                    <circle cx="12" cy="5" r="2" />
+                    <circle cx="19" cy="5" r="2" />
+                    <circle cx="5" cy="12" r="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <circle cx="19" cy="12" r="2" />
+                    <circle cx="5" cy="19" r="2" />
+                    <circle cx="12" cy="19" r="2" />
+                    <circle cx="19" cy="19" r="2" />
 
                 </svg>
             </button>
@@ -95,9 +96,11 @@
             <x-general-components.notification />
             <div>
                 @auth
-                    <a href="#" class="font-semibold">{{ Auth::user()->organization_acronym }}</a>
+                    <a href="#"
+                        class="font-semibold text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px]">{{ Auth::user()->organization_acronym }}</a>
                 @else
-                    <a href="#" class="font-semibold">Guest</a>
+                    <a href="#"
+                        class="font-semibold text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px]">Guest</a>
                 @endauth
             </div>
         </div>
@@ -140,12 +143,14 @@
         if (mobileMenuBtn) {
             mobileMenuBtn.addEventListener('click', function() {
                 openMobileSidebar();
+                closeMobileSidebar.classList.remove('hidden');
             });
         }
 
         if (closeMobileSidebar) {
             closeMobileSidebar.addEventListener('click', function() {
                 closeMobileSidebarFunc();
+                closeMobileSidebar.classList.add('hidden');
             });
         }
 
@@ -158,9 +163,9 @@
         function collapseSidebar() {
             sidebar.classList.remove('w-1/5');
             sidebar.classList.add('w-20');
-            if (mainContent) {
-                mainContent.classList.remove('ml-[20%]');
-                mainContent.classList.add('ml-20');
+            if (mainContent && window.innerWidth >= 768) {
+                mainContent.classList.remove('md:ml-[20%]');
+                mainContent.classList.add('md:ml-20');
             }
             if (toggleIcon) {
                 toggleIcon.classList.add('rotate-180');
@@ -173,9 +178,9 @@
         function expandSidebar() {
             sidebar.classList.add('w-1/5');
             sidebar.classList.remove('w-20');
-            if (mainContent) {
-                mainContent.classList.add('ml-[20%]');
-                mainContent.classList.remove('ml-20');
+            if (mainContent && window.innerWidth >= 768) {
+                mainContent.classList.add('md:ml-[20%]');
+                mainContent.classList.remove('md:ml-20');
             }
             if (toggleIcon) {
                 toggleIcon.classList.remove('rotate-180');
@@ -216,6 +221,11 @@
                 if (toggleIcon) {
                     toggleIcon.classList.remove('rotate-180');
                 }
+                // Remove margin on mobile
+                if (mainContent) {
+                    mainContent.classList.remove('md:ml-[20%]', 'md:ml-20', 'ml-20', 'ml-[20%]');
+                    mainContent.classList.add('ml-0');
+                }
             } else {
                 // Desktop view - apply saved state
                 sidebar.classList.remove('max-md:-translate-x-full', 'max-md:translate-x-0');
@@ -226,6 +236,10 @@
                     collapseSidebar();
                 } else {
                     expandSidebar();
+                }
+                // Remove ml-0 on desktop
+                if (mainContent) {
+                    mainContent.classList.remove('ml-0');
                 }
             }
         }

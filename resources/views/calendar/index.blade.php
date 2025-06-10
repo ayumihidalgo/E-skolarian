@@ -327,6 +327,12 @@ function containsSpecialChars(text) {
                 },
                 dayHeaderFormat: { weekday: 'short' },
                 fixedWeekCount: false,
+
+                eventTimeFormat: {
+                hour: 'numeric',
+                minute: '2-digit',
+                meridiem: 'short'  
+            },
                 
                 events: function(fetchInfo, successCallback, failureCallback) {
                     Promise.all([
@@ -442,7 +448,16 @@ function containsSpecialChars(text) {
     const actionContainer = document.getElementById('event-action-buttons');
     
     if (titleElement) {
-        titleElement.textContent = event.title;
+        // Use full title and apply word wrapping styles for announcements only
+        const fullTitle = event.extendedProps.full_title || event.title.replace('📢 ', '');
+        titleElement.textContent = fullTitle;
+        
+        // Apply word wrapping styles specifically for announcements
+        titleElement.style.wordWrap = 'break-word';
+        titleElement.style.overflowWrap = 'break-word';
+        titleElement.style.whiteSpace = 'normal';
+        titleElement.style.maxWidth = '100%';
+        titleElement.style.lineHeight = '1.4';
     }
     
     // Format and display the date
@@ -456,8 +471,9 @@ function containsSpecialChars(text) {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
             });
         }
         
@@ -472,14 +488,14 @@ function containsSpecialChars(text) {
     // Show announcement-specific content
     if (actionContainer) {
         actionContainer.innerHTML = `
-            <div class="text-sm text-gray-600 mb-2">
+            <div class="text-sm text-gray-600 mb-2" style="word-wrap: break-word; overflow-wrap: break-word;">
                 <strong>Posted by:</strong> ${event.extendedProps.poster || 'Unknown'}<br>
                 ${event.extendedProps.deadline_text ? '<strong>Deadline:</strong> ' + event.extendedProps.deadline_text : ''}
             </div>
-            <div class="text-sm text-gray-700 mb-4">
+            <div class="text-sm text-gray-700 mb-4" style="word-wrap: break-word; overflow-wrap: break-word;">
                 ${event.extendedProps.content || 'No additional details available.'}
             </div>
-            <p class="text-xs text-orange-600 font-medium">📢 This is an announcement with a deadline.</p>
+            <p class="text-xs text-orange-600 font-medium">📢 Deadline Announcement.</p>
         `;
     }
     

@@ -258,6 +258,7 @@
     max-height: 40px !important; /* Limit height to prevent oversized events */
     overflow: visible !important; 
     max-height: none !important;
+    padding-right: 60px;
 }
 
 /* Fix for long event titles - truncate with ellipsis */
@@ -268,6 +269,7 @@
     display: block !important;
     max-width: 100% !important;
     position: relative !important;
+    padding-right: 0.5rem;
 }
 
 /* Alternative: Enable multi-line wrapping with height limit */
@@ -507,6 +509,7 @@
 .fc-event-time {
     color: inherit !important;
     font-weight: 500 !important;
+    flex-shrink: 0;
 }
 
 /* Hover effects for events */
@@ -519,8 +522,49 @@
 /* Make sure text remains readable */
 .fc-event .fc-event-main {
     color: inherit !important;
+    min-width: 0;
 }
 
 .fc-event .fc-event-main-frame {
     color: inherit !important;
+}
+
+.fc-event-main .fc-event-time {
+    flex-shrink: 0 !important; /* Never shrink the time */
+    margin-right: 4px;
+}
+
+.fc-event-main .fc-event-title {
+    flex: 1;
+    min-width: 0; /* Allow title to shrink */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.fc-daygrid-event {
+    min-height: 20px;
+}
+.fc-daygrid-event-dot {
+    margin-right: 2px;
+}
+
+.fc-daygrid-event .fc-event-main {
+    padding-right: 50px; /* Reserve space for time in month view */
+}
+
+/* Announcement modal specific styles */
+#eventDetailsModal #detail-title {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    max-width: 100%;
+    line-height: 1.4;
+}
+
+/* Ensure the modal container doesn't overflow */
+#eventDetailsModal .modal-container {
+    max-width: 90vw;
+    max-width: 500px;
+    overflow: hidden;
 }
