@@ -68,7 +68,8 @@
             <div id="adminDropdownMenu"
                 class="absolute right-0 mt-2 w-40 bg-white rounded-[16px] shadow-lg py-1 hidden z-50 border-2 border-[#4D0F0F] cursor-pointer">
                 <!-- Settings Option -->
-                <a class="flex items-center justify-center px-4 py-2 text-xl text-[#332B2B]"> {{-- href="{{ route('superadmin.settings') }}" --}}
+                <a class="flex items-center justify-center px-4 py-2 text-xl text-[#332B2B]"
+                    href="{{ route('superadmin.settings') }}"> {{-- href="{{ route('superadmin.settings') }}" --}}
                     <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 21 20"
                         fill="none" class="mr-2">
                         <path

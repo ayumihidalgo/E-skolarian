@@ -80,6 +80,7 @@ newPasswordInput.addEventListener("input", function () {
     updatePasswordRequirements(this.value);
 });
 
+window.togglePassword = togglePassword;
 function togglePassword(event, inputId) {
     event.preventDefault();
     const input = document.getElementById(inputId);
