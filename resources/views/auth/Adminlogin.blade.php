@@ -18,21 +18,16 @@
     @vite('resources/css/app.css')
 
     <script>
-        const loginUrl = '/admin/login';
-        const landingUrl = '/';
+    // Immediate check and redirect (before page render finishes)
+    const isBack = performance.getEntriesByType("navigation")[0]?.type === "back_forward";
 
-        // Detect if browser is navigating back to this page
-        const navType = performance.getEntriesByType("navigation")[0]?.type;
-        const isBack = navType === "back_forward";
+    const loginUrl = '/admin/login';
+    const landingUrl = '/';
 
-        window.addEventListener('pageshow', (event) => {
-            if ((event.persisted || isBack) && window.location.pathname === loginUrl) {
-                // Avoid showing login page at all
-                history.replaceState(null, '', landingUrl);
-                window.location.replace(landingUrl); // Use replace to avoid stacking
-            }
-        });
-
+    if (isBack && window.location.pathname === loginUrl) {
+        window.location.replace(landingUrl);
+    }
+    
        /* To carousel set of images */
        const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
