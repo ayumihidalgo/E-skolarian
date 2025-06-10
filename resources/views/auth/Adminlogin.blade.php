@@ -18,6 +18,21 @@
     @vite('resources/css/app.css')
 
     <script>
+        const loginUrl = '/admin/login';
+        const landingUrl = '/';
+
+        // Detect if browser is navigating back to this page
+        const navType = performance.getEntriesByType("navigation")[0]?.type;
+        const isBack = navType === "back_forward";
+
+        window.addEventListener('pageshow', (event) => {
+            if ((event.persisted || isBack) && window.location.pathname === loginUrl) {
+                // Avoid showing login page at all
+                history.replaceState(null, '', landingUrl);
+                window.location.replace(landingUrl); // Use replace to avoid stacking
+            }
+        });
+
        /* To carousel set of images */
        const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
@@ -1032,7 +1047,8 @@
         if (event.persisted) {
             const loader = document.getElementById('loader');
             if (loader) {
-                loader.style.display = 'none';
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
             }
         }
     });
