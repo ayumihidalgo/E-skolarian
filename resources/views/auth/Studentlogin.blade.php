@@ -18,6 +18,16 @@
     @vite('resources/css/app.css')
 
     <script>
+        // Immediate check and redirect (before page render finishes)
+        const isBack = performance.getEntriesByType("navigation")[0]?.type === "back_forward";
+
+        const loginUrl = '/student/login';
+        const landingUrl = '/';
+
+        if (isBack && window.location.pathname === loginUrl) {
+            window.location.replace(landingUrl);
+        }
+
         /* To carousel set of images */
         const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
@@ -1038,7 +1048,8 @@ function closeErrorModal() {
         if (event.persisted) {
             const loader = document.getElementById('loader');
             if (loader) {
-                loader.style.display = 'none';
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
             }
         }
     });
