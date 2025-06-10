@@ -23,6 +23,16 @@ class User extends Authenticatable
     {
         $this->notify(new \App\Notifications\CustomResetPassword($token));
     }
+
+
+    public function routeNotificationForMail($notification)
+    {
+        // If the recovery_email was used, send to that
+        return request('email') === $this->recovery_email
+            ? $this->recovery_email
+            : $this->email;
+    }
+
     // A scope to only get active users
     public function scopeActive($query)
     {

@@ -27,17 +27,26 @@ class StudentPasswordResetLinkController extends Controller
             'role' => 'required|in:student', // Only student allowed
         ]);
 
-        // Check if the email exists in the users table and is student
+        // Try to find user by email
         $user = User::where('email', $request->email)
             ->where('active', 1)
             ->where('role', 'student')
             ->first();
 
+        // If not found, try recovery_email
+        if (!$user) {
+            $user = User::where('recovery_email', $request->email)
+                ->where('active', 1)
+                ->where('role', 'student')
+                ->first();
+        }
+
         if (!$user) {
             return back()->withErrors(['email' => 'We can\'t find a student organization with that email address.']);
         }
 
-        $status = Password::sendResetLink($request->only('email'));
+        // Use the user's primary email for token creation and lookup
+        $status = Password::sendResetLink(['email' => $user->email]);
 
         return $status === Password::RESET_LINK_SENT
             ? back()->with('status', __($status))
