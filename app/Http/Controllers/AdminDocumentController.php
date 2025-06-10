@@ -38,7 +38,7 @@ class AdminDocumentController extends Controller
                 $attachments[] = [
                     'id' => $version->id,
                     'version' => $version->version,
-                    'file_path' => $version->file_path,
+                    'document_url' => $version->document_url,
                     'comments' => $version->comments ?? null,
                     'submitted_at' => $version->submitted_at,
                     'is_latest' => ($version === $documentVersions->first())
@@ -47,7 +47,7 @@ class AdminDocumentController extends Controller
             
             // Get latest version's file path for display
             $latestVersion = $documentVersions->first();
-            $filePath = $latestVersion->file_path;
+            $document_url = $latestVersion->document_url;
         }
 
         // Organization mapping
@@ -83,12 +83,12 @@ class AdminDocumentController extends Controller
                 'id' => $document->id,
                 'tag' => $document->control_tag,
                 'title' => $document->subject,
-                'content' => $document->summary,
+                'content' => $document->overview,
                 'date' => $document->created_at,
                 'type' => $document->type,
                 'status' => $document->status,
                 'organization' => $organizationName,
-                'file_path' => $filePath,
+                'document_url' => $document_url,
                 'attachments' => $attachments, // Add the array of all attachments
                 'remarks' => $document->remarks ?? null,
                 'is_archived' => $isArchived // Add this line
