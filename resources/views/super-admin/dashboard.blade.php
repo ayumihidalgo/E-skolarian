@@ -4,7 +4,7 @@
     <!-- This is the main content area for the super admin dashboard -->
     @include('components.superAdminNavigation') <!-- Include the super admin navigation component -->
     <!-- Super admin word under the nav var -->
-    <div class="max-h-screen bg-white bg-opacity-30 px-15 py-8">
+    <div class="max-h-screen bg-[#F2F4F7] bg-opacity-30 px-15 py-8">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-[35px] font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
          @if (session('success'))
@@ -550,7 +550,7 @@
     </div>
 
         <!-- Table Header and Container -->
-        <div class="overflow-hidden rounded-[25px] shadow bg-[#D9D9D9]" style="width: 100%; height: 400px; flex-shrink:0;">
+        <div class="overflow-hidden rounded-[25px] shadow bg-[#D9D9D9]" style="width: 100%; height: 540px; flex-shrink:0;">
             <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
                 <thead>
                     <tr>
