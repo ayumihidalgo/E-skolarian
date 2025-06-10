@@ -29,7 +29,7 @@
                             <!-- Document submission date - formatted for readability -->
                             <div>
                                 <p class="font-semibold text-white/60">
-                                    {{ \Carbon\Carbon::parse($document['date'])->format('F d, Y') }}</p>
+                                    {{ \Carbon\Carbon::parse($document['date'])->format('F d, Y g:i A') }}</p>
                             </div>
                             <!-- Document control tag/identifier -->
                             <div>
