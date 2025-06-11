@@ -434,6 +434,7 @@
     <script>
         // Auto-select receiver when selecting doc type disabled at start
         let receiverAutoSelected = false;
+        let myDropzone;
 
         // Element references
         const docType = {
@@ -759,13 +760,18 @@
 
         // Show academic year in the dropdown
         window.selectAcademicYear = function (value, isMobile) {
-            const target = isMobile ? academicYearMobile : academicYear;
-            target.selected.textContent = value;
-            target.input.value = value;
-            target.dropdown.classList.add('hidden');
+            academicYear.input.value = value;
+            academicYear.selected.textContent = value;
+            academicYearMobile.selected.textContent = value;
 
-            // Fire change event manually
-            target.input.dispatchEvent(new Event('change', { bubbles: true }));
+            if (isMobile) {
+                academicYearMobile.dropdown.classList.add('hidden');
+            } else {
+                academicYear.dropdown.classList.add('hidden');
+            }
+
+            // Fire change event once on the input
+            academicYear.input.dispatchEvent(new Event('change', { bubbles: true }));
         };
 
         // Show attendees range in the dropdown
@@ -899,7 +905,7 @@
                 attendees: () => document.getElementById('attendees').value.trim() !== '',
                 attendeesRange: () => document.getElementById('attendeesRangeInput').value.trim() !== '',
                 fees: () => document.getElementById('fees').value.trim() !== '',
-                file: () => document.getElementById('fileUpload').files.length > 0,
+                file: () => myDropzone && myDropzone.files && myDropzone.files.length > 0,
             };
 
             const submitButton = document.getElementById('mainSubmitButton');
@@ -1000,7 +1006,7 @@
         ];
         const previewTemplate = document.getElementById("custom-preview-template").innerHTML;
 
-        const myDropzone = new Dropzone("#desktopDropzone", {
+        myDropzone = new Dropzone("#desktopDropzone", {
             url: "#",
             autoProcessQueue: false,
             clickable: true,
@@ -1035,7 +1041,7 @@
                     if (dz.files.length > MAX_FILES) {
                         dz.removeFile(file);
                         hideAllToasts();
-                        showToast('error', `Upload limit reached. Max ${MAX_FILES} files.`);
+                        showToast('error', "Upload limit reached. Please remove some files before uploading new ones.");
                         return;
                     }
 
@@ -1064,6 +1070,10 @@
                     // Trigger change again to re-render previews
                     validateForm();
                 });
+
+                dz.on("queuecomplete", function () {
+                    validateForm();
+                });
             }
         });
 
@@ -1075,17 +1085,20 @@
 
             files.forEach(file => {
                 if (!ALLOWED_TYPES.includes(file.type)) {
+                    hideAllToasts();
                     showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
                     return;
                 }
 
                 if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                    hideAllToasts();
                     showToast('error', "File size must not exceed 5 MB.");
                     return;
                 }
 
                 if (myDropzone.files.length >= MAX_FILES) {
-                    showToast('error', `Upload limit reached. Max ${MAX_FILES} files.`);
+                    hideAllToasts();
+                    showToast('error', "Upload limit reached. Please remove some files before uploading new ones.");
                     return;
                 }
 
@@ -1093,7 +1106,15 @@
                 added++;
             });
 
-            // Reset input so same files can be selected again
+            setTimeout(() => {
+                const dt = new DataTransfer();
+                myDropzone.files.forEach(f => dt.items.add(f));
+                fileInput.files = dt.files;
+
+                validateForm();
+            }, 100);
+
+            // Reset so the same file can be selected again
             this.value = "";
         });
 
