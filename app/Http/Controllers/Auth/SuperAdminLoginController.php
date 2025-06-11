@@ -57,29 +57,25 @@ class SuperAdminLoginController extends Controller
           ->where('active', 1)
           ->first();
 
-        if ($user && Auth::attempt([
-            'email' => $user->email,
-            'password' => $request->password,
-            'role' => 'super admin',
-            'active' => 1,
-        ], $remember)) {
-            // Successful login - clear attempts
+        if ($user && Auth::attempt(['email' => $user->email,
+        'password' => $request->password,
+        'role' => 'super admin',
+        'active' => 1],
+        $remember)) {
             $this->clearLoginAttempts($request);
-
             $request->session()->regenerate();
-            $request->session()->put('user_id', Auth::id());
-            $request->session()->put('user_role', Auth::user()->role);
-            $request->session()->put('user_email', Auth::user()->email);
 
-            // Logout all other sessions for this user except the current one
+            $authenticatedUser = $request->user();
             $currentSessionId = Session::getId();
-            $userId = Auth::id();
-            DB::table('sessions')
-                ->where('user_id', $userId)
-                ->where('id', '!=', $currentSessionId)
-                ->delete();
 
-            return redirect('super-admin/dashboard');
+            $authenticatedUser->last_session_id = $currentSessionId;
+            $authenticatedUser->save();
+
+            $request->session()->put('user_id', $authenticatedUser->id);
+            $request->session()->put('user_role', $authenticatedUser->role);
+            $request->session()->put('user_email', $authenticatedUser->email);
+
+            return redirect('/super-admin/dashboard');
         }
 
         // Increment login attempts with 5 minutes decay time
