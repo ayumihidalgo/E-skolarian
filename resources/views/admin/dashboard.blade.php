@@ -640,19 +640,46 @@
                 contentError.style.display = 'none';
             }
 
-            // Schedule validation
+            // Schedule validation (must not be in the past, and if today, time is required and must be in the future)
             const scheduleCheckbox = document.getElementById('scheduleCheckbox');
             const scheduleDate = document.getElementById('scheduleDate');
             const scheduleTime = document.getElementById('scheduleTime');
 
             if (scheduleCheckbox.checked) {
-                const selectedDate = new Date(scheduleDate.value);
-                const today = new Date();
-                today.setHours(0,0,0,0);
-
-                if (!scheduleDate.value || selectedDate < today) {
+                if (!scheduleDate.value) {
                     alert('Please select today or a future date for the schedule.');
                     valid = false;
+                } else {
+                    const now = new Date();
+                    now.setSeconds(0,0); // ignore seconds/milliseconds for comparison
+
+                    const selectedDate = new Date(scheduleDate.value);
+                    selectedDate.setHours(0,0,0,0);
+
+                    // If selected date is today, require time and it must be in the future
+                    if (
+                        selectedDate.getFullYear() === now.getFullYear() &&
+                        selectedDate.getMonth() === now.getMonth() &&
+                        selectedDate.getDate() === now.getDate()
+                    ) {
+                        if (!scheduleTime.value) {
+                            alert('Please specify a time for today\'s schedule.');
+                            valid = false;
+                        } else {
+                            // Combine date and time for accurate comparison
+                            const selectedDateTime = new Date(scheduleDate.value + 'T' + scheduleTime.value);
+                            if (selectedDateTime <= now) {
+                                alert('Please select a future time for today\'s schedule.');
+                                valid = false;
+                            }
+                        }
+                    } else {
+                        // Not today: must be in the future
+                        if (selectedDate < now) {
+                            alert('Please select today or a future date for the schedule.');
+                            valid = false;
+                        }
+                    }
                 }
             }
 
@@ -783,17 +810,46 @@
             const currentAudience = document.getElementById('editAudienceAll').checked ? 'all' : 'custom';
             const currentAudienceStudents = Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb => cb.value);
 
-            // Validate schedule (must not be in the past)
-            if (currentScheduleCheckbox) {
-                const selectedDate = new Date(currentScheduleDate);
-                const today = new Date();
-                today.setHours(0,0,0,0);
-                if (!currentScheduleDate || selectedDate < today) {
-                    alert('Please select today or a future date for the schedule.');
-                    e.preventDefault();
-                    return;
-                }
+    // Validate schedule (must not be in the past, and if today, time is required and must be in the future)
+    if (currentScheduleCheckbox) {
+        if (!currentScheduleDate) {
+            alert('Please select today or a future date for the schedule.');
+            e.preventDefault();
+            return;
+        }
+        const now = new Date();
+        now.setSeconds(0,0); // ignore seconds/milliseconds for comparison
+
+        const selectedDate = new Date(currentScheduleDate);
+        selectedDate.setHours(0,0,0,0);
+
+        // If selected date is today, require time and it must be in the future
+        if (
+            selectedDate.getFullYear() === now.getFullYear() &&
+            selectedDate.getMonth() === now.getMonth() &&
+            selectedDate.getDate() === now.getDate()
+        ) {
+            if (!currentScheduleTime) {
+                alert('Please specify a time for today\'s schedule.');
+                e.preventDefault();
+                return;
             }
+            // Combine date and time for accurate comparison
+            const selectedDateTime = new Date(currentScheduleDate + 'T' + currentScheduleTime);
+            if (selectedDateTime <= now) {
+                alert('Please select a future time for today\'s schedule.');
+                e.preventDefault();
+                return;
+            }
+        } else {
+            // Not today: must be in the future
+            if (selectedDate < now) {
+                alert('Please select today or a future date for the schedule.');
+                e.preventDefault();
+                return;
+            }
+        }
+    }
 
             // Compare schedule
             let scheduleChanged = false;
