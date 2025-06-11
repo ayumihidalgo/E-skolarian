@@ -112,10 +112,11 @@
 
                             <!-- Document Type Field if "Other" is Selected -->
                             <div id="othersDocTypeContainer" class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full" hidden>
-                                <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Document Type<span
-                                        class="required-indicator text-red-500"> *</span>:</span>
+                                <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">
+                                    Document Type<span class="required-indicator text-red-500"> *</span>:
+                                </span>
                                 <input type="text" name="other_type" id="othersDocTypeInput" autocomplete="off"
-                                    class="flex-1 font-semibold focus:outline-none" maxlength="50">
+                                    class="min-w-0 w-full font-semibold focus:outline-none" maxlength="50">
                             </div>
                             
                             <!-- Semester A.Y. Dropdown for Desktop -->
