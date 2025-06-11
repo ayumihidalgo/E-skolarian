@@ -783,6 +783,18 @@
             const currentAudience = document.getElementById('editAudienceAll').checked ? 'all' : 'custom';
             const currentAudienceStudents = Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb => cb.value);
 
+            // Validate schedule (must not be in the past)
+            if (currentScheduleCheckbox) {
+                const selectedDate = new Date(currentScheduleDate);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                if (!currentScheduleDate || selectedDate < today) {
+                    alert('Please select today or a future date for the schedule.');
+                    e.preventDefault();
+                    return;
+                }
+            }
+
             // Compare schedule
             let scheduleChanged = false;
             if (originalScheduleDate || currentScheduleDate) {
