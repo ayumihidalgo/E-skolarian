@@ -38,7 +38,7 @@ class AdminDocumentController extends Controller
                 $attachments[] = [
                     'id' => $version->id,
                     'version' => $version->version,
-                    'file_path' => $version->file_path,
+                    'document_url' => $version->document_url,
                     'comments' => $version->comments ?? null,
                     'submitted_at' => $version->submitted_at,
                     'is_latest' => ($version === $documentVersions->first())
@@ -47,7 +47,7 @@ class AdminDocumentController extends Controller
             
             // Get latest version's file path for display
             $latestVersion = $documentVersions->first();
-            $filePath = $latestVersion->file_path;
+            $document_url = $latestVersion->document_url;
         }
 
         // Organization mapping
@@ -83,12 +83,12 @@ class AdminDocumentController extends Controller
                 'id' => $document->id,
                 'tag' => $document->control_tag,
                 'title' => $document->subject,
-                'content' => $document->summary,
+                'content' => $document->overview,
                 'date' => $document->created_at,
                 'type' => $document->type,
                 'status' => $document->status,
                 'organization' => $organizationName,
-                'file_path' => $filePath,
+                'document_url' => $document_url,
                 'attachments' => $attachments, // Add the array of all attachments
                 'remarks' => $document->remarks ?? null,
                 'is_archived' => $isArchived // Add this line
@@ -337,5 +337,89 @@ class AdminDocumentController extends Controller
         }
         
         return view('admin.archivePage', compact('documents'));
+    }
+
+    // Add this new method to handle server-side select all
+    public function selectAllDocuments(Request $request)
+    {
+        // Build the same query as in documentHistory method
+        $query = DB::table('submitted_documents')
+            ->select('id')
+            ->whereNull('archived_at')
+            ->where('status', 'Approved');
+        
+        // Apply the same filters as in documentHistory
+        if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
+            $query->where('control_tag', 'LIKE', $request->organization . '_%');
+        }
+        
+        if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {
+            $query->where('type', $request->type);
+        }
+        
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('subject', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('control_tag', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('type', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+        
+        // Apply date filtering
+        if ($request->has('start_date') && !empty($request->start_date)) {
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+            $query->where('created_at', '>=', $startDate);
+        }
+        
+        if ($request->has('end_date') && !empty($request->end_date)) {
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+            $query->where('created_at', '<=', $endDate);
+        }
+        
+        // Get all document IDs that match the current filters
+        $documentIds = $query->pluck('id')->toArray();
+        
+        return response()->json([
+            'success' => true,
+            'document_ids' => $documentIds,
+            'total_count' => count($documentIds)
+        ]);
+    }
+
+    // Add this new method for archived documents select all
+    public function selectAllArchivedDocuments(Request $request)
+    {
+        // Build the same query as in archivePage method
+        $query = DB::table('submitted_documents')
+            ->select('id')
+            ->whereNotNull('archived_at'); // Only archived documents
+    
+        // Apply the same filters as in archivePage
+        if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
+            $query->where('control_tag', 'LIKE', $request->organization . '_%');
+        }
+    
+        if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {
+            $query->where('type', $request->type);
+        }
+    
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('subject', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('control_tag', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('type', 'LIKE', "%{$searchTerm}%");
+            });
+        }
+    
+        // Get all archived document IDs that match the current filters
+        $documentIds = $query->pluck('id')->toArray();
+    
+        return response()->json([
+            'success' => true,
+            'document_ids' => $documentIds,
+            'total_count' => count($documentIds)
+        ]);
     }
 }

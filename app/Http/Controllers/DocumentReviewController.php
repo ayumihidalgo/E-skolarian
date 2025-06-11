@@ -175,20 +175,19 @@ class DocumentReviewController extends Controller
 
         // Define tag colors for different organizations
         $tagColors = [
-            'PSY' => 'text-purple-600',
-            'ECE' => 'text-blue-600',
-            'IT' => 'text-green-600',
-            'EDU' => 'text-yellow-600',
-            'HR' => 'text-red-600',
-            'MAR' => 'text-indigo-600',
-            'ACC' => 'text-pink-600',
-            'IE' => 'text-cyan-600',
-            'AGDS' => 'text-emerald-600',
-            'CHO' => 'text-amber-600',
-            'SIGMA' => 'text-teal-600',
-            'TAP' => 'text-rose-600',
-            'OSC' => 'text-orange-600',
-            'DOC' => 'text-blue-800',
+            'OSC' => 'text-blue-500',
+            'ECE' => 'text-red-500',
+            'PSY' => 'text-purple-500',
+            'IT' => 'text-orange-500',
+            'HR' => 'text-pink-400',
+            'ACC' => 'text-pink-400',
+            'EDU' => 'text-blue-500',
+            'MAR' => 'text-yellow-500',
+            'IE' => 'text-green-500',
+            'TAP' => 'text-green-500',
+            'SIGMA' => 'text-yellow-900',
+            'AGDS' => 'text-yellow-900',
+            'CHO' => 'text-blue-500',
         ];
 
         // Check if this is an AJAX request
@@ -244,7 +243,14 @@ class DocumentReviewController extends Controller
         $documentData = [
             'id' => $document->id,
             'subject' => $document->subject,
-            'summary' => $document->summary,
+            'summary' => $document->overview,
+            'academic_year' => $document->academic_year,
+            'venue' => $document->venue,
+            'proposed_date_time' => $document->proposed_date_time,
+            'hours' => $document->hours,
+            'attendees' => $document->attendees,
+            'attendees_range' => $document->attendees_range,
+            'fees' => $document->fees,
             'type' => $document->type,
             'control_tag' => $document->control_tag,
             'status' => $document->status,
@@ -279,7 +285,8 @@ class DocumentReviewController extends Controller
                 $documentData['attachments'][] = [
                     'id' => $version->id,
                     'version' => $version->version,
-                    'file_path' => $version->file_path,
+                    'uploaded_by' => $version->uploaded_by,
+                    'document_url' => $version->document_url,
                     'comments' => $version->comments,
                     'submitted_at' => $version->submitted_at,
                     'is_latest' => $version->id === $document->documentVersions->first()->id
@@ -288,12 +295,12 @@ class DocumentReviewController extends Controller
             
             // Set the latest version as the primary file_path
             $latestVersion = $document->documentVersions->first();
-            $documentData['file_path'] = $latestVersion->file_path;
+            $documentData['document_url'] = $latestVersion->document_url;
             $documentData['version'] = $latestVersion->version;
             $documentData['submitted_at'] = $latestVersion->submitted_at;
         } else {
             // If no versions exist, use the file_path from the document itself (for backward compatibility)
-            $documentData['file_path'] = $document->file_path ?? null;
+            $documentData['document_url'] = $document->document_url ?? null;
         }
         
         return response()->json($documentData);

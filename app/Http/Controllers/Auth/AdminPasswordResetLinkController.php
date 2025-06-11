@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 use App\Models\User;
 use Carbon\Carbon;
 use App\LogsActivity; // Import LogsActivity trait
+use App\Notifications\CustomResetPassword;
 
 class AdminPasswordResetLinkController extends Controller
 {
@@ -30,17 +31,26 @@ class AdminPasswordResetLinkController extends Controller
         // Always use admin role
         $role = 'admin';
 
-        // Check if the email exists in the users table and is admin
+        // Try to find user by email
         $user = User::where('email', $request->email)
             ->where('active', 1)
             ->where('role', 'admin')
             ->first();
 
+        // If not found, try recovery_email
+        if (!$user) {
+            $user = User::where('recovery_email', $request->email)
+                ->where('active', 1)
+                ->where('role', 'admin')
+                ->first();
+        }
+
         if (!$user) {
             return back()->withErrors(['email' => 'We can\'t find an admin with that email address.']);
         }
 
-        $status = Password::sendResetLink($request->only('email'));
+        // Still uses the primary email for token creation and lookup
+        $status = Password::sendResetLink(['email' => $user->email]);
 
         return $status === Password::RESET_LINK_SENT
             ? back()->with('status', __($status))
