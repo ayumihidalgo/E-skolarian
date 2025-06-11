@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use App\LogsActivity;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
 class AdminLoginController extends Controller
@@ -59,25 +58,23 @@ class AdminLoginController extends Controller
       ->first();
 
     if ($user && Auth::attempt(['email' => $user->email, 'password' => $request->password, 'role' => 'admin', 'active' => 1], $remember)) {
-        // Successful login
         $this->clearLoginAttempts($request);
         $request->session()->regenerate();
-        $request->session()->put('user_id', Auth::id());
-        $request->session()->put('user_role', Auth::user()->role);
-        $request->session()->put('user_email', Auth::user()->email);
 
-        // Logout all other sessions for this user except the current one
+        $authenticatedUser = $request->user();
         $currentSessionId = Session::getId();
-        $userId = Auth::id();
-        DB::table('sessions')
-            ->where('user_id', $userId)
-            ->where('id', '!=', $currentSessionId)
-            ->delete();
+
+        $authenticatedUser->last_session_id = $currentSessionId;
+        $authenticatedUser->save();
+
+        $request->session()->put('user_id', $authenticatedUser->id);
+        $request->session()->put('user_role', $authenticatedUser->role);
+        $request->session()->put('user_email', $authenticatedUser->email);
 
         $this->logActivity(
             'Login',
             'User',
-            "{$user->role_name} successfully logged in."
+            "{$authenticatedUser->role_name} successfully logged in."
         );
 
         return redirect('/admin/dashboard');
@@ -97,9 +94,17 @@ class AdminLoginController extends Controller
 
     public function logout(Request $request)
     {
+        $user = $request->user();
+
+        if ($user) {
+            $user->last_session_id = null;
+            $user->save();
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/admin/login');
     }
 

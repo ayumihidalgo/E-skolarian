@@ -31,10 +31,11 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SuperAdmin\SuperAdminSettingsController;
 use App\Http\Middleware\LogoutIfAuthenticated;
 use App\Http\Middleware\CheckActiveStatus;
+use App\Http\Middleware\EnsureCurrentSessionisValid;
 
 
 // Guest routes for login selection
-Route::middleware(LogoutIfAuthenticated::class)->group(function () {
+Route::middleware(['guest', NoBackHistory::class])->group(function () {
     Route::get('/', function () {
         return view('auth.landingPage');
     })->name('landing');
@@ -105,15 +106,15 @@ Route::get('/notification', function () {
 // ----------------------------------------
 // Authenticated Routes
 // ----------------------------------------
-Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiveStatus::class])->group(function () {
+Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
     // ---------------- Super Admin ----------------
-    
+
     // Dashboard & Announcements
     Route::get('/super-admin/dashboard', [SuperAdminController::class, 'showDashboard'])
         ->name('super-admin.dashboard');
     Route::get('/super-admin/announcements/archive', [SuperAdminController::class, 'showDashboard'])
         ->name('super-admin.announcementArchive');
-    
+
     // Announcement CRUD operations
     Route::post('/super-admin/announcements', [AnnouncementController::class, 'store'])
         ->name('super-admin.announcements.store');
@@ -151,7 +152,7 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiv
     Route::post('/super-admin/settings/remove-profile', [SettingsController::class, 'removeProfilePicture'])->name('superadmin.settings.remove-profile-picture');
     Route::post('/super-admin/settings/send-recovery-code', [SettingsController::class, 'sendRecoveryCode'])->name('superadmin.settings.sendRecoveryCode');
     Route::post('/super-admin/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('superadmin.settings.verifyRecoveryCode');
-    Route::post('/super-admin/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('superadmin.settings.removeRecoveryEmail');  
+    Route::post('/super-admin/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('superadmin.settings.removeRecoveryEmail');
     // Super Admin Reports
     Route::get('/super-admin/reports', function () {
         return view('super-admin.super-admin-component.reports');
@@ -165,7 +166,7 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiv
 
 });
 
-Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStatus::class])->group(function () {
+Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
     // ---------------- Admin ----------------
     Route::get('/admin/dashboard', [AdminDashboardController::class, 'showDashboard'])->name('admin.dashboard');
     Route::post('/admin/announcements', [AnnouncementController::class, 'store'])->name('announcements.store');
@@ -201,7 +202,7 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
     Route::post('/admin/archive-documents', [AdminDocumentController::class, 'archiveDocuments'])->name('admin.archiveDocuments');
 });
 // ---------------- Student ----------------
-Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class])->group(function () {
+Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
     Route::get('/student/dashboard', [StudentDashboardController::class, 'showStudentDashboard'])->name('student.dashboard');
     Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
     Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
@@ -218,7 +219,7 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveSt
     Route::get('/student/archivePage', [StudentDocumentController::class, 'archivePage'])->name('student.archivePage');
 });
 
-Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiveStatus::class])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
 
 
 
