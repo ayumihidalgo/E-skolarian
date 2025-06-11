@@ -61,6 +61,16 @@ function repositionActionButtons() {
     }
 }
 
+// showHideEventDetails function helper
+window.showHideEventDetails = function(documentType) {
+    const eventProposalDetails = document.getElementById('eventProposalDetails');
+    if (documentType === 'Event Proposal') {
+        eventProposalDetails.classList.remove('hidden');
+    } else {
+        eventProposalDetails.classList.add('hidden');
+    }
+};
+
 // Run on page load and window resize
 document.addEventListener('DOMContentLoaded', function() {
     // Original repositionActionButtons call
@@ -1183,12 +1193,43 @@ function updateDocumentDetailsView(docData) {
     });
     
     try {
+        // Format date & time in the format "Month DD, YYYY HH:MMAM/PM"
+        const rawDateTime = docData.proposed_date_time || '';
+        let formattedDateTime = rawDateTime;
+        
+        if (rawDateTime) {
+            try {
+            const dateObj = new Date(rawDateTime);
+            if (!isNaN(dateObj)) {
+                formattedDateTime = dateObj.toLocaleString('en-US', {
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+                });
+            }
+            } catch (error) {
+            console.error('Error formatting date:', error);
+            }
+        }
+        
         // Update document information using direct IDs
         document.getElementById('documentDate').textContent = formattedDate;
         document.getElementById('documentOrg').innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
         document.getElementById('documentTitle').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject || docData.title}`;
         document.getElementById('documentType').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
+        document.getElementById('documentYear').innerHTML = `<span class="text-[#FFFFFF91] font-normal">A.Y. Semester:</span> ${docData.academic_year}`;
+        document.getElementById('venueInfo').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Venue:</span> ${docData.venue}`; 
+        document.getElementById('dateTimeInfo').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Date & Time:</span> ${formattedDateTime}`;
+        document.getElementById('hoursInfo').innerHTML = `<span class="text-[#FFFFFF91] font-normal">No. Of Hours:</span> ${docData.hours} Hour/s`;
+        document.getElementById('attendeesInfo').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Attendees:</span> ${docData.attendees}`;
+        document.getElementById('numAttendeesInfo').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Expected No. of Attendees:</span> ${docData.attendees_range} Students`;
+        document.getElementById('feeInfo').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Fee/Contribution per Student/Participant:</span> Php ${docData.fees}`;
         document.getElementById('documentTag').textContent = docData.control_tag || docData.tag;
+
+        window.showHideEventDetails(docData.type);
 
         // Update summary
         document.getElementById('documentSummary').textContent = docData.summary || 'No summary available';
@@ -1205,7 +1246,7 @@ function updateDocumentDetailsView(docData) {
                 // Add all versions with the latest version marked
                 const versions = docData.attachments;
                 versions.forEach((version, index) => {
-                    const fileName = version.file_path.split('/').pop();
+                    const fileName = version.document_url ? version.document_url.split('/').pop() : 'Unknown File';
                     const isLatest = version.is_latest;
                     
                     // Create attachment button
@@ -1225,15 +1266,15 @@ function updateDocumentDetailsView(docData) {
                     
                     // Set up click handler for viewing the document
                     button.onclick = function() {
-                        openDocumentViewer(version.file_path, 'application/pdf');
+                        openDocumentViewer(version.document_url, 'application/pdf');
                     };
                     
                     attachmentItem.appendChild(button);
                     attachmentSection.appendChild(attachmentItem);
                 });
-            } else if (docData.file_path) {
+            } else if (docData.document_url) {
                 // For backward compatibility - just one attachment
-                const fileName = docData.file_path.split('/').pop();
+                const fileName = docData.document_url.split('/').pop();
                 
                 // Create attachment button
                 const button = document.createElement('button');
@@ -1249,7 +1290,7 @@ function updateDocumentDetailsView(docData) {
                 
                 // Set up click handler for viewing the document
                 button.onclick = function() {
-                    openDocumentViewer(docData.file_path, 'application/pdf');
+                    openDocumentViewer(docData.document_url, 'application/pdf');
                 };
                 
                 attachmentSection.appendChild(button);
@@ -1313,7 +1354,7 @@ function updateDocumentDetailsView(docData) {
                 viewButton.className = 'bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 text-sm';
                 viewButton.textContent = 'View';
                 viewButton.onclick = function() {
-                    openDocumentViewer(version.file_path, 'application/pdf');
+                    openDocumentViewer(version.document_url, 'application/pdf');
                 };
                 
                 versionItem.appendChild(versionInfo);

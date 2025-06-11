@@ -128,7 +128,7 @@
             'OSC' => 'text-blue-500',
             'ECE' => 'text-red-500',
             'PSY' => 'text-purple-500',
-            'IT' => 'text-orange-500',
+            'ELITE' => 'text-orange-500',
             'HR' => 'text-pink-400',
             'ACC' => 'text-pink-400',
             'EDU' => 'text-blue-500',
