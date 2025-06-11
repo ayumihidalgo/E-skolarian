@@ -27,6 +27,28 @@
         #main-content{
             margin-left: 0;
         }
+
+        #tableSection{
+            overflow-x: auto;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        #detailsComment {
+            flex-direction: column;
+        }
+        
+        #detailsComment > * + * {
+            margin-top: 1rem;
+        }
+
+        #documentDetails{
+            width: 100%;
+        }
+
+        #OrgInfoCommments{
+            width: 100%;
+        }
     }
 </style>
 
@@ -116,7 +138,7 @@
 
                         <!-- Table Section -->
                         @if ($documents->isNotEmpty())
-                            <div class="bg-white rounded-[24px] shadow-md overflow-x-auto pt-2 flex flex-col min-h-[400px]">
+                            <div id="tableSection" class="bg-white rounded-[24px] overflow-x-auto shadow-md pt-2 flex flex-col min-h-[500px]">
                                 <table class="min-w-full text-sm rounded-[24px]">
                                     <thead class="bg-white text-black font-extrabold text-lg">
                                         <tr>
@@ -175,14 +197,14 @@
 
                                                             // Map to color key
                                                             $colorKey = match($acronym) {
-                                                                'PSY' => 'PSY',
-                                                                'ECE' => 'ECE',
-                                                                'IT' => 'IT',
-                                                                'EDU' => 'EDU',
-                                                                'HR' => 'HR',
-                                                                'MAR' => 'MAR',
-                                                                'ACC' => 'ACC',
-                                                                'IE' => 'IE',
+                                                                'ACAP' => 'PSY',
+                                                                'AECES' => 'ECE',
+                                                                'ELITE' => 'IT',
+                                                                'GIVE' => 'EDU',
+                                                                'JEHRA' => 'HR',
+                                                                'JMAP' => 'MAR',
+                                                                'JPIA' => 'ACC',
+                                                                'PIIE' => 'IE',
                                                                 'AGDS' => 'AGDS',
                                                                 'CHO' => 'CHO',
                                                                 'SIGMA' => 'SIGMA',
@@ -291,16 +313,17 @@
                     </div>
 
                     <!-- Mobile view - stacks vertically -->
-                    <div class="p-3 md:p-6 flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0 w-full max-w-7xl">
+                    <div id="detailsComment" class="p-3 md:p-6 flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0 w-full max-w-7xl">
                         <!-- Document Details - Full width on mobile -->
                         <div id="documentDetails" class="w-full md:w-2/3 bg-[#4D0F0F] rounded-2xl p-4 md:p-6 space-y-4 md:space-y-6">
                             <!-- Header -->
                             <div class="flex justify-between items-start">
                                 <div class="font-bold text-sm md:text-base max-w-[70%]">
-                                    <p id="documentDate" class="text-xs text-[#FFFFFF91] md:text-sm mb-1 break-words"></p>
+                                    <p id="documentDate" class="text-xs text-[#24191991] md:text-sm mb-1 break-words"></p>
                                     <p id="documentOrg" class="break-words"><span class="text-[#FFFFFF91] font-normal">From:</span> </p>
                                     <p id="documentTitle" class="break-words"><span class="text-[#FFFFFF91] font-normal">Title:</span> </p>
                                     <p id="documentType" class="break-words"><span class="text-[#FFFFFF91] font-normal">Document Type:</span> </p>
+                                    <p id="documentYear" class="break-words"><span class="text-[#FFFFFF91] font-normal">A.Y. Semester:</span> </p>
                                 </div>
                                 <div class="text-right">
                                     <p id="documentTag" class="px-2 md:px-3 text-[#FFFFFF91] py-1 text-xs md:text-sm break-words"></p>
@@ -385,7 +408,7 @@
                         </div>
 
                         <!-- Organization Info and Comments - Full width on mobile -->
-                        <div class="w-full md:w-1/3 bg-[#4D0F0F] text-white rounded-2xl p-4 md:p-6 flex flex-col justify-between">
+                        <div id="OrgInfoCommments" class="w-full md:w-1/3 bg-[#4D0F0F] text-white rounded-2xl p-4 md:p-6 flex flex-col justify-between">
                             <div class="space-y-4 md:space-y-6">
                                 <div class="flex items-center space-x-3 md:space-x-4">
                                     <!-- Profile Picture Placeholder -->
@@ -406,15 +429,15 @@
                                     <!-- Comments will be loaded here -->
                                 </div>
                             </div>
-
+                                                                
                             <!-- Comment Input -->
                             <div class="mt-4 md:mt-6">
                                 <form id="commentForm" class="flex flex-col space-y-2">
-                                    <div class="flex items-center bg-[#FFFFFFD6] rounded-full px-3 md:px-4 py-1">
+                                    <div id="commentInput" class="flex items-center bg-[#FFFFFFD6] rounded-full px-3 md:px-4 py-1">
                                         <input type="text"
                                             id="commentInput"
                                             placeholder="Comment..."
-                                            class="flex-1 rounded-full py-1.5 md:py-2 px-3 md:px-4 bg-transparent text-black placeholder-gray-700 text-sm md:text-base focus:outline-none" />
+                                            class="flex-1 rounded-full py-1.5 md:py-2 px-3 md:px-4 bg-transparent text-black placeholder-gray-700 text-sm md:text-base focus:outline-none"/>
                                         <div class="flex items-center flex-shrink-0">
                                             <label for="commentAttachment" class="text-[#4D0F0F] hover:text-[#5d0c0c] cursor-pointer mr-2">
                                                 <input type="file" id="commentAttachment" class="hidden" accept=".jpg,.jpeg,.png,.pdf,.docx,.doc" />

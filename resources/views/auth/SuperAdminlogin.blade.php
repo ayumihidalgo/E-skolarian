@@ -438,6 +438,19 @@
             }
         });
 
+        // Prevent spaces in password
+        passwordInput.addEventListener('keydown', function (e) {
+            if (e.key === ' ') e.preventDefault();
+        });
+
+        passwordInput.addEventListener('paste', function (e) {
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            if (/\s/.test(pastedText)) {
+                e.preventDefault();
+                alert('Spaces are not allowed in the password.');
+            }
+        });
+
         // Input event handlers
         emailInput.addEventListener('input', function () {
             if (/\s/.test(emailInput.value)) {

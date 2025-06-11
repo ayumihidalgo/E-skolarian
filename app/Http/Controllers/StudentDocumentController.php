@@ -48,7 +48,7 @@ class StudentDocumentController extends Controller
                 'id' => $document->id,
                 'tag' => $document->control_tag,
                 'title' => $document->subject,
-                'content' => $document->summary,
+                'content' => $document->overview,
                 'date' => $document->created_at,
                 'type' => $document->type,
                 'status' => $document->status,

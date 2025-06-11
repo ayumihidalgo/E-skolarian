@@ -18,6 +18,16 @@
     @vite('resources/css/app.css')
 
     <script>
+        // Immediate check and redirect (before page render finishes)
+        const isBack = performance.getEntriesByType("navigation")[0]?.type === "back_forward";
+
+        const loginUrl = '/student/login';
+        const landingUrl = '/';
+
+        if (isBack && window.location.pathname === loginUrl) {
+            window.location.replace(landingUrl);
+        }
+
         /* To carousel set of images */
         const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
@@ -639,6 +649,20 @@
             }
         });
 
+        // Prevent spaces in password
+        passwordInput.addEventListener('keydown', function (e) {
+            if (e.key === ' ') e.preventDefault();
+        });
+
+        passwordInput.addEventListener('paste', function (e) {
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            if (/\s/.test(pastedText)) {
+                e.preventDefault();
+                alert('Spaces are not allowed in the password.');
+            }
+        });
+
+
         // Input event handlers
         emailInput.addEventListener('input', function () {
             if (/\s/.test(emailInput.value)) {
@@ -1038,7 +1062,8 @@ function closeErrorModal() {
         if (event.persisted) {
             const loader = document.getElementById('loader');
             if (loader) {
-                loader.style.display = 'none';
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
             }
         }
     });

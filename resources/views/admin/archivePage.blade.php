@@ -94,9 +94,14 @@
                             <!-- Table header with sortable columns -->
                             <thead class="bg-white text-left">
                                 <tr>
-                                    <!-- Select all checkbox column -->
                                     <th class="px-4 py-2 whitespace-nowrap">
-                                        <input type="checkbox" id="selectAll" class="w-4 h-4 cursor-pointer">
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" id="selectAll" class="w-4 h-4 cursor-pointer">
+                                            <button id="selectAllLink" 
+                                                class="text-[#7A1212] underline hover:text-[#DAA520] text-sm font-medium cursor-pointer">
+                                                Select All
+                                            </button>
+                                        </div>
                                     </th>
                                     <!-- Define column headers array -->
                                     @php $headers = ['Tag', 'Organization', 'Title', 'Date Archived', 'Type', 'Status']; @endphp
@@ -145,7 +150,7 @@
                                 : 'text-gray-500';
 
                                 // Format archive date for display
-                                $archivedDate = \Carbon\Carbon::parse($document->archived_at)->format('m/d/Y');
+                                $archivedDate = \Carbon\Carbon::parse($document->archived_at)->format('m/d/Y g:i A');
                                 @endphp
                                 <!-- Document row with data attributes for filtering -->
                                 <tr class="border-b border-gray-300 hover:bg-gray-100"
@@ -294,17 +299,227 @@
 </div>
 
 <script>
-    // Keep track of which documents are checked
+    // Configuration constants
     let selectedItems = new Set();
+    let isSelectAllActive = false; // Track if server-side select all is active
+    let allFilteredDocumentIds = []; // Store all document IDs from server-side select all
+
+    // Remember sort direction for each column
+    let sortDirection = [true, true, true, true, true, true];
 
     // Update the counter showing how many documents are selected
     function updateSelectedCount() {
         const count = selectedItems.size;
         document.getElementById('selectedCount').textContent = count;
         document.getElementById('restoreSelectedBtn').disabled = count === 0;
+        
+        // Update the regular checkbox state based on visible selections
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox && !isSelectAllActive) {
+            const visibleCheckboxes = document.querySelectorAll('.row-checkbox');
+            const checkedVisibleCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+            
+            if (visibleCheckboxes.length > 0 && checkedVisibleCheckboxes.length === visibleCheckboxes.length) {
+                selectAllCheckbox.checked = true;
+            } else {
+                selectAllCheckbox.checked = false;
+            }
+        }
     }
 
-    // Toast functionality - ADDED FROM documentHistory.blade.php
+    // Select only documents visible on current page
+    function selectCurrentPageDocuments() {
+        const checkboxes = document.querySelectorAll('.row-checkbox:not(:disabled)');
+        
+        checkboxes.forEach(checkbox => {
+            if (checkbox.closest('tr').style.display !== 'none') {
+                checkbox.checked = true;
+                const id = checkbox.getAttribute('data-id');
+                selectedItems.add(id);
+            }
+        });
+
+        updateSelectedCount();
+        updateSelectAllLinkText();
+    }
+
+    // Server-side select all function - selects ALL archived documents across ALL pages
+    function selectAllDocumentsServerSide() {
+        // Show loading indicator
+        const selectAllLink = document.getElementById('selectAllLink');
+        const originalText = selectAllLink.textContent;
+        selectAllLink.textContent = 'Loading...';
+        selectAllLink.disabled = true;
+
+        // Get current filter values
+        const organizationFilter = document.getElementById("organizationFilter").value;
+        const typeFilter = document.getElementById("typeFilter").value;
+        const searchTerm = document.querySelector('input[placeholder="Search..."]').value.trim();
+
+        // Build filter parameters
+        const params = new URLSearchParams();
+        
+        if (organizationFilter !== 'Organization' && organizationFilter !== 'All') {
+            params.append('organization', organizationFilter);
+        }
+        
+        if (typeFilter !== 'Type' && typeFilter !== 'All') {
+            params.append('type', typeFilter);
+        }
+        
+        if (searchTerm) {
+            params.append('search', searchTerm);
+        }
+
+        // Make AJAX request to get all archived document IDs
+        fetch("{{ route('admin.selectAllArchivedDocuments') }}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: params.toString()
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Store all document IDs from server
+                allFilteredDocumentIds = data.document_ids;
+                isSelectAllActive = true;
+
+                // Add all IDs to selectedItems
+                data.document_ids.forEach(id => {
+                    selectedItems.add(id.toString());
+                });
+
+                // Check all visible checkboxes on current page
+                document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+
+                // Check the main checkbox too
+                const selectAllCheckbox = document.getElementById('selectAll');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = true;
+                }
+
+                // Update UI
+                updateSelectedCount();
+                updateSelectAllLinkText();
+                
+                // Show success message
+                showActionToast(
+                    'Selection Complete',
+                    `Selected ${data.total_count} archived documents across all pages.`,
+                    true
+                );
+
+                console.log(`Server-side select all: ${data.total_count} archived documents selected`);
+            } else {
+                showActionToast(
+                    'Selection Failed',
+                    'Failed to select all archived documents.',
+                    false
+                );
+            }
+        })
+        .catch(error => {
+            console.error('Error selecting all archived documents:', error);
+            showActionToast(
+                'Selection Error',
+                'An error occurred while selecting archived documents.',
+                false
+            );
+        })
+        .finally(() => {
+            // Restore link state
+            selectAllLink.disabled = false;
+            updateSelectAllLinkText();
+        });
+    }
+
+    // Deselect all documents
+    function deselectAllDocuments() {
+        isSelectAllActive = false;
+        allFilteredDocumentIds = [];
+        selectedItems.clear();
+
+        // Uncheck all visible checkboxes
+        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+            checkbox.checked = false;
+        });
+
+        // Uncheck select all checkbox
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+        }
+
+        updateSelectedCount();
+        updateSelectAllLinkText();
+        console.log('All archived documents deselected');
+    }
+
+    // Update the "Select All" link text based on current state
+    function updateSelectAllLinkText() {
+        const selectAllLink = document.getElementById('selectAllLink');
+        if (selectAllLink && !selectAllLink.disabled) {
+            if (isSelectAllActive) {
+                selectAllLink.textContent = 'Deselect All';
+                selectAllLink.classList.remove('text-[#7A1212]');
+                selectAllLink.classList.add('text-red-600');
+            } else {
+                selectAllLink.textContent = 'Select All';
+                selectAllLink.classList.remove('text-red-600');
+                selectAllLink.classList.add('text-[#7A1212]');
+            }
+        }
+    }
+
+    // Handle individual checkbox changes
+    function handleIndividualCheckboxChange(checkbox) {
+        const documentId = checkbox.getAttribute('data-id');
+        
+        if (checkbox.checked) {
+            selectedItems.add(documentId);
+        } else {
+            selectedItems.delete(documentId);
+            
+            // If user unchecks any item, disable server-side select all
+            if (isSelectAllActive) {
+                isSelectAllActive = false;
+                const selectAllCheckbox = document.getElementById('selectAll');
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = false;
+                }
+                updateSelectAllLinkText();
+            }
+        }
+        
+        updateSelectedCount();
+    }
+
+    // Restore selection state when navigating between pages
+    function restoreSelectionStateOnPage() {
+        // Check select all checkbox if server-side select all is active
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox && isSelectAllActive) {
+            selectAllCheckbox.checked = true;
+        }
+
+        // Check individual checkboxes based on selectedItems
+        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+            const documentId = checkbox.getAttribute('data-id');
+            if (selectedItems.has(documentId)) {
+                checkbox.checked = true;
+            }
+        });
+
+        updateSelectedCount();
+        updateSelectAllLinkText();
+    }
+
+    // Toast functionality
     function showActionToast(title, message, isSuccess = true) {
         const toast = document.getElementById('documentActionToast');
         const actionIcon = document.getElementById('actionIcon');
@@ -319,7 +534,7 @@
                 toast.className = toast.className.replace('border-gray-400', 'border-green-400');
             }
         } else {
-            actionIcon.src = "{{ asset('images/error.svg') }}"; // Assuming you have an error icon
+            actionIcon.src = "{{ asset('images/error.svg') }}";
             toast.className = toast.className.replace('border-green-400', 'border-red-400');
             if (!toast.className.includes('border-red-400')) {
                 toast.className = toast.className.replace('border-gray-400', 'border-red-400');
@@ -343,7 +558,7 @@
         toast.classList.add('hidden');
     }
 
-    // Actually restore the selected documents - UPDATED WITH TOAST
+    // Actually restore the selected documents - UPDATED WITH DYNAMIC PAGINATION FIX
     function processRestore() {
         if (selectedItems.size === 0) return;
 
@@ -386,17 +601,20 @@
                         }
                     });
 
-                    // Clear selections and update count
-                    selectedItems.clear();
-                    updateSelectedCount();
+                    // Reset selection state
+                    deselectAllDocuments();
 
-                    // Wait for animations to complete, then refresh if needed
+                    // Wait for animations to complete, then refresh pagination
                     setTimeout(() => {
-                        // Check if there are any remaining documents
+                        // Check if there are any remaining documents on current page
                         const remainingRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
+                        
                         if (remainingRows === 0) {
-                            // If no documents left, reload the page to show empty state properly
-                            window.location.reload();
+                            // If no documents left on current page, refresh to update pagination
+                            refreshCurrentPage();
+                        } else {
+                            // If documents still exist, just update pagination numbers
+                            updatePaginationAfterRestore();
                         }
                     }, 600);
 
@@ -420,11 +638,122 @@
             });
     }
 
-    // Get filtered results from the server
+    // NEW FUNCTION: Refresh current page to update pagination
+    function refreshCurrentPage() {
+        const currentUrl = window.location.href;
+        const tableContainer = document.querySelector('#tableContainer');
+        
+        // Show loading indicator
+        tableContainer.classList.add('opacity-50');
+        
+        fetch(currentUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Update table content
+            const newTableBody = doc.querySelector('#documentTable tbody');
+            if (newTableBody) {
+                document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+            }
+            
+            // Update pagination - this will remove empty pages
+            const newPagination = doc.querySelector('#paginationContainer');
+            const currentPagination = document.querySelector('#paginationContainer');
+            
+            if (newPagination) {
+                if (currentPagination) {
+                    currentPagination.outerHTML = newPagination.outerHTML;
+                }
+            } else {
+                // If no pagination returned, hide the pagination container
+                if (currentPagination) {
+                    currentPagination.style.display = 'none';
+                }
+            }
+            
+            // Remove loading state
+            tableContainer.classList.remove('opacity-50');
+            
+            // Reset checkbox states
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const hasDocuments = document.querySelectorAll("#documentTable tbody tr[data-id]").length > 0;
+            
+            if (selectAllCheckbox) {
+                selectAllCheckbox.disabled = !hasDocuments;
+                selectAllCheckbox.checked = false;
+            }
+            
+            // Update select all link
+            updateSelectAllLinkText();
+            
+        })
+        .catch(error => {
+            console.error('Error refreshing page:', error);
+            tableContainer.classList.remove('opacity-50');
+            // Fallback to full page reload if AJAX fails
+            window.location.reload();
+        });
+    }
+
+    // NEW FUNCTION: Update pagination without full refresh
+    function updatePaginationAfterRestore() {
+        const currentUrl = window.location.href;
+        
+        // Just fetch pagination info
+        fetch(currentUrl, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Only update pagination, keep existing table content
+            const newPagination = doc.querySelector('#paginationContainer');
+            const currentPagination = document.querySelector('#paginationContainer');
+            
+            if (newPagination && currentPagination) {
+                currentPagination.outerHTML = newPagination.outerHTML;
+            } else if (!newPagination && currentPagination) {
+                // Hide pagination if no longer needed
+                currentPagination.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error updating pagination:', error);
+        });
+    }
+
+    // Open document details page
+    function viewDocument(id) {
+        window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
+    }
+
+    // Display the confirmation dialog before restoring
+    function showRestoreConfirmation() {
+        if (selectedItems.size > 0) {
+            document.getElementById("restoreConfirmationModal").classList.remove("hidden");
+        }
+    }
+
+    // Updated applyServerSideFilters function
     function applyServerSideFilters() {
         // Show loading effect
         const tableContainer = document.querySelector('#tableContainer');
         tableContainer.classList.add('opacity-50');
+        
+        // Reset server-side selection when filters change
+        if (isSelectAllActive) {
+            deselectAllDocuments();
+        }
         
         // Clear any previous selections
         selectedItems.clear();
@@ -439,11 +768,11 @@
         const typeFilter = document.getElementById("typeFilter").value;
         
         // Only include filters that are actually set
-        if (organizationFilter !== 'Organization') {
+        if (organizationFilter !== 'Organization' && organizationFilter !== 'All') {
             params.append('organization', organizationFilter);
         }
         
-        if (typeFilter !== 'Type') {
+        if (typeFilter !== 'Type' && typeFilter !== 'All') {
             params.append('type', typeFilter);
         }
         
@@ -451,6 +780,7 @@
             params.append('search', searchTerm);
         }
         
+        // Always start from page 1 when applying filters
         const url = `${window.location.pathname}?${params.toString()}`;
         
         // Ask the server for filtered results
@@ -471,7 +801,7 @@
                 document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
             }
             
-            // Update the page numbers
+            // Update the page numbers - CRITICAL FOR PAGINATION FIX
             const newPagination = doc.querySelector('#paginationContainer');
             const currentPagination = document.querySelector('#paginationContainer');
             
@@ -480,7 +810,7 @@
                     currentPagination.outerHTML = newPagination.outerHTML;
                 }
             } else {
-                const currentPagination = document.querySelector('#paginationContainer');
+                // Hide pagination if no results need pagination
                 if (currentPagination) {
                     currentPagination.style.display = 'none';
                 }
@@ -499,6 +829,9 @@
                 }
             }
             
+            // Update select all link text
+            updateSelectAllLinkText();
+            
             // Remove the loading effect
             tableContainer.classList.remove('opacity-50');
         })
@@ -508,161 +841,44 @@
         });
     }
 
-    // Sort the table when a column header is clicked
-    function sortTable(columnIndex) {
-        const columnMap = [
-            'control_tag', // Tag column
-            'organization', // Organization column
-            'subject', // Title column
-            'archived_at', // Date column
-            'type', // Document type column
-            'status' // Status column
-        ];
-
-        const columnName = columnMap[columnIndex - 1];
-        if (!columnName) return;
-
-        // Toggle sort direction
-        sortDirection[columnIndex] = !sortDirection[columnIndex];
-        const direction = sortDirection[columnIndex] ? 'asc' : 'desc';
-
-        // Show loading effect
-        const tableContainer = document.querySelector('#tableContainer');
-        tableContainer.classList.add('opacity-50');
-
-        // Keep any existing filters
-        const orgFilter = document.getElementById("organizationFilter").value;
-        const typeFilter = document.getElementById("typeFilter").value;
-        const searchInput = document.querySelector('input[placeholder="Search..."]').value;
-
-        const params = new URLSearchParams(window.location.search);
-
-        // Add sorting parameters
-        params.set('sort_by', columnName);
-        params.set('sort_dir', direction);
-
-        // Keep filter parameters
-        if (orgFilter !== 'Organization') {
-            params.set('organization', orgFilter);
-        }
-
-        if (typeFilter !== 'Type') {
-            params.set('type', typeFilter);
-        }
-
-        if (searchInput.trim() !== '') {
-            params.set('search', searchInput);
-        }
-
-        const url = `${window.location.pathname}?${params.toString()}`;
-
-        // Ask the server for sorted results
-        fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-
-                // Update the table with sorted data
-                const newTableBody = doc.querySelector('#documentTable tbody');
-                if (newTableBody) {
-                    document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
-                }
-
-                // Update pagination if needed
-                const newPagination = doc.querySelector('#paginationContainer');
-                const currentPagination = document.querySelector('#paginationContainer');
-
-                if (newPagination && currentPagination) {
-                    currentPagination.outerHTML = newPagination.outerHTML;
-                }
-
-                // Update URL
-                window.history.pushState({}, '', url);
-
-                // Update sort arrow icon
-                updateSortIndicator(columnIndex);
-
-                // Remove loading effect
-                tableContainer.classList.remove('opacity-50');
-
-                // Reset selections
-                selectedItems.clear();
-                updateSelectedCount();
-
-                // Uncheck "select all" box
-                const selectAllCheckbox = document.getElementById('selectAll');
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = false;
-                }
-            })
-            .catch(error => {
-                console.error('Error sorting table:', error);
-                tableContainer.classList.remove('opacity-50');
-            });
-    }
-
-    // Update the arrow icon next to the sorted column
-    function updateSortIndicator(columnIndex) {
-        const sortIcons = document.querySelectorAll('thead button img');
-        sortIcons.forEach(icon => {
-            icon.classList.remove('rotate-180');
-        });
-
-        const clickedIcon = document.querySelector(`thead th:nth-child(${columnIndex + 1}) button img`);
-        if (clickedIcon && !sortDirection[columnIndex]) {
-            clickedIcon.classList.add('rotate-180');
-        }
-    }
-
-    // Open document details page
-    function viewDocument(id) {
-        window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
-    }
-
-    // Display the confirmation dialog before restoring
-    function showRestoreConfirmation() {
-        if (selectedItems.size > 0) {
-            document.getElementById("restoreConfirmationModal").classList.remove("hidden");
-        }
-    }
-
-    // Remember sort direction for each column
-    let sortDirection = [true, true, true, true, true, true];
-
-    // Handle clicks on checkboxes and other elements
-    document.addEventListener('click', function(e) {
-        if (e.target.id === 'selectAll') {
-            const checkboxes = document.querySelectorAll('.row-checkbox');
-            checkboxes.forEach(checkbox => {
-                if (checkbox.closest('tr').style.display !== 'none') {
-                    checkbox.checked = e.target.checked;
-                    const id = checkbox.getAttribute('data-id');
-                    if (e.target.checked) {
-                        selectedItems.add(id);
-                    } else {
-                        selectedItems.delete(id);
-                    }
-                }
-            });
-            updateSelectedCount();
-        } else if (e.target.classList.contains('row-checkbox')) {
-            const id = e.target.getAttribute('data-id');
-            if (e.target.checked) {
-                selectedItems.add(id);
-            } else {
-                selectedItems.delete(id);
-            }
-            updateSelectedCount();
-        }
-    });
-
     // Setup when page loads
     document.addEventListener('DOMContentLoaded', function() {
+        // Handle regular checkbox select all (only current page)
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    // Only select visible documents on current page
+                    selectCurrentPageDocuments();
+                } else {
+                    // Deselect all
+                    deselectAllDocuments();
+                }
+            });
+        }
+
+        // Handle "Select All" link (server-side select all across all pages)
+        const selectAllLink = document.getElementById('selectAllLink');
+        if (selectAllLink) {
+            selectAllLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (isSelectAllActive) {
+                    // If already active, deselect all
+                    deselectAllDocuments();
+                } else {
+                    // Server-side select all across all pages
+                    selectAllDocumentsServerSide();
+                }
+            });
+        }
+
+        // Handle individual checkbox changes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('row-checkbox')) {
+                handleIndividualCheckboxChange(e.target);
+            }
+        });
+
         // Setup restore button
         document.getElementById('restoreSelectedBtn').addEventListener('click', showRestoreConfirmation);
 
@@ -728,12 +944,11 @@
                             document.querySelector('#paginationContainer').outerHTML = newPagination.outerHTML;
                         }
 
+                        // Restore selection state for visible documents
+                        restoreSelectionStateOnPage();
+
                         // Update URL without reload
                         window.history.pushState({}, '', url);
-
-                        // Reset filters and selections
-                        selectedItems.clear();
-                        updateSelectedCount();
 
                         // Remove loading state
                         tableContainer.classList.remove('opacity-50');
@@ -747,7 +962,6 @@
 
         // Add this at the beginning to check initial state
         const hasDocuments = document.querySelectorAll("#documentTable tbody tr[data-id]").length > 0;
-        const selectAllCheckbox = document.getElementById('selectAll');
         if (selectAllCheckbox) {
             selectAllCheckbox.disabled = !hasDocuments;
         }
