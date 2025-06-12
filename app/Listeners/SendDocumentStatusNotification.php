@@ -29,9 +29,22 @@ class SendDocumentStatusNotification
             return;
         }
 
-        $status = $doc->status; // 'approved' or 'rejected'
-        $title = 'Document ' . ucfirst($status);
-        $message = "Your document for subject \"{$doc->subject}\" (Type: {$doc->type}, ID: {$doc->id}) was {$status}.";
+        $status = $doc->status; // 'approved', 'rejected', 'Under Review', etc.
+        $title = match($status) {
+            'Under Review' => 'Document Under Review',
+            'Approved' => 'Document Approved',
+            'Rejected' => 'Document Rejected', 
+            'Returned' => 'Document Returned',
+            default => 'Document ' . ucfirst(strtolower($status))
+        };
+        
+        $message = match($status) {
+            'Under Review' => "Your document for subject \"{$doc->subject}\" (Type: {$doc->type}, ID: {$doc->id}) is now under review.",
+            'Approved' => "Your document for subject \"{$doc->subject}\" (Type: {$doc->type}, ID: {$doc->id}) was approved.",
+            'Rejected' => "Your document for subject \"{$doc->subject}\" (Type: {$doc->type}, ID: {$doc->id}) was rejected.",
+            'Returned' => "Your document for subject \"{$doc->subject}\" (Type: {$doc->type}, ID: {$doc->id}) was returned for revision.",
+            default => "Your document for subject \"{$doc->subject}\" (Type: {$doc->type}, ID: {$doc->id}) status changed to {$status}."
+        };
 
         try {
             $notification = Notification::create([
