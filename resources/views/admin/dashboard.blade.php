@@ -121,7 +121,7 @@
                                                             <button
                                                                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition border-t border-gray-100 whitespace-nowrap"
                                                                 type="button"
-                                                                onclick="openArchiveModal({{ $announcement->id }})">
+                                                                onclick="openArchiveModal({{ $announcement->id }}, {{ $announcement->user_id }})">
                                                                 Move to Archive
                                                             </button>
                                                         </form>
@@ -259,13 +259,13 @@
                                                         <button
                                                             class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition whitespace-nowrap"
                                                             type="button"
-                                                            onclick="openRestoreModal({{ $announcement->id }})">
+                                                            onclick="openRestoreModal({{ $announcement->id }}, {{ $announcement->user_id }})">
                                                             Restore
                                                         </button>
                                                         <button
                                                             class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition whitespace-nowrap"
                                                             type="button"
-                                                            onclick="openDeleteModal({{ $announcement->id }})">
+                                                            onclick="openDeleteModal({{ $announcement->id }}, {{ $announcement->user_id }})">
                                                             Delete
                                                         </button>
                                                     </div>
@@ -291,7 +291,7 @@
                                                             <button
                                                                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition whitespace-nowrap"
                                                                 type="button"
-                                                                onclick="openArchiveModal({{ $announcement->id }})">
+                                                                onclick="openArchiveModal({{ $announcement->id }}, {{ $announcement->user_id }})">
                                                                 Move to Archive
                                                             </button>
                                                         </div>
@@ -373,7 +373,7 @@
                                 <div>
                                     <label class="inline-flex items-center">
                                         <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox">
-                                        <span class="ml-2">Schedule</span>
+                                        <span class="ml-2">Set Due Date</span>
                                     </label>
                                     <div id="scheduleFields" class="mt-2 space-x-2 hidden">
                                         <input type="date" id="scheduleDate" name="schedule_date"
@@ -473,7 +473,7 @@
                 <div class="mb-3">
                     <label class="inline-flex items-center">
                         <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
-                        <span class="ml-2">Schedule</span>
+                        <span class="ml-2">Set Due Date</span>
                     </label>
                     <div id="editScheduleFields" class="mt-2 space-x-2 hidden">
                         <input type="date" id="editScheduleDate" name="schedule_date" class="border rounded px-2 py-1">
@@ -684,6 +684,16 @@
                 }
             }
 
+            // Audience validation
+            const audienceCustom = document.getElementById('audienceCustom');
+            if (audienceCustom.checked) {
+                const checkedStudents = document.querySelectorAll('#customAudienceDropdown input[type="checkbox"]:checked');
+                if (checkedStudents.length === 0) {
+                    alert('Please select at least one student for the custom audience.');
+                    valid = false;
+                }
+            }
+
             if (valid) {
                 // Disable the button to prevent multiple clicks
                 document.getElementById('submitBtn').disabled = true;
@@ -798,7 +808,7 @@
             document.querySelectorAll('.editAudienceStudent').forEach(cb => cb.checked = false);
             // Check those in audienceStudents
             audienceStudents.forEach(id => {
-                const cb = document.querySelector('.editAudienceStudent[value="' + id + '"]');
+                const cb = document.querySelector('.editAudienceStudent[value="' + String(id) + '"]');
                 if (cb) cb.checked = true;
             });
 
@@ -827,6 +837,15 @@
             const originalAudienceStudents = JSON.parse(document.getElementById('originalAudienceStudents').value || '[]');
             const currentAudience = document.getElementById('editAudienceAll').checked ? 'all' : 'custom';
             const currentAudienceStudents = Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb => cb.value);
+
+    // Audience validation for edit modal
+    if (document.getElementById('editAudienceCustom').checked) {
+        if (currentAudienceStudents.length === 0) {
+            alert('Please select at least one student for the custom audience.');
+            e.preventDefault();
+            return;
+        }
+    }
 
     // Validate schedule (must not be in the past, and if today, time is required and must be in the future)
     if (currentScheduleCheckbox) {
@@ -867,6 +886,7 @@
                 return;
             }
         }
+        
     }
 
             // Compare schedule
@@ -913,18 +933,33 @@
         });
 
         // Open Archive Modal
-        function openArchiveModal(announcementId) {
+        function openArchiveModal(announcementId, announcementUserId = null) {
+            if (currentUserRole !== 'super admin' && currentUserId != announcementUserId) {
+                const toast = document.getElementById('ArchiveNotAllowedToast');
+                toast.style.display = 'flex';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+                return;
+            }
             const form = document.getElementById('archiveForm');
             form.action = `/admin/announcements/${announcementId}/archive`;
             document.getElementById('archiveConfirmModal').classList.remove('hidden');
         }
-
         function closeArchiveModal() {
             document.getElementById('archiveConfirmModal').classList.add('hidden');
         }
 
         // Open Restore Modal
-        function openRestoreModal(announcementId) {
+        function openRestoreModal(announcementId, announcementUserId = null) {
+            if (currentUserRole !== 'super admin' && currentUserId != announcementUserId) {
+                const toast = document.getElementById('RestoreNotAllowedToast');
+                toast.style.display = 'flex';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+                return;
+            }
             const form = document.getElementById('restoreForm');
             form.action = `/admin/announcements/${announcementId}/restore`;
             document.getElementById('restoreConfirmModal').classList.remove('hidden');
@@ -935,12 +970,19 @@
         }
 
         // Open Delete Modal
-        function openDeleteModal(announcementId) {
+        function openDeleteModal(announcementId, announcementUserId = null) {
+            if (currentUserRole !== 'super admin' && currentUserId != announcementUserId) {
+                const toast = document.getElementById('DeleteNotAllowedToast');
+                toast.style.display = 'flex';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+                return;
+            }
             const form = document.getElementById('deleteForm');
             form.action = `/admin/announcements/${announcementId}/delete`;
             document.getElementById('deleteConfirmModal').classList.remove('hidden');
         }
-
         function closeDeleteModal() {
             document.getElementById('deleteConfirmModal').classList.add('hidden');
         }
@@ -986,8 +1028,241 @@
                 document.getElementById('editCustomAudienceDropdown').classList.remove('hidden');
             }
         });
-    </script>
 
+
+// --- Draft Save/Restore Logic ---
+const DRAFT_KEY_POST = 'announcementDraft';
+const DRAFT_KEY_EDIT = 'editAnnouncementDraft';
+
+function saveDraft(type) {
+    if (type === 'post') {
+        localStorage.setItem(DRAFT_KEY_POST, JSON.stringify({
+            title: titleInput.value,
+            content: contentInput.value,
+            schedule: document.getElementById('scheduleCheckbox').checked,
+            schedule_date: document.getElementById('scheduleDate').value,
+            schedule_time: document.getElementById('scheduleTime').value,
+            audience: document.getElementById('audienceAll').checked ? 'all' : 'custom',
+            audience_students: Array.from(document.querySelectorAll('#customAudienceDropdown input[type="checkbox"]:checked')).map(cb => cb.value)
+        }));
+    } else if (type === 'edit') {
+        localStorage.setItem(DRAFT_KEY_EDIT, JSON.stringify({
+            id: document.getElementById('editAnnouncementId').value,
+            title: document.getElementById('editTitle').value,
+            content: document.getElementById('editContent').value,
+            schedule: document.getElementById('editScheduleCheckbox').checked,
+            schedule_date: document.getElementById('editScheduleDate').value,
+            schedule_time: document.getElementById('editScheduleTime').value,
+            audience: document.getElementById('editAudienceAll').checked ? 'all' : 'custom',
+            audience_students: Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb => cb.value)
+        }));
+    }
+}
+
+function restoreDraft(type) {
+    let draft = null;
+    if (type === 'post') {
+        draft = localStorage.getItem(DRAFT_KEY_POST);
+        if (draft) {
+            draft = JSON.parse(draft);
+            titleInput.value = draft.title || '';
+            contentInput.value = draft.content || '';
+            document.getElementById('scheduleCheckbox').checked = !!draft.schedule;
+            document.getElementById('scheduleFields').classList.toggle('hidden', !draft.schedule);
+            document.getElementById('scheduleDate').value = draft.schedule_date || '';
+            document.getElementById('scheduleTime').value = draft.schedule_time || '';
+            if (draft.audience === 'all') {
+                document.getElementById('audienceAll').checked = true;
+                document.getElementById('customAudienceDropdown').classList.add('hidden');
+            } else {
+                document.getElementById('audienceCustom').checked = true;
+                document.getElementById('customAudienceDropdown').classList.remove('hidden');
+            }
+            // Uncheck all first
+            document.querySelectorAll('#customAudienceDropdown input[type="checkbox"]').forEach(cb => cb.checked = false);
+            // Check those in audience_students
+            (draft.audience_students || []).forEach(id => {
+                const cb = document.querySelector('#customAudienceDropdown input[type="checkbox"][value="' + String(id) + '"]');
+                if (cb) cb.checked = true;
+            });
+        }
+    } else if (type === 'edit') {
+        draft = localStorage.getItem(DRAFT_KEY_EDIT);
+        if (draft) {
+            draft = JSON.parse(draft);
+            // Only restore if editing the same announcement
+            if (draft.id == document.getElementById('editAnnouncementId').value) {
+                document.getElementById('editTitle').value = draft.title || '';
+                document.getElementById('editContent').value = draft.content || '';
+                document.getElementById('editScheduleCheckbox').checked = !!draft.schedule;
+                document.getElementById('editScheduleFields').classList.toggle('hidden', !draft.schedule);
+                document.getElementById('editScheduleDate').value = draft.schedule_date || '';
+                document.getElementById('editScheduleTime').value = draft.schedule_time || '';
+                if (draft.audience === 'all') {
+                    document.getElementById('editAudienceAll').checked = true;
+                    document.getElementById('editCustomAudienceDropdown').classList.add('hidden');
+                } else {
+                    document.getElementById('editAudienceCustom').checked = true;
+                    document.getElementById('editCustomAudienceDropdown').classList.remove('hidden');
+                }
+                // Uncheck all first
+                document.querySelectorAll('.editAudienceStudent').forEach(cb => cb.checked = false);
+                // Check those in audience_students
+                (draft.audience_students || []).forEach(id => {
+                    const cb = document.querySelector('.editAudienceStudent[value="' + String(id) + '"]');
+                    if (cb) cb.checked = true;
+                });
+            }
+        }
+    }
+}
+
+function clearDraft(type) {
+    if (type === 'post') localStorage.removeItem(DRAFT_KEY_POST);
+    if (type === 'edit') localStorage.removeItem(DRAFT_KEY_EDIT);
+}
+
+// --- Modal State & Change Detection ---
+let isPostModalOpen = false;
+let isEditModalOpen = false;
+let hasPostChanges = false;
+let hasEditChanges = false;
+
+// Watch for changes in post modal
+['input', 'change'].forEach(evt => {
+    form.addEventListener(evt, () => {
+        hasPostChanges = true;
+        saveDraft('post');
+    });
+});
+
+// Watch for changes in edit modal
+['input', 'change'].forEach(evt => {
+    document.getElementById('editAnnouncementForm').addEventListener(evt, () => {
+        hasEditChanges = true;
+        saveDraft('edit');
+    });
+});
+
+// Override open/close modal functions
+const originalOpenPostAnnouncementModal = openPostAnnouncementModal;
+openPostAnnouncementModal = function() {
+    isPostModalOpen = true;
+    hasPostChanges = false;
+    originalOpenPostAnnouncementModal();
+    restoreDraft('post');
+};
+const originalClosePostAnnouncementModal = closePostAnnouncementModal;
+closePostAnnouncementModal = function() {
+    if (hasPostChanges && (titleInput.value || contentInput.value)) {
+        showDiscardChangesModal('post');
+    } else {
+        isPostModalOpen = false;
+        hasPostChanges = false;
+        clearDraft('post');
+        originalClosePostAnnouncementModal();
+    }
+};
+
+const originalOpenEditModal = openEditModal;
+openEditModal = function(...args) {
+    isEditModalOpen = true;
+    hasEditChanges = false;
+    originalOpenEditModal(...args);
+    restoreDraft('edit');
+};
+const originalCloseEditModal = closeEditModal;
+closeEditModal = function() {
+    if (hasEditChanges && (document.getElementById('editTitle').value || document.getElementById('editContent').value)) {
+        showDiscardChangesModal('edit');
+    } else {
+        isEditModalOpen = false;
+        hasEditChanges = false;
+        clearDraft('edit');
+        originalCloseEditModal();
+    }
+};
+
+// --- Discard Changes Modal Logic ---
+let discardType = null;
+function showDiscardChangesModal(type) {
+    discardType = type;
+    document.getElementById('discardChangesModal').classList.remove('hidden');
+}
+function closeDiscardChangesModal() {
+    document.getElementById('discardChangesModal').classList.add('hidden');
+}
+function confirmDiscardChanges() {
+    closeDiscardChangesModal();
+    if (discardType === 'post') {
+        isPostModalOpen = false;
+        hasPostChanges = false;
+        clearDraft('post');
+        originalClosePostAnnouncementModal();
+    } else if (discardType === 'edit') {
+        isEditModalOpen = false;
+        hasEditChanges = false;
+        clearDraft('edit');
+        originalCloseEditModal();
+    }
+    discardType = null;
+}
+
+// --- Intercept Refresh/Back/Exit ---
+window.addEventListener('beforeunload', function(e) {
+    if ((isPostModalOpen && hasPostChanges) || (isEditModalOpen && hasEditChanges)) {
+        // Save draft before leaving
+        if (isPostModalOpen) saveDraft('post');
+        if (isEditModalOpen) saveDraft('edit');
+        // Show browser warning (required for beforeunload)
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// --- On Modal Submit, Clear Draft ---
+form.addEventListener('submit', function() {
+    clearDraft('post');
+    hasPostChanges = false;
+    isPostModalOpen = false;
+});
+document.getElementById('editAnnouncementForm').addEventListener('submit', function() {
+    clearDraft('edit');
+    hasEditChanges = false;
+    isEditModalOpen = false;
+});
+
+// Optional: ESC key closes modal with warning
+document.addEventListener('keydown', function(e) {
+    if (e.key === "Escape" || e.key === "Esc") {
+        if (isPostModalOpen && (titleInput.value || contentInput.value)) {
+            closePostAnnouncementModal();
+        }
+        if (isEditModalOpen && (document.getElementById('editTitle').value || document.getElementById('editContent').value)) {
+            closeEditModal();
+        }
+    }
+});
+
+    </script>
+<!-- Discard Changes Modal -->
+<div id="discardChangesModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
+        <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-lg">Discard Changes?</span>
+            <button onclick="closeDiscardChangesModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <div class="mb-4 text-gray-700">
+            Are you sure you want to discard your changes? All unsaved edits will be lost.
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="confirmDiscardChanges()" class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Close without saving</button>
+            <button onclick="closeDiscardChangesModal()" class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Keep editing</button>
+        </div>
+    </div>
+</div>
+<!-- Edit Not Allowed Toast -->
     <div id="EditNotAllowedToast"
         class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
         role="alert">
@@ -1005,4 +1280,58 @@
                 onclick="document.getElementById('EditNotAllowedToast').style.display='none';">&times;</button>
         </div>
     </div>
+<!-- Archive Not Allowed Toast -->
+<div id="ArchiveNotAllowedToast"
+    class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+    role="alert">
+    <div class="w-full flex justify-between">
+        <div class="flex items-center gap-4">
+            <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
+            <div>
+                <h6 class="font-bold font-['Manrope']">
+                    You are not authorized to archive this announcement.
+                </h6>
+            </div>
+        </div>
+        <button type="button"
+            class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+            onclick="document.getElementById('ArchiveNotAllowedToast').style.display='none';">&times;</button>
+    </div>
+</div>
+<!-- Restore Not Allowed Toast -->
+<div id="RestoreNotAllowedToast"
+    class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+    role="alert">
+    <div class="w-full flex justify-between">
+        <div class="flex items-center gap-4">
+            <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
+            <div>
+                <h6 class="font-bold font-['Manrope']">
+                    You are not authorized to restore this announcement.
+                </h6>
+            </div>
+        </div>
+        <button type="button"
+            class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+            onclick="document.getElementById('RestoreNotAllowedToast').style.display='none';">&times;</button>
+    </div>
+</div>
+<!-- Delete Not Allowed Toast -->
+<div id="DeleteNotAllowedToast"
+    class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+    role="alert">
+    <div class="w-full flex justify-between">
+        <div class="flex items-center gap-4">
+            <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
+            <div>
+                <h6 class="font-bold font-['Manrope']">
+                    You are not authorized to delete this announcement.
+                </h6>
+            </div>
+        </div>
+        <button type="button"
+            class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+            onclick="document.getElementById('DeleteNotAllowedToast').style.display='none';">&times;</button>
+    </div>
+</div>
 @endsection
