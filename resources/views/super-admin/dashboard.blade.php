@@ -4,7 +4,7 @@
     <!-- This is the main content area for the super admin dashboard -->
     @include('components.superAdminNavigation') <!-- Include the super admin navigation component -->
     <!-- Super admin word under the nav var -->
-    <div class="max-h-screen bg-[#F2F4F7] bg-opacity-30 px-15 py-8">
+    <div class="min-h-screen bg-[#F2F4F7] bg-opacity-30 px-15 py-8">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-[35px] font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
          @if (session('success'))
@@ -676,7 +676,7 @@
         </div> <!-- This closes the table container div -->
 
     <!-- Pagination controls -->
-    <div class="flex justify-center bg-white py-4">
+    <div class="flex justify-center bg-[#F2F4F7] py-4">
         <nav>
             <ul class="inline-flex items-center space-x-2">
                 <li>

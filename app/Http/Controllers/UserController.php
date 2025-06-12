@@ -107,6 +107,15 @@ class UserController extends Controller
             $user->email = $request->email;
             $user->save();
 
+            $this->logActivity(
+                'Updated',
+                'User',
+                ($user->role === 'admin' ? 
+                "{$user->role_name} has been updated." : 
+                "{$user->organization_acronym} has been updated."
+                )
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'User updated successfully'

@@ -20,7 +20,7 @@
         </div>
 
         <!-- Activity Table -->
-        <div class="bg-white rounded-[25px] shadow-lg overflow-hidden" style= "width: 100%; height: 725px; flex-shrink:0;">
+        <div class="bg-white rounded-[25px] shadow-lg overflow-hidden mb-12" style= "width: 100%; height: 725px; flex-shrink:0;">
             <!-- Table Header -->
             <div class="px-8 py-4 flex justify-between items-center">
                 <h2 class="text-[30px] font-bold text-[#161616] font-[Lexend]">ACTIVITY LOG</h2>
@@ -167,7 +167,7 @@
             </div>
 
             <!-- Pagination -->
-            <div class="mt-4 flex justify-center mb-1 absolute bottom-10 left-0 w-full p-2 text-center">
+            <div class="mt-1 flex justify-center mb-1 absolute bottom-5 left-0 w-full p-2 text-center">
                 <nav>
                     <ul class="inline-flex items-center space-x-2">
                         <!-- First/Previous Page -->
