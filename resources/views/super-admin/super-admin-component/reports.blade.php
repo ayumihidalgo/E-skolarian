@@ -14,7 +14,7 @@
                     Back to Dashboard
                 </a>
             </div>
-    <div class="bg-white rounded-[25px] shadow-lg overflow-hidden" style= "width: 100%; height: 725px; flex-shrink:0;">
+    <div class="bg-white rounded-[25px] shadow-lg overflow-hidden mb-12" style= "width: 100%; height: 725px; flex-shrink:0;">
     <!-- Header with title and filters -->
         <div class="px-8 py-4 flex justify-between items-center">
             <h2 class="text-[30px] font-bold text-[#161616] font-[Lexend]">REPORTS</h2>
@@ -142,7 +142,7 @@
                     </table>
                 </div>
               <!-- Pagination always visible -->
-                <div class="mt-4 flex justify-center mb-1 absolute bottom-10 left-0 w-full p-2 text-center">
+                <div class="mt-4 flex justify-center mb-1 absolute bottom-20 left-0 w-full p-2 text-center">    
                     <nav>
                         <ul class="inline-flex items-center space-x-2">
                             <!-- First/Previous Page -->
