@@ -202,7 +202,7 @@
                 @endif
             </div>
             @else
-            <div class="flex items-center justify-center h-full text-center">
+            <div class="flex items-center justify-center flex-1 min-h-120 text-center p-8">
                 <div class="text-gray-500 text-sm sm:text-base">
                     @if(Auth::check())
                         Hi, {{ Auth::user()->username }}! <br> No notifications for you.
