@@ -66,19 +66,25 @@
                         class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 truncate">
                         <option class="bg-white text-black truncate" value="Type" disabled selected>Type</option>
                         <option class="bg-white text-black truncate" value="All">All Types</option>
+                        <!-- Standard document type options -->
                         <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
                         <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan of
                             Activities</option>
-                        <option class="bg-white text-black truncate" value="Calendar of Activities">Calendar of
-                            Activities</option>
-                        <option class="bg-white text-black truncate" value="Accomplishment Report">Accomplishment Report
+                        <option class="bg-white text-black truncate" value="Reports of Proceedings">Reports of Proceedings
                         </option>
-                        <option class="bg-white text-black truncate" value="Constitution and By-Laws">Contribution and
+                        <option class="bg-white text-black truncate" value="Constitution and By-Laws">Constitution and
                             By-Laws</option>
+                        <option class="bg-white text-black truncate" value="Fundraising Activities">Fundraising Activities
+                        </option>
                         <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
-                        <option class="bg-white text-black truncate" value="Off-Campus">Off-Campus</option>
                         <option class="bg-white text-black truncate" value="Petition and Concern">Petition and Concern
                         </option>
+                        <option class="bg-white text-black truncate" value="Memorandum of Agreement">Memorandum of
+                            Agreement</option>
+                        <option class="bg-white text-black truncate" value="Off Campus Activities">Off Campus Activities
+                        </option>
+                        <!-- Others option for non-standard types -->
+                        <option class="bg-white text-black truncate" value="Others">Others</option>
                     </select>
                     <!-- Custom dropdown arrow icon -->
                     <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -126,7 +132,6 @@
                                 // Extract organization acronym from control tag
                                 $parts = explode('_', $document->control_tag);
                                 $acronym = count($parts) > 0 ? $parts[0] : '';
-                                $orgName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
 
                                 // Map the acronym to a color key for consistent color coding
                                 $colorKey = match ($acronym) {
@@ -145,13 +150,26 @@
                                 'OSC' => 'OSC',
                                 default => 'text-gray-500',
                                 };
-                                $tagColor = isset($tagColors[$colorKey])
-                                ? $tagColors[$colorKey]
-                                : 'text-gray-500';
+                                $tagColor = isset($tagColors[$colorKey]) ? $tagColors[$colorKey] : 'text-gray-500';
 
                                 // Format archive date for display
                                 $archivedDate = \Carbon\Carbon::parse($document->archived_at)->format('m/d/Y g:i A');
+                                
+                                // Determine display type - show 'Others' for non-standard types
+                                $standardTypes = [
+                                    'Event Proposal',
+                                    'General Plan of Activities', 
+                                    'Reports of Proceedings',
+                                    'Constitution and By-Laws',
+                                    'Fundraising Activities',
+                                    'Request Letter',
+                                    'Petition and Concern',
+                                    'Memorandum of Agreement',
+                                    'Off Campus Activities'
+                                ];
+                                $displayType = in_array($document->type, $standardTypes) ? $document->type : 'Others';
                                 @endphp
+                                
                                 <!-- Document row with data attributes for filtering -->
                                 <tr class="border-b border-gray-300 hover:bg-gray-100"
                                     data-org-acronym="{{ $acronym }}"
@@ -167,11 +185,11 @@
                                         onclick="viewDocument({{ $document->id }})">
                                         <span class="{{ $tagColor }}">{{ $document->control_tag }}</span>
                                     </td>
-                                    <!-- Organization name with tooltip for full name -->
+                                    <!-- USERNAME instead of organization name -->
                                     <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
                                         onclick="viewDocument({{ $document->id }})"
-                                        title="{{ $orgName }}">
-                                        {{ $orgName }}
+                                        title="{{ $document->username ?? 'N/A' }}">
+                                        {{ $document->username ?? 'N/A' }}
                                     </td>
                                     <!-- Document subject with tooltip for full text -->
                                     <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
@@ -184,11 +202,11 @@
                                         onclick="viewDocument({{ $document->id }})">
                                         {{ $archivedDate }}
                                     </td>
-                                    <!-- Document type with tooltip -->
+                                    <!-- Document type - show 'Others' for non-standard types -->
                                     <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
                                         onclick="viewDocument({{ $document->id }})"
-                                        title="{{ $document->type }}">
-                                        {{ $document->type }}
+                                        title="{{ $displayType }}">
+                                        {{ $displayType }}
                                     </td>
                                     <!-- Status with color-coded badge -->
                                     <td class="px-4 py-2 cursor-pointer"

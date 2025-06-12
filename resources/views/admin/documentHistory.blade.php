@@ -69,25 +69,18 @@
                             class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 truncate">
                             <option class="bg-white text-black truncate" value="Type" disabled selected>Type</option>
                             <option class="bg-white text-black truncate" value="All">All Types</option>
-                            <!-- Document type options -->
+                            <!-- Standard document type options -->
                             <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
-                            <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan
-                                of
-                                Activities</option>
-                            <option class="bg-white text-black truncate" value="Calendar of Activities">Calendar of
-                                Activities
-                            </option>
-                            <option class="bg-white text-black truncate" value="Accomplishment Report">Accomplishment
-                                Report
-                            </option>
-                            <option class="bg-white text-black truncate" value="Contribution and By-Laws">Contribution
-                                and
-                                By-Laws</option>
+                            <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan of Activities</option>
+                            <option class="bg-white text-black truncate" value="Reports of Proceedings">Reports of Proceedings</option>
+                            <option class="bg-white text-black truncate" value="Constitution and By-Laws">Constitution and By-Laws</option>
+                            <option class="bg-white text-black truncate" value="Fundraising Activities">Fundraising Activities</option>
                             <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
-                            <option class="bg-white text-black truncate" value="Off-Campus">Off-Campus</option>
-                            <option class="bg-white text-black truncate" value="Petition and Concern">Petition and
-                                Concern
-                            </option>
+                            <option class="bg-white text-black truncate" value="Petition and Concern">Petition and Concern</option>
+                            <option class="bg-white text-black truncate" value="Memorandum of Agreement">Memorandum of Agreement</option>
+                            <option class="bg-white text-black truncate" value="Off Campus Activities">Off Campus Activities</option>
+                            <!-- Others option for non-standard types -->
+                            <option class="bg-white text-black truncate" value="Others">Others</option>
                         </select>
                         <!-- Custom dropdown arrow -->
                         <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -184,8 +177,7 @@
                                 // Extract organization acronym from control tag (e.g., "ACAP_001")
                                 $parts = explode('_', $document->control_tag);
                                 $acronym = count($parts) > 0 ? $parts[0] : '';
-                                $orgName = isset($orgMap[$acronym]) ? $orgMap[$acronym] : $acronym;
-
+                                
                                 // Map the acronym to a color key for consistent color coding
                                 $colorKey = match ($acronym) {
                                 'ACAP' => 'PSY',
@@ -205,8 +197,11 @@
                                 };
                                 $tagColor = isset($tagColors[$colorKey]) ? $tagColors[$colorKey] : 'text-gray-500';
 
-                                // Format date AND TIME for consistent display - UPDATED
+                                // Format date AND TIME for consistent display
                                 $createdDateTime = \Carbon\Carbon::parse($document->created_at)->format('m/d/Y g:i A');
+                                
+                                // Determine display type - show 'Others' for non-standard types
+                                $displayType = in_array($document->type, $standardTypes ?? []) ? $document->type : 'Others';
                                 @endphp
 
                                 <!-- Document row with data attributes for filtering -->
@@ -223,10 +218,11 @@
                                         onclick="viewDocument({{ $document->id }})">
                                         <span class="{{ $tagColor }}">{{ $document->control_tag }}</span>
                                     </td>
-                                    <!-- Organization name with tooltip for full name -->
+                                    <!-- USERNAME instead of organization name -->
                                     <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
-                                        onclick="viewDocument({{ $document->id }})" title="{{ $orgName }}">
-                                        {{ $orgName }}
+                                        onclick="viewDocument({{ $document->id }})" 
+                                        title="{{ $document->username ?? 'N/A' }}">
+                                        {{ $document->username ?? 'N/A' }}
                                     </td>
                                     <!-- Document subject with tooltip for full text -->
                                     <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
@@ -234,17 +230,17 @@
                                         title="{{ $document->subject }}">
                                         {{ $document->subject }}
                                     </td>
-                                    <!-- Date AND TIME submitted - UPDATED -->
+                                    <!-- Date AND TIME submitted -->
                                     <td class="px-4 py-2 truncate max-w-[140px] cursor-pointer"
                                         onclick="viewDocument({{ $document->id }})" 
                                         title="{{ $createdDateTime }}">
                                         {{ $createdDateTime }}
                                     </td>
-                                    <!-- Document type with tooltip -->
+                                    <!-- Document type - show 'Others' for non-standard types -->
                                     <td class="px-4 py-2 truncate max-w-[160px] cursor-pointer"
                                         onclick="viewDocument({{ $document->id }})"
-                                        title="{{ $document->type }}">
-                                        {{ $document->type }}
+                                        title="{{ $displayType }}">
+                                        {{ $displayType }}
                                     </td>
                                     <!-- Status with color-coded badge -->
                                     <td class="px-4 py-2 cursor-pointer"
@@ -1028,9 +1024,9 @@
                 if (newPagination) {
                     if (currentPagination) {
                         currentPagination.outerHTML = newPagination.outerHTML;
+                        currentPagination.style.display = 'block'; // Make sure it's visible
                     }
                 } else if (currentPagination) {
-                    // If no new pagination but we had one before, hide it
                     currentPagination.style.display = 'none';
                 }
 
@@ -1040,18 +1036,13 @@
                 // Uncheck "select all" checkbox
                 const selectAllCheckbox = document.getElementById('selectAll');
                 if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = false;
-
-                    // Disable checkbox if no results
                     const visibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
                     selectAllCheckbox.disabled = visibleRows === 0;
+                    selectAllCheckbox.checked = false;
                 }
 
                 // Update export button state
                 updateExportButtonState();
-                
-                // Update select all link text
-                updateSelectAllLinkText();
 
                 // Remove loading state
                 tableContainer.classList.remove('opacity-50');
@@ -1543,7 +1534,7 @@
             return; // Don't proceed if button is disabled
         }
 
-        // Get current filter values
+        // Get current filter values - ALWAYS get these regardless of selection
         const organization = document.getElementById("organizationFilter").value !== "Organization" ?
             document.getElementById("organizationFilter").value : '';
         const type = document.getElementById("typeFilter").value !== "Type" ?
@@ -1554,6 +1545,10 @@
         let exportUrl = "{{ route('admin.document.export') }}";
         const params = new URLSearchParams();
 
+        // Store original HTML
+        const originalContent = floatingExportBtn.innerHTML;
+
+        // ALWAYS send filter parameters (whether documents are selected or not)
         if (organization && organization !== 'All') params.append('organization', organization);
         if (type && type !== 'All') params.append('type', type);
         if (search.trim() !== '') params.append('search', search);
@@ -1568,11 +1563,21 @@
             params.append('end_date_display', new Date(currentDateFilter.end).toLocaleDateString());
         }
 
-        // Store original HTML
-        const originalContent = floatingExportBtn.innerHTML;
+        // Check if there are selected documents and add them
+        if (selectedItems.size > 0) {
+            // Export only selected documents BUT with current filter information
+            const selectedArray = Array.from(selectedItems);
+            selectedArray.forEach(id => {
+                params.append('selected_documents[]', id);
+            });
+            
+            // Set loading state for selected export
+            floatingExportBtn.innerHTML = `<span class="animate-pulse">Exporting ${selectedItems.size} selected...</span>`;
+        } else {
+            // Set loading state for full export
+            floatingExportBtn.innerHTML = '<span class="animate-pulse">Generating...</span>';
+        }
 
-        // Set loading state
-        floatingExportBtn.innerHTML = '<span class="animate-pulse">Generating...</span>';
         floatingExportBtn.disabled = true;
 
         // Append parameters to URL
@@ -1585,11 +1590,26 @@
         hiddenIframe.style.display = 'none';
         document.body.appendChild(hiddenIframe);
 
-        // Set a timeout to restore the button state if the download takes too long
+        // Set a timeout to restore the button state
         setTimeout(() => {
             floatingExportBtn.innerHTML = originalContent;
             updateExportButtonState(); // Use the function to properly restore state
-        }, 5000); // 5 seconds timeout
+            
+            // Show success message
+            if (selectedItems.size > 0) {
+                showActionToast(
+                    'Export Successful',
+                    `Successfully exported ${selectedItems.size} selected documents.`,
+                    true
+                );
+            } else {
+                showActionToast(
+                    'Export Successful',
+                    'Document history exported successfully.',
+                    true
+                );
+            }
+        }, 3000); // 3 seconds timeout
 
         // Navigate iframe to the export URL to trigger download
         hiddenIframe.src = exportUrl;
@@ -1599,10 +1619,7 @@
             if (hiddenIframe.parentNode) {
                 hiddenIframe.parentNode.removeChild(hiddenIframe);
             }
-            // Restore button state
-            floatingExportBtn.innerHTML = originalContent;
-            updateExportButtonState(); // Use the function to properly restore state
-        }, 2000);
+        }, 5000);
     }
 </script>
 @endsection
