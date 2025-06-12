@@ -27,10 +27,10 @@
 
     <!-- Notification Panel -->
    <div id="notificationPanel"
-        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-72 md:w-80 lg:w-96 xl:w-[26rem] 2xl:w-[28rem] sm:h-auto sm:max-h-[70vh] md:max-h-[75vh] lg:max-h-[80vh] xl:max-h-[85vh]">
+        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-72 md:w-80 lg:w-96 xl:w-[26rem] 2xl:w-[28rem] sm:h-auto sm:max-h-[85vh] flex flex-col">
         
         <!-- Header -->
-      <div class="notif-top-content p-4 border-b flex flex-row justify-between w-full h-[40px]">
+      <div class="notif-top-content p-4 border-b flex flex-row justify-between w-full flex-shrink-0">
             <div class="flex items-center">
                 <!-- Back Icon (visible only on mobile) -->
                 <button id="backBtn" class="mr-2 sm:hidden text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-300">
@@ -89,7 +89,7 @@
 
 
         <!-- Tabs -->
-        <div id="tabs-nav" class="flex items-center justify-between text-sm font-medium text-gray-600 shadow mt-4">
+        <div id="tabs-nav" class="flex items-center justify-between text-sm font-medium text-gray-600 shadow flex-shrink-0">
             <div class="flex">
                 <button id="allTab" class="px-4 py-2 border-b-2 border-purple-400 border-opacity-50 text-black font-semibold bg-gray-50 cursor-pointer">All</button>
                 <button id="unreadTab" class="px-4 py-2 hover:bg-gray-100 text-gray-500 cursor-pointer relative">
@@ -108,7 +108,7 @@
         </div>
 
         <!-- Notification Content -->
-        <div id="notificationBody" class="overflow-y-auto transition-all duration-300 w-full h-[18rem] sm:h-[20rem] md:h-[24rem] lg:h-[28rem] xl:h-[32rem]">
+        <div id="notificationBody" class="flex-1 overflow-y-auto transition-all duration-300 w-full min-h-0">
             @if(Auth::check() && Auth::user()->notifications->count() > 0)
             <!-- All Notifications Tab Content -->
             <div id="allNotifications" class="block  cursor-default">
