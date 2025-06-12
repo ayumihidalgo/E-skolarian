@@ -88,10 +88,21 @@ class SuperAdminController extends Controller
         }
 
         // Fetch active users with ID > 1 (excluding super admin) with sorting and pagination
-        $users = User::where('active', true)
-            ->where('id', '>', 1) // Exclude super admin
-            ->orderBy($sortField, $sortDirection)
-            ->paginate(6); // Adjust number per page as needed
+        $users = User::select([
+            'id', 
+            'username', 
+            'email', 
+            'recovery_email', // Add this line
+            'role', 
+            'role_name', 
+            'organization_acronym', 
+            'active',
+            'created_at'
+        ])
+        ->where('active', true)
+        ->where('id', '>', 1) // Exclude super admin
+        ->orderBy($sortField, $sortDirection)
+        ->paginate(6); // Adjust number per page as needed
 
         // Fetch activities with proper eager loading
         $activities = ActivityLog::with(['user' => function($query) {
@@ -304,5 +315,21 @@ class SuperAdminController extends Controller
             'success' => true,
             'newCount' => $newCount
         ]);
+    }
+
+    public function checkRecoveryEmailExists(Request $request)
+    {
+        $recoveryEmail = $request->input('recovery_email');
+        $excludeId = $request->input('exclude_id');
+        
+        $query = User::where('recovery_email', $recoveryEmail);
+        
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+        
+        $exists = $query->exists();
+        
+        return response()->json(['exists' => $exists]);
     }
 }

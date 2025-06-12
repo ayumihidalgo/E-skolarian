@@ -91,9 +91,10 @@ class UserController extends Controller
         try {
             $user = User::findOrFail($id);
             
-            // Validate request
+            // Validate request - Add recovery_email validation
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email|unique:users,email,' . $id,
+                'recovery_email' => 'nullable|email|unique:users,recovery_email,' . $id, // Add this line
             ]);
 
             if ($validator->fails()) {
@@ -103,9 +104,36 @@ class UserController extends Controller
                 ], 422);
             }
 
-            // Update user
+            // Check if recovery email is same as primary email
+            if ($request->recovery_email && $request->recovery_email === $request->email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Recovery email cannot be the same as primary email'
+                ], 422);
+            }
+
+            // Store original values for email notification comparison
+            $originalEmail = $user->email;
+            $originalRecoveryEmail = $user->recovery_email;
+
+            // Update user - Add recovery_email update
             $user->email = $request->email;
+            $user->recovery_email = $request->recovery_email; // Add this line
             $user->save();
+
+            // Send notification email if email or recovery email changed
+            if ($originalEmail !== $user->email || $originalRecoveryEmail !== $user->recovery_email) {
+                try {
+                    Mail::to($user->email)->send(new UserNotificationMail($user, 'updated'));
+                    
+                    // If recovery email was added/changed, also send to recovery email
+                    if ($user->recovery_email && $user->recovery_email !== $originalRecoveryEmail) {
+                        Mail::to($user->recovery_email)->send(new UserNotificationMail($user, 'updated'));
+                    }
+                } catch (\Exception $e) {
+                    Log::error('Failed to send update notification email: ' . $e->getMessage());
+                }
+            }
 
             $this->logActivity(
                 'Updated',

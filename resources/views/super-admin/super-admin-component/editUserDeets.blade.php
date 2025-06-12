@@ -59,6 +59,16 @@
                        class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] underline decoration-[#3f434a]">
             </div>
 
+            <!-- Recovery Email field -->
+            <div class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="block text-sm font-medium text-black mb-1 font-[Lexend]">Recovery Email</label>
+                <input type="email" 
+                       id="editRecoveryEmail" 
+                       name="recovery_email"
+                       placeholder="Enter recovery email (optional)"
+                       class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]">
+            </div>
+
             <p class="text-sm text-gray-500 mt-5 text-center">Any changes made will notify the account owner via email.</p>
 
             <div class="flex justify-center">
