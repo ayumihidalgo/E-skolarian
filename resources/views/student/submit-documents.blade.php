@@ -147,11 +147,11 @@
                                 class="required-indicator text-red-500"> *</span>:</label>
 
                         <textarea id="overview" name="overview"
-                            class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
+                            class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="1000"
                             oninput="overviewUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
 
                         <div class="text-sm text-gray-500 text-right">
-                            <span id="overview-counter">0</span>/255
+                            <span id="overview-counter">0</span>/1000
                         </div>
                     </div>
 

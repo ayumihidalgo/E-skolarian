@@ -41,7 +41,7 @@ class DocumentController extends Controller
                 'received_by' => 'required|exists:users,id',
                 'subject' => 'required|string|max:255',
                 'type' => 'required|string|max:50',
-                'overview' => 'required|string|max:255',
+                'overview' => 'required|string|max:1000',
                 'academic_year' => 'required|string',
                 'venue' => 'nullable|string|max:100|required_if:type,Event Proposal',
                 'proposed_date_time' => 'nullable|date|required_if:type,Event Proposal',

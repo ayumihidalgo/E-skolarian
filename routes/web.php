@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SuperAdmin\SuperAdminSettingsController;
 use App\Http\Middleware\LogoutIfAuthenticated;
 use App\Http\Middleware\CheckActiveStatus;
+use App\Http\Controllers\GuestSubmitDocumentController;
 
 
 // Guest routes for login selection
@@ -41,10 +42,15 @@ Route::middleware(LogoutIfAuthenticated::class)->group(function () {
 
 
     // Guest
-    Route::get('/guest', function() {
-        return view('guest.guest');
+    Route::get('/guest/login', function() {
+        return view('guest.guestLogin');
     })->name('guest');
-
+    Route::post('/guest/send-otp', [GuestSubmitDocumentController::class, 'sendOtp'])->name('guest.sendOtp');
+    Route::get('/guest/verify', [GuestSubmitDocumentController::class, 'showOtpForm'])->name('guest.verifyForm');
+    Route::post('/guest/verify-otp', [GuestSubmitDocumentController::class, 'verifyOtp'])->name('guest.verifyOtp');
+    Route::get('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])->name('guest.resendOtp');
+    Route::get('/guest/submission-form', [GuestSubmitDocumentController::class, 'showSubmissionForm'])->name('guest.submissionForm');
+    Route::get('/guest/success', [GuestSubmitDocumentController::class, 'showSubmissionSuccess'])->name('guest.submissionSuccess');
 
     // Student Login
     Route::get('/student/login', function () {
