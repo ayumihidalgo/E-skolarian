@@ -343,6 +343,10 @@ class DocumentReviewController extends Controller
                         'updated_at' => now()
                     ]);
                     
+                    // Update document status to Under Review
+                    $document->status = 'Under Review';
+                    $document->save();
+                    
                     // Add this to the timeline
                     DocumentTimeline::create([
                         'document_id' => $id,
@@ -352,6 +356,9 @@ class DocumentReviewController extends Controller
                         'message' => 'Document opened for review',
                         'related_review_id' => $review->id
                     ]);
+                    
+                    // Dispatch event for notification
+                    event(new DocumentStatusUpdated($document));
                 }
             }
             
