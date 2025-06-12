@@ -561,19 +561,19 @@
         }
 
         function updateNotificationBadge() {
-            // Count unread notifications
+            // Count unread notifications that are still in the unread tab
             const unreadCount = document.querySelectorAll('#unreadNotifications [data-notification-id]').length;
-            const badge = document.querySelector('.bg-red-500.rounded-full');
-            const unreadBadge = document.querySelector('#unreadTab .bg-red-500');
+            const headerBadge = document.querySelector('.bg-red-500.rounded-full');
+            const tabBadge = document.querySelector('#unreadTab .bg-red-500');
             
             if (unreadCount === 0) {
-                if (badge) badge.style.display = 'none';
-                if (unreadBadge) unreadBadge.style.display = 'none';
+                if (headerBadge) headerBadge.style.display = 'none';
+                if (tabBadge) tabBadge.style.display = 'none';
             } else {
-                if (badge) badge.style.display = 'block';
-                if (unreadBadge) {
-                    unreadBadge.style.display = 'block';
-                    unreadBadge.textContent = unreadCount;
+                if (headerBadge) headerBadge.style.display = 'block';
+                if (tabBadge) {
+                    tabBadge.style.display = 'block';
+                    tabBadge.textContent = unreadCount;
                 }
             }
         }
