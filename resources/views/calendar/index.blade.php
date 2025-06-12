@@ -334,44 +334,38 @@ function containsSpecialChars(text) {
                 meridiem: 'short'  
             },
                 
-                events: function(fetchInfo, successCallback, failureCallback) {
-                    Promise.all([
-                        fetch('/calendar/events').then(r => r.json()), // Add this line to fetch admin events
-                        fetch('/calendar/announcements').then(r => r.json())
-                    ]).then(responses => {
-                        console.log('Manual events:', responses[0]);
-                        console.log('Announcements:', responses[1]);
-                        
-                        let allEvents = [];
-                        
-                        // Safely concatenate arrays
-                        responses.forEach((response, index) => {
-                            if (Array.isArray(response)) {
-                                allEvents = allEvents.concat(response);
-                            } else {
-                                console.warn(`Response ${index} is not an array:`, response);
+            events: function(fetchInfo, successCallback, failureCallback) {
+                    console.log('=== Fetching announcements for student view ===');
+                    
+                    fetch('/calendar/announcements')
+                        .then(response => {
+                            console.log('Announcements response:', response.status);
+                            if (!response.ok) {
+                                console.warn('Announcements failed with status', response.status);
+                                return [];
                             }
+                            return response.json();
+                        })
+                        .then(announcements => {
+                            console.log('Announcements for student:', announcements);
+                            successCallback(announcements || []);
+                        })
+                        .catch(error => {
+                            console.error('Error fetching announcements:', error);
+                            successCallback([]);
                         });
-                        
-                        console.log('Total events for student view:', allEvents.length);
-                        successCallback(allEvents);
-                    }).catch(error => {
-                        console.error('Error fetching events:', error);
-                        failureCallback(error);
-                    });
                 },
                 // Handle date changes
                 datesSet: function() {
                     checkIfCurrentMonth();
                 },
+
                 eventClick: function(info) {
-                    if (info.event.extendedProps.source === 'announcement') {
-                        openAnnouncementDetailsModal(info.event);
-                    } else {
-                        // For manual events, show details but without edit options
-                        openEventDetailsModal(info.event);
-                    }
+                    console.log('Event clicked:', info.event);
                     info.jsEvent.preventDefault();
+                    
+                    // Students can only view announcement details
+                    openAnnouncementDetailsModal(info.event);
                 },
                 // Handle date clicks
                 // function dateClick 
@@ -743,76 +737,7 @@ function saveEvent() {
     const emojiRegex = /[\u{1F000}-\u{1FFFF}|\u{2600}-\u{27BF}|\u{2B50}|\u{1F004}|\u{1F0CF}|\u{1F170}-\u{1F251}|\u{1F300}-\u{1F8FF}]/u;
     return emojiRegex.test(text);
 }
-// Functions to handle the event details modal
-function openEventDetailsModal(event) {
-    const modal = document.getElementById('eventDetailsModal');
-    const modalContent = modal.querySelector('.modal-container');
-    
-    if (!modal) return;
-    
-    // Populate the modal with event details
-    document.getElementById('detail-title').textContent = event.title;
-    
-    // Format and display the date
-    let dateStr = '';
-    const startDate = event.start ? new Date(event.start) : null;
-    const endDate = event.end ? new Date(event.end) : null;
-    
-    if (startDate) {
-        // Format the date nicely
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        if (event.allDay) {
-            dateStr = startDate.toLocaleDateString(undefined, options);
-            if (endDate) {
-                const endStr = endDate.toLocaleDateString(undefined, options);
-                dateStr += ' to ' + endStr;
-            }
-        } else {
-            options.hour = 'numeric';
-            options.minute = 'numeric';
-            dateStr = startDate.toLocaleString(undefined, options);
-            if (endDate) {
-                const endStr = endDate.toLocaleString(undefined, options);
-                dateStr += ' to ' + endStr;
-            }
-        }
-    }
-    
-    document.getElementById('detail-date').textContent = dateStr;
-    
-    // Set event color indicator
-    const colorIndicator = document.getElementById('event-color-indicator');
-    if (colorIndicator) {
-        colorIndicator.style.backgroundColor = event.backgroundColor || '#7A1212';
-    }
-    
-    @if(Auth::user()->role === 'admin')
-    // Set up delete button handler
-    const deleteBtn = document.getElementById('delete-event-btn');
-    if (deleteBtn) {
-        // Remove any existing event listeners
-        const newDeleteBtn = deleteBtn.cloneNode(true);
-        deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
-        
-        // Add event listener for deleting the event
-        newDeleteBtn.addEventListener('click', function() {
-            if (confirm('Are you sure you want to delete this event?')) {
-                event.remove();
-                closeEventDetailsModal();
-            }
-        });
-    }
-    @endif
-    
-    // Show modal with animation
-    modal.classList.remove('hidden');
-    
-    // Trigger animation after a small delay
-    setTimeout(() => {
-        modalContent.classList.remove('modal-hidden');
-        modalContent.classList.add('modal-visible');
-    }, 10);
-}
+
 
 function closeEventDetailsModal() {
     const modal = document.getElementById('eventDetailsModal');

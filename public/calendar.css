@@ -68,14 +68,15 @@
 }
 
 .fc-header-toolbar.fc-toolbar.fc-toolbar-ltr {
-    background: transparent !important;
-    margin: 0 !important;
-    padding: 15px 20px !important; /* Add consistent padding */
+    background: none !important;
+    background-color: transparent !important;
     border: none !important;
-    box-shadow: none !important; /* Remove any shadow causing the white effect */
-    width: 100% !important; /* Ensure full width */
-    overflow: visible !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 15px 20px !important;
     position: relative !important;
+    z-index: 1 !important;
 }
 
 /* Toolbar layout */
@@ -568,3 +569,392 @@
     max-width: 500px;
     overflow: hidden;
 }
+
+
+
+/* ===== MOBILE RESPONSIVENESS ===== */
+
+/* Mobile breakpoints */
+@media (max-width: 768px) {
+    /* Adjust main content for mobile */
+    #main-content {
+        margin-left: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Calendar container adjustments */
+    .py-8.px-10 {
+        padding: 1rem !important;
+    }
+    
+    /* Calendar header title */
+    .mb-8 h1 {
+        font-size: 24px !important;
+        margin-bottom: 1rem !important;
+        text-align: center;
+    }
+    
+    /* Calendar container */
+    #calendar-container {
+        width: 100% !important;
+        margin: 0 !important;
+        border-radius: 12px !important;
+        min-height: 400px !important;
+    }
+    
+    /* FullCalendar adjustments */
+    .fc {
+        border-radius: 12px !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Header toolbar mobile layout */
+    .fc-header-toolbar {
+        padding: 10px 15px !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px;
+    }
+    
+    /* Toolbar chunks stacking */
+    .fc-toolbar-chunk {
+        background: none !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Center the navigation */
+    .fc-toolbar-chunk:nth-child(2) {
+        order: 1;
+        min-width: auto !important;
+        margin-bottom: 10px;
+    }
+    
+    /* Position buttons below */
+    .fc-toolbar-chunk:last-child {
+        order: 2;
+        position: relative !important;
+        right: auto !important;
+        justify-content: center !important;
+        gap: 10px;
+    }
+    
+    /* Month title mobile */
+    .fc-toolbar-title {
+        font-size: 18px !important;
+        margin: 0 10px !important;
+    }
+    
+    /* Navigation buttons mobile */
+    .fc-prev-button,
+    .fc-next-button {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        transform: none !important;
+        width: 35px !important;
+        height: 35px !important;
+    }
+    
+    /* Today button mobile */
+    .fc-today-button {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+        border-radius: 15px !important;
+    }
+    
+    /* Create event button mobile */
+    .custom-create-event {
+        padding: 8px 12px !important;
+        font-size: 14px !important;
+        border-radius: 15px !important;
+    }
+    
+    .custom-create-event-text {
+        font-size: 14px !important;
+    }
+    
+    /* Day headers mobile */
+    .fc-col-header-cell {
+        padding: 8px 2px !important;
+        font-size: 0.75rem !important;
+    }
+    
+    /* Day cells mobile */
+    .fc-daygrid-day {
+        min-height: 60px !important;
+    }
+    
+    .fc-daygrid-day-frame {
+        min-height: 60px !important;
+    }
+    
+    /* Day numbers mobile */
+    .fc-daygrid-day-number {
+        font-size: 0.875rem !important;
+        padding: 4px !important;
+    }
+    
+    /* Events mobile */
+    .fc-event {
+        font-size: 0.75rem !important;
+        margin: 1px !important;
+        padding: 1px 3px !important;
+        max-height: 25px !important;
+        padding-right: 40px !important;
+    }
+    
+    .fc-event-title {
+        font-size: 0.75rem !important;
+        line-height: 1.2 !important;
+    }
+    
+    .fc-event-time {
+        font-size: 0.7rem !important;
+    }
+    
+    /* Event containers mobile */
+    .fc-daygrid-event .fc-event-main {
+        padding-right: 35px !important;
+    }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+    /* Even smaller adjustments */
+    .py-8.px-10 {
+        padding: 0.75rem !important;
+    }
+    
+    .mb-8 h1 {
+        font-size: 20px !important;
+    }
+    
+    .fc-toolbar-title {
+        font-size: 16px !important;
+    }
+    
+    .fc-prev-button,
+    .fc-next-button {
+        width: 30px !important;
+        height: 30px !important;
+    }
+    
+    .fc-today-button {
+        font-size: 12px !important;
+        padding: 6px 10px !important;
+    }
+    
+    .custom-create-event {
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+    }
+    
+    .custom-create-event-text {
+        font-size: 12px !important;
+    }
+    
+    /* Smaller day cells */
+    .fc-daygrid-day {
+        min-height: 50px !important;
+    }
+    
+    .fc-daygrid-day-frame {
+        min-height: 50px !important;
+    }
+    
+    /* Even smaller events */
+    .fc-event {
+        font-size: 0.7rem !important;
+        max-height: 20px !important;
+        padding-right: 30px !important;
+    }
+    
+    .fc-event-title {
+        font-size: 0.7rem !important;
+    }
+    
+    .fc-event-time {
+        font-size: 0.65rem !important;
+    }
+}
+
+/* ===== MODAL RESPONSIVENESS ===== */
+
+/* Modal mobile adjustments */
+@media (max-width: 768px) {
+    /* Event Details Modal */
+    #eventDetailsModal .modal-container {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        margin: 1rem !important;
+    }
+    
+    #eventDetailsModal .p-6 {
+        padding: 1rem !important;
+    }
+    
+    #detail-title {
+        font-size: 1rem !important;
+        line-height: 1.3 !important;
+    }
+    
+    /* Event Modal (Admin only) */
+    #eventModal .modal-container {
+        width: 95vw !important;
+        max-width: 95vw !important;
+        margin: 1rem !important;
+    }
+    
+    #eventModal .p-6 {
+        padding: 1rem !important;
+    }
+    
+    /* Form elements mobile */
+    #eventModal input,
+    #eventModal select {
+        font-size: 16px !important; /* Prevents zoom on iOS */
+    }
+    
+    /* Confirmation modals */
+    #confirmSaveModal .modal-container,
+    #discardChangesModal .modal-container {
+        width: 90vw !important;
+        max-width: 90vw !important;
+        margin: 1rem !important;
+    }
+}
+
+/* ===== YEAR SELECTOR MOBILE ===== */
+
+@media (max-width: 768px) {
+    #year-selector {
+        width: 180px !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+    }
+    
+    #year-selector select {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+    }
+}
+
+/* ===== LANDSCAPE ORIENTATION ===== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .fc-daygrid-day {
+        min-height: 45px !important;
+    }
+    
+    .fc-daygrid-day-frame {
+        min-height: 45px !important;
+    }
+    
+    .fc-event {
+        max-height: 18px !important;
+        font-size: 0.7rem !important;
+    }
+}
+
+/* ===== TOUCH IMPROVEMENTS ===== */
+
+@media (max-width: 768px) {
+    /* Larger touch targets */
+    .fc-prev-button,
+    .fc-next-button,
+    .fc-today-button,
+    .custom-create-event {
+        min-height: 44px !important; /* Apple's recommended touch target size */
+        touch-action: manipulation; /* Improves touch responsiveness */
+    }
+    
+    /* Year selector touch improvements */
+    .fc-toolbar-title {
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        touch-action: manipulation;
+    }
+    
+    /* Day cells touch */
+    .fc-daygrid-day {
+        touch-action: manipulation;
+    }
+    
+    /* Event touch */
+    .fc-event {
+        touch-action: manipulation;
+        cursor: pointer;
+    }
+}
+
+
+
+/* Override FullCalendar's default white background */
+.fc {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+/* Specifically target the header toolbar's default background */
+.fc-header-toolbar {
+    background-color: transparent !important;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Remove FullCalendar's default page background */
+.fc-theme-standard {
+    background-color: transparent !important;
+}
+
+/* Target FullCalendar's CSS variables */
+.fc {
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: transparent;
+}
+
+
+/**
+
+
+.fc-header-toolbar,
+.fc-toolbar,
+.fc-toolbar-ltr,
+div.fc-header-toolbar,
+#calendar .fc-header-toolbar,
+#calendar-container .fc-header-toolbar {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+}
+
+
+.fc-toolbar-chunk {
+    display: none !important;
+}
+
+
+.fc-prev-button,
+.fc-next-button,
+.fc-today-button,
+.fc-toolbar-title {
+    display: none !important;
+}
+
+
+[class*="fc-toolbar"] {
+    display: none !important;
+}
+
+
+**/
