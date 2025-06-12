@@ -100,14 +100,15 @@
                                                         class="hidden absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow z-30">
                                                         <button
                                                             class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition whitespace-nowrap"
-                                                            onclick="openEditModal(
+                                                            onclick="tryOpenEditModal(
                                                                 {{ $announcement->id }},
                                                                 `{{ addslashes($announcement->title) }}`,
                                                                 `{{ addslashes(e($announcement->content)) }}`,
                                                                 `{{ $announcement->deadline ? \Carbon\Carbon::parse($announcement->deadline)->format('Y-m-d') : '' }}`,
                                                                 `{{ $announcement->deadline ? \Carbon\Carbon::parse($announcement->deadline)->format('H:i') : '' }}`,
                                                                 `{{ $announcement->audience ?? 'all' }}`,
-                                                                '{{ htmlspecialchars(json_encode($announcement->audience_students ?? []), ENT_QUOTES, "UTF-8") }}'
+                                                                '{{ htmlspecialchars(json_encode($announcement->audience_students ?? []), ENT_QUOTES, "UTF-8") }}',
+                                                                {{ $announcement->user_id }}
                                                             )"
                                                             type="button">
                                                             Edit
@@ -729,8 +730,25 @@
                 document.querySelectorAll('[id^="menu-"]').forEach(menu => menu.classList.add('hidden'));
             }
         });
+    // Get current user info from Blade
+        const currentUserId = {{ json_encode(session('currentUserId', auth()->id())) }};
+        const currentUserRole = {!! json_encode(session('currentUserRole', auth()->user()->role)) !!};
 
-        // Open Edit Modal (now supports schedule and audience)
+        function tryOpenEditModal(id, title, content, scheduleDate = '', scheduleTime = '', audience = 'all', audienceStudents = '[]', announcementUserId = null) {
+            // Only allow if current user is super admin or is the owner
+            if (currentUserRole !== 'super admin' && currentUserId != announcementUserId) {
+                // Show warning toast
+                const toast = document.getElementById('EditNotAllowedToast');
+                toast.style.display = 'flex';
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+                return;
+            }
+            // Otherwise, open the edit modal
+            openEditModal(id, title, content, scheduleDate, scheduleTime, audience, audienceStudents);
+        }
+        // Open Edit Modal 
         function openEditModal(id, title, content, scheduleDate = '', scheduleTime = '', audience = 'all', audienceStudents = '[]') {
             // Always parse audienceStudents as JSON
             try {
@@ -970,4 +988,21 @@
         });
     </script>
 
+    <div id="EditNotAllowedToast"
+        class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+        role="alert">
+        <div class="w-full flex justify-between">
+            <div class="flex items-center gap-4">
+                <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
+                <div>
+                    <h6 class="font-bold font-['Manrope']">
+                        You are not authorized to edit this announcement.
+                    </h6>
+                </div>
+            </div>
+            <button type="button"
+                class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+                onclick="document.getElementById('EditNotAllowedToast').style.display='none';">&times;</button>
+        </div>
+    </div>
 @endsection
