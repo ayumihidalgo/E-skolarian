@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Validation feedback elements
     const usernameInput = document.getElementById('editUsername');
     const emailInput = document.getElementById('editEmail');
+    const recoveryEmailInput = document.getElementById('editRecoveryEmail'); // Add this line
     const roleSelect = document.getElementById('editRoleName');
     const editAcronymField = document.getElementById('editAcronymField');
     const editAcronymInput = document.getElementById('editAcronym');
@@ -58,6 +59,8 @@ document.addEventListener('DOMContentLoaded', function () {
     usernameError.className = 'text-red-600 text-xs mt-1 hidden';
     const emailError = document.createElement('p');
     emailError.className = 'text-red-600 text-xs mt-1 hidden';
+    const recoveryEmailError = document.createElement('p'); // Add this line
+    recoveryEmailError.className = 'text-red-600 text-xs mt-1 hidden';
     const roleError = document.createElement('p');
     roleError.className = 'text-red-600 text-xs mt-1 hidden';
 
@@ -67,6 +70,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (emailInput) {
         emailInput.parentNode.insertBefore(emailError, emailInput.nextSibling);
+    }
+    if (recoveryEmailInput) { // Add this block
+        recoveryEmailInput.parentNode.insertBefore(recoveryEmailError, recoveryEmailInput.nextSibling);
     }
     if (roleSelect) {
         roleSelect.parentNode.insertBefore(roleError, roleSelect.nextSibling);
@@ -78,6 +84,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Reset form to initial state
             document.getElementById('editUsername').value = initialFormState.username || '';
             document.getElementById('editEmail').value = initialFormState.email || '';
+            document.getElementById('editRecoveryEmail').value = initialFormState.recoveryEmail || ''; // Add this line
             document.getElementById('editRoleName').value = initialFormState.roleName || '';
             
             // Reset validation states
@@ -93,9 +100,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function resetValidationState() {
         usernameError.classList.add('hidden');
         emailError.classList.add('hidden');
+        recoveryEmailError.classList.add('hidden'); // Add this line
         roleError.classList.add('hidden');
         usernameInput.classList.remove('border-red-500');
         emailInput.classList.remove('border-red-500');
+        recoveryEmailInput.classList.remove('border-red-500'); // Add this line
         roleSelect.classList.remove('border-red-500');
     }
 
@@ -134,6 +143,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
         emailInput.addEventListener('blur', function() {
             validateEmail().then(() => validateForm());
+        });
+    }
+
+    // Recovery Email validation
+    if (recoveryEmailInput) {
+        let recoveryEmailCheckTimeout;
+        
+        // Prevent invalid characters as user types
+        recoveryEmailInput.addEventListener('keypress', function (e) {
+            const char = String.fromCharCode(e.which);
+            // Allow: a-z, A-Z, 0-9, @, ., _, -, +
+            if (!/[a-zA-Z0-9@._\-+]/.test(char)) {
+                e.preventDefault();
+            }
+        });
+
+        recoveryEmailInput.addEventListener('input', function() {
+            // Remove any invalid characters that slipped through
+            this.value = this.value
+                .replace(/[^a-zA-Z0-9@._\-+]/g, '') // Only allow valid email characters
+                .replace(/\s+/g, ''); // Remove spaces
+        
+            clearTimeout(recoveryEmailCheckTimeout);
+            recoveryEmailCheckTimeout = setTimeout(() => {
+                validateRecoveryEmail().then(() => validateForm());
+            }, 300);
+        });
+
+        // Prevent pasting invalid content
+        recoveryEmailInput.addEventListener('paste', function(e) {
+            const paste = (e.clipboardData || window.clipboardData).getData('text');
+            if (!/^[a-zA-Z0-9@._\-+]*$/.test(paste)) {
+                e.preventDefault();
+            }
+        });
+
+        recoveryEmailInput.addEventListener('blur', function() {
+            validateRecoveryEmail().then(() => validateForm());
         });
     }
 
@@ -193,6 +240,7 @@ document.addEventListener('DOMContentLoaded', function () {
         initialFormState = {
             username: document.getElementById('editUsername').value.trim(),
             email: document.getElementById('editEmail').value.trim(),
+            recoveryEmail: document.getElementById('editRecoveryEmail').value.trim(), // Add this line
             roleName: document.getElementById('editRoleName').value
         };
         // Initially disable the save button
@@ -205,12 +253,14 @@ document.addEventListener('DOMContentLoaded', function () {
         const currentValues = {
             username: document.getElementById('editUsername').value.trim(),
             email: document.getElementById('editEmail').value.trim(),
+            recoveryEmail: document.getElementById('editRecoveryEmail').value.trim(), // Add this line
             roleName: document.getElementById('editRoleName').value
         };
 
         const hasChanged = 
             currentValues.username !== initialFormState.username ||
             currentValues.email !== initialFormState.email ||
+            currentValues.recoveryEmail !== initialFormState.recoveryEmail || // Add this line
             currentValues.roleName !== initialFormState.roleName;
 
         // Enable/disable save button based on changes
@@ -299,6 +349,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Get current user data
             const username = document.getElementById('userUsername').textContent;
             const email = document.getElementById('userEmail').textContent;
+            const recoveryEmail = document.getElementById('userRecoveryEmail').textContent; // Add this line
             const roleName = document.getElementById('userRole').textContent;
             const acronym = document.getElementById('userAcronym')?.textContent;
 
@@ -314,8 +365,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 const usernameInput = document.getElementById('editUsername');
                 const roleNameInput = document.getElementById('editRoleName');
                 const emailInput = document.getElementById('editEmail');
+                const recoveryEmailInput = document.getElementById('editRecoveryEmail'); // Add this line
 
-                // For admin users, only email should be editable
+                // For admin users, only email and recovery email should be editable
                 if (isAdmin) {
                     // Lock username and role
                     usernameInput.readOnly = true;
@@ -323,9 +375,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     usernameInput.classList.add('bg-gray-100', 'cursor-not-allowed');
                     roleNameInput.classList.add('bg-gray-100', 'cursor-not-allowed');
                     
-                    // Keep email editable
+                    // Keep email and recovery email editable
                     emailInput.readOnly = false;
+                    recoveryEmailInput.readOnly = false; // Add this line
                     emailInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                    recoveryEmailInput.classList.remove('bg-gray-100', 'cursor-not-allowed'); // Add this line
 
                     // Hide acronym field
                     if (editAcronymField) {
@@ -337,6 +391,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 usernameInput.value = username;
                 roleNameInput.value = roleName;
                 emailInput.value = email;
+                recoveryEmailInput.value = recoveryEmail === 'Not set' ? '' : recoveryEmail; // Add this line
                 document.getElementById('editActualRole').value = isAdmin ? 'admin' : 'student';
 
                 // Handle acronym field for student organizations
@@ -362,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Add input event listeners to form fields
     if (editUserForm) {
-        const formInputs = ['editUsername', 'editEmail', 'editRoleName'];
+        const formInputs = ['editUsername', 'editEmail', 'editRecoveryEmail', 'editRoleName']; // Add editRecoveryEmail
         formInputs.forEach(inputId => {
             const element = document.getElementById(inputId);
             if (element) {
@@ -521,6 +576,138 @@ document.addEventListener('DOMContentLoaded', function () {
         return true;
     }
 
+    // Recovery Email validation with all validations from primary email
+    if (recoveryEmailInput) {
+        let recoveryEmailCheckTimeout;
+        
+        // Prevent invalid characters as user types
+        recoveryEmailInput.addEventListener('keypress', function (e) {
+            const char = String.fromCharCode(e.which);
+            // Allow: a-z, A-Z, 0-9, @, ., _, -, +
+            if (!/[a-zA-Z0-9@._\-+]/.test(char)) {
+                e.preventDefault();
+            }
+        });
+
+        recoveryEmailInput.addEventListener('input', function() {
+            // Remove any invalid characters that slipped through
+            this.value = this.value
+                .replace(/[^a-zA-Z0-9@._\-+]/g, '') // Only allow valid email characters
+                .replace(/\s+/g, ''); // Remove spaces
+        
+            clearTimeout(recoveryEmailCheckTimeout);
+            recoveryEmailCheckTimeout = setTimeout(() => {
+                validateRecoveryEmail().then(() => validateForm());
+            }, 300);
+        });
+
+        // Prevent pasting invalid content
+        recoveryEmailInput.addEventListener('paste', function(e) {
+            const paste = (e.clipboardData || window.clipboardData).getData('text');
+            if (!/^[a-zA-Z0-9@._\-+]*$/.test(paste)) {
+                e.preventDefault();
+            }
+        });
+
+        recoveryEmailInput.addEventListener('blur', function() {
+            validateRecoveryEmail().then(() => validateForm());
+        });
+    }
+
+    // Recovery Email validation function with all primary email validations
+    async function validateRecoveryEmail() {
+        const recoveryEmail = recoveryEmailInput.value.trim();
+        const MAX_EMAIL_LENGTH = 50;
+        const ALLOWED_DOMAINS = ['gmail.com', 'yahoo.com', 'iskolarngbayan.pup.edu.ph'];
+
+        recoveryEmailError.classList.add('hidden');
+        recoveryEmailInput.classList.remove('border-red-500');
+
+        // Recovery email is optional, so empty is valid
+        if (recoveryEmail === '') {
+            return true;
+        }
+
+        // Length validation
+        if (recoveryEmail.length > MAX_EMAIL_LENGTH) {
+            showRecoveryEmailError(`Recovery email must be less than ${MAX_EMAIL_LENGTH} characters`);
+            return false;
+        }
+
+        // Basic email format validation
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(recoveryEmail)) {
+            showRecoveryEmailError('Please enter a valid recovery email address');
+            return false;
+        }
+
+        // Extract domain from email
+        const domain = recoveryEmail.split('@')[1]?.toLowerCase();
+        
+        // Domain validation
+        if (!domain || !ALLOWED_DOMAINS.includes(domain)) {
+            showRecoveryEmailError('Only @gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph email addresses are accepted');
+            return false;
+        }
+
+        // Check for number instead of letter in domain (.c0m instead of .com)
+        if (/\.c0m$|\.c0m@/.test(recoveryEmail.toLowerCase())) {
+            showRecoveryEmailError('Invalid domain format');
+            return false;
+        }
+
+        // Check if recovery email is same as primary email
+        const primaryEmail = emailInput.value.trim();
+        if (recoveryEmail.toLowerCase() === primaryEmail.toLowerCase()) {
+            showRecoveryEmailError('Recovery email cannot be the same as primary email');
+            return false;
+        }
+
+        // Only check for duplicate recovery email if it's different from the original
+        if (recoveryEmail.toLowerCase() !== initialFormState.recoveryEmail.toLowerCase()) {
+            try {
+                const exists = await checkRecoveryEmailExists(recoveryEmail);
+                if (exists) {
+                    showRecoveryEmailError('This recovery email is already in use');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error checking recovery email:', error);
+                showRecoveryEmailError('Error checking recovery email availability');
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Recovery Email existence check function
+    async function checkRecoveryEmailExists(email) {
+        if (!email) return false; // Empty recovery email is allowed
+
+        const response = await fetch('/check-recovery-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ 
+                recovery_email: email.toLowerCase(),
+                exclude_id: window.currentUserId  // Exclude current user
+            })
+        });
+        const data = await response.json();
+        return data.exists;
+    }
+
+    // Helper function for showing recovery email errors
+    function showRecoveryEmailError(message) {
+        recoveryEmailError.textContent = message;
+        recoveryEmailError.classList.remove('hidden');
+        recoveryEmailInput.classList.add('border-red-500');
+    }
+
+    // Validation for role selection
     async function validateRole() {
         // Reset error state
         roleError.classList.add('hidden');
@@ -568,6 +755,12 @@ document.addEventListener('DOMContentLoaded', function () {
         emailInput.classList.add('border-red-500');
     }
 
+    function showRecoveryEmailError(message) {
+        recoveryEmailError.textContent = message;
+        recoveryEmailError.classList.remove('hidden');
+        recoveryEmailInput.classList.add('border-red-500');
+    }
+
     function showRoleError(message) {
         roleError.textContent = message;
         roleError.classList.remove('hidden');
@@ -578,13 +771,16 @@ document.addEventListener('DOMContentLoaded', function () {
     async function validateForm() {
         const isUsernameValid = await validateUsername();
         const isEmailValid = await validateEmail();
+        const isRecoveryEmailValid = await validateRecoveryEmail(); // Add this line
         const isRoleValid = await validateRole();
         
-        saveButton.disabled = !(isUsernameValid && isEmailValid && isRoleValid);
-        saveButton.classList.toggle('opacity-50', !isUsernameValid || !isEmailValid || !isRoleValid);
-        saveButton.classList.toggle('cursor-not-allowed', !isUsernameValid || !isEmailValid || !isRoleValid);
+        const allValid = isUsernameValid && isEmailValid && isRecoveryEmailValid && isRoleValid;
+        
+        saveButton.disabled = !allValid;
+        saveButton.classList.toggle('opacity-50', !allValid);
+        saveButton.classList.toggle('cursor-not-allowed', !allValid);
 
-        return isUsernameValid && isEmailValid && isRoleValid;
+        return allValid;
     }
 
     // Handle Edit User Form Submission
@@ -602,6 +798,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 formData.append('_method', 'PUT');
                 formData.append('id', window.currentUserId);
                 formData.append('email', document.getElementById('editEmail').value.trim());
+                formData.append('recovery_email', document.getElementById('editRecoveryEmail').value.trim()); // Add this line
                 formData.append('username', document.getElementById('editUsername').value);
                 formData.append('role_name', document.getElementById('editRoleName').value);
                 formData.append('role', document.getElementById('editActualRole').value);
@@ -616,6 +813,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (submitBtn) {
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = 'Saving...';
+                }
+
+                // Debug: Log form data
+                console.log('Form data being sent:');
+                for (let [key, value] of formData.entries()) {
+                    console.log(key, value);
                 }
 
                 const response = await fetch(`/users/${window.currentUserId}`, {
