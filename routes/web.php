@@ -162,8 +162,11 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiv
     Route::get('/super-admin/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('super-admin.reports');
 
 
-    Route::get('/super-admin/activity-logs', [App\Http\Controllers\SuperAdminController::class, 'activityLogs'])->name('super-admin.activity-logs');
+    Route::get('/super-admin/reports/all', [\App\Http\Controllers\SuperAdminController::class, 'allReports'])->name('super-admin.reports.all');
 
+
+    Route::get('/super-admin/activity-logs', [App\Http\Controllers\SuperAdminController::class, 'activityLogs'])->name('super-admin.activity-logs');
+    Route::get('/super-admin/activity-logs/all', [\App\Http\Controllers\SuperAdminController::class, 'allActivityLogs'])->name('super-admin.activity-logs.all');
 });
 
 Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
@@ -493,7 +496,6 @@ Route::get('/records/{id}', [StudentTrackerController::class, 'show'])->name('re
 Route::get('/loading', function () {
     return view('loading');
 });
-
 
 // Redirect /login to landing page
 Route::get('/login', function () {
