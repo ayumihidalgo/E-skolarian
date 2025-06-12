@@ -92,7 +92,7 @@ class SuperAdminController extends Controller
             'id', 
             'username', 
             'email', 
-            'recovery_email', // Add this line
+            'recovery_email',
             'role', 
             'role_name', 
             'organization_acronym', 
@@ -331,5 +331,17 @@ class SuperAdminController extends Controller
         $exists = $query->exists();
         
         return response()->json(['exists' => $exists]);
+    }
+
+    public function allActivityLogs()
+    {
+        $activities = \App\Models\ActivityLog::with('user')->orderBy('created_at', 'desc')->get();
+        return response()->json($activities);
+    }
+
+    public function allReports()
+    {
+        $reports = \App\Models\ProblemReport::orderBy('created_at', 'desc')->get();
+        return response()->json($reports);
     }
 }

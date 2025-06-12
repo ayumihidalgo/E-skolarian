@@ -4,18 +4,19 @@
 @include('components.superAdminNavigation')
 
 <div class="max-h-screen bg-[#F2F4F7] bg-opacity-30 px-10 py-8">
-            <div class="flex justify-between items-center mb-4">
-                <!-- Back to Dashboard Button -->
-                <a href="{{ route('super-admin.dashboard') }}"
-                    class="bg-[#F2F4F7] hover:text-red-800 text-[#7A1212] px-4 py-2 rounded-[16px] font-sm font-[Lexend] inline-flex items-center self-start mb-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
-                    </svg>
-                    Back to Dashboard
-                </a>
-            </div>
+    <div class="flex justify-between items-center mb-4">
+        <!-- Back to Dashboard Button -->
+        <a href="{{ route('super-admin.dashboard') }}"
+            class="bg-[#F2F4F7] hover:text-red-800 text-[#7A1212] px-4 py-2 rounded-[16px] font-sm font-[Lexend] inline-flex items-center self-start mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+            </svg>
+            Back to Dashboard
+        </a>
+    </div>
+    
     <div class="bg-white rounded-[25px] shadow-lg overflow-hidden mb-12" style= "width: 100%; height: 725px; flex-shrink:0;">
-    <!-- Header with title and filters -->
+        <!-- Header with title and filters -->
         <div class="px-8 py-4 flex justify-between items-center">
             <h2 class="text-[30px] font-bold text-[#161616] font-[Lexend]">REPORTS</h2>
             
@@ -55,9 +56,9 @@
                 </button>
             </div>
         </div>
-        <!-- Reports Table Container with vertical scrollbar -->
+        
+        <!-- Reports Table Container -->
         <div class="overflow-x-auto rounded-md mx-auto">
-            <!-- Reports Table -->
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-white">
@@ -65,25 +66,16 @@
                             <th class="w-[10%] px-12 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">
                                 <div class="flex items-center">
                                     <span class="whitespace-nowrap text-black">Timestamp</span>
-                                    <div class="flex flex-col ml-2">
-                                       
-                                    </div>
                                 </div>
                             </th>
                             <th class="w-[15%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">
                                 <div class="flex items-center">
                                     <span class="whitespace-nowrap text-black">Report ID</span>
-                                    <div class="flex flex-col ml-2">
-                                      
-                                    </div>
                                 </div>
                             </th>
                             <th class="w-[25%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">
                                 <div class="flex items-center">
                                     <span class="whitespace-nowrap">Email</span>
-                                    <div class="flex flex-col ml-2">
-                                     
-                                    </div>
                                 </div>
                             </th>
                             <th class="w-[45%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">
@@ -91,105 +83,69 @@
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-[#D9D9D9]/70">
-                    <!-- No Results Row - Initially Hidden -->
-                    <tr id="noResultsRow" class="hidden">
-                        <td colspan="4" class="text-center py-12 text-gray-500 font-[Lexend]">
-                            <div class="flex flex-col items-center justify-center">
-                                <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
-                                <span class="text-lg font-semibold mb-2">No reports found</span>
-                                <span class="text-l text-gray-400">Try adjusting your search or filter to find what you're looking for.</span>
-                                <button id="clearSearchBtn"
-                                    class="mt-6 px-4 py-2 bg-[#7A1212] text-white rounded-lg font-[Lexend] hover:bg-red-800 transition cursor-pointer focus:outline-none focus:ring-0">
-                                    Clear Search
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-    
-                    <!-- Data Rows -->
-                    @forelse($reports as $report)
-                        <tr class="cursor-pointer hover:bg-gray-50" 
-                                onclick="openReportModal({{ 
- 
-                                    json_encode([
-                                        'id' => $report->id,
-                                        'created_at' => $report->created_at,
-                                        'email' => $report->email,
-                                        'description' => $report->description,
-                                       'attachment' => $report->file_path ? asset('storage/' . $report->file_path) : null
-                                    ]) 
-                            }})">
-                            <td class="w-[10%] px-13 py-2 whitespace-nowrap text-l text-[#000000] font-[Lexend]">
-                                {{ $report->created_at->format('F j, Y') }}<br>
-                                <span class="text-m text-gray-500">{{ $report->created_at->format('h:i A') }}</span>
-                            </td>
-                            <td class="w-[15%] px-6 py-1 whitespace-nowrap">
-                                RPT-{{ str_pad($report->id, 3, '0', STR_PAD_LEFT) }}
-                            </td>
-                            <td class="w-[25%] px-6 py-2 whitespace-nowrap">
-                                {{ $report->email }}
-                            </td>
-                            <td class="w-[45%] px-6 py-2 text-l text-gray-900 font-[Lexend] max-w-l truncate">
-                                <div class="max-w-full overflow-hidden text-ellipsis">
-                                    {{ Str::limit($report->description, 85) }}
+                    <tbody class="divide-y divide-[#D9D9D9]/70" id="reportsTableBody">
+                        <!-- No Results Row - Initially Hidden -->
+                        <tr id="noResultsRow" class="hidden">
+                            <td colspan="4" class="text-center py-12 text-gray-500 font-[Lexend]">
+                                <div class="flex flex-col items-center justify-center">
+                                    <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
+                                    <span class="text-lg font-semibold mb-2">No reports found</span>
+                                    <span class="text-l text-gray-400">Try adjusting your search or filter to find what you're looking for.</span>
+                                    <button id="clearSearchBtn"
+                                        class="mt-6 px-4 py-2 bg-[#7A1212] text-white rounded-lg font-[Lexend] hover:bg-red-800 transition cursor-pointer focus:outline-none focus:ring-0">
+                                        Clear Search
+                                    </button>
                                 </div>
                             </td>
                         </tr>
+
+                        <!-- Data Rows -->
+                        @forelse($reports as $report)
+                            <tr class="cursor-pointer hover:bg-gray-50" 
+                                    onclick="openReportModal({{ 
+                                        json_encode([
+                                            'id' => $report->id,
+                                            'created_at' => $report->created_at,
+                                            'email' => $report->email,
+                                            'description' => $report->description,
+                                           'attachment' => $report->file_path ? asset('storage/' . $report->file_path) : null
+                                        ]) 
+                                }})">
+                                <td class="w-[10%] px-13 py-2 whitespace-nowrap text-l text-[#000000] font-[Lexend]">
+                                    {{ $report->created_at->format('F j, Y') }}<br>
+                                    <span class="text-m text-gray-500">{{ $report->created_at->format('h:i A') }}</span>
+                                </td>
+                                <td class="w-[15%] px-6 py-1 whitespace-nowrap">
+                                    RPT-{{ str_pad($report->id, 3, '0', STR_PAD_LEFT) }}
+                                </td>
+                                <td class="w-[25%] px-6 py-2 whitespace-nowrap">
+                                    {{ $report->email }}
+                                </td>
+                                <td class="w-[45%] px-6 py-2 text-l text-gray-900 font-[Lexend] max-w-l truncate">
+                                    <div class="max-w-full overflow-hidden text-ellipsis">
+                                        {{ Str::limit($report->description, 85) }}
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
                         @endforelse
-                        </tbody>
-                    </table>
-                </div>
-              <!-- Pagination always visible -->
-                <div class="mt-4 flex justify-center mb-1 absolute bottom-20 left-0 w-full p-2 text-center">    
-                    <nav>
-                        <ul class="inline-flex items-center space-x-2">
-                            <!-- First/Previous Page -->
-                            <li>
-                                @if ($reports->currentPage() == 1)
-                                    <span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">
-                                        <
-                                    </span>
-                                @else
-                                    <a href="{{ $reports->url(1) }}" 
-                                       class="px-3 py-1 rounded-lg text-black">
-                                        <
-                                    </a>
-                                @endif
-                            </li>
-
-                            <!-- Page Numbers -->
-                            @for ($i = 1; $i <= $reports->lastPage(); $i++)
-                                <li>
-                                    <a href="{{ $reports->url($i) }}"
-                                        class="px-3 py-1 rounded-lg {{ $reports->currentPage() == $i ? 'bg-[#4D0F0F] text-white' : 'text-black' }}">
-                                        {{ $i }}
-                                    </a>
-                                </li>
-                            @endfor
-
-                            <!-- Next/Last Page -->
-                            <li>
-                                @if ($reports->currentPage() == $reports->lastPage())
-                                    <span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">
-                                        >
-                                    </span>
-                                @else
-                                    <a href="{{ $reports->url($reports->lastPage()) }}" 
-                                       class="px-3 py-1 rounded-lg text-black">
-                                        >
-                                    </a>
-                                @endif
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="mt-4 flex justify-center mb-1 absolute bottom-20 left-0 w-full p-2 text-center">    
+                <nav>
+                    <ul class="inline-flex items-center space-x-2">
+                        <!-- Pagination will be dynamically updated by JavaScript -->
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
 </div>
 
-
+<!-- Report Modal (Keep existing modal code) -->
 <div id="reportModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 z-50 hidden flex items-center justify-center">
     <div class="bg-white w-full h-full relative flex flex-col">
         <!-- Fixed navigation header at top -->
@@ -202,10 +158,9 @@
             <div class="px-6 py-4 flex justify-between items-center">
                 <h1 class="text-[40px] font-bold text-[#161616] font-[Lexend]">REPORT</h1>
             </div>
-                <!-- Report Card Container -->
+            <!-- Report Card Container -->
             <div class="overflow-hidden rounded-[25px] shadow bg-[#FFFFFFA6] mt-8" style="width: 100%; height: 450px; flex-shrink:0;">
                 <div class="overflow-hidden rounded-[25px] shadow bg-[#FFFFFFA6]" style="width: 100%; height: 450px; flex-shrink:0;">
-
                     <!-- Report Header with close button -->
                     <div class="bg-white px-6 py-4 border-b border-gray-300 flex justify-center items-center relative">
                         <h2 id="modalReportId" class="text-[30px] font-semibold text-black font-[Lexend]">REPORT-001</h2>
@@ -215,7 +170,6 @@
                             </svg>
                         </button>
                     </div>
-
                     <!-- Report Content -->
                     <div class="px-12 py-6 space-y-4">
                         <!-- Timestamp -->
@@ -243,11 +197,11 @@
                 </div>
             </div>
             <!-- Email Response Button -->
-                <div class="text-center mt-6">
-                    <button onclick="emailResponse()" class="bg-green-600 text-white px-6 py-2 rounded-[10px] shadow font-[Lexend] text-xl font-semibold hover:bg-[#28B309] transition-colors curosr-pointer">
-                        Email Response
-                    </button>
-                </div>
+            <div class="text-center mt-6">
+                <button onclick="emailResponse()" class="bg-green-600 text-white px-6 py-2 rounded-[10px] shadow font-[Lexend] text-xl font-semibold hover:bg-[#28B309] transition-colors curosr-pointer">
+                    Email Response
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -296,167 +250,354 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const monthFilter = document.getElementById('monthFilter');
-    const yearFilter = document.getElementById('yearFilter');
-
-    // Set current values from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('month')) {
-        monthFilter.value = urlParams.get('month');
-    }
-    if (urlParams.get('year')) {
-        yearFilter.value = urlParams.get('year');
-    }
-
-    // Handle filter changes
-    function applyFilters() {
-        const month = monthFilter.value;
-        const year = yearFilter.value;
-
-        const url = new URL(window.location);
-        url.searchParams.delete('page'); // Reset pagination
-
-        if (month) {
-            url.searchParams.set('month', month);
-        } else {
-            url.searchParams.delete('month');
-        }
-
-        if (year) {
-            url.searchParams.set('year', year);
-        } else {
-            url.searchParams.delete('year');
-        }
-
-        window.location.href = url.toString();
-    }
-
-    monthFilter.addEventListener('change', applyFilters);
-    yearFilter.addEventListener('change', applyFilters);
-});
-
-// Modal functions
-function openReportModal(report) {
-    // Mark report as viewed via AJAX
-    fetch(`/reports/${report.id}/mark-as-viewed`, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-            'Accept': 'application/json',
-        }
-    }).then(response => response.json())
-      .then(data => {
-          // Refresh the notification count
-          const notificationBadge = document.querySelector('.absolute.bg-red-500.rounded-full');
-          if (notificationBadge) {
-              const newCount = parseInt(notificationBadge.textContent) - 1;
-              if (newCount <= 0) {
-                  notificationBadge.remove();
-              } else {
-                  notificationBadge.textContent = newCount;
-              }
-          }
-      });
-
-    document.getElementById('modalReportId').textContent = 'RPT-' + String(report.id).padStart(3, '0');
-
-    const date = new Date(report.created_at);
-    document.getElementById('modalTimestamp').textContent = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-
-    document.getElementById('modalEmail').textContent = report.email;
-
-    // Format description with approximately 50 words per line
-    const description = report.description;
-    const words = description.split(' ');
-    const linesOfWords = [];
-    let currentLine = [];
-
-    for (let word of words) {
-        currentLine.push(word);
-        if (currentLine.length >= 50) {
-            linesOfWords.push(currentLine.join(' '));
-            currentLine = [];
-        }
-    }
-    if (currentLine.length > 0) {
-        linesOfWords.push(currentLine.join(' '));
-    }
-
-    document.getElementById('modalDescription').textContent = linesOfWords.join('\n');
-
-    // Handle attachment
-    const attachmentDiv = document.getElementById('modalAttachment');
-    if (report.attachment) {
-        attachmentDiv.innerHTML = `
-            <a href="${report.attachment}" 
-               target="_blank" 
-               class="inline-flex items-center bg-yellow-500 px-4 py-2 rounded text-black font-bold hover:bg-yellow-600 transition-colors">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                    </path>
-                </svg>
-                <span class="whitespace-nowrap">View Attachment</span>
-            </a>`;
-    } else {
-        attachmentDiv.innerHTML = `
-        <span class="inline-block bg-yellow-500 px-4 py-2 rounded text-black font-bold">
-            No attachment provided
-        </span>`;
-    }
-
-    // Show modal
-    const modal = document.getElementById('reportModal');
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-}
-
-function closeReportModal() {
-    const modal = document.getElementById('reportModal');
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-}
-
-function emailResponse() {
-    const email = document.getElementById('modalEmail').textContent;
-    const reportId = document.getElementById('modalReportId').textContent;
-
-    // Create mailto link
-    const subject = encodeURIComponent('Response to ' + reportId);
-    const mailtoLink = 'mailto:' + email + '?subject=' + subject;
-
-    window.location.href = mailtoLink;
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', function(event) {
-    const modal = document.getElementById('reportModal');
-    if (event.target === modal) {
-        closeReportModal();
-    }
-});
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
     // Get all required elements
     const filterModal = document.getElementById('filterModal');
     const openFilterModalBtn = document.getElementById('openFilterModal');
     const applyFiltersBtn = document.getElementById('applyFilters');
     const clearFiltersBtn = document.getElementById('clearFilters');
-    const startDateInput = document.getElementById('startDate');
-    const endDateInput = document.getElementById('endDate');
-    const tableBody = document.querySelector('tbody');
+    const tableBody = document.getElementById('reportsTableBody');
     const noResultsRow = document.getElementById('noResultsRow');
     const searchInput = document.getElementById('searchInput');
     const clearSearchBtn = document.getElementById('clearSearchBtn');
-    const quickFilterBtns = document.querySelectorAll('[data-filter]');
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+    const quickFilterBtns = filterModal.querySelectorAll('[data-filter]');
+
+    // Store all reports data and pagination
+    let allReports = [];
+    let filteredReports = [];
+    let currentPage = 1;
+    const itemsPerPage = 8;
+
+    // Track current filters
+    let currentFilterType = null;
+    let currentStartDate = null;
+    let currentEndDate = null;
+    let currentSearchTerm = '';
+
+    // Fetch all reports from server on page load
+    async function fetchAllReports() {
+        try {
+            const response = await fetch('/super-admin/reports/all');
+            allReports = await response.json();
+            filteredReports = [...allReports];
+            return true;
+        } catch (error) {
+            console.error('Error fetching reports:', error);
+            return false;
+        }
+    }
+
+    // Render reports in table with pagination
+    function renderReports(reports, searchTerm = '') {
+        tableBody.innerHTML = '';
+
+        if (reports.length === 0) {
+            noResultsRow.classList.remove('hidden');
+            updatePagination(0);
+            return;
+        }
+
+        // Calculate pagination
+        const totalPages = Math.ceil(reports.length / itemsPerPage);
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        const currentPageReports = reports.slice(startIndex, endIndex);
+
+        // Render current page reports
+        currentPageReports.forEach(report => {
+            const row = createReportRow(report);
+            
+            // Apply search highlighting if search term exists
+            if (searchTerm) {
+                highlightSearchTerm(row, searchTerm);
+            }
+            
+            tableBody.appendChild(row);
+        });
+
+        // Add no results row to DOM
+        tableBody.appendChild(noResultsRow);
+        noResultsRow.classList.add('hidden');
+
+        // Update pagination controls
+        updatePagination(totalPages);
+    }
+
+    // Create report row element
+    function createReportRow(report) {
+        const row = document.createElement('tr');
+        row.className = 'cursor-pointer hover:bg-gray-50';
+        
+        const dateObj = new Date(report.created_at);
+        const formattedDate = dateObj.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        });
+        const formattedTime = dateObj.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+
+        row.innerHTML = `
+            <td class="w-[10%] px-13 py-2 whitespace-nowrap text-l text-[#000000] font-[Lexend]">
+                ${formattedDate}<br>
+                <span class="text-m text-gray-500">${formattedTime}</span>
+            </td>
+            <td class="w-[15%] px-6 py-1 whitespace-nowrap">
+                RPT-${String(report.id).padStart(3, '0')}
+            </td>
+            <td class="w-[25%] px-6 py-2 whitespace-nowrap">
+                ${report.email}
+            </td>
+            <td class="w-[45%] px-6 py-2 text-l text-gray-900 font-[Lexend] max-w-l truncate">
+                <div class="max-w-full overflow-hidden text-ellipsis">
+                    ${report.description.length > 85 ? report.description.substring(0, 85) + '...' : report.description}
+                </div>
+            </td>
+        `;
+
+        // Add click event to open modal
+        row.addEventListener('click', function() {
+            openReportModal({
+                id: report.id,
+                created_at: report.created_at,
+                email: report.email,
+                description: report.description,
+                attachment: report.file_path ? `{{ asset('storage/') }}/${report.file_path}` : null
+            });
+        });
+
+        return row;
+    }
+
+    // Update pagination controls
+    function updatePagination(totalPages) {
+        const paginationContainer = document.querySelector('nav ul');
+        if (!paginationContainer) return;
+
+        paginationContainer.innerHTML = '';
+
+        if (totalPages <= 1) {
+            paginationContainer.style.display = 'none';
+            return;
+        }
+
+        paginationContainer.style.display = 'flex';
+
+        // Calculate the range of pages to show (5 pages max)
+        const maxVisiblePages = 5;
+        let startPage, endPage;
+
+        if (totalPages <= maxVisiblePages) {
+            // Show all pages if total is 5 or less
+            startPage = 1;
+            endPage = totalPages;
+        } else {
+            // Calculate start and end based on current page
+            const halfVisible = Math.floor(maxVisiblePages / 2);
+            
+            if (currentPage <= halfVisible + 1) {
+                // Near the beginning
+                startPage = 1;
+                endPage = maxVisiblePages;
+            } else if (currentPage >= totalPages - halfVisible) {
+                // Near the end
+                startPage = totalPages - maxVisiblePages + 1;
+                endPage = totalPages;
+            } else {
+                // In the middle
+                startPage = currentPage - halfVisible;
+                endPage = currentPage + halfVisible;
+            }
+        }
+
+        // Previous button
+        const prevLi = document.createElement('li');
+        if (currentPage === 1) {
+            prevLi.innerHTML = '<span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed"><</span>';
+        } else {
+            prevLi.innerHTML = `<button class="px-3 py-1 rounded-lg text-black hover:bg-gray-100" onclick="changePage(${currentPage - 1})"><</button>`;
+        }
+        paginationContainer.appendChild(prevLi);
+
+        // First page + ellipsis (if needed)
+        if (startPage > 1) {
+            const firstLi = document.createElement('li');
+            firstLi.innerHTML = `<button class="px-3 py-1 rounded-lg text-black hover:bg-gray-100" onclick="changePage(1)">1</button>`;
+            paginationContainer.appendChild(firstLi);
+
+            if (startPage > 2) {
+                const ellipsisLi = document.createElement('li');
+                ellipsisLi.innerHTML = '<span class="px-3 py-1 text-gray-400">...</span>';
+                paginationContainer.appendChild(ellipsisLi);
+            }
+        }
+
+        // Page numbers in range
+        for (let i = startPage; i <= endPage; i++) {
+            const pageLi = document.createElement('li');
+            const isActive = i === currentPage;
+            pageLi.innerHTML = `
+                <button class="px-3 py-1 rounded-lg ${isActive ? 'bg-[#4D0F0F] text-white' : 'text-black hover:bg-gray-100'}" 
+                        onclick="changePage(${i})">${i}</button>
+            `;
+            paginationContainer.appendChild(pageLi);
+        }
+
+        // Last page + ellipsis (if needed)
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsisLi = document.createElement('li');
+                ellipsisLi.innerHTML = '<span class="px-3 py-1 text-gray-400">...</span>';
+                paginationContainer.appendChild(ellipsisLi);
+            }
+
+            const lastLi = document.createElement('li');
+            lastLi.innerHTML = `<button class="px-3 py-1 rounded-lg text-black hover:bg-gray-100" onclick="changePage(${totalPages})">${totalPages}</button>`;
+            paginationContainer.appendChild(lastLi);
+        }
+
+        // Next button
+        const nextLi = document.createElement('li');
+        if (currentPage === totalPages) {
+            nextLi.innerHTML = '<span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">></span>';
+        } else {
+            nextLi.innerHTML = `<button class="px-3 py-1 rounded-lg text-black hover:bg-gray-100" onclick="changePage(${currentPage + 1})">></button>`;
+        }
+        paginationContainer.appendChild(nextLi);
+    }
+
+    // Change page function
+    window.changePage = function(page) {
+        currentPage = page;
+        const searchTerm = searchInput.value.trim();
+        let displayReports = filteredReports;
+        
+        if (searchTerm) {
+            displayReports = searchReports(filteredReports, searchTerm);
+        }
+        
+        renderReports(displayReports, searchTerm);
+    };
+
+    // Reset to first page
+    function resetToFirstPage() {
+        currentPage = 1;
+    }
+
+    // Filter reports based on criteria
+    function filterReports(reports, filterType, startDate = null, endDate = null) {
+        const now = new Date();
+        
+        return reports.filter(report => {
+            const reportDate = new Date(report.created_at);
+            
+            switch(filterType) {
+                case 'today':
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const repToday = new Date(reportDate);
+                    repToday.setHours(0, 0, 0, 0);
+                    return repToday.getTime() === today.getTime();
+                    
+                case 'this-week':
+                    const weekStart = new Date(now);
+                    weekStart.setDate(now.getDate() - now.getDay());
+                    weekStart.setHours(0, 0, 0, 0);
+                    const weekEnd = new Date(weekStart);
+                    weekEnd.setDate(weekStart.getDate() + 6);
+                    weekEnd.setHours(23, 59, 59, 999);
+                    return reportDate >= weekStart && reportDate <= weekEnd;
+                    
+                case 'this-month':
+                    return reportDate.getMonth() === now.getMonth() && 
+                           reportDate.getFullYear() === now.getFullYear();
+                           
+                case 'custom':
+                    if (startDate && endDate) {
+                        const start = new Date(startDate);
+                        start.setHours(0, 0, 0, 0);
+                        const end = new Date(endDate);
+                        end.setHours(23, 59, 59, 999);
+                        return reportDate >= start && reportDate <= end;
+                    } else if (startDate) {
+                        const start = new Date(startDate);
+                        start.setHours(0, 0, 0, 0);
+                        return reportDate >= start;
+                    } else if (endDate) {
+                        const end = new Date(endDate);
+                        end.setHours(23, 59, 59, 999);
+                        return reportDate <= end;
+                    }
+                    return true;
+                    
+                default:
+                    return true;
+            }
+        });
+    }
+
+    // Sort reports
+    function sortReports(reports, sortType) {
+        const sorted = [...reports];
+        
+        if (sortType === 'newest') {
+            return sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        } else if (sortType === 'oldest') {
+            return sorted.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        }
+        
+        return sorted;
+    }
+
+    // Search reports
+    function searchReports(reports, searchTerm) {
+        if (!searchTerm) return reports;
+        
+        const term = searchTerm.toLowerCase();
+        return reports.filter(report => {
+            const dateStr = new Date(report.created_at).toLocaleDateString();
+            const reportId = `RPT-${String(report.id).padStart(3, '0')}`;
+            const email = report.email || '';
+            const description = report.description || '';
+            
+            return dateStr.toLowerCase().includes(term) ||
+                   reportId.toLowerCase().includes(term) ||
+                   email.toLowerCase().includes(term) ||
+                   description.toLowerCase().includes(term);
+        });
+    }
+
+    // Highlight search terms
+    function highlightSearchTerm(row, searchTerm) {
+        if (!searchTerm) return;
+        
+        const cells = row.querySelectorAll('td');
+        cells.forEach(cell => {
+            const text = cell.textContent;
+            if (text.toLowerCase().includes(searchTerm.toLowerCase())) {
+                const regex = new RegExp(`(${searchTerm})`, 'gi');
+                cell.innerHTML = cell.innerHTML.replace(regex, '<mark style="background-color: yellow;">$1</mark>');
+            }
+        });
+    }
+
+    // Initialize page
+    async function initializePage() {
+        const success = await fetchAllReports();
+        if (!success) {
+            console.error('Failed to load reports data');
+            return;
+        }
+        renderReports(filteredReports);
+    }
 
     // Toggle filter modal
     openFilterModalBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        const buttonRect = this.getBoundingClientRect();
-        filterModal.style.top = `${buttonRect.bottom + 5}px`;
-        filterModal.style.right = `${window.innerWidth - buttonRect.right}px`;
         filterModal.classList.toggle('hidden');
     });
 
@@ -467,22 +608,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Parse date string to Date object
-    function parseDate(dateStr) {
-        const parts = dateStr.split(',')[0].trim().split(' ');
-        const month = new Date(Date.parse(parts[0] + " 1, 2012")).getMonth();
-        const day = parseInt(parts[1]);
-        const year = parseInt(parts[2] || new Date().getFullYear());
-        return new Date(year, month, day);
-    }
-
     // Quick filter buttons
     quickFilterBtns.forEach(btn => {
         btn.addEventListener('click', function() {
             const filterType = this.dataset.filter;
-            const now = new Date();
             
-            // Reset custom range inputs
+            // Store current filter state
+            currentFilterType = filterType;
+            if (filterType !== 'custom') {
+                currentStartDate = null;
+                currentEndDate = null;
+            }
+            
+            resetToFirstPage();
             startDateInput.value = '';
             endDateInput.value = '';
 
@@ -491,118 +629,68 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add active state to clicked button
             this.classList.add('bg-[#F5E6E6]');
 
-            const rows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow)'));
-            let visibleCount = 0;
-
-            rows.forEach(row => {
-                const dateCell = row.querySelector('td:first-child');
-                if (!dateCell) return;
-                
-                const dateText = dateCell.childNodes[0].textContent.trim();
-                const rowDate = parseDate(dateText);
-                let showRow = false;
-
-                switch(filterType) {
-                    case 'newest':
-                        showRow = true;
-                        rows.sort((a, b) => {
-                            const dateA = parseDate(a.querySelector('td:first-child').childNodes[0].textContent.trim());
-                            const dateB = parseDate(b.querySelector('td:first-child').childNodes[0].textContent.trim());
-                            return dateB - dateA;
-                        });
-                        break;
-                    case 'oldest':
-                        showRow = true;
-                        rows.sort((a, b) => {
-                            const dateA = parseDate(a.querySelector('td:first-child').childNodes[0].textContent.trim());
-                            const dateB = parseDate(b.querySelector('td:first-child').childNodes[0].textContent.trim());
-                            return dateA - dateB;
-                        });
-                        break;
-                    case 'today':
-                        showRow = rowDate.toDateString() === now.toDateString();
-                        break;
-                    case 'this-week':
-                        const weekStart = new Date(now);
-                        weekStart.setDate(now.getDate() - now.getDay());
-                        weekStart.setHours(0, 0, 0, 0);
-                        const weekEnd = new Date(weekStart);
-                        weekEnd.setDate(weekStart.getDate() + 6);
-                        weekEnd.setHours(23, 59, 59, 999);
-                        showRow = rowDate >= weekStart && rowDate <= weekEnd;
-                        break;
-                    case 'this-month':
-                        showRow = rowDate.getMonth() === now.getMonth() && 
-                                rowDate.getFullYear() === now.getFullYear();
-                        break;
-                }
-
-                row.style.display = showRow ? '' : 'none';
-                if (showRow) visibleCount++;
-            });
-
+            // Apply filter
             if (filterType === 'newest' || filterType === 'oldest') {
-                rows.forEach(row => tableBody.appendChild(row));
+                filteredReports = sortReports(allReports, filterType);
+            } else {
+                filteredReports = filterReports(allReports, filterType);
             }
 
-            noResultsRow.classList.toggle('hidden', visibleCount > 0);
+            // Apply current search term if exists
+            const searchTerm = searchInput.value.trim();
+            currentSearchTerm = searchTerm;
+            if (searchTerm) {
+                filteredReports = searchReports(filteredReports, searchTerm);
+            }
+
+            renderReports(filteredReports, searchTerm);
+            filterModal.classList.add('hidden');
         });
     });
 
     // Apply custom range filter
     applyFiltersBtn.addEventListener('click', function() {
-        const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
-        const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
         
-        if (startDate) startDate.setHours(0, 0, 0, 0);
-        if (endDate) endDate.setHours(23, 59, 59, 999);
+        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+            alert('Start date cannot be after end date');
+            return;
+        }
 
+        currentFilterType = 'custom';
+        currentStartDate = startDate ? new Date(startDate) : null;
+        currentEndDate = endDate ? new Date(endDate) : null;
+
+        resetToFirstPage();
         quickFilterBtns.forEach(btn => btn.classList.remove('bg-[#F5E6E6]'));
 
-        const rows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow)'));
-        let visibleCount = 0;
+        filteredReports = filterReports(allReports, 'custom', startDate, endDate);
 
-        rows.forEach(row => {
-            const dateCell = row.querySelector('td:first-child');
-            if (!dateCell) return;
+        const searchTerm = searchInput.value.trim();
+        currentSearchTerm = searchTerm;
+        if (searchTerm) {
+            filteredReports = searchReports(filteredReports, searchTerm);
+        }
 
-            const dateText = dateCell.childNodes[0].textContent.trim();
-            const rowDate = parseDate(dateText);
-            
-            let showRow = true;
-            if (startDate && endDate) {
-                showRow = rowDate >= startDate && rowDate <= endDate;
-            } else if (startDate) {
-                showRow = rowDate >= startDate;
-            } else if (endDate) {
-                showRow = rowDate <= endDate;
-            }
-
-            row.style.display = showRow ? '' : 'none';
-            if (showRow) visibleCount++;
-        });
-
-        noResultsRow.classList.toggle('hidden', visibleCount > 0);
+        renderReports(filteredReports, searchTerm);
         filterModal.classList.add('hidden');
     });
 
     // Search functionality
     searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        const rows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow)'));
-        let visibleCount = 0;
+        const searchTerm = this.value.trim();
+        currentSearchTerm = searchTerm;
+        
+        resetToFirstPage();
+        
+        let searchResults = [...filteredReports];
+        
+        if (searchTerm) {
+            searchResults = searchReports(filteredReports, searchTerm);
+        }
 
-        rows.forEach(row => {
-            const cells = row.querySelectorAll('td');
-            const matchesSearch = Array.from(cells).some(cell => 
-                cell.textContent.toLowerCase().includes(searchTerm)
-            );
-
-            row.style.display = matchesSearch ? '' : 'none';
-            if (matchesSearch) visibleCount++;
-        });
-
-        noResultsRow.classList.toggle('hidden', visibleCount > 0);
+        renderReports(searchResults, searchTerm);
     });
 
     // Clear all filters and search
@@ -610,33 +698,108 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.value = '';
         startDateInput.value = '';
         endDateInput.value = '';
-        
+
+        currentFilterType = null;
+        currentStartDate = null;
+        currentEndDate = null;
+        currentSearchTerm = '';
+
+        resetToFirstPage();
         quickFilterBtns.forEach(btn => btn.classList.remove('bg-[#F5E6E6]'));
 
-        const rows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow)'));
-        rows.forEach(row => {
-            row.style.display = '';
-            row.style.order = '';
-        });
-
-        noResultsRow.classList.add('hidden');
+        filteredReports = [...allReports];
+        renderReports(filteredReports);
         filterModal.classList.add('hidden');
     }
 
     clearFiltersBtn.addEventListener('click', clearAllFiltersAndSearch);
-    if (clearSearchBtn) {
-        clearSearchBtn.addEventListener('click', clearAllFiltersAndSearch);
+    clearSearchBtn.addEventListener('click', clearAllFiltersAndSearch);
+
+    // Initialize the page
+    initializePage();
+
+    // Helper function to apply current filters to reports
+    function applyCurrentFilters(reports) {
+        let result = [...reports];
+        
+        if (currentFilterType) {
+            if (currentFilterType === 'newest' || currentFilterType === 'oldest') {
+                result = sortReports(result, currentFilterType);
+            } else if (currentFilterType === 'custom') {
+                result = filterReports(result, 'custom', currentStartDate, currentEndDate);
+            } else {
+                result = filterReports(result, currentFilterType);
+            }
+        }
+        
+        if (currentSearchTerm) {
+            result = searchReports(result, currentSearchTerm);
+        }
+        
+        return result;
     }
 
-    // PDF Generation functionality for reports
+    // Generate filter description for PDF header
+    function getFilterDescription() {
+        if (!currentFilterType && !currentSearchTerm) {
+            return {
+                description: 'All Problem Reports',
+                recordCount: `Total Records: ${allReports.length}`
+            };
+        }
+        
+        let filterParts = [];
+        
+        if (currentFilterType) {
+            switch(currentFilterType) {
+                case 'today':
+                    filterParts.push("Today's Reports");
+                    break;
+                case 'this-week':
+                    filterParts.push("This Week's Reports");
+                    break;
+                case 'this-month':
+                    filterParts.push("This Month's Reports");
+                    break;
+                case 'newest':
+                    filterParts.push('All Reports (Newest First)');
+                    break;
+                case 'oldest':
+                    filterParts.push('All Reports (Oldest First)');
+                    break;
+                case 'custom':
+                    let customDesc = 'Custom Date Range';
+                    if (currentStartDate && currentEndDate) {
+                        customDesc += ` (${currentStartDate.toLocaleDateString()} - ${currentEndDate.toLocaleDateString()})`;
+                    } else if (currentStartDate) {
+                        customDesc += ` (From ${currentStartDate.toLocaleDateString()})`;
+                    } else if (currentEndDate) {
+                        customDesc += ` (Until ${currentEndDate.toLocaleDateString()})`;
+                    }
+                    filterParts.push(customDesc);
+                    break;
+            }
+        }
+        
+        if (currentSearchTerm) {
+            filterParts.push(`Search: "${currentSearchTerm}"`);
+        }
+        
+        const filteredData = applyCurrentFilters(allReports);
+        return {
+            description: filterParts.join(' | '),
+            recordCount: `Filtered Records: ${filteredData.length} of ${allReports.length}`
+        };
+    }
+
+    // PDF Generation functionality - Landscape only
     const generatePDFBtn = document.getElementById('generatePDFBtn');
 
     if (generatePDFBtn) {
-        generatePDFBtn.addEventListener('click', function() {
+        generatePDFBtn.addEventListener('click', async function() {
             const button = this;
             const originalContent = button.innerHTML;
-            
-            // Show loading state
+
             button.innerHTML = `
                 <svg class="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -646,225 +809,314 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             button.disabled = true;
 
-            // Check if html2pdf is available
-            if (typeof html2pdf === 'undefined') {
-                alert('PDF library not loaded. Please refresh the page and try again.');
-                button.innerHTML = originalContent;
-                button.disabled = false;
-                return;
-            }
-
-            // Create a container for PDF content
-            const pdfContainer = document.createElement('div');
-            pdfContainer.style.cssText = `
-                padding: 20px;
-                background-color: white;
-                font-family: Arial, sans-serif;
-                color: black;
-                width: 100%;
-            `;
-
-            // Add header
-            const header = document.createElement('div');
-            header.innerHTML = `
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #4D0F0F; font-size: 24px; margin-bottom: 10px; font-family: Arial, sans-serif;">Problem Reports Summary</h1>
-                    <p style="color: #666; font-size: 14px; font-family: Arial, sans-serif;">Generated on ${new Date().toLocaleString()}</p>
-                    <hr style="border: 1px solid #4D0F0F; margin-top: 20px;">
-                </div>
-            `;
-            pdfContainer.appendChild(header);
-
-            // Get visible table rows only (excluding no results row)
-            const tableBody = document.querySelector('tbody');
-            const visibleRows = Array.from(tableBody.querySelectorAll('tr:not(#noResultsRow)'))
-                .filter(row => row.style.display !== 'none');
-
-            if (visibleRows.length === 0) {
-                alert('No data to export. Please adjust your filters.');
-                button.innerHTML = originalContent;
-                button.disabled = false;
-                return;
-            }
-
-            // Create a clean table for PDF
-            const cleanTable = document.createElement('table');
-            cleanTable.style.cssText = `
-                width: 100%;
-                border-collapse: collapse;
-                font-family: Arial, sans-serif;
-                margin-top: 20px;
-            `;
-
-            // Create table header
-            const thead = document.createElement('thead');
-            const headerRow = document.createElement('tr');
-            const headers = ['Timestamp', 'Report ID', 'Email', 'Problem Description'];
-            
-            headers.forEach(headerText => {
-                const th = document.createElement('th');
-                th.style.cssText = `
-                    background-color: #4D0F0F;
-                    color: white;
-                    padding: 12px 8px;
-                    border: 1px solid #ddd;
-                    text-align: left;
-                    font-size: 14px;
-                    font-weight: bold;
-                    font-family: Arial, sans-serif;
-                `;
-                th.textContent = headerText;
-                headerRow.appendChild(th);
-            });
-            thead.appendChild(headerRow);
-            cleanTable.appendChild(thead);
-
-            // Create table body
-            const tbody = document.createElement('tbody');
-            
-            visibleRows.forEach((row, index) => {
-                const newRow = document.createElement('tr');
-                newRow.style.cssText = `
-                    background-color: ${index % 2 === 0 ? 'white' : '#f9f9f9'};
-                `;
-
-                // Extract and clean cell data
-                const cells = row.querySelectorAll('td');
-                
-                // Timestamp cell
-                const timestampCell = document.createElement('td');
-                const timestampText = cells[0].textContent.trim();
-                const [date, time] = timestampText.split('\n');
-                timestampCell.style.cssText = `
-                    padding: 8px;
-                    border: 1px solid #ddd;
-                    font-size: 11px;
-                    vertical-align: top;
-                    font-family: Arial, sans-serif;
-                `;
-                timestampCell.innerHTML = `
-                    <div style="font-weight: bold;">${date || ''}</div>
-                    <div style="color: #666; font-size: 10px;">${time || ''}</div>
-                `;
-                newRow.appendChild(timestampCell);
-
-                // Report ID cell
-                const reportIdCell = document.createElement('td');
-                reportIdCell.style.cssText = `
-                    padding: 8px;
-                    border: 1px solid #ddd;
-                    font-size: 11px;
-                    vertical-align: top;
-                    font-family: Arial, sans-serif;
-                    font-weight: bold;
-                `;
-                reportIdCell.textContent = cells[1] ? cells[1].textContent.trim() : '';
-                newRow.appendChild(reportIdCell);
-
-                // Email cell
-                const emailCell = document.createElement('td');
-                emailCell.style.cssText = `
-                    padding: 8px;
-                    border: 1px solid #ddd;
-                    font-size: 11px;
-                    vertical-align: top;
-                    font-family: Arial, sans-serif;
-                `;
-                emailCell.textContent = cells[2] ? cells[2].textContent.trim() : '';
-                newRow.appendChild(emailCell);
-
-                // Description cell
-                const descCell = document.createElement('td');
-                descCell.style.cssText = `
-                    padding: 8px;
-                    border: 1px solid #ddd;
-                    font-size: 11px;
-                    vertical-align: top;
-                    word-wrap: break-word;
-                    max-width: 300px;
-                    font-family: Arial, sans-serif;
-                `;
-                descCell.textContent = cells[3] ? cells[3].textContent.trim() : '';
-                newRow.appendChild(descCell);
-
-                tbody.appendChild(newRow);
-            });
-            
-            cleanTable.appendChild(tbody);
-            pdfContainer.appendChild(cleanTable);
-
-            // Add summary statistics
-            const summaryDiv = document.createElement('div');
-            summaryDiv.style.cssText = `
-                margin-top: 30px;
-                padding: 15px;
-                background-color: #f9f9f9;
-                border-radius: 8px;
-                font-family: Arial, sans-serif;
-            `;
-            summaryDiv.innerHTML = `
-                <h3 style="color: #4D0F0F; margin-bottom: 10px;">Summary</h3>
-                <p style="margin: 5px 0;"><strong>Total Report(s):</strong> ${visibleRows.length}</p>
-                <p style="margin: 5px 0;"><strong>Report Period:</strong> ${getReportPeriod(visibleRows)}</p>
-            `;
-            pdfContainer.appendChild(summaryDiv);
-
-            // PDF generation options
-            const opt = {
-                margin: [10, 10, 10, 10],
-                filename: `problem-reports-${new Date().toISOString().split('T')[0]}.pdf`,
-                image: { 
-                    type: 'jpeg', 
-                    quality: 0.98 
-                },
-                html2canvas: { 
-                    scale: 1.5,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff',
-                    removeContainer: true
-                },
-                jsPDF: { 
-                    unit: 'mm', 
-                    format: 'a4', 
-                    orientation: 'landscape' 
+            try {
+                let reports = [];
+                if (allReports.length > 0) {
+                    reports = [...allReports];
+                } else {
+                    const response = await fetch('/super-admin/reports/all');
+                    reports = await response.json();
                 }
-            };
 
-            // Generate and download PDF
-            html2pdf().set(opt).from(pdfContainer).save().then(() => {
-                // Reset button state
-                button.innerHTML = originalContent;
-                button.disabled = false;
-            }).catch(error => {
+                if (!reports.length) {
+                    alert('No reports found.');
+                    return;
+                }
+
+                const filteredData = applyCurrentFilters(reports);
+
+                if (!filteredData.length) {
+                    alert('No reports found matching the current filter.');
+                    return;
+                }
+
+                const { description, recordCount } = getFilterDescription();
+
+                const pdfContainer = document.createElement('div');
+                pdfContainer.style.cssText = `
+                    padding: 20px;
+                    background-color: white;
+                    font-family: Arial, sans-serif;
+                    color: black;
+                    width: 100%;
+                `;
+
+                const style = document.createElement('style');
+                style.textContent = `
+                    table, tr, td, th, tbody, thead, tfoot {
+                        page-break-inside: avoid !important;
+                        break-inside: avoid !important;
+                    }
+                `;
+                pdfContainer.appendChild(style);
+
+                const header = document.createElement('div');
+                header.innerHTML = `
+                    <div style="text-align: center; margin-bottom: 15px;">
+                        <h1 style="color: #4D0F0F; font-size: 20px; margin-bottom: 5px; font-family: Arial, sans-serif;">Problem Reports Summary</h1>
+                        <p style="color: #666; font-size: 11px; font-family: Arial, sans-serif; margin: 2px 0;">Generated on ${new Date().toLocaleString()}</p>
+                        <p style="color: #4D0F0F; font-size: 12px; font-weight: bold; margin: 3px 0; font-family: Arial, sans-serif;">${description}</p>
+                        <p style="color: #666; font-size: 10px; font-family: Arial, sans-serif; margin: 2px 0;">${recordCount}</p>
+                        <hr style="border: 0.5px solid #4D0F0F; margin: 10px 0;">
+                    </div>
+                `;
+                pdfContainer.appendChild(header);
+
+                const cleanTable = document.createElement('table');
+                cleanTable.style.cssText = `
+                    width: 100%;
+                    border-collapse: collapse;
+                    font-family: Arial, sans-serif;
+                    margin-top: 20px;
+                `;
+
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                
+                // Landscape layout headers
+                const headers = ['Timestamp', 'Report ID', 'Email', 'Problem Description'];
+                const headerWidths = ['18%', '15%', '25%', '42%'];
+
+                headers.forEach((headerText, index) => {
+                    const th = document.createElement('th');
+                    th.style.cssText = `
+                        background-color: #4D0F0F;
+                        color: white;
+                        padding: 8px 6px;
+                        border: 1px solid #ddd;
+                        text-align: left;
+                        font-size: 12px;
+                        font-weight: bold;
+                        font-family: Arial, sans-serif;
+                        width: ${headerWidths[index]};
+                    `;
+                    th.textContent = headerText;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                cleanTable.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                filteredData.forEach((report, index) => {
+                    const newRow = document.createElement('tr');
+                    newRow.style.cssText = `
+                        background-color: ${index % 2 === 0 ? 'white' : '#f9f9f9'};
+                    `;
+
+                    const dateObj = new Date(report.created_at);
+
+                    // Timestamp cell
+                    const timestampCell = document.createElement('td');
+                    timestampCell.style.cssText = `
+                        padding: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 10px;
+                        vertical-align: top;
+                        font-family: Arial, sans-serif;
+                    `;
+                    timestampCell.innerHTML = `
+                        <div style="font-weight: bold;">${dateObj.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                        <div style="color: #666; font-size: 9px;">${dateObj.toLocaleTimeString()}</div>
+                    `;
+                    newRow.appendChild(timestampCell);
+
+                    // Report ID cell
+                    const reportIdCell = document.createElement('td');
+                    reportIdCell.style.cssText = `
+                        padding: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 10px;
+                        vertical-align: top;
+                        font-family: Arial, sans-serif;
+                        font-weight: bold;
+                    `;
+                    reportIdCell.textContent = `RPT-${String(report.id).padStart(3, '0')}`;
+                    newRow.appendChild(reportIdCell);
+
+                    // Email cell
+                    const emailCell = document.createElement('td');
+                    emailCell.style.cssText = `
+                        padding: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 10px;
+                        vertical-align: top;
+                        font-family: Arial, sans-serif;
+                    `;
+                    emailCell.textContent = report.email || '';
+                    newRow.appendChild(emailCell);
+
+                    // Description cell
+                    const descCell = document.createElement('td');
+                    descCell.style.cssText = `
+                        padding: 6px;
+                        border: 1px solid #ddd;
+                        font-size: 10px;
+                        vertical-align: top;
+                        word-wrap: break-word;
+                        font-family: Arial, sans-serif;
+                    `;
+                    descCell.textContent = report.description || '';
+                    newRow.appendChild(descCell);
+
+                    tbody.appendChild(newRow);
+                });
+
+                cleanTable.appendChild(tbody);
+                pdfContainer.appendChild(cleanTable);
+
+                // Generate filename
+                let filename = 'problem-reports';
+                if (currentFilterType) {
+                    switch(currentFilterType) {
+                        case 'today': filename += '-today'; break;
+                        case 'this-week': filename += '-this-week'; break;
+                        case 'this-month': filename += '-this-month'; break;
+                        case 'custom': filename += '-custom-range'; break;
+                        case 'newest': filename += '-newest-first'; break;
+                        case 'oldest': filename += '-oldest-first'; break;
+                    }
+                }
+                if (currentSearchTerm) {
+                    filename += '-search';
+                }
+                filename += `-${new Date().toISOString().split('T')[0]}.pdf`;
+
+                const opt = {
+                    margin: [8, 8, 8, 8],
+                    filename: filename,
+                    image: { 
+                        type: 'jpeg', 
+                        quality: 0.98 
+                    },
+                    html2canvas: { 
+                        scale: 1.3,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#ffffff',
+                        removeContainer: true
+                    },
+                    jsPDF: { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'landscape' // Fixed to landscape
+                    }
+                };
+
+                html2pdf().set(opt).from(pdfContainer).save().then(() => {
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                }).catch(error => {
+                    console.error('PDF generation failed:', error);
+                    alert('Failed to generate PDF. Please try again.');
+                    button.innerHTML = originalContent;
+                    button.disabled = false;
+                });
+
+            } catch (error) {
                 console.error('PDF generation failed:', error);
                 alert('Failed to generate PDF. Please try again.');
+            } finally {
                 button.innerHTML = originalContent;
                 button.disabled = false;
-            });
+            }
         });
     }
 
-    // Helper function to get report period
-    function getReportPeriod(rows) {
-        if (rows.length === 0) return 'No data';
-        
-        const dates = rows.map(row => {
-            const dateText = row.querySelector('td:first-child').textContent.trim().split('\n')[0];
-            return new Date(dateText);
-        }).filter(date => !isNaN(date));
-        
-        if (dates.length === 0) return 'Invalid dates';
-        
-        const minDate = new Date(Math.min(...dates));
-        const maxDate = new Date(Math.max(...dates));
-        
-        if (minDate.toDateString() === maxDate.toDateString()) {
-            return minDate.toLocaleDateString();
-        } else {
-            return `${minDate.toLocaleDateString()} - ${maxDate.toLocaleDateString()}`;
+    // Keep existing modal functions
+    function openReportModal(report) {
+        // Mark report as viewed via AJAX
+        fetch(`/reports/${report.id}/mark-as-viewed`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+            }
+        }).then(response => response.json())
+          .then(data => {
+              const notificationBadge = document.querySelector('.absolute.bg-red-500.rounded-full');
+              if (notificationBadge) {
+                  const newCount = parseInt(notificationBadge.textContent) - 1;
+                  if (newCount <= 0) {
+                      notificationBadge.remove();
+                  } else {
+                      notificationBadge.textContent = newCount;
+                  }
+              }
+          });
+
+        document.getElementById('modalReportId').textContent = 'RPT-' + String(report.id).padStart(3, '0');
+
+        const date = new Date(report.created_at);
+        document.getElementById('modalTimestamp').textContent = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+
+        document.getElementById('modalEmail').textContent = report.email;
+
+        const description = report.description;
+        const words = description.split(' ');
+        const linesOfWords = [];
+        let currentLine = [];
+
+        for (let word of words) {
+            currentLine.push(word);
+            if (currentLine.length >= 50) {
+                linesOfWords.push(currentLine.join(' '));
+                currentLine = [];
+            }
         }
+        if (currentLine.length > 0) {
+            linesOfWords.push(currentLine.join(' '));
+        }
+
+        document.getElementById('modalDescription').textContent = linesOfWords.join('\n');
+
+        const attachmentDiv = document.getElementById('modalAttachment');
+        if (report.attachment) {
+            attachmentDiv.innerHTML = `
+            <a href="${report.attachment}" 
+               target="_blank" 
+               class="inline-flex items-center bg-yellow-500 px-4 py-2 rounded text-black font-bold hover:bg-yellow-600 transition-colors">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                    </path>
+                </svg>
+                <span class="whitespace-nowrap">View Attachment</span>
+            </a>`;
+        } else {
+            attachmentDiv.innerHTML = `
+            <span class="inline-block bg-yellow-500 px-4 py-2 rounded text-black font-bold">
+                No attachment provided
+            </span>`;
+        }
+
+        const modal = document.getElementById('reportModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
+
+    function closeReportModal() {
+        const modal = document.getElementById('reportModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function emailResponse() {
+        const email = document.getElementById('modalEmail').textContent;
+        const reportId = document.getElementById('modalReportId').textContent;
+
+        const subject = encodeURIComponent('Response to ' + reportId);
+        const mailtoLink = 'mailto:' + email + '?subject=' + subject;
+
+        window.location.href = mailtoLink;
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modal = document.getElementById('reportModal');
+        if (event.target === modal) {
+            closeReportModal();
+        }
+    });
 });
 </script>
 @endsection

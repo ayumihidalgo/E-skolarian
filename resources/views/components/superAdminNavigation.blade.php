@@ -34,19 +34,29 @@
             <span class="text-[18px] group-hover:text-red-500">Reports</span>
         </a>
 
-
-        <!-- <div class="flex justify-center">
-                <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
-                    @if (isset($userProfilePics) && $userProfilePics->has($user->id) && $userProfilePics[$user->id])
-<img src="{{ asset('storage/' . $userProfilePics[$user->id]) }}"
-                            alt="Profile" class="w-full h-full object-cover">
-@else
-<img src="{{ asset('images/dprofile.svg') }}" alt="Default Profile"
-                            class="w-full h-full object-cover">
-@endif
-                </div>
-            </div> -->
-
+        <!-- Profile Picture Container -->
+        <div class="flex justify-center">
+            <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                @php
+                    $currentUser = auth()->user();
+                    $profilePic = null;
+                    if ($currentUser) {
+                        // Use the correct column name from your database
+                        $profilePic = $currentUser->profile_pic ?? null;
+                    }
+                @endphp
+                
+                @if ($profilePic)
+                    <img src="{{ asset('storage/' . $profilePic) }}" 
+                         alt="Profile" 
+                         class="w-full h-full object-cover">
+                @else
+                    <img src="{{ asset('images/dprofile.svg') }}" 
+                         alt="Default Profile" 
+                         class="w-full h-full object-cover">
+                @endif
+            </div>
+        </div>
 
         <!-- Super Admin Dropdown -->
         <div class="relative" id="adminDropdownContainer">
