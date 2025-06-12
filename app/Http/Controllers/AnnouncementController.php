@@ -125,6 +125,15 @@ class AnnouncementController extends Controller
     public function moveToArchive($id)
     {
         $announcement = Announcement::findOrFail($id);
+
+        // Only the owner (admin) or a super admin can archive
+        if (
+            auth()->user()->role !== 'super admin' &&
+            $announcement->user_id !== auth()->id()
+        ) {
+            abort(403, 'You are not authorized to archive this announcement.');
+        }
+
         $announcement->archived = true;
         $announcement->save();
 
@@ -135,6 +144,15 @@ class AnnouncementController extends Controller
     public function restore($id)
     {
         $announcement = Announcement::findOrFail($id);
+
+        // Only the owner (admin) or a super admin can restore
+        if (
+            auth()->user()->role !== 'super admin' &&
+            $announcement->user_id !== auth()->id()
+        ) {
+            abort(403, 'You are not authorized to restore this announcement.');
+        }
+
         $announcement->archived = false;
         $announcement->save();
 
@@ -145,6 +163,15 @@ class AnnouncementController extends Controller
     public function destroy($id)
     {
         $announcement = Announcement::findOrFail($id);
+
+        // Only the owner (admin) or a super admin can delete
+        if (
+            auth()->user()->role !== 'super admin' &&
+            $announcement->user_id !== auth()->id()
+        ) {
+            abort(403, 'You are not authorized to delete this announcement.');
+        }
+
         $announcement->delete();
 
         return redirect()->route($this->getRedirectRoute(), ['archive' => 1])
