@@ -82,7 +82,7 @@
     <footer class="flex text-center justify-center items-center gap-2 bg-[#4D0F0F] min-h-[70px] flex-wrap p-2">
         <p>Need help? Contact <button onclick="document.getElementById('reportBtn').click();" class="underline cursor-pointer">PUPSRC SUPERADMIN</button> for assistance with your login.</p>
         <!-- Report Button -->
-        <button id="reportBtn"
+        <button class="reportBtn"
             class="bg-transparent rounded-full shadow-none focus:outline-none z-50 flex items-center justify-center cursor-pointer"
             title="Report a Problem">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="w-[26px]">
@@ -200,11 +200,13 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const reportBtn = document.getElementById('reportBtn');
+        // Use class for report button to avoid id conflicts
+        const reportBtns = document.querySelectorAll('.reportBtn');
         const reportModal = document.getElementById('reportModal');
         const reportForm = document.getElementById('reportForm');
         const cancelReportBtn = document.getElementById('cancelReportBtn');
         const submitBtn = document.getElementById('reportSubmitBtn');
+        const webmailInput = document.getElementById('webmailInput');
 
         let isDirty = false;
 
@@ -220,35 +222,21 @@
             submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
 
-        // Validate inputs and enable/disable submit button accordingly
-        function validateInputs() {
-        const email = reportForm.email.value.trim();
-        const desc = reportForm.description.value.trim();
-
-        const maxEmailLength = 50;
-        const maxDescLength = 255;
-
-        const isEmailTooLong = email.length > maxEmailLength;
-        const isDescTooLong = desc.length > maxDescLength;
-
-        const isEmailValid = email.length > 0 && !isEmailTooLong;
-        const isDescValid = desc.length > 0 && !isDescTooLong;
-
-        // Show warnings only if too long
-        document.getElementById('webmailLengthWarning').classList.toggle('hidden', !isEmailTooLong);
-        document.getElementById('descLengthWarning').classList.toggle('hidden', !isDescTooLong);
-
-        const shouldEnableSubmit = isEmailValid && isDescValid;
-
-        if (shouldEnableSubmit) {
-            enableSubmit();
-        } else {
-            disableSubmit();
+        // Add custom webmail domain warning if not present
+        let webmailDomainWarning = document.getElementById('webmailDomainWarning');
+        if (!webmailDomainWarning) {
+            webmailDomainWarning = document.createElement('p');
+            webmailDomainWarning.id = 'webmailDomainWarning';
+            webmailDomainWarning.className = 'text-red-600 mt-1 hidden';
+            webmailInput.parentNode.appendChild(webmailDomainWarning);
         }
-        }
-        const webmailInput = document.getElementById('webmailInput');
 
-         // Prevent spaces in email
+        // Webmail validation for domain and local part (letters/numbers only before @pup.edu.ph or @iskolarngbayan.pup.edu.ph)
+        function isValidWebmail(email) {
+            return /^[a-zA-Z0-9]+@(pup\.edu\.ph|iskolarngbayan\.pup\.edu\.ph)$/.test(email);
+        }
+
+        // Prevent spaces in email
         webmailInput.addEventListener('keydown', function (e) {
             if (e.key === ' ') e.preventDefault();
             });
@@ -261,7 +249,27 @@
             }
         });
 
-         // Update description counter
+        webmailInput.addEventListener('input', function () {
+            const email = webmailInput.value.trim();
+            const isTooLong = email.length > 50;
+            const isDomainValid = isValidWebmail(email);
+
+            // Show/hide length warning
+            document.getElementById('webmailLengthWarning').classList.toggle('hidden', !isTooLong);
+
+            // Show/hide domain warning
+            if (email.length > 0 && !isTooLong && !isDomainValid) {
+                webmailDomainWarning.textContent = '*Webmail must end with @pup.edu.ph or @iskolarngbayan.pup.edu.ph';
+                webmailDomainWarning.classList.remove('hidden');
+            } else {
+                webmailDomainWarning.classList.add('hidden');
+            }
+
+            // Enable/disable submit button
+            validateInputs();
+        });
+
+        // Update description counter
         const descriptionInput = document.getElementById('descriptionInput');
         const descCounter = document.getElementById('descCounter');
         const descWarning = document.getElementById('descLengthWarning');
@@ -281,15 +289,54 @@
         descCounter.textContent = `${descriptionInput.value.length} / 255`;
 
 
+        // Validate inputs and enable/disable submit button accordingly
+        function validateInputs() {
+            const email = reportForm.email.value.trim();
+            const desc = reportForm.description.value.trim();
 
-        // On modal open: reset form, reset flags, disable submit and validate inputs
-        reportBtn.addEventListener('click', () => {
-            reportModal.classList.remove('hidden');
-            reportForm.reset();
-            isDirty = false;
-            disableSubmit();
-            validateInputs();
+            const maxEmailLength = 50;
+            const maxDescLength = 255;
+
+            const isEmailTooLong = email.length > maxEmailLength;
+            const isDescTooLong = desc.length > maxDescLength;
+
+            const isEmailValid = email.length > 0 && !isEmailTooLong && isValidWebmail(email);
+            const isDescValid = desc.length > 0 && !isDescTooLong;
+
+            document.getElementById('webmailLengthWarning').classList.toggle('hidden', !isEmailTooLong);
+            document.getElementById('descLengthWarning').classList.toggle('hidden', !isDescTooLong);
+
+            const shouldEnableSubmit = isEmailValid && isDescValid;
+
+            if (shouldEnableSubmit) {
+                enableSubmit();
+            } else {
+                disableSubmit();
+            }
+        }
+
+        // Fix: Use class for report button(s) and add event listener to all
+        reportBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                reportModal.classList.remove('hidden');
+                reportForm.reset();
+                isDirty = false;
+                disableSubmit();
+                validateInputs();
+            });
         });
+
+        // Also open modal when clicking "PUPSRC SUPERADMIN" help link
+        const superadminBtn = document.querySelector('button[onclick*="reportBtn"]');
+        if (superadminBtn) {
+            superadminBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                // Find the first reportBtn and trigger its click handler
+                if (reportBtns.length > 0) {
+                    reportBtns[0].click();
+                }
+            });
+        }
 
         // Listen for input on required fields
        reportForm.email.addEventListener('input', () => {
