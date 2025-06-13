@@ -248,8 +248,7 @@ class DocumentExportController extends Controller
 
         $row++; // Add extra space
         
-        // Set up table headers - Updated to show "Username" instead of "Organization"
-        $headers = ['Control Tag', 'Username', 'Subject', 'Date Submitted', 'Type', 'Status'];
+        $headers = ['Control Tag', 'Organization', 'Title', 'Date Submitted', 'Type', 'Status'];
         $column = 'A';
         
         foreach ($headers as $header) {

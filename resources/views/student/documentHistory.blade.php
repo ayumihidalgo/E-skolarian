@@ -35,37 +35,18 @@
                             class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 truncate">
                             <option class="bg-white text-black truncate" value="Type" disabled selected>Type</option>
                             <option class="bg-white text-black truncate" value="All">All Types</option>
+                            <!-- Standard document type options - matching AdminDocumentController -->
                             <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
-                            <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan
-                                of
-                                Activities</option>
-                            <option class="bg-white text-black truncate" value="Calendar of Activities">Calendar of
-                                Activities</option>
-                            <option class="bg-white text-black truncate" value="Accomplishment Report">Accomplishment
-                                Report
-                            </option>
-                            <option class="bg-white text-black truncate" value="Contribution and By-Laws">Contribution
-                                and
-                                By-Laws</option>
+                            <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan of Activities</option>
+                            <option class="bg-white text-black truncate" value="Reports of Proceedings">Reports of Proceedings</option>
+                            <option class="bg-white text-black truncate" value="Constitution and By-Laws">Constitution and By-Laws</option>
+                            <option class="bg-white text-black truncate" value="Fundraising Activities">Fundraising Activities</option>
                             <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
-                            <option class="bg-white text-black truncate" value="Off-Campus">Off-Campus</option>
-                            <option class="bg-white text-black truncate" value="Petition and Concern">Petition and
-                                Concern
-                            </option>
-                        </select>
-                        <!-- Custom dropdown arrow -->
-                        <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
-                            class="absolute top-1/2 right-3 -translate-y-1/2 w-4 h-4 pointer-events-none" />
-                    </div>
-
-                    <!-- Status dropdown filter -->
-                    <div class="relative w-40">
-                        <select id="statusFilter"
-                            class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200">
-                            <option class="bg-white text-black" value="Status" disabled selected>Status</option>
-                            <option class="bg-white text-black" value="All">All Status</option>
-                            <option class="bg-white text-black" value="Approved">Approved</option>
-                            <option class="bg-white text-black" value="Rejected">Rejected</option>
+                            <option class="bg-white text-black truncate" value="Petition and Concern">Petition and Concern</option>
+                            <option class="bg-white text-black truncate" value="Memorandum of Agreement">Memorandum of Agreement</option>
+                            <option class="bg-white text-black truncate" value="Off Campus Activities">Off Campus Activities</option>
+                            <!-- Others option for non-standard types -->
+                            <option class="bg-white text-black truncate" value="Others">Others</option>
                         </select>
                         <!-- Custom dropdown arrow -->
                         <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -75,29 +56,30 @@
             </div>
 
             @php
+            // Standard document types - matching AdminDocumentController
+            $standardTypes = [
+                'Event Proposal',
+                'General Plan of Activities',
+                'Reports of Proceedings',
+                'Constitution and By-Laws',
+                'Fundraising Activities',
+                'Request Letter',
+                'Petition and Concern',
+                'Memorandum of Agreement',
+                'Off Campus Activities'
+            ];
+
             // Assuming we get these values from auth/session - using ELITE as user's organization
             $userOrganization = 'ELITE'; // This should come from authenticated user's data
 
             // Organization mapping - only include user's organization
             $orgMap = [
-            'ELITE' => 'Eligible League of Information Technology Enthusiasts',
+                'ELITE' => 'Eligible League of Information Technology Enthusiasts',
             ];
 
             // Color coding for different organization tags
             $tagColors = [
-            'IT' => 'text-orange-500',
-            ];
-
-            // Document types array
-            $types = [
-            'Event Proposal',
-            'General Plan of Activities',
-            'Calendar of Activities',
-            'Accomplishment Report',
-            'Contribution and By-Laws',
-            'Request Letter',
-            'Off-Campus',
-            'Petition and Concern',
+                'IT' => 'text-orange-500',
             ];
             @endphp
 
@@ -136,14 +118,15 @@
                                 $tagColor = isset($tagColors['IT']) ? $tagColors['IT'] : 'text-gray-500';
 
                                 // Format date for consistent display
-                                $createdDate = \Carbon\Carbon::parse($document->created_at)->format(
-                                'm/d/Y',
-                                );
+                                $createdDate = \Carbon\Carbon::parse($document->created_at)->format('m/d/Y');
+                                
+                                // Determine display type - show 'Others' for non-standard types
+                                $displayType = in_array($document->type, $standardTypes) ? $document->type : 'Others';
                                 @endphp
                                 <!-- Document row with data attributes for filtering -->
                                 <tr class="border-b border-gray-300 hover:bg-gray-100 cursor-pointer"
                                     onclick="viewDocument({{ $document->id }})"
-                                    data-status="{{ $document->status }}" data-type="{{ $document->type }}">
+                                    data-type="{{ $document->type }}">
                                     <!-- Document tag with color coding -->
                                     <td class="px-4 py-2 font-semibold truncate max-w-[120px]">
                                         <span class="{{ $tagColor }}">{{ $document->control_tag }}</span>
@@ -156,9 +139,9 @@
                                     <td class="px-4 py-2 truncate max-w-[120px]">
                                         {{ $createdDate }}
                                     </td>
-                                    <!-- Document type with tooltip -->
-                                    <td class="px-4 py-2 truncate max-w-[160px]" title="{{ $document->type }}">
-                                        {{ $document->type }}
+                                    <!-- Document type - show 'Others' for non-standard types -->
+                                    <td class="px-4 py-2 truncate max-w-[160px]" title="{{ $displayType }}">
+                                        {{ $displayType }}
                                     </td>
                                     <!-- Status with color-coded badge -->
                                     <td class="px-4 py-2">
@@ -192,8 +175,8 @@
                 </div>
             </div>
 
-            <!-- Pagination controls -->
-            @if(count($documents) > 0)
+            <!-- Pagination controls with ellipsis -->
+            @if (count($documents) > 0)
             <div class="mt-4 flex justify-center" id="paginationContainer">
                 <nav>
                     <ul class="inline-flex items-center space-x-2">
@@ -201,27 +184,60 @@
                         <li>
                             <a href="{{ $documents->previousPageUrl() }}"
                                 class="pagination-btn-prev px-3 py-1 rounded-lg {{ $documents->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
-                                <
-                                    </a>
+                                &lt;
+                            </a>
                         </li>
 
-                        <!-- Page numbers -->
-                        @for ($i = 1; $i <= $documents->lastPage(); $i++)
+                        @php
+                            $current = $documents->currentPage();
+                            $last = $documents->lastPage();
+                            $start = max(1, $current - 2);
+                            $end = min($last, $current + 2);
+                        @endphp
+
+                        <!-- First page -->
+                        @if($start > 1)
+                            <li>
+                                <a href="{{ $documents->url(1) }}"
+                                    class="pagination-btn px-3 py-1 rounded-lg {{ $current == 1 ? 'bg-[#7A1212] text-white' : '' }}">
+                                    1
+                                </a>
+                            </li>
+                            @if($start > 2)
+                                <li><span class="px-3 py-1">...</span></li>
+                            @endif
+                        @endif
+
+                        <!-- Page numbers around current page -->
+                        @for ($i = $start; $i <= $end; $i++)
                             <li>
                                 <a href="{{ $documents->url($i) }}"
-                                    class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
+                                    class="pagination-btn px-3 py-1 rounded-lg {{ $current == $i ? 'bg-[#7A1212] text-white' : '' }}">
                                     {{ $i }}
                                 </a>
                             </li>
-                            @endfor
+                        @endfor
 
-                            <!-- Next page button -->
+                        <!-- Last page -->
+                        @if($end < $last)
+                            @if($end < $last - 1)
+                                <li><span class="px-3 py-1">...</span></li>
+                            @endif
                             <li>
-                                <a href="{{ $documents->nextPageUrl() }}"
-                                    class="pagination-btn-next px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
-                                    >
+                                <a href="{{ $documents->url($last) }}"
+                                    class="pagination-btn px-3 py-1 rounded-lg {{ $current == $last ? 'bg-[#7A1212] text-white' : '' }}">
+                                    {{ $last }}
                                 </a>
                             </li>
+                        @endif
+
+                        <!-- Next page button -->
+                        <li>
+                            <a href="{{ $documents->nextPageUrl() }}"
+                                class="pagination-btn-next px-3 py-1 rounded-lg {{ $current == $last ? 'cursor-not-allowed opacity-50' : '' }}">
+                                &gt;
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </div>
@@ -229,13 +245,14 @@
         </div>
     </div>
     @include('components.footer')
+    
+    <!-- Keep the existing JavaScript exactly the same -->
     <script>
         // Track sort direction for each column
         let sortDirection = [true, true, true, true, true];
 
         document.addEventListener('DOMContentLoaded', function() {
             // Filter form elements
-            const statusFilter = document.getElementById("statusFilter");
             const typeFilter = document.getElementById("typeFilter");
             const searchInput = document.querySelector('input[placeholder="Search..."]');
 
@@ -245,7 +262,6 @@
             }
 
             // Add event listeners to filters
-            statusFilter.addEventListener("change", handleFilterChange);
             typeFilter.addEventListener("change", handleFilterChange);
 
             // For search, use debouncing
@@ -317,13 +333,8 @@
             // Build the query parameters
             const params = new URLSearchParams();
 
-            const statusFilter = document.getElementById("statusFilter").value;
             const typeFilter = document.getElementById("typeFilter").value;
             const searchInput = document.querySelector('input[placeholder="Search..."]').value;
-
-            if (statusFilter !== 'Status') {
-                params.append('status', statusFilter);
-            }
 
             if (typeFilter !== 'Type') {
                 params.append('type', typeFilter);
@@ -407,7 +418,6 @@
             tableContainer.classList.add('opacity-50');
 
             // Get current filter values to preserve them
-            const statusFilter = document.getElementById("statusFilter").value;
             const typeFilter = document.getElementById("typeFilter").value;
             const searchInput = document.querySelector('input[placeholder="Search..."]').value;
 
@@ -419,10 +429,6 @@
             params.set('sort_dir', direction);
 
             // Keep filter parameters
-            if (statusFilter !== 'Status') {
-                params.set('status', statusFilter);
-            }
-
             if (typeFilter !== 'Type') {
                 params.set('type', typeFilter);
             }
@@ -486,4 +492,4 @@
             }
         }
     </script>
-    @endsection
+@endsection
