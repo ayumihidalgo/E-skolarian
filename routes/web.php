@@ -45,7 +45,7 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
     // Guest
     Route::get('/guest/login', function() {
         return view('guest.guestLogin');
-    })->name('guest');
+    })->name('guestLogin');
     Route::post('/guest/send-otp', [GuestSubmitDocumentController::class, 'sendOtp'])
         ->name('guest.sendOtp');
     Route::get('/guest/verify', [GuestSubmitDocumentController::class, 'showOtpForm'])
@@ -228,7 +228,7 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
 // ---------------- Student ----------------
 Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
     Route::get('/student/dashboard', [StudentDashboardController::class, 'showStudentDashboard'])->name('student.dashboard');
-    Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');    
+    Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
     Route::get('/student/documentHistory', [StudentDocumentController::class, 'documentArchive'])->name('student.documentHistory');
     Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
     Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])->name('student.documentPreview');
