@@ -14,7 +14,7 @@ class CreateDocumentVersionsTable extends Migration
         Schema::create('document_versions', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->unsignedBigInteger('document_id');
-            $table->unsignedBigInteger('uploaded_by');
+            $table->unsignedBigInteger('uploaded_by')->nullable();;
             $table->integer('version');
             $table->string('document_url');
             $table->text('comments')->nullable();
