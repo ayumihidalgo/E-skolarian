@@ -1058,3 +1058,12 @@ div.fc-header-toolbar,
     .py-8.px-10 {
         flex-grow: 1;
     }
+    input:checked + .relative .block {
+        background-color: #DAA520;
+    }
+    input:checked + .relative .dot {
+        transform: translateX(24px);
+    }
+    .dot {
+        transition: transform 0.3s ease;
+    }

@@ -282,87 +282,116 @@ class EventController extends Controller
         }
     }
 
-public function getCalendarAnnouncements()
-{
-    try {
-        \Log::info('=== getCalendarAnnouncements() method called ===');
-        
-        $userRole = auth()->user()->role;
-        \Log::info('User role: ' . $userRole);
-        
-        // Get announcements that are scheduled (have deadline) and not archived
-        $query = Announcement::where('archived', 0) // Use 'archived' not 'is_archived'
-            ->whereNotNull('deadline') // Use 'deadline' as the scheduled date
-            ->where('deadline', '>=', Carbon::now()); // Only show future/current announcements
-
-        \Log::info('Base query count: ' . $query->count());
-
-        // Filter by audience for students
-        if ($userRole === 'student') {
-            $userId = auth()->id();
-            \Log::info('Filtering for student ID: ' . $userId);
+    public function getCalendarAnnouncements()
+    {
+        try {
+            \Log::info('=== getCalendarAnnouncements() method called ===');
             
-            $query->where(function($q) use ($userId) {
-                $q->where('audience', 'all')
-                  ->orWhere(function($subQ) use ($userId) {
-                      $subQ->where('audience', 'custom')
-                           ->whereNotNull('audience_students')
-                           ->where(function($jsonQ) use ($userId) {
-                               // Check if user ID is in the JSON array
-                               $jsonQ->whereRaw("JSON_CONTAINS(audience_students, '\"$userId\"')")
-                                     ->orWhereRaw("JSON_CONTAINS(audience_students, '$userId')");
-                           });
-                  });
-            });
-        }
-
-        $announcements = $query->with('user')->get();
-        \Log::info('Final filtered announcements: ' . $announcements->count());
-        
-        // Log each announcement details
-        foreach($announcements as $announcement) {
-            \Log::info('Announcement: ' . $announcement->title . ' | Deadline: ' . $announcement->deadline . ' | Audience: ' . $announcement->audience);
-        }
-
-        $announcementEvents = $announcements->map(function($announcement) {
-            $deadline = Carbon::parse($announcement->deadline);
+            $userRole = auth()->user()->role;
+            \Log::info('User role: ' . $userRole);
             
-
-            $title = $announcement->title;
-            $maxTitleLength = 60; // Set maximum characters for display
+            // Check if user wants to show past deadlines
+            $showPastDeadlines = request()->get('show_past', false);
+            \Log::info('Show past deadlines parameter: ' . ($showPastDeadlines ? 'true' : 'false'));
             
-            if (strlen($title) > $maxTitleLength) {
-                $displayTitle = substr($title, 0, $maxTitleLength) . '...';
+            // Get announcements that are scheduled (have deadline) and not archived
+            $query = Announcement::where('archived', 0)
+                ->whereNotNull('deadline');
+                
+            // Filter by date based on toggle - THIS IS THE KEY FIX
+            if (!$showPastDeadlines) {
+                // Only show future deadlines (not expired)
+                $query->where('deadline', '>', Carbon::now());
+                \Log::info('Filtering to show only future deadlines after: ' . Carbon::now());
             } else {
-                $displayTitle = $title;
+                \Log::info('Showing all deadlines (including past)');
             }
-            return [
-                'id' => 'announcement_' . $announcement->id,
-                'title' => '📢 ' . $announcement->title,
-                'start' => $deadline->format('Y-m-d H:i:s'),
-                'end' => $deadline->format('Y-m-d H:i:s'),
-                'backgroundColor' => '#FF6347',
-                'textColor' => '#ffffff',
-                'allDay' => $deadline->format('H:i:s') === '00:00:00',
-                'source' => 'announcement',
-                'editable' => false,
-                'deletable' => false,
-                'announcement_id' => $announcement->id,
-                'content' => $announcement->content,
-                'poster' => $announcement->user->username ?? 'Unknown',
-                'deadline_text' => $deadline->format('F j, Y g:i A')
-            ];
-        });
-        
-        \Log::info('Returning ' . $announcementEvents->count() . ' announcement events');
-        return response()->json($announcementEvents->values());
-        
-    } catch (\Exception $e) {
-        \Log::error('Error in getCalendarAnnouncements: ' . $e->getMessage());
-        \Log::error('Stack trace: ' . $e->getTraceAsString());
-        return response()->json(['error' => $e->getMessage()], 500);
+    
+            \Log::info('Base query count after date filter: ' . $query->count());
+    
+            // Filter by audience for students
+            if ($userRole === 'student') {
+                $userId = auth()->id();
+                \Log::info('Filtering for student ID: ' . $userId);
+                
+                $query->where(function($q) use ($userId) {
+                    $q->where('audience', 'all')
+                      ->orWhere(function($subQ) use ($userId) {
+                          $subQ->where('audience', 'custom')
+                               ->whereNotNull('audience_students')
+                               ->where(function($jsonQ) use ($userId) {
+                                   $jsonQ->whereRaw("JSON_CONTAINS(audience_students, '\"$userId\"')")
+                                         ->orWhereRaw("JSON_CONTAINS(audience_students, '$userId')");
+                               });
+                      });
+                });
+            }
+    
+            $announcements = $query->with('user')->get();
+            \Log::info('Final filtered announcements: ' . $announcements->count());
+    
+            // Log each announcement to debug
+            foreach ($announcements as $announcement) {
+                \Log::info('Announcement: ' . $announcement->title . ' - Deadline: ' . $announcement->deadline);
+            }
+    
+            $announcementEvents = $announcements->map(function($announcement) {
+                $deadline = Carbon::parse($announcement->deadline);
+                $now = Carbon::now();
+                
+                // Check if announcement is expired
+                $isExpired = $deadline->isPast();
+                $isMissedToday = $deadline->isToday() && $deadline->isPast();
+    
+                $title = $announcement->title;
+                $maxTitleLength = 60;
+                
+                if (strlen($title) > $maxTitleLength) {
+                    $displayTitle = substr($title, 0, $maxTitleLength) . '...';
+                } else {
+                    $displayTitle = $title;
+                }
+                
+                // Determine background color based on status
+                $backgroundColor = '#FF6347'; // Default orange
+                $titlePrefix = '📢 ';
+
+                if ($isExpired) {
+                    $backgroundColor = '#9CA3AF'; // Gray for expired
+                    $titlePrefix = '⏰ '; // Just one icon for all past deadlines
+                }
+                
+                return [
+                    'id' => 'announcement_' . $announcement->id,
+                    'title' => $titlePrefix . $announcement->title,
+                    'start' => $deadline->format('Y-m-d H:i:s'),
+                    'end' => $deadline->format('Y-m-d H:i:s'),
+                    'backgroundColor' => $backgroundColor,
+                    'textColor' => '#ffffff',
+                    'allDay' => $deadline->format('H:i:s') === '00:00:00',
+                    'source' => 'announcement',
+                    'editable' => false,
+                    'deletable' => false,
+                    'announcement_id' => $announcement->id,
+                    'content' => $announcement->content,
+                    'poster' => $announcement->user->username ?? 'Unknown',
+                    'deadline_text' => $deadline->format('F j, Y g:i A'),
+                    'full_title' => $announcement->title,
+                    'is_expired' => $isExpired,
+                    'is_missed_today' => $isMissedToday,
+                    'status_text' => $isExpired ? 'Past Deadline' : 'Active'
+                ];
+            });
+            
+            \Log::info('Returning ' . $announcementEvents->count() . ' announcement events');
+            return response()->json($announcementEvents->values());
+            
+        } catch (\Exception $e) {
+            \Log::error('Error in getCalendarAnnouncements: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
-}
 
 private function getScheduledAnnouncements()
 {

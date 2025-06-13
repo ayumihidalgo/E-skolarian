@@ -213,14 +213,28 @@
                 </div>
             </div>
            
-            <!-- Right: Today Button (fixed position) -->
-            <div class="flex justify-end items-center pr-0">
-                <button id="today-btn" class="flex justify-center items-center w-[85px] h-[44px] p-[10px] gap-[10px] flex-shrink-0 rounded-[22px] bg-[#DAA520] transition-colors invisible mr-8 hover:bg-[#c99418]">
-                    <span class="text-white font-manrope text-[16px] font-extrabold leading-normal underline decoration-solid">Today</span>
-                </button>
+   <!-- Right: Today Button (keep original) -->
+    <div class="flex justify-end items-center pr-0">
+        <button id="today-btn" class="flex justify-center items-center w-[85px] h-[44px] p-[10px] gap-[10px] flex-shrink-0 rounded-[22px] bg-[#DAA520] transition-colors invisible mr-8 hover:bg-[#c99418]">
+            <span class="text-white font-manrope text-[16px] font-extrabold leading-normal underline decoration-solid">Today</span>
+        </button>
+    </div>
+</div>
+<!-- Add toggle in a separate row -->
+<div class="mb-4 lg:mb-4 md:mb-2 sm:mb-2 flex justify-end pr-8">
+    <div class="flex items-center">
+        <label class="flex items-center cursor-pointer">
+            <input type="checkbox" id="show-past-toggle" class="sr-only">
+            <div class="relative">
+                <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
+                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
             </div>
-        </div>
-
+            <div class="ml-3 text-gray-700 font-medium text-sm">
+                Show Past Deadlines
+            </div>
+        </label>
+    </div>
+</div>
 
         <!-- Calendar container with responsive dimensions -->
         <div id="calendar-container" class="bg-white rounded-lg overflow-hidden shadow-md relative z-[5] min-h-[600px] lg:min-h-[600px] md:min-h-[500px] sm:min-h-[400px]">
@@ -320,6 +334,16 @@
     }
    
     document.addEventListener('DOMContentLoaded', function() {
+        const toggleElement = document.getElementById('show-past-toggle');
+    if (toggleElement) {
+        toggleElement.addEventListener('change', function() {
+            console.log('Show past toggle changed to:', this.checked);
+            if (calendarObj) {
+                console.log('Refetching events...');
+                calendarObj.refetchEvents();
+            }
+        });
+    }
         // Check if FullCalendar is loaded
         if (typeof FullCalendar === 'undefined') {
             // If not loaded yet, wait a bit and try loading the calendar
@@ -362,8 +386,16 @@
                 // Complete events function
                 events: function(fetchInfo, successCallback, failureCallback) {
                     console.log('=== Fetching announcements only ===');
-                   
-                    fetch('/calendar/announcements')
+                    
+                    // Check if show past toggle is enabled
+                    const showPast = document.getElementById('show-past-toggle')?.checked || false;
+                    console.log('Show past toggle is:', showPast);
+                    
+                    // Build the URL with the correct parameter
+                    const url = showPast ? '/calendar/announcements?show_past=true' : '/calendar/announcements';
+                    console.log('Fetching from URL:', url);
+                    
+                    fetch(url)
                         .then(response => {
                             console.log('Announcements response:', response.status);
                             if (!response.ok) {
@@ -373,7 +405,19 @@
                             return response.json();
                         })
                         .then(announcements => {
-                            console.log('Announcements:', announcements);
+                            console.log('Received announcements:', announcements);
+                            console.log('Number of announcements:', announcements.length);
+                            
+                            // Log each announcement for debugging
+                            announcements.forEach((ann, index) => {
+                                console.log(`Announcement ${index + 1}:`, {
+                                    title: ann.title,
+                                    start: ann.start,
+                                    is_expired: ann.is_expired,
+                                    backgroundColor: ann.backgroundColor
+                                });
+                            });
+                            
                             successCallback(announcements || []);
                         })
                         .catch(error => {
@@ -723,11 +767,8 @@
     const actionContainer = document.getElementById('event-action-buttons');
    
     if (titleElement) {
-        // Use full title and apply word wrapping styles for announcements
-        const fullTitle = event.extendedProps.full_title || event.title.replace('📢 ', '');
+        const fullTitle = event.extendedProps.full_title || event.title.replace(/^[📢⏰] /, '');
         titleElement.textContent = fullTitle;
-       
-        // Apply word wrapping styles
         titleElement.style.wordWrap = 'break-word';
         titleElement.style.overflowWrap = 'break-word';
         titleElement.style.whiteSpace = 'normal';
@@ -755,31 +796,39 @@
         dateElement.textContent = dateStr;
     }
    
-    // Set event color indicator
+    // Set event color indicator based on status
     if (colorIndicator) {
-        colorIndicator.style.backgroundColor = '#FF6347';
+        colorIndicator.style.backgroundColor = event.backgroundColor || '#FF6347';
     }
    
-    // Show simplified announcement content for students (no poster information)
+    // Show announcement content with simplified status
     if (actionContainer) {
-        // Only show deadline info if available
         let deadlineInfo = '';
         if (event.extendedProps.deadline_text) {
             deadlineInfo = `<strong>Deadline:</strong> ${event.extendedProps.deadline_text}<br>`;
         }
+        
+        let statusInfo = '';
+        if (event.extendedProps.is_expired) {
+            statusInfo = `<strong class="text-gray-600">Status:</strong> <span class="text-gray-600">Past Deadline</span><br>`;
+        }
        
-        // Show additional content if available
         let contentInfo = '';
         if (event.extendedProps.content) {
             contentInfo = `<div class="text-sm text-gray-700 mt-2">${event.extendedProps.content}</div>`;
         }
+        
+        const iconText = event.extendedProps.is_expired ? 
+            '⏰ Past Deadline' : 
+            '📢 Important Deadline Announcement';
        
         actionContainer.innerHTML = `
             <div class="text-sm text-gray-600 mb-2" style="word-wrap: break-word; overflow-wrap: break-word;">
                 ${deadlineInfo}
+                ${statusInfo}
             </div>
             ${contentInfo}
-            <p class="text-xs text-orange-600 font-medium mt-2">📢 Important Deadline Announcement</p>
+            <p class="text-xs font-medium mt-2 ${event.extendedProps.is_expired ? 'text-gray-500' : 'text-orange-600'}">${iconText}</p>
         `;
     }
    

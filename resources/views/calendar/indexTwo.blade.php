@@ -219,6 +219,21 @@
         <span class="text-white font-manrope text-[16px] font-extrabold leading-normal underline decoration-solid">Today</span>
     </button>
 </div>
+
+</div>
+<div class="mb-4 lg:mb-4 md:mb-2 sm:mb-2 flex justify-end pr-8">
+    <div class="flex items-center">
+        <label class="flex items-center cursor-pointer">
+            <input type="checkbox" id="show-past-toggle" class="sr-only">
+            <div class="relative">
+                <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
+                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+            </div>
+            <div class="ml-3 text-gray-700 font-medium text-sm">
+                Show Past Deadlines
+            </div>
+        </label>
+    </div>
 </div>
 
 
@@ -325,6 +340,16 @@
     }
    
     document.addEventListener('DOMContentLoaded', function() {
+        const toggleElement = document.getElementById('show-past-toggle');
+    if (toggleElement) {
+        toggleElement.addEventListener('change', function() {
+            console.log('Show past toggle changed to:', this.checked);
+            if (calendarObj) {
+                console.log('Refetching events...');
+                calendarObj.refetchEvents();
+            }
+        });
+    }
         // Check if FullCalendar is loaded
         if (typeof FullCalendar === 'undefined') {
             // If not loaded yet, wait a bit and try loading the calendar
@@ -412,23 +437,38 @@
                
                 // Complete events function
                 events: function(fetchInfo, successCallback, failureCallback) {
-                    console.log('=== Fetching announcements only ===');
-                   
-                    fetch('/calendar/announcements')
-                        .then(response => {
-                            console.log('Announcements response:', response.status);
-                            if (!response.ok) {
-                                console.warn('Announcements failed with status', response.status);
-                                return [];
-                            }
-                            return response.json();
+                    console.log('=== Fetching events and announcements ===');
+                    
+                    // Check if show past toggle is enabled
+                    const showPast = document.getElementById('show-past-toggle')?.checked || false;
+                    console.log('Show past toggle is:', showPast);
+                    
+                    // Fetch both events and announcements
+                    const eventsPromise = fetch('/calendar/events');
+                    const announcementsUrl = showPast ? '/calendar/announcements?show_past=true' : '/calendar/announcements';
+                    const announcementsPromise = fetch(announcementsUrl);
+                    
+                    Promise.all([eventsPromise, announcementsPromise])
+                        .then(responses => {
+                            console.log('Events response:', responses[0].status);
+                            console.log('Announcements response:', responses[1].status);
+                            
+                            return Promise.all([
+                                responses[0].ok ? responses[0].json() : [],
+                                responses[1].ok ? responses[1].json() : []
+                            ]);
                         })
-                        .then(announcements => {
-                            console.log('Announcements:', announcements);
-                            successCallback(announcements || []);
+                        .then(([events, announcements]) => {
+                            console.log('Events:', events.length, 'Announcements:', announcements.length);
+                            
+                            // Combine both arrays
+                            const allEvents = [...(events || []), ...(announcements || [])];
+                            console.log('Total combined events:', allEvents.length);
+                            
+                            successCallback(allEvents);
                         })
                         .catch(error => {
-                            console.error('Error fetching announcements:', error);
+                            console.error('Error fetching calendar data:', error);
                             successCallback([]);
                         });
                 },
@@ -712,82 +752,110 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     function openAnnouncementDetailsModal(event) {
-        console.log("Opening announcement details modal for:", event.title);
+    console.log("Opening details modal for:", event.title);
+   
+    const modal = document.getElementById('eventDetailsModal');
+    const modalContent = modal.querySelector('.modal-container');
+   
+    if (!modal) {
+        console.error('Event details modal not found');
+        return;
+    }
+   
+    const titleElement = document.getElementById('detail-title');
+    const dateElement = document.getElementById('detail-date');
+    const colorIndicator = document.getElementById('event-color-indicator');
+    const actionContainer = document.getElementById('event-action-buttons');
+   
+    if (titleElement) {
+        const fullTitle = event.extendedProps.full_title || event.title.replace(/^[📢⏳⏰] /, '');
+        titleElement.textContent = fullTitle;
+        titleElement.style.wordWrap = 'break-word';
+        titleElement.style.overflowWrap = 'break-word';
+        titleElement.style.whiteSpace = 'normal';
+        titleElement.style.maxWidth = '100%';
+        titleElement.style.lineHeight = '1.4';
+    }
+   
+    // Format and display the date
+    if (dateElement) {
+        let dateStr = '';
+        const startDate = event.start ? new Date(event.start) : null;
+        const endDate = event.end ? new Date(event.end) : null;
        
-        const modal = document.getElementById('eventDetailsModal');
-        const modalContent = modal.querySelector('.modal-container');
-       
-        if (!modal) {
-            console.error('Event details modal not found');
-            return;
-        }
-       
-        // Populate the modal with announcement details
-        const titleElement = document.getElementById('detail-title');
-        const dateElement = document.getElementById('detail-date');
-        const colorIndicator = document.getElementById('event-color-indicator');
-        const actionContainer = document.getElementById('event-action-buttons');
-       
-        if (titleElement) {
-            // Use full title and apply word wrapping styles for announcements only
-            const fullTitle = event.extendedProps.full_title || event.title.replace('📢 ', '');
-            titleElement.textContent = fullTitle;
-           
-            // Apply word wrapping styles specifically for announcements
-            titleElement.style.wordWrap = 'break-word';
-            titleElement.style.overflowWrap = 'break-word';
-            titleElement.style.whiteSpace = 'normal';
-            titleElement.style.maxWidth = '100%';
-            titleElement.style.lineHeight = '1.4';
-        }
-       
-        // Format and display the date
-        if (dateElement) {
-            let dateStr = '';
-            const startDate = event.start ? new Date(event.start) : null;
-            const endDate = event.end ? new Date(event.end) : null;
-           
-            if (startDate) {
-                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-                if (event.allDay) {
-                    dateStr = startDate.toLocaleDateString('en-US', options);
-                    if (endDate && endDate.getTime() !== startDate.getTime()) {
-                        dateStr += ' - ' + endDate.toLocaleDateString('en-US', options);
-                    }
-                } else {
-                    const timeOptions = { ...options, hour: 'numeric', minute: '2-digit', hour12: true };
-                    dateStr = startDate.toLocaleDateString('en-US', timeOptions);
-                    if (endDate) {
-                        dateStr += ' - ' + endDate.toLocaleDateString('en-US', timeOptions);
-                    }
+        if (startDate) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            if (event.allDay) {
+                dateStr = startDate.toLocaleDateString('en-US', options);
+                if (endDate && endDate.getTime() !== startDate.getTime()) {
+                    dateStr += ' - ' + endDate.toLocaleDateString('en-US', options);
+                }
+            } else {
+                const timeOptions = { ...options, hour: 'numeric', minute: '2-digit', hour12: true };
+                dateStr = startDate.toLocaleDateString('en-US', timeOptions);
+                if (endDate) {
+                    dateStr += ' - ' + endDate.toLocaleDateString('en-US', timeOptions);
                 }
             }
-            dateElement.textContent = dateStr;
         }
-       
-        // Set event color indicator
-        if (colorIndicator) {
-            colorIndicator.style.backgroundColor = '#FF6347';
-        }
-       
-        // Show announcement-specific content
-        if (actionContainer) {
-            actionContainer.innerHTML = `
-                <div class="text-sm text-gray-600 mb-2" style="word-wrap: break-word; overflow-wrap: break-word;">
-                    <strong>Posted by:</strong> ${event.extendedProps.poster || 'Unknown'}<br>
-                    <strong>Deadline:</strong> ${event.extendedProps.deadline_text || ''}
-                </div>
-                <p class="text-xs text-orange-600 font-medium">📢 Deadline Announcement.</p>
-            `;
-        }
-       
-        // Show modal with animation
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-            modalContent.classList.remove('modal-hidden');
-            modalContent.classList.add('modal-visible');
-        }, 10);
+        dateElement.textContent = dateStr;
     }
+   
+    // Set event color indicator
+    if (colorIndicator) {
+        colorIndicator.style.backgroundColor = event.backgroundColor || '#FF6347';
+    }
+   
+    // Show content based on event type
+    if (actionContainer) {
+        if (event.extendedProps.source === 'announcement') {
+    // Announcement content with simplified status
+    let deadlineInfo = '';
+    if (event.extendedProps.deadline_text) {
+        deadlineInfo = `<strong>Deadline:</strong> ${event.extendedProps.deadline_text}<br>`;
+    }
+    
+    let statusInfo = '';
+    if (event.extendedProps.is_expired) {
+        statusInfo = `<strong class="text-gray-600">Status:</strong> <span class="text-gray-600">Past Deadline</span><br>`;
+    }
+   
+    let contentInfo = '';
+    if (event.extendedProps.content) {
+        contentInfo = `<div class="text-sm text-gray-700 mt-2">${event.extendedProps.content}</div>`;
+    }
+    
+    const iconText = event.extendedProps.is_expired ? 
+        '⏰ Past Deadline' : 
+        '📢 Active Deadline Announcement';
+   
+    actionContainer.innerHTML = `
+        <div class="text-sm text-gray-600 mb-2" style="word-wrap: break-word; overflow-wrap: break-word;">
+            <strong>Posted by:</strong> ${event.extendedProps.poster || 'Unknown'}<br>
+            ${deadlineInfo}
+            ${statusInfo}
+        </div>
+        ${contentInfo}
+        <p class="text-xs font-medium mt-2 ${event.extendedProps.is_expired ? 'text-gray-500' : 'text-orange-600'}">${iconText}</p>
+    `;
+} else {
+    // Regular event content
+    actionContainer.innerHTML = `
+        <div class="text-sm text-gray-600 mb-2" style="word-wrap: break-word; overflow-wrap: break-word;">
+            <strong>Created by:</strong> ${event.extendedProps.creator || 'Unknown'}
+        </div>
+        <p class="text-xs text-blue-600 font-medium">📅 Calendar Event</p>
+    `;
+}
+}
+   
+    // Show modal with animation
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        modalContent.classList.remove('modal-hidden');
+        modalContent.classList.add('modal-visible');
+    }, 10);
+}
 
 
 function closeEventDetailsModal() {
