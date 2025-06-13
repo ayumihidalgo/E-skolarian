@@ -320,40 +320,26 @@ function getCalendarConfig() {
     const isMobile = isMobileDevice();
     
     return {
-        initialView: isMobile ? 'listMonth' : 'dayGridMonth', // Use list view on very small screens
+        initialView: isMobile ? 'listMonth' : 'dayGridMonth',
         initialDate: new Date(),
         height: 'auto',
         aspectRatio: isMobile ? 1.1 : 1.5,
-        expandRows: !isMobile,  // Don't expand rows on mobile
-        headerToolbar: false,   // We're using custom header
+        expandRows: !isMobile,
+        headerToolbar: false,
         dayHeaderFormat: { weekday: 'short' },
         fixedWeekCount: false,
         selectable: false,
         editable: false,
         contentHeight: 'auto',
         
-        // These settings help with mobile
+        // These settings help with mobile and create the "3+ more" effect
         dayMaxEventRows: isMobile ? 2 : 3,
         eventMaxStack: isMobile ? 2 : 3,
         
-        // Better time formatting
         eventTimeFormat: {
             hour: 'numeric',
             minute: '2-digit',
             meridiem: 'short'
-        },
-        
-        // Switch to list view button on very small screens
-        customButtons: {
-            viewToggle: {
-                text: 'View',
-                click: function() {
-                    const currentView = calendarObj.view.type;
-                    calendarObj.changeView(
-                        currentView === 'dayGridMonth' ? 'listMonth' : 'dayGridMonth'
-                    );
-                }
-            }
         }
     };
 }
@@ -729,53 +715,64 @@ function initCalendar() {
             ...config,
            
             // Add these properties to prevent multi-day event display
-            eventMaxStack: 3,
-            dayMaxEvents: true,
-            dayMaxEventRows: 3,
+
            
             // Complete events function
-// In the events function, modify the data processing:
+
 
 // Replace the entire events function with this simplified version:
 
-events: function(fetchInfo, successCallback, failureCallback) {
-    console.log('=== Fetching announcements only ===');
-    
-    const showPast = document.getElementById('show-past-toggle')?.checked || false;
-    console.log('Show past toggle is:', showPast);
-    
-    const url = showPast ? '/calendar/announcements?show_past=true' : '/calendar/announcements';
-    console.log('Fetching from URL:', url);
-    
-    fetch(url)
-        .then(response => {
-            console.log('Announcements response:', response.status);
-            if (!response.ok) {
-                console.warn('Announcements failed with status', response.status);
-                return [];
-            }
-            return response.json();
-        })
-        .then(announcements => {
-            console.log('Received announcements:', announcements);
-            
-            // Minimal processing - just ensure end is null
-            const processedAnnouncements = announcements.map(announcement => {
-                return {
-                    ...announcement,
-                    end: null,  // Force end to null
-                    allDay: false // Force to not be all-day
-                };
-            });
-            
-            console.log('Processed announcements:', processedAnnouncements);
-            successCallback(processedAnnouncements || []);
-        })
-        .catch(error => {
-            console.error('Error fetching announcements:', error);
-            successCallback([]);
-        });
-},
+            events: function(fetchInfo, successCallback, failureCallback) {
+                console.log('=== Fetching announcements only ===');
+                
+                const showPast = document.getElementById('show-past-toggle')?.checked || false;
+                console.log('Show past toggle is:', showPast);
+                
+                const url = showPast ? '/calendar/announcements?show_past=true' : '/calendar/announcements';
+                console.log('Fetching from URL:', url);
+                
+                fetch(url)
+                    .then(response => {
+                        console.log('Announcements response:', response.status);
+                        if (!response.ok) {
+                            console.warn('Announcements failed with status', response.status);
+                            return [];
+                        }
+                        return response.json();
+                    })
+                    .then(announcements => {
+                        console.log('Received announcements:', announcements);
+                        
+                        // Minimal processing - just ensure end is null
+                        const processedAnnouncements = announcements.map(announcement => {
+                            return {
+                                ...announcement,
+                                end: null,  // Force end to null
+                                allDay: false // Force to not be all-day
+                            };
+                        });
+                        
+                        console.log('Processed announcements:', processedAnnouncements);
+                        successCallback(processedAnnouncements || []);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching announcements:', error);
+                        successCallback([]);
+                    });
+            },
+
+            dayCellDidMount: function(info) {
+                // Count events on this day
+                const dayEvents = calendarObj.getEvents().filter(event => {
+                    const eventDate = new Date(event.start);
+                    const cellDate = new Date(info.date);
+                    return eventDate.toDateString() === cellDate.toDateString();
+                });
+                
+                if (dayEvents.length > 2) {
+                    console.log('Day with many events:', info.date, 'Event count:', dayEvents.length);
+                }
+            },
            
             // Handle date changes
             datesSet: function() {
@@ -793,7 +790,7 @@ events: function(fetchInfo, successCallback, failureCallback) {
            
             // Display settings
             eventDisplay: 'block',
-            eventMaxStack: config.eventMaxStack,
+
            
             // Add event constraint to prevent spanning
             selectConstraint: {
