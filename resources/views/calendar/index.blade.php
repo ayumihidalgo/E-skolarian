@@ -29,26 +29,37 @@
     <div class="py-8 px-10 lg:py-8 lg:px-10 md:py-4 md:px-4 sm:py-2 sm:px-2">
         <!-- Calendar header with title -->
         <!-- Calendar header with title and navigation in one line -->
-        <div class="mb-8 lg:mb-8 md:mb-4 sm:mb-4 grid grid-cols-3">
+        <div class="mb-8 lg:mb-8 md:mb-4 sm:mb-4 grid lg:grid-cols-3 md:grid-cols-1 sm:grid-cols-1">
             <!-- Left: Calendar Title -->
-            <h1 class="text-black font-manrope text-2xl lg:text-3xl md:text-2xl sm:text-xl font-extrabold leading-normal">
+           <h1 class="text-black font-manrope text-xl lg:text-3xl md:text-2xl sm:text-xl font-extrabold leading-normal mb-4 md:mb-4 sm:mb-3 text-center lg:text-left">
                 Calendar
             </h1>
            
             <!-- Middle: Month & Year Dropdowns with Navigation Arrows (centered) -->
-            <div class="flex items-center justify-center">
-                <div class="flex items-center gap-6">
+            <div class="flex items-center justify-center mb-4 md:mb-3 sm:mb-2">
+                <div class="flex items-center gap-2 md:gap-3 lg:gap-6">
 
 
                     <!-- Left Arrow (Previous Month) -->
-                    <button id="prev-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity mr-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none">
+                    <button id="prev-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 30 30" fill="none">
                             <path d="M18.75 7.5L11.25 15L18.75 22.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </button>
+
+                     <!-- MOBILE VERSION: Month & Year (simplified on mobile) -->
+            <div class="flex items-center md:hidden">
+                <div id="mobile-month-trigger" class="text-black text-center font-lexend text-lg lg:text-2xl font-medium mr-1 min-h-[44px] flex items-center">
+                    <span id="mobile-selected-month">January</span>
+                </div>
+                <div id="mobile-year-trigger" class="text-black text-center font-lexend text-lg lg:text-2xl font-medium min-h-[44px] flex items-center">
+                    <span id="mobile-selected-year">2023</span>
+                </div>
+            </div>
+
                    
                     <!-- Custom Month Dropdown -->
-                    <div class="relative mx-2">
+                    <div class="relative mx-2 hidden md:block">
                         <!-- Custom dropdown trigger -->
                         <div id="month-dropdown-trigger" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-2xl font-medium leading-normal hover:border-blue-500 focus:border-blue-500 transition-colors flex items-center">
                             <span id="selected-month">January</span>
@@ -179,7 +190,7 @@
                     </div>
                    
                     <!-- Year Dropdown (Custom) -->
-                    <div class="relative mx-2">
+                    <div class="relative mx-2 hidden md:block">
                         <!-- Custom dropdown trigger -->
                         <div id="year-dropdown-trigger" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-2xl font-medium leading-normal hover:border-blue-500 focus:border-blue-500 transition-colors flex items-center">
                             <span id="selected-year">2023</span>
@@ -204,33 +215,33 @@
                     </div>
 
 
-                    <!-- Right Arrow (Next Month) -->
-                    <button id="next-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity ml-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none">
+                <!-- Right Arrow -->
+                <button id="next-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 30 30" fill="none">
                         <path d="M11.25 22.5L18.75 15L11.25 7.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                    </button>
-                </div>
+                    </svg>
+                </button>
             </div>
+        </div>
            
-   <!-- Right: Today Button (keep original) -->
-    <div class="flex justify-end items-center pr-0">
-        <button id="today-btn" class="flex justify-center items-center w-[85px] h-[44px] p-[10px] gap-[10px] flex-shrink-0 rounded-[22px] bg-[#DAA520] transition-colors invisible mr-8 hover:bg-[#c99418]">
-            <span class="text-white font-manrope text-[16px] font-extrabold leading-normal underline decoration-solid">Today</span>
+    <!-- Today Button -->
+    <div class="flex justify-center lg:justify-end items-center">
+        <button id="today-btn" class="flex justify-center items-center w-[85px] h-[40px] p-[10px] gap-[10px] rounded-[22px] bg-[#DAA520] transition-colors invisible hover:bg-[#c99418] min-h-[44px]">
+            <span class="text-white font-manrope text-[14px] lg:text-[16px] font-extrabold leading-normal underline decoration-solid">Today</span>
         </button>
     </div>
 </div>
-<!-- Add toggle in a separate row -->
-<div class="mb-4 lg:mb-4 md:mb-2 sm:mb-2 flex justify-end pr-8">
+<!-- Toggle Row - Simplified for mobile -->
+<div class="mb-4 lg:mb-4 md:mb-2 sm:mb-2 flex justify-center lg:justify-end">
     <div class="flex items-center">
         <label class="flex items-center cursor-pointer">
             <input type="checkbox" id="show-past-toggle" class="sr-only">
             <div class="relative">
-                <div class="block bg-gray-600 w-14 h-8 rounded-full"></div>
-                <div class="dot absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition"></div>
+                <div class="block bg-gray-600 w-12 h-6 rounded-full"></div>
+                <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
             </div>
-            <div class="ml-3 text-gray-700 font-medium text-sm">
-                Show Past Deadlines
+            <div class="ml-2 text-gray-700 font-medium text-sm">
+                Show Past
             </div>
         </label>
     </div>
@@ -299,39 +310,292 @@
     }
    
     // Adjust calendar settings for mobile
-    function getCalendarConfig() {
-        const isMobile = isMobileDevice();
-       
-        return {
-            initialView: 'dayGridMonth',
-            initialDate: new Date(),
-            height: 'auto',
-            aspectRatio: isMobile ? 1.2 : 1.5,
-            expandRows: true,  
-            headerToolbar: {
-                left: '',
-                center: 'prev title next',
-                right: 'today'
-            },
-            buttonText: {
-                today: 'Today'
-            },
-            dayHeaderFormat: { weekday: 'short' },
-            fixedWeekCount: false,
-            selectable: false,
-            editable: false,
-            contentHeight: 'auto',
-           
-            eventTimeFormat: {
-                hour: 'numeric',
-                minute: '2-digit',
-                meridiem: 'short'  
-            },
-           
-            // Responsive event settings
-            eventMaxStack: isMobile ? 2 : 3,
-        };
+function getCalendarConfig() {
+    const isMobile = isMobileDevice();
+    
+    return {
+        initialView: isMobile ? 'listMonth' : 'dayGridMonth', // Use list view on mobile
+        initialDate: new Date(),
+        height: 'auto',
+        aspectRatio: isMobile ? 1.1 : 1.5,
+        expandRows: !isMobile,  // Don't expand rows on mobile
+        headerToolbar: false,   // We're using custom header
+        dayHeaderFormat: { weekday: 'short' },
+        fixedWeekCount: false,
+        selectable: false,
+        editable: false,
+        contentHeight: 'auto',
+        
+        // These settings help with mobile
+        dayMaxEventRows: isMobile ? 2 : 3,
+        eventMaxStack: isMobile ? 2 : 3,
+        
+        // Better time formatting
+        eventTimeFormat: {
+            hour: 'numeric',
+            minute: '2-digit',
+            meridiem: 'short'
+        }
+    };
+}
+
+// Add this mobile detection function
+function isMobileDevice() {
+    return window.innerWidth <= 768;
+}
+// Initialize mobile-optimized month/year selection
+function setupMobileMonthYearSelection() {
+    const mobileTriggers = {
+        month: document.getElementById('mobile-month-trigger'),
+        year: document.getElementById('mobile-year-trigger')
+    };
+    
+    if (!mobileTriggers.month || !mobileTriggers.year) return;
+    
+    // Setup click handlers for mobile
+    mobileTriggers.month.addEventListener('click', function() {
+        openMobileMonthSelector();
+    });
+    
+    mobileTriggers.year.addEventListener('click', function() {
+        openMobileYearSelector();
+    });
+    
+    // Update the mobile selectors when calendar changes
+    updateMobileSelectors();
+}
+
+// Create a mobile month selector popup
+function openMobileMonthSelector() {
+    // Remove any existing popup first
+    removeMobileSelectors();
+    
+    // Create the month selector
+    const popup = document.createElement('div');
+    popup.className = 'month-popup fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4';
+    popup.style.maxHeight = '60vh';
+    popup.style.overflowY = 'auto';
+    popup.style.borderRadius = '12px 12px 0 0';
+    
+    // Create header
+    const header = document.createElement('div');
+    header.className = 'flex justify-between items-center mb-4 pb-2 border-b';
+    
+    const title = document.createElement('h3');
+    title.className = 'text-lg font-medium';
+    title.textContent = 'Select Month';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'text-gray-500 p-2';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = removeMobileSelectors;
+    
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    popup.appendChild(header);
+    
+    // Create month grid
+    const monthsGrid = document.createElement('div');
+    monthsGrid.className = 'grid grid-cols-3 gap-2';
+    
+    const months = [
+        'January', 'February', 'March', 
+        'April', 'May', 'June', 
+        'July', 'August', 'September', 
+        'October', 'November', 'December'
+    ];
+    
+    const currentMonth = calendarObj.getDate().getMonth();
+    
+    months.forEach((month, index) => {
+        const monthBtn = document.createElement('button');
+        monthBtn.className = 'p-3 text-center rounded-lg ' + 
+                            (currentMonth === index ? 
+                                'bg-[#DAA520] text-white' : 
+                                'bg-gray-100 text-gray-800 hover:bg-gray-200');
+        monthBtn.textContent = month;
+        
+        monthBtn.addEventListener('click', function() {
+            // Update calendar month
+            const currentDate = calendarObj.getDate();
+            const newDate = new Date(currentDate.getFullYear(), index, 1);
+            calendarObj.gotoDate(newDate);
+            
+            // Update UI
+            document.getElementById('selected-month').textContent = month;
+            document.getElementById('mobile-selected-month').textContent = month;
+            
+            // Close popup
+            removeMobileSelectors();
+        });
+        
+        monthsGrid.appendChild(monthBtn);
+    });
+    
+    popup.appendChild(monthsGrid);
+    document.body.appendChild(popup);
+    
+    // Animate in
+    setTimeout(() => {
+        popup.classList.add('active');
+    }, 10);
+    
+    // Add backdrop and close on backdrop click
+    const backdrop = document.createElement('div');
+    backdrop.className = 'fixed inset-0 bg-black bg-opacity-50 z-40';
+    backdrop.addEventListener('click', removeMobileSelectors);
+    document.body.appendChild(backdrop);
+}
+
+// Create a mobile year selector popup
+function openMobileYearSelector() {
+    // Remove any existing popup first
+    removeMobileSelectors();
+    
+    // Create the year selector
+    const popup = document.createElement('div');
+    popup.className = 'year-popup fixed bottom-0 left-0 right-0 bg-white shadow-lg z-50 p-4';
+    popup.style.maxHeight = '60vh';
+    popup.style.overflowY = 'auto';
+    popup.style.borderRadius = '12px 12px 0 0';
+    
+    // Create header
+    const header = document.createElement('div');
+    header.className = 'flex justify-between items-center mb-4 pb-2 border-b';
+    
+    const title = document.createElement('h3');
+    title.className = 'text-lg font-medium';
+    title.textContent = 'Select Year';
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'text-gray-500 p-2';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = removeMobileSelectors;
+    
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    popup.appendChild(header);
+    
+    // Create year list
+    const yearsContainer = document.createElement('div');
+    yearsContainer.className = 'grid grid-cols-3 gap-2';
+    
+    const currentYear = calendarObj.getDate().getFullYear();
+    const startYear = currentYear - 10;
+    const endYear = currentYear + 10;
+    
+    for (let year = startYear; year <= endYear; year++) {
+        const yearBtn = document.createElement('button');
+        yearBtn.className = 'p-3 text-center rounded-lg ' + 
+                           (year === currentYear ? 
+                              'bg-[#DAA520] text-white' : 
+                              'bg-gray-100 text-gray-800 hover:bg-gray-200');
+        yearBtn.textContent = year;
+        
+        yearBtn.addEventListener('click', function() {
+            // Update calendar year
+            const currentDate = calendarObj.getDate();
+            const newDate = new Date(year, currentDate.getMonth(), 1);
+            calendarObj.gotoDate(newDate);
+            
+            // Update UI
+            document.getElementById('selected-year').textContent = year;
+            document.getElementById('mobile-selected-year').textContent = year;
+            
+            // Close popup
+            removeMobileSelectors();
+        });
+        
+        yearsContainer.appendChild(yearBtn);
     }
+    
+    popup.appendChild(yearsContainer);
+    document.body.appendChild(popup);
+    
+    // Animate in
+    setTimeout(() => {
+        popup.classList.add('active');
+    }, 10);
+    
+    // Add backdrop and close on backdrop click
+    const backdrop = document.createElement('div');
+    backdrop.className = 'fixed inset-0 bg-black bg-opacity-50 z-40';
+    backdrop.addEventListener('click', removeMobileSelectors);
+    document.body.appendChild(backdrop);
+}
+
+// Keep mobile selectors in sync with calendar
+function updateMobileSelectors() {
+    if (!calendarObj) return;
+    
+    const mobileMonthEl = document.getElementById('mobile-selected-month');
+    const mobileYearEl = document.getElementById('mobile-selected-year');
+    
+    if (!mobileMonthEl || !mobileYearEl) return;
+    
+    const date = calendarObj.getDate();
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    mobileMonthEl.textContent = monthNames[date.getMonth()];
+    mobileYearEl.textContent = date.getFullYear();
+}
+
+// Remove mobile selector popups
+function removeMobileSelectors() {
+    const popups = document.querySelectorAll('.month-popup, .year-popup');
+    const backdrops = document.querySelectorAll('.fixed.inset-0.bg-black.bg-opacity-50');
+    
+    popups.forEach(popup => popup.remove());
+    backdrops.forEach(backdrop => backdrop.remove());
+}
+function addMobileViewToggle() {
+    if (!isMobileDevice()) return;
+    
+    // Check if it already exists
+    if (document.getElementById('mobile-view-toggle')) return;
+    
+    const toggleBtn = document.createElement('button');
+    toggleBtn.id = 'mobile-view-toggle';
+    toggleBtn.className = 'fixed bottom-6 right-6 z-50 bg-[#DAA520] text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg';
+    toggleBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>';
+    
+    toggleBtn.addEventListener('click', function() {
+        const currentView = calendarObj.view.type;
+        calendarObj.changeView(
+            currentView === 'dayGridMonth' ? 'listMonth' : 'dayGridMonth'
+        );
+        
+        // Save preference
+        localStorage.setItem('calendarViewMode', 
+            currentView === 'dayGridMonth' ? 'listMonth' : 'dayGridMonth');
+    });
+    
+    document.body.appendChild(toggleBtn);
+    
+    // Check if we have a saved preference
+    const savedView = localStorage.getItem('calendarViewMode');
+    if (savedView && calendarObj) {
+        calendarObj.changeView(savedView);
+    }
+}
+function setupMobileLayout() {
+    const isMobile = window.innerWidth <= 768;
+    const mainContent = document.getElementById('main-content');
+    
+    // Adjust main content spacing on mobile
+    if (isMobile && mainContent) {
+        // For mobile, use full width
+        mainContent.classList.remove('ml-[20%]');
+        mainContent.classList.add('ml-0', 'w-full');
+    } else if (mainContent) {
+        // For desktop, restore sidebar space
+        mainContent.classList.remove('ml-0', 'w-full');
+        mainContent.classList.add('ml-[20%]');
+    }
+}
    
     document.addEventListener('DOMContentLoaded', function() {
         const toggleElement = document.getElementById('show-past-toggle');
@@ -361,13 +625,39 @@
 
 
     // Make sure everything is loaded before initializing
-    function initializeCalendarWhenReady() {
-        // Small delay to ensure DOM is fully ready
-        setTimeout(() => {
-            initCalendar();
-            setupCalendarResizeObserver();
-        }, 100);
-    }
+function initializeCalendarWhenReady() {
+    // Small delay to ensure DOM is fully ready
+    setTimeout(() => {
+        setupMobileLayout();
+        initCalendar();
+        setupCalendarResizeObserver();
+        setupMobileMonthYearSelection();
+        setupMobileToggle();
+        
+        // Handle orientation changes
+        window.addEventListener('orientationchange', function() {
+            setTimeout(() => {
+                setupMobileLayout();
+                updateMobileSelectors();
+                if (calendarObj) {
+                    calendarObj.updateSize();
+                }
+            }, 200);
+        });
+        
+        // Handle resize for dynamic updates
+        window.addEventListener('resize', function() {
+            clearTimeout(window.mobileResizeTimeout);
+            window.mobileResizeTimeout = setTimeout(() => {
+                setupMobileLayout();
+                updateMobileSelectors();
+            }, 200);
+        });
+        
+        // Add mobile view toggle
+        setTimeout(addMobileViewToggle, 1000);
+    }, 100);
+}
    
     // Initialize the calendar
     function initCalendar() {
@@ -482,6 +772,29 @@
                 '</div></div>';
         }
     }
+
+    function setupMobileToggle() {
+    const toggleCheckbox = document.getElementById('show-past-toggle');
+    const toggleDot = document.querySelector('.dot');
+    
+    if (!toggleCheckbox || !toggleDot) return;
+    
+    // Make sure the dot moves properly
+    toggleCheckbox.addEventListener('change', function() {
+        if (this.checked) {
+            toggleDot.style.transform = 'translateX(calc(100% + 2px))';
+            toggleDot.style.backgroundColor = '#DAA520';
+        } else {
+            toggleDot.style.transform = 'translateX(0)';
+            toggleDot.style.backgroundColor = 'white';
+        }
+        
+        // Refetch events as in your original code
+        if (calendarObj) {
+            calendarObj.refetchEvents();
+        }
+    });
+}
    
     function setupCalendarResizeObserver() {
     const mainContent = document.getElementById('main-content');
