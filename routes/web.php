@@ -45,7 +45,7 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
     // Guest
     Route::get('/guest/login', function () {
         return view('guest.guestLogin');
-    })->name('guest');
+    })->name('guestLogin');
     Route::post('/guest/send-otp', [GuestSubmitDocumentController::class, 'sendOtp'])
         ->name('guest.sendOtp');
     Route::get('/guest/verify', [GuestSubmitDocumentController::class, 'showOtpForm'])

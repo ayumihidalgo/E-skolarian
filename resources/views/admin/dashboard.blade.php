@@ -30,36 +30,36 @@
 
             <div class="flex-grow p-6 space-y-6">
                 <!-- Stats Section -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500">Pending Documents</p>
-                            <div class="text-2xl font-bold">{{ $pendingCount }}</div>
-                        </div>
-                        <img src="{{ asset('images/pendingicon.svg') }}" class="w-10 h-10" alt="Pending Documents">
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500">Under Review</p>
-                            <div class="text-2xl font-bold">{{ $reviewCount }}</div>
-                        </div>
-                        <img src="{{ asset('images/reviewicon.svg') }}" class="w-10 h-10" alt="Under Review">
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500">Approved Documents</p>
-                            <div class="text-2xl font-bold">{{ $approvedCount }}</div>
-                        </div>
-                        <img src="{{ asset('images/approvedicon.svg') }}" class="w-10 h-10" alt="Approved Documents">
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                        <div>
-                            <p class="text-sm text-gray-500">Total Documents</p>
-                            <div class="text-2xl font-bold">{{ $totalCount }}</div>
-                        </div>
-                        <img src="{{ asset('images/totaldocicon.svg') }}" class="w-10 h-10" alt="Total Documents">
-                    </div>
-                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+        <div>
+            <p class="text-sm text-gray-500">Pending Documents</p>
+            <div class="text-2xl font-bold">{{ $pendingCount }}</div>
+        </div>
+        <img src="{{ asset('images/pendingicon.svg') }}" class="w-10 h-10" alt="Pending Documents">
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+        <div>
+            <p class="text-sm text-gray-500">Under Review</p>
+            <div class="text-2xl font-bold">{{ $reviewCount }}</div>
+        </div>
+        <img src="{{ asset('images/reviewicon.svg') }}" class="w-10 h-10" alt="Under Review">
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+        <div>
+            <p class="text-sm text-gray-500">Approved Documents</p>
+            <div class="text-2xl font-bold">{{ $approvedCount }}</div>
+        </div>
+        <img src="{{ asset('images/approvedicon.svg') }}" class="w-10 h-10" alt="Approved Documents">
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+        <div>
+            <p class="text-sm text-gray-500">Total Documents</p>
+            <div class="text-2xl font-bold">{{ $totalCount }}</div>
+        </div>
+        <img src="{{ asset('images/totaldocicon.svg') }}" class="w-10 h-10" alt="Total Documents">
+    </div>
+</div>
 
                 <!-- Announcement and Documents Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -171,11 +171,11 @@
                             </div>
                         </div>
                         <!-- Recent Documents -->
-                        <div class="bg-zinc-100 rounded-xl shadow-md p-4 flex-1 flex flex-col">
+                        <div class="bg-white rounded-xl shadow-md p-4 flex-1 flex flex-col">
                             <h2 class="text-lg font-semibold mb-2">Recent Documents</h2>
                             @if($recentDocuments->count())
                                 <div class="overflow-x-auto">
-                                    <table class="min-w-full text-sm text-left">
+                                    <table class="min-w-full text-sm text-left bg-white rounded-xl">
                                         <thead>
                                             <tr class="border-b">
                                                 <th class="px-3 py-2 font-semibold">Tag</th>
@@ -187,8 +187,8 @@
                                         </thead>
                                         <tbody>
                                             @foreach($recentDocuments as $doc)
-                                                <tr class="border-b hover:bg-zinc-200">
-                                                    <td class="px-3 py-2 font-bold text-orange-500">{{ $doc->control_tag }}</td>
+                                                <tr class="border-b">
+                                                    <td class="px-3 py-2 font-extrabold text-black">{{ $doc->control_tag }}</td>
                                                     <td class="px-3 py-2 max-w-[180px] truncate" title="{{ $doc->user->username ?? '' }}">
                                                         @if(is_null($doc->user_id))
                                                             Guest Student
