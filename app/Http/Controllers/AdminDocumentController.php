@@ -28,9 +28,9 @@ class AdminDocumentController extends Controller
             ->orderBy('version', 'desc')
             ->get();
         
-        // Initialize attachments array
+        // Initialize attachments array and document_url
         $attachments = [];
-        $filePath = null;
+        $document_url = null; // Initialize this variable
         
         // Process all versions into attachments array
         if ($documentVersions && count($documentVersions) > 0) {
@@ -48,6 +48,9 @@ class AdminDocumentController extends Controller
             // Get latest version's file path for display
             $latestVersion = $documentVersions->first();
             $document_url = $latestVersion->document_url;
+        } else {
+            // Fallback to original document URL if no versions exist
+            $document_url = $document->document_url ?? null;
         }
 
         // Organization mapping
@@ -98,44 +101,66 @@ class AdminDocumentController extends Controller
 
     public function documentHistory(Request $request)
     {
-        // Start with a base query
+        // Define the standard document types
+        $standardTypes = [
+            'Event Proposal',
+            'General Plan of Activities',
+            'Reports of Proceedings',
+            'Constitution and By-Laws',
+            'Fundraising Activities',
+            'Request Letter',
+            'Petition and Concern',
+            'Memorandum of Agreement',
+            'Off Campus Activities'
+        ];
+
+        // Start with a base query - LEFT JOIN with users table
         $query = DB::table('submitted_documents')
-            ->whereNull('archived_at')
-            ->where('status', 'Approved');
+            ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id')
+            ->select('submitted_documents.*', 'users.username')
+            ->whereNull('submitted_documents.archived_at')
+            ->where('submitted_documents.status', 'Approved');
         
         // Apply organization filter
         if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
-            $query->where('control_tag', 'LIKE', $request->organization . '_%');
+            $query->where('submitted_documents.control_tag', 'LIKE', $request->organization . '_%');
         }
         
-        // Apply type filter
+        // Apply type filter - handle "Others" category
         if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {
-            $query->where('type', $request->type);
+            if ($request->type === 'Others') {
+                // Filter for documents with types NOT in the standard list
+                $query->whereNotIn('submitted_documents.type', $standardTypes);
+            } else {
+                // Filter for specific standard type
+                $query->where('submitted_documents.type', $request->type);
+            }
         }
         
         // Apply status filter
         if ($request->has('status') && $request->status != 'All' && $request->status != 'Status') {
-            $query->where('status', $request->status);
+            $query->where('submitted_documents.status', $request->status);
         }
         
         // ADD DATE FILTERING 
         if ($request->has('start_date') && !empty($request->start_date)) {
             $startDate = Carbon::parse($request->start_date)->startOfDay();
-            $query->where('created_at', '>=', $startDate);
+            $query->where('submitted_documents.created_at', '>=', $startDate);
         }
         
         if ($request->has('end_date') && !empty($request->end_date)) {
             $endDate = Carbon::parse($request->end_date)->endOfDay();
-            $query->where('created_at', '<=', $endDate);
+            $query->where('submitted_documents.created_at', '<=', $endDate);
         }
         
         // Apply search filter
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
             $query->where(function($q) use ($searchTerm) {
-                $q->where('subject', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('control_tag', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('type', 'LIKE', "%{$searchTerm}%");
+                $q->where('submitted_documents.subject', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('submitted_documents.control_tag', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('submitted_documents.type', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('users.username', 'LIKE', "%{$searchTerm}%");
             });
         }
         
@@ -145,36 +170,29 @@ class AdminDocumentController extends Controller
             $direction = $request->has('sort_dir') ? $request->sort_dir : 'asc';
             
             if ($column === 'organization') {
-                // Sort by the organization part of control_tag
-                // This uses a substring before the underscore
-                $query->orderByRaw("SUBSTRING_INDEX(control_tag, '_', 1) $direction");
+                // Sort by username instead of organization acronym
+                $query->orderBy('users.username', $direction);
             } else {
-                // Normal column sort
-                $query->orderBy($column, $direction);
+                // Prefix columns with table name to avoid ambiguity
+                $query->orderBy('submitted_documents.' . $column, $direction);
             }
         } else {
             // Default sort
-            $query->orderBy('created_at', 'desc');
+            $query->orderBy('submitted_documents.created_at', 'desc');
         }
-        
-        // DEBUG: Add this temporarily to see what's happening
-        \Log::info('Document History Query Debug:', [
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'sql' => $query->toSql(),
-            'bindings' => $query->getBindings(),
-            'all_params' => $request->all()
-        ]);
         
         // Execute query with pagination and append all query parameters for pagination links
         $documents = $query->paginate(6)->appends($request->all());
         
+        // Pass standard types to the view for processing
+        $standardTypes = $standardTypes;
+        
         // Return appropriate response based on request type
         if ($request->ajax()) {
-            return view('admin.documentHistory', compact('documents'))->render();
+            return view('admin.documentHistory', compact('documents', 'standardTypes'))->render();
         }
         
-        return view('admin.documentHistory', compact('documents'));
+        return view('admin.documentHistory', compact('documents', 'standardTypes'));
     }
 
     public function archiveDocuments(Request $request)
@@ -212,25 +230,49 @@ class AdminDocumentController extends Controller
     {
         $adminId = auth()->id();
 
+        // Define the standard document types
+        $standardTypes = [
+            'Event Proposal',
+            'General Plan of Activities',
+            'Reports of Proceedings',
+            'Constitution and By-Laws',
+            'Fundraising Activities',
+            'Request Letter',
+            'Petition and Concern',
+            'Memorandum of Agreement',
+            'Off Campus Activities'
+        ];
+
+        // Add LEFT JOIN with users table to get username
         $query = DB::table('submitted_documents')
-            ->whereNotNull('archived_at')
-            ->where('received_by', $adminId);
+            ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id')
+            ->select('submitted_documents.*', 'users.username')
+            ->whereNotNull('submitted_documents.archived_at')
+            ->where('submitted_documents.received_by', $adminId);
 
         // Apply filters from request parameters
         if ($request->has('organization') && $request->organization !== 'All' && $request->organization !== 'Organization') {
-            $query->where('control_tag', 'like', $request->organization . '_%');
+            $query->where('submitted_documents.control_tag', 'like', $request->organization . '_%');
         }
 
+        // Apply type filter - handle "Others" category
         if ($request->has('type') && $request->type !== 'All' && $request->type !== 'Type') {
-            $query->where('type', $request->type);
+            if ($request->type === 'Others') {
+                // Filter for documents with types NOT in the standard list
+                $query->whereNotIn('submitted_documents.type', $standardTypes);
+            } else {
+                // Filter for specific standard type
+                $query->where('submitted_documents.type', $request->type);
+            }
         }
 
         if ($request->has('search') && !empty($request->search)) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('subject', 'like', "%{$search}%")
-                  ->orWhere('control_tag', 'like', "%{$search}%")
-                  ->orWhere('type', 'like', "%{$search}%");
+                $q->where('submitted_documents.subject', 'like', "%{$search}%")
+                  ->orWhere('submitted_documents.control_tag', 'like', "%{$search}%")
+                  ->orWhere('submitted_documents.type', 'like', "%{$search}%")
+                  ->orWhere('users.username', 'like', "%{$search}%");
             });
         }
 
@@ -240,22 +282,22 @@ class AdminDocumentController extends Controller
             $direction = $request->has('sort_dir') ? $request->sort_dir : 'asc';
             
             if ($column === 'organization') {
-                // Sort by the organization part of control_tag
-                $query->orderByRaw("SUBSTRING_INDEX(control_tag, '_', 1) $direction");
+                // Sort by username instead of organization acronym
+                $query->orderBy('users.username', $direction);
             } else {
-                // Normal column sort
-                $query->orderBy($column, $direction);
+                // Prefix columns with table name to avoid ambiguity
+                $query->orderBy('submitted_documents.' . $column, $direction);
             }
         } else {
             // Default sort
-            $query->orderBy('archived_at', 'desc');
+            $query->orderBy('submitted_documents.archived_at', 'desc');
         }
 
         // Fetch archived documents with pagination
         $documents = $query->paginate(6)
                           ->appends($request->except('page'));
 
-        // Your existing organization mapping code
+        // Your existing organization mapping code (keep for any remaining references)
         $orgMap = [
             'ACAP' => 'Association of Competent and Aspiring Psychologists',
             'AECES' => 'Association of Electronics and Communications Engineering Students',
@@ -290,10 +332,10 @@ class AdminDocumentController extends Controller
 
         // Handle AJAX requests
         if ($request->ajax()) {
-            return view('admin.archivePage', compact('documents', 'orgMap', 'tagColors'))->render();
+            return view('admin.archivePage', compact('documents', 'orgMap', 'tagColors', 'standardTypes'))->render();
         }
 
-        return view('admin.archivePage', compact('documents', 'orgMap', 'tagColors'));
+        return view('admin.archivePage', compact('documents', 'orgMap', 'tagColors', 'standardTypes'));
     }
 
     public function restoreDocuments(Request $request)
@@ -342,44 +384,66 @@ class AdminDocumentController extends Controller
     // Add this new method to handle server-side select all
     public function selectAllDocuments(Request $request)
     {
-        // Build the same query as in documentHistory method
+        // Define the standard document types
+        $standardTypes = [
+            'Event Proposal',
+            'General Plan of Activities',
+            'Reports of Proceedings',
+            'Constitution and By-Laws',
+            'Fundraising Activities',
+            'Request Letter',
+            'Petition and Concern',
+            'Memorandum of Agreement',
+            'Off Campus Activities'
+        ];
+
+        // Build the same query as in documentHistory method with LEFT JOIN
         $query = DB::table('submitted_documents')
-            ->select('id')
-            ->whereNull('archived_at')
-            ->where('status', 'Approved');
-        
+            ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id')
+            ->select('submitted_documents.id')
+            ->whereNull('submitted_documents.archived_at')
+            ->where('submitted_documents.status', 'Approved');
+    
         // Apply the same filters as in documentHistory
         if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
-            $query->where('control_tag', 'LIKE', $request->organization . '_%');
+            $query->where('submitted_documents.control_tag', 'LIKE', $request->organization . '_%');
         }
-        
+    
+        // Apply type filter - handle "Others" category
         if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {
-            $query->where('type', $request->type);
+            if ($request->type === 'Others') {
+                // Filter for documents with types NOT in the standard list
+                $query->whereNotIn('submitted_documents.type', $standardTypes);
+            } else {
+                // Filter for specific standard type
+                $query->where('submitted_documents.type', $request->type);
+            }
         }
-        
+    
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
             $query->where(function($q) use ($searchTerm) {
-                $q->where('subject', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('control_tag', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('type', 'LIKE', "%{$searchTerm}%");
+                $q->where('submitted_documents.subject', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('submitted_documents.control_tag', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('submitted_documents.type', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('users.username', 'LIKE', "%{$searchTerm}%");
             });
         }
-        
+    
         // Apply date filtering
         if ($request->has('start_date') && !empty($request->start_date)) {
             $startDate = Carbon::parse($request->start_date)->startOfDay();
-            $query->where('created_at', '>=', $startDate);
+            $query->where('submitted_documents.created_at', '>=', $startDate);
         }
-        
+    
         if ($request->has('end_date') && !empty($request->end_date)) {
             $endDate = Carbon::parse($request->end_date)->endOfDay();
-            $query->where('created_at', '<=', $endDate);
+            $query->where('submitted_documents.created_at', '<=', $endDate);
         }
-        
+    
         // Get all document IDs that match the current filters
-        $documentIds = $query->pluck('id')->toArray();
-        
+        $documentIds = $query->pluck('submitted_documents.id')->toArray();
+    
         return response()->json([
             'success' => true,
             'document_ids' => $documentIds,
@@ -390,31 +454,53 @@ class AdminDocumentController extends Controller
     // Add this new method for archived documents select all
     public function selectAllArchivedDocuments(Request $request)
     {
-        // Build the same query as in archivePage method
+        // Define the standard document types
+        $standardTypes = [
+            'Event Proposal',
+            'General Plan of Activities',
+            'Reports of Proceedings',
+            'Constitution and By-Laws',
+            'Fundraising Activities',
+            'Request Letter',
+            'Petition and Concern',
+            'Memorandum of Agreement',
+            'Off Campus Activities'
+        ];
+
+        // Build the same query as in archivePage method with LEFT JOIN
         $query = DB::table('submitted_documents')
-            ->select('id')
-            ->whereNotNull('archived_at'); // Only archived documents
-    
+            ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id')
+            ->select('submitted_documents.id')
+            ->whereNotNull('submitted_documents.archived_at');
+
         // Apply the same filters as in archivePage
         if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
-            $query->where('control_tag', 'LIKE', $request->organization . '_%');
+            $query->where('submitted_documents.control_tag', 'LIKE', $request->organization . '_%');
         }
-    
+
+        // Apply type filter - handle "Others" category
         if ($request->has('type') && $request->type != 'All' && $request->type != 'Type') {
-            $query->where('type', $request->type);
+            if ($request->type === 'Others') {
+                // Filter for documents with types NOT in the standard list
+                $query->whereNotIn('submitted_documents.type', $standardTypes);
+            } else {
+                // Filter for specific standard type
+                $query->where('submitted_documents.type', $request->type);
+            }
         }
-    
+
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
             $query->where(function($q) use ($searchTerm) {
-                $q->where('subject', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('control_tag', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('type', 'LIKE', "%{$searchTerm}%");
+                $q->where('submitted_documents.subject', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('submitted_documents.control_tag', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('submitted_documents.type', 'LIKE', "%{$searchTerm}%")
+                  ->orWhere('users.username', 'LIKE', "%{$searchTerm}%");
             });
         }
-    
+
         // Get all archived document IDs that match the current filters
-        $documentIds = $query->pluck('id')->toArray();
+        $documentIds = $query->pluck('submitted_documents.id')->toArray();
     
         return response()->json([
             'success' => true,
