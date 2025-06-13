@@ -27,10 +27,10 @@
 
     <!-- Notification Panel -->
    <div id="notificationPanel"
-        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-72 md:w-80 lg:w-96 xl:w-[26rem] 2xl:w-[28rem] sm:h-auto sm:max-h-[70vh] md:max-h-[75vh] lg:max-h-[80vh] xl:max-h-[85vh]">
+        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-72 md:w-80 lg:w-96 xl:w-[26rem] 2xl:w-[28rem] sm:h-auto sm:max-h-[85vh] sm:max-w-[95vw] flex flex-col overflow-hidden">
         
         <!-- Header -->
-      <div class="notif-top-content p-4 border-b flex flex-row justify-between w-full h-[40px]">
+      <div class="notif-top-content p-4 border-b flex flex-row justify-between w-full flex-shrink-0 min-h-[60px]">
             <div class="flex items-center">
                 <!-- Back Icon (visible only on mobile) -->
                 <button id="backBtn" class="mr-2 sm:hidden text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-300">
@@ -438,6 +438,11 @@
         const notificationElement = link.closest('[data-notification-id]');
         if (!notificationElement) return;
         const notificationId = notificationElement.dataset.notificationId;
+
+        // Close the notification panel
+        if (isPanelVisible) {
+            togglePanel();
+        }
 
         // Your existing mark-as-read logic here...
         try {
