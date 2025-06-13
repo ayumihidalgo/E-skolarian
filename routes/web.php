@@ -542,6 +542,10 @@ Route::post('/check-recovery-email', [SuperAdminController::class, 'checkRecover
 Route::get('/student/document-history/preview/{id}', [StudentDocumentController::class, 'documentHistoryPreview'])->name('student.document.history.preview');
 
 
+// Add this line with your other admin routes
+Route::get('/admin/documents/export/pdf', [App\Http\Controllers\DocumentExportController::class, 'exportPdf'])->name('admin.document.export.pdf')->middleware('auth');
+
+
 
 
 
