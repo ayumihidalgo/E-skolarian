@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use App\Events\DocumentStatusUpdated;
 use App\Models\DocumentTimeline;
 use App\LogsActivity;
+use Illuminate\Support\Facades\Log;
 
 class DocumentReviewController extends Controller
 {
@@ -240,6 +241,7 @@ class DocumentReviewController extends Controller
         // Transform document for the view
         $documentData = [
             'id' => $document->id,
+            'guest_webmail' => $document->guest_webmail,
             'subject' => $document->subject,
             'summary' => $document->overview,
             'academic_year' => $document->academic_year,
@@ -430,6 +432,15 @@ class DocumentReviewController extends Controller
             // Dispatch event for notification - AFTER creating the timeline entry
             // This event should NOT create another timeline entry
             event(new DocumentStatusUpdated($document));
+
+            // Check if this is a guest submission (user_id is null)
+            if ($document->user_id) {
+                // Regular user notification through the application
+                // $document->user->notify(new \App\Notifications\DocumentApproved($document, $request->message));
+            } else if ($document->guest_webmail) {
+                // Guest user notification via email
+                \Mail::to($document->guest_webmail)->send(new \App\Mail\DocumentApprovedMail($document, $request->message));
+            }
             
             return response()->json([
                 'success' => true,
@@ -522,6 +533,9 @@ class DocumentReviewController extends Controller
                         \Log::error('Failed to send notification: ' . $e->getMessage());
                     }
                 }
+            } else if ($document->guest_webmail) {
+                // Guest user notification via email
+                \Mail::to($document->guest_webmail)->send(new \App\Mail\DocumentResubmissionMail($document, $request->message));
             }
             
             return response()->json([
