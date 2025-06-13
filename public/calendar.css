@@ -21,7 +21,35 @@
     background-color: #fff;
     visibility: visible !important;
     width: 98% !important
+    
 }
+#calendar-container {
+    transition: min-height 0.3s ease-in-out;
+}
+
+
+/* Make the view container adapt to content */
+.fc .fc-view-harness {
+    height: auto !important;
+    transition: height 0.3s ease-in-out;
+}
+
+/* Make sure rows fill available space */
+.fc .fc-daygrid-body {
+    height: auto !important;
+}
+
+/* For February specifically - ensure proper height distribution */
+.fc .fc-daygrid-body table {
+    height: 100%;
+}
+
+/* Make cells expand to fill available space */
+.fc .fc-daygrid-body-balanced .fc-daygrid-day-events {
+    position: relative;
+    min-height: 2em;
+}
+
 
 .fc-header-toolbar {
     background: transparent !important;
@@ -922,7 +950,7 @@
 }
 
 
-/**
+
 
 
 .fc-header-toolbar,
@@ -957,4 +985,46 @@ div.fc-header-toolbar,
 }
 
 
-**/
+    /* Ensure proper layout with footer at bottom */
+    #main-content {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    
+    /* Push footer to bottom */
+    .py-8.px-10 {
+        flex-grow: 1;
+    }
+
+
+
+ 
+    /* Custom styling for today's cell in the calendar */
+    .fc .fc-day-today {
+        background-color: #F5C518 !important;
+        opacity: 0.8;
+    }
+    
+    /* If you want the highlighting to be more subtle */
+    .fc .fc-day-today:not(.fc-daygrid-day-outside) {
+        background-color: #F5C518 !important;
+        opacity: 0.8;
+    }
+        /* Color for days from other months */
+        .fc .fc-day-other,
+        .fc .fc-daygrid-day-outside {
+            background-color: #E8E8E8 !important;
+        }
+        
+    /* Ensure proper layout with footer at bottom */
+    #main-content {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+    }
+    
+    /* Push footer to bottom */
+    .py-8.px-10 {
+        flex-grow: 1;
+    }

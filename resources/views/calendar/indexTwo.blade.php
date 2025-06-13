@@ -25,11 +25,77 @@
     <!-- Calendar content section -->
     <div class="py-8 px-10 lg:py-8 lg:px-10 md:py-4 md:px-4 sm:py-2 sm:px-2">
         <!-- Calendar header with title -->
-        <div class="mb-8 lg:mb-8 md:mb-4 sm:mb-4">
-            <h1 class="text-black font-manrope text-2xl lg:text-3xl md:text-2xl sm:text-xl font-extrabold leading-normal text-center lg:text-left">
-                Calendar 
-            </h1>
+<!-- Calendar header with title and navigation in one line -->
+<div class="mb-8 lg:mb-8 md:mb-4 sm:mb-4 grid grid-cols-3">
+    <!-- Left: Calendar Title -->
+    <h1 class="text-black font-manrope text-2xl lg:text-3xl md:text-2xl sm:text-xl font-extrabold leading-normal">
+        Calendar 
+    </h1>
+    
+    <!-- Middle: Month & Year Dropdowns with Navigation Arrows (centered) -->
+    <div class="flex items-center justify-center">
+        <div class="flex items-center gap-6">
+
+            <!-- Left Arrow (Previous Month) -->
+            <button id="prev-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none">
+                    <path d="M18.75 7.5L11.25 15L18.75 22.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            
+
+
+            <div class="relative mx-2">
+                <select id="month-dropdown" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-2xl font-medium leading-normal hover:border-blue-500 focus:border-blue-500 focus:outline-none transition-colors">
+                    <option value="0">January</option>
+                    <option value="1">February</option>
+                    <option value="2">March</option>
+                    <option value="3">April</option>
+                    <option value="4">May</option>
+                    <option value="5">June</option>
+                    <option value="6">July</option>
+                    <option value="7">August</option>
+                    <option value="8">September</option>
+                    <option value="9">October</option>
+                    <option value="10">November</option>
+                    <option value="11">December</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" class="flex-shrink-0">
+                        <path d="M1 1.5L6 6.5L11 1.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <!-- Year Dropdown -->
+            <div class="relative mx-2">
+                <select id="year-dropdown" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-2xl font-medium leading-normal hover:border-blue-500 focus:border-blue-500 focus:outline-none transition-colors">
+                    <!-- Years will be populated by JavaScript -->
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" class="flex-shrink-0">
+                        <path d="M1 1.5L6 6.5L11 1.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+            </div>
+            
+
+            <!-- Right Arrow (Next Month) -->
+            <button id="next-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity ml-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30" fill="none">
+                  <path d="M11.25 22.5L18.75 15L11.25 7.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
         </div>
+    </div>
+    
+    <!-- Right: Today Button (fixed position) -->
+    <div class="flex justify-end items-center pr-0">
+    <button id="today-btn" class="flex justify-center items-center w-[85px] h-[44px] p-[10px] gap-[10px] flex-shrink-0 rounded-[22px] bg-[#DAA520] transition-colors invisible mr-8 hover:bg-[#c99418]">
+        <span class="text-white font-manrope text-[16px] font-extrabold leading-normal underline decoration-solid">Today</span>
+    </button>
+</div>
+</div>
 
         <!-- Calendar container with responsive dimensions -->
         <div id="calendar-container" class="bg-white rounded-lg overflow-hidden shadow-md relative z-[5] min-h-[600px] lg:min-h-[600px] md:min-h-[500px] sm:min-h-[400px]">
@@ -37,7 +103,6 @@
         </div>
     </div>
 
-    <!-- Event Details Modal (Responsive) -->
     <div id="eventDetailsModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md lg:max-w-md md:max-w-sm sm:max-w-[95vw] modal-container modal-hidden">
             <div class="p-6 lg:p-6 md:p-4 sm:p-4">
@@ -67,7 +132,13 @@
                     </div>
                 </div>
             </div>
+            
         </div>
+    </div>
+
+    <!-- Add footer here with proper spacing -->
+    <div class="mt-auto">
+        @include('components.footer')
     </div>
 </div>
 
@@ -97,6 +168,7 @@
             initialDate: new Date(),
             height: 'auto',
             aspectRatio: isMobile ? 1.2 : 1.5,
+            expandRows: true,  
             headerToolbar: {
                 left: '',
                 center: 'prev title next',
@@ -109,6 +181,7 @@
             fixedWeekCount: false,
             selectable: false,
             editable: false,
+            contentHeight: 'auto',
             
             eventTimeFormat: {
                 hour: 'numeric',
@@ -184,7 +257,9 @@
                 
                 // Handle date changes
                 datesSet: function() {
+                    updateCustomControls();
                     checkIfCurrentMonth();
+                    adjustCalendarHeight();
                 },
                 
                 // Handle event clicks (read-only)
@@ -222,6 +297,7 @@
             
             // Render calendar immediately
             calendarObj.render();
+            setupCustomNavigation();
 
 
             
@@ -238,6 +314,38 @@
                 '</div></div>';
         }
     }
+
+    function adjustCalendarHeight() {
+    if (!calendarObj) return;
+    
+    const date = calendarObj.getDate();
+    const currentView = calendarObj.view;
+    const calendarContainer = document.getElementById('calendar-container');
+    const calendar = document.getElementById('calendar');
+    
+    if (!calendarContainer || !calendar) return;
+    
+    // Calculate number of weeks in the current month view
+    const start = currentView.currentStart;
+    const end = currentView.currentEnd;
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const weeksCount = Math.ceil(diffDays / 7);
+    
+    // Base height per week (adjust as needed)
+    const baseHeightPerWeek = 120; // pixels
+    const minHeight = 400; // minimum height
+    
+    // Calculate new height based on weeks
+    let newHeight = Math.max(weeksCount * baseHeightPerWeek, minHeight);
+    
+    // Apply the new height
+    calendarContainer.style.minHeight = `${newHeight}px`;
+    calendar.style.minHeight = `${newHeight}px`;
+    
+    // Force calendar to update its size
+    calendarObj.updateSize();
+}
 
     function debugCalendarData() {
         console.log('=== DEBUG: Testing announcement fetch ===');
@@ -405,6 +513,115 @@ function closeEventDetailsModal() {
             showYearSelector(currentYear, this);
         });
     }
+
+
+    // Setup custom navigation
+// Setup custom navigation
+function setupCustomNavigation() {
+    const prevBtn = document.getElementById('prev-month');
+    const nextBtn = document.getElementById('next-month');
+    const monthDropdown = document.getElementById('month-dropdown');
+    const yearDropdown = document.getElementById('year-dropdown');
+    const todayBtn = document.getElementById('today-btn');
+    
+    // Populate year dropdown
+    populateYearDropdown();
+    
+    // Set initial values
+    updateCustomControls();
+    
+    // Handle previous month button click
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function() {
+            calendarObj.prev();
+        });
+    }
+    
+    // Handle next month button click
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            calendarObj.next();
+        });
+    }
+    
+    // Handle month dropdown change
+    if (monthDropdown) {
+        monthDropdown.addEventListener('change', function() {
+            const selectedMonth = parseInt(this.value);
+            const currentDate = calendarObj.getDate();
+            const newDate = new Date(currentDate.getFullYear(), selectedMonth, 1);
+            calendarObj.gotoDate(newDate);
+        });
+    }
+    
+    // Handle year dropdown change
+    if (yearDropdown) {
+        yearDropdown.addEventListener('change', function() {
+            const selectedYear = parseInt(this.value);
+            const currentDate = calendarObj.getDate();
+            const newDate = new Date(selectedYear, currentDate.getMonth(), 1);
+            calendarObj.gotoDate(newDate);
+        });
+    }
+    
+    // Handle today button click
+    if (todayBtn) {
+        todayBtn.addEventListener('click', function() {
+            calendarObj.today();
+        });
+    }
+}
+
+// Populate year dropdown with range of years
+function populateYearDropdown() {
+    const yearDropdown = document.getElementById('year-dropdown');
+    if (!yearDropdown) return;
+    
+    const currentYear = new Date().getFullYear();
+    const startYear = currentYear - 10;
+    const endYear = currentYear + 10;
+    
+    yearDropdown.innerHTML = '';
+    
+    for (let year = startYear; year <= endYear; year++) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        if (year === currentYear) {
+            option.selected = true;
+        }
+        yearDropdown.appendChild(option);
+    }
+}
+
+// Update custom controls based on calendar date
+// Update custom controls based on calendar date
+function updateCustomControls() {
+    if (!calendarObj) return;
+    
+    const calendarDate = calendarObj.getDate();
+    const monthDropdown = document.getElementById('month-dropdown');
+    const yearDropdown = document.getElementById('year-dropdown');
+    const todayBtn = document.getElementById('today-btn');
+    
+    if (monthDropdown) {
+        monthDropdown.value = calendarDate.getMonth();
+    }
+    
+    if (yearDropdown) {
+        yearDropdown.value = calendarDate.getFullYear();
+    }
+    
+    // Show/hide today button based on current month
+    if (todayBtn) {
+        const isCurrentMonth = 
+            currentMonth === calendarDate.getMonth() && 
+            currentYear === calendarDate.getFullYear();
+        
+        // Use visibility instead of display to maintain layout
+        todayBtn.style.visibility = isCurrentMonth ? 'hidden' : 'visible';
+    }
+}
 
     // Improved Year Selector with better spacing
     function showYearSelector(currentYear, titleElement) {
