@@ -11,13 +11,9 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 ...jsFiles,
-                'resources/js/activity-log-pdf.js'
             ],
             refresh: true,
         }),
         tailwindcss(),
     ],
-    optimizeDeps: {
-        include: ['html2pdf.js']
-    }
 });
