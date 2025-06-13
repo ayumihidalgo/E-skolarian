@@ -27,6 +27,7 @@ use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\ProblemReportController;
 use App\Http\Controllers\StudentDashboardController;
+use App\Http\Controllers\GuestSubmitDocumentController;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\SuperAdmin\SuperAdminSettingsController;
 use App\Http\Middleware\LogoutIfAuthenticated;
@@ -42,10 +43,23 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
 
 
     // Guest
-    Route::get('/guest', function() {
-        return view('guest.guest');
+    Route::get('/guest/login', function() {
+        return view('guest.guestLogin');
     })->name('guest');
-
+    Route::post('/guest/send-otp', [GuestSubmitDocumentController::class, 'sendOtp'])
+        ->name('guest.sendOtp');
+    Route::get('/guest/verify', [GuestSubmitDocumentController::class, 'showOtpForm'])
+        ->name('guest.verifyForm');
+    Route::post('/guest/verify-otp', [GuestSubmitDocumentController::class, 'verifyOtp'])
+        ->name('guest.verifyOtp');
+    Route::get('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])
+        ->name('guest.resendOtp');
+    Route::post('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])
+        ->name('guest.resendOtp');
+    Route::get('/guest/submit', [GuestSubmitDocumentController::class, 'showSubmissionForm'])
+        ->name('guest.submissionForm');
+    Route::get('/guest/success', [GuestSubmitDocumentController::class, 'showSubmissionSuccess'])
+        ->name('guest.submissionSuccess');
 
     // Student Login
     Route::get('/student/login', function () {
@@ -100,8 +114,8 @@ Route::get('/notification', function () {
     return view('components.general-components.notification');
 });
 
-
-
+// Moved out from middleware auth so that both authenticated students and guests can submit documents
+Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
 
 // ----------------------------------------
 // Authenticated Routes
@@ -209,8 +223,7 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
 // ---------------- Student ----------------
 Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
     Route::get('/student/dashboard', [StudentDashboardController::class, 'showStudentDashboard'])->name('student.dashboard');
-    Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
-    Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
+    Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');    
     Route::get('/student/documentHistory', [StudentDocumentController::class, 'documentArchive'])->name('student.documentHistory');
     Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
     Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])->name('student.documentPreview');
@@ -283,9 +296,6 @@ Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->n
 
     // Submit Document Route
     Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
-
-
-    Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
     // Dashboard Route
     Route::get('/dashboard', function () {
         return view('student.dashboard');

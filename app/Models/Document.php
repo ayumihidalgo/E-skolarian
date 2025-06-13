@@ -10,6 +10,7 @@ class Document extends Model
 
     protected $fillable = [
         'user_id',
+        'guest_webmail',
         'received_by',
         'subject',
         'type',

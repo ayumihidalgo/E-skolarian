@@ -14,6 +14,7 @@ use App\Models\Role;
 use App\Events\DocumentSubmitted;
 use App\Models\DocumentVersion;
 use App\LogsActivity;
+use Illuminate\Support\Facades\Session;
 
 class DocumentController extends Controller
 {
@@ -34,18 +35,16 @@ class DocumentController extends Controller
     {
         try {
             Log::info('Store method hit', $request->all());
-            Log::info('Document submission attempt', ['user_id' => Auth::id()]);
 
-            // Validate the incoming request
             $validated = $request->validate([
                 'received_by' => 'required|exists:users,id',
                 'subject' => 'required|string|max:255',
                 'type' => 'required|string|max:50',
-                'overview' => 'required|string|max:255',
+                'overview' => 'required|string|max:1000',
                 'academic_year' => 'required|string',
                 'venue' => 'nullable|string|max:100|required_if:type,Event Proposal',
                 'proposed_date_time' => 'nullable|date|required_if:type,Event Proposal',
-                'hours' => 'nullable|integer|required_if:type,Event Proposal',
+                'hours' => 'nullable|integer|min:1|required_if:type,Event Proposal',
                 'attendees' => 'nullable|string|max:50|required_if:type,Event Proposal',
                 'attendees_range' => 'nullable|required_if:type,Event Proposal|in:10-50,50-100,100-250,250-500,Above 500',
                 'fees' => 'nullable|numeric|required_if:type,Event Proposal',
@@ -54,11 +53,15 @@ class DocumentController extends Controller
                 'comments' => 'nullable|string|max:500',
             ]);
 
-            $validated['user_id'] = Auth::id();
+            // Determine if guest or authenticated
+            $isGuest = !Auth::check();
+            $guestWebmail = $isGuest ? Session::get('guest_webmail') : null;
+            $userId = $isGuest ? null : Auth::id();
 
-            // Save first to get the auto-increment ID
+            // Create document
             $document = Document::create([
-                'user_id' => $validated['user_id'],
+                'user_id' => $userId,
+                'guest_webmail' => $guestWebmail,
                 'received_by' => $validated['received_by'],
                 'subject' => $validated['subject'],
                 'overview' => $validated['overview'],
@@ -69,28 +72,24 @@ class DocumentController extends Controller
                 'hours' => $validated['hours'],
                 'attendees' => $validated['attendees'],
                 'attendees_range' => $validated['attendees_range'],
-                'fees' => $validated['fees']
+                'fees' => $validated['fees'],
             ]);
 
-            // Defines the control tag of the submitted documents, Example: ELITE-0001
-            $acronym = Auth::user()->organization_acronym ?? 'DOC';
+            // Set control tag
+            $acronym = $isGuest ? 'GUEST' : (Auth::user()->organization_acronym ?? 'DOC');
             $document->control_tag = $acronym . '-' . str_pad($document->id, 4, '0', STR_PAD_LEFT);
-
-            // Store the validated data with the generated control tag
             $document->save();
 
-            // Handle the uploaded file
+            // File uploads
             $files = $request->file('file_upload');
-
-            $version = 1;   // NOTE: Version 1 by default
+            $version = 1;
             foreach ($files as $file) {
                 $originalName = $file->getClientOriginalName();
-                // Optionally, you can prepend a unique ID or timestamp to avoid overwriting files with the same name
                 $filePath = $file->storeAs('documents', $originalName, 'public');
 
                 DocumentVersion::create([
                     'document_id' => $document->id,
-                    'uploaded_by' => Auth::id(),
+                    'uploaded_by' => $userId, // Will be null for guest
                     'version' => $version,
                     'document_url' => $filePath,
                     'original_name' => $originalName,
@@ -99,23 +98,25 @@ class DocumentController extends Controller
                 ]);
             }
 
-            // Add these lines to dispatch the event
             Log::info('Dispatching DocumentSubmitted event for document ID: ' . $document->id);
             event(new DocumentSubmitted($document));
-                        
+
             $this->logActivity(
                 'Submitted',
                 "Document #{$document->id}",
-                "{$document->user_id} submitted a document titled '{$document->title}'."
+                $userId 
+                    ? "{$document->user_id} submitted a document titled '{$document->subject}'."
+                    : "Guest {$guestWebmail} submitted a document titled '{$document->subject}'."
             );
 
+            if ($isGuest) {
+                return redirect()->route('guest.submissionSuccess');
+            }
             return back()->with('success', 'Document submitted successfully!');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
-            // Log the actual error message for debugging
             Log::error('Document submission failed: ' . $e->getMessage());
-
             return back()->with('error', 'Something went wrong while submitting the document. Please try again.');
         }
     }

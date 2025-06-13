@@ -6,9 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use App\LogsActivity; 
 
 class StudentDocumentController extends Controller
 {
+    use LogsActivity; 
+
     public function preview($id)
     {
         // Fetch the document from the database with LEFT JOIN to get username
@@ -56,6 +59,13 @@ class StudentDocumentController extends Controller
             ->where('id', $id)
             ->whereNotNull('archived_at')
             ->exists();
+
+        // Log the activity - student viewed their document
+        $this->logActivity(
+            'Viewed',
+            'Document',
+            "Student viewed document: {$document->subject} ({$document->control_tag})"
+        );
 
         return view('student.documentPreview', [
             'document' => [
@@ -283,6 +293,13 @@ class StudentDocumentController extends Controller
             ->where('id', $id)
             ->whereNotNull('archived_at')
             ->exists();
+
+        // Log the activity - student viewed document from history
+        $this->logActivity(
+            'Viewed',
+            'Document History',
+            "Student viewed document from history: {$document->subject} ({$document->control_tag})"
+        );
 
         return view('student.documentPreview', [
             'document' => [
