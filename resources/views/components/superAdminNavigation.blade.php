@@ -98,7 +98,7 @@
                 </a>
                 <hr class="my-1 border-[#4D0F0F]">
                 <!-- Logout Option -->
-                <form method="POST" action="{{ route('superadmin.logout') }}" class="block">
+                <form method="POST" action="{{ route('superadmin.logout') }}" class="block" id="logoutForm">
                     @csrf
                     <button type="button" onclick="openLogoutModal()"
                         class="w-full flex items-center justify-center px-4 py-2 text-xl text-[#332B2B] cursor-pointer">
@@ -151,6 +151,7 @@
     function confirmLogout() {
         document.getElementById('logoutForm').submit();
     }
+
     document.addEventListener('DOMContentLoaded', function() {
         let lastKnownCount = null;
 

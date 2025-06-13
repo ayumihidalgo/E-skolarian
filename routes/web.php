@@ -43,7 +43,7 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
 
 
     // Guest
-    Route::get('/guest/login', function() {
+    Route::get('/guest/login', function () {
         return view('guest.guestLogin');
     })->name('guest');
     Route::post('/guest/send-otp', [GuestSubmitDocumentController::class, 'sendOtp'])
@@ -131,7 +131,7 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiv
     Route::post('/super-admin/announcements', [AnnouncementController::class, 'store'])
         ->name('super-admin.announcements.store');
     //Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])
-       // ->name('super-admin.announcements.update');
+    // ->name('super-admin.announcements.update');
     Route::post('/super-admin/announcements/{id}/archive', [AnnouncementController::class, 'moveToArchive'])
         ->name('super-admin.announcements.archive');
     Route::post('/super-admin/announcements/{id}/restore', [AnnouncementController::class, 'restore'])
@@ -165,6 +165,8 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiv
     Route::post('/super-admin/settings/send-recovery-code', [SettingsController::class, 'sendRecoveryCode'])->name('superadmin.settings.sendRecoveryCode');
     Route::post('/super-admin/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('superadmin.settings.verifyRecoveryCode');
     Route::post('/super-admin/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('superadmin.settings.removeRecoveryEmail');
+    Route::post('/settings/send-primary-email-code', [SettingsController::class, 'sendPrimaryEmailCode'])->name('superadmin.settings.sendPrimaryEmailCode');
+    Route::post('/settings/verify-primary-email-code', [SettingsController::class, 'verifyPrimaryEmailCode'])->name('superadmin.settings.verifyPrimaryEmailCode');
     // Super Admin Reports
     Route::get('/super-admin/reports', function () {
         return view('super-admin.super-admin-component.reports');
@@ -228,7 +230,7 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
 // ---------------- Student ----------------
 Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
     Route::get('/student/dashboard', [StudentDashboardController::class, 'showStudentDashboard'])->name('student.dashboard');
-    Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');    
+    Route::get('/student/submit-documents', [DocumentController::class, 'create'])->name('student.submit-documents');
     Route::get('/student/documentHistory', [StudentDocumentController::class, 'documentArchive'])->name('student.documentHistory');
     Route::get('/student/studentTracker', [StudentTrackerController::class, 'viewStudentTracker'])->name('student.studentTracker');
     Route::get('/student/document/preview/{id}', [StudentDocumentController::class, 'preview'])->name('student.documentPreview');
@@ -276,7 +278,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiv
     // ----------------------------------------
 // Calendar IndexTwo (Shared)
 // ----------------------------------------
-Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->name('calendar.indexTwo');
+    Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->name('calendar.indexTwo');
 
     // User
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
