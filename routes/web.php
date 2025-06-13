@@ -52,8 +52,6 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
         ->name('guest.verifyForm');
     Route::post('/guest/verify-otp', [GuestSubmitDocumentController::class, 'verifyOtp'])
         ->name('guest.verifyOtp');
-    Route::get('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])
-        ->name('guest.resendOtp');
     Route::post('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])
         ->name('guest.resendOtp');
     Route::get('/guest/submit', [GuestSubmitDocumentController::class, 'showSubmissionForm'])
@@ -176,11 +174,18 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiv
     Route::get('/super-admin/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('super-admin.reports');
 
 
-    Route::get('/super-admin/reports/all', [\App\Http\Controllers\SuperAdminController::class, 'allReports'])->name('super-admin.reports.all');
+    Route::get('/super-admin/reports/all', [SuperAdminController::class, 'getAllReports'])->name('super-admin.reports.all');
 
 
     Route::get('/super-admin/activity-logs', [App\Http\Controllers\SuperAdminController::class, 'activityLogs'])->name('super-admin.activity-logs');
     Route::get('/super-admin/activity-logs/all', [\App\Http\Controllers\SuperAdminController::class, 'allActivityLogs'])->name('super-admin.activity-logs.all');
+
+    // Add these routes:
+    Route::post('/super-admin/reports/{report}/mark-as-viewed', [SuperAdminController::class, 'markReportAsViewed'])->name('super-admin.reports.mark-viewed');
+    Route::get('/super-admin/reports/all', [SuperAdminController::class, 'getAllReports'])->name('super-admin.reports.all');
+
+    // Add this new route for getting unviewed reports count
+    Route::get('/super-admin/reports/unviewed-count', [SuperAdminController::class, 'getUnviewedReportsCount'])->name('super-admin.reports.unviewed-count');
 });
 
 Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
@@ -602,10 +607,7 @@ Route::post('/check-recovery-email', [SuperAdminController::class, 'checkRecover
 
 Route::get('/student/document-history/preview/{id}', [StudentDocumentController::class, 'documentHistoryPreview'])->name('student.document.history.preview');
 
-
-// Add this line with your other admin routes
 Route::get('/admin/documents/export/pdf', [App\Http\Controllers\DocumentExportController::class, 'exportPdf'])->name('admin.document.export.pdf')->middleware('auth');
-
 
 
 

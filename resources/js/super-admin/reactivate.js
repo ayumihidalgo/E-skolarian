@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         confirmReactivateEmailInput.addEventListener('input', function () {
             const email = this.value.trim();
-            const allowedDomains = ['@gmail.com', '@yahoo.com', '@iskolarngbayan.pup.edu.ph'];
+            const allowedDomains = ['@gmail.com', '@yahoo.com', '@iskolarngbayan.pup.edu.ph', '@pup.edu.ph'];
             const maxEmailLength = 100;
 
             // Reset error state
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // Allowed domains
             const hasValidDomain = allowedDomains.some(domain => email.toLowerCase().endsWith(domain));
             if (!hasValidDomain) {
-                reactivateEmailError.textContent = 'Please use a valid @gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph email address';
+                reactivateEmailError.textContent = 'Please use a valid @gmail.com, @yahoo.com, @pup.edu.ph or @iskolarngbayan.pup.edu.ph email address';
                 reactivateEmailError.classList.remove('hidden');
                 this.classList.add('border-red-500', 'ring-red-500');
                 return;

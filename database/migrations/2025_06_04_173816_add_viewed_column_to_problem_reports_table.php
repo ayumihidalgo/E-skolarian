@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('problem_reports', function (Blueprint $table) {
-            //
+            if (!Schema::hasColumn('problem_reports', 'viewed')) {
+                $table->boolean('viewed')->default(false)->after('description');
+                $table->index(['viewed', 'created_at']); // Add index for performance
+            }
         });
     }
 
@@ -22,7 +25,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('problem_reports', function (Blueprint $table) {
-            //
+            if (Schema::hasColumn('problem_reports', 'viewed')) {
+                $table->dropIndex(['viewed', 'created_at']); // Remove index
+                $table->dropColumn('viewed'); // Remove the column
+            }
         });
     }
 };
