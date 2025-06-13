@@ -14,8 +14,10 @@ class AdminDocumentController extends Controller
         $adminId = auth()->id();
 
         $document = DB::table('submitted_documents')
-            ->where('id', $id)
-            ->where('received_by', $adminId) // Only assigned to this admin
+            ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id')
+            ->select('submitted_documents.*', 'users.username')
+            ->where('submitted_documents.id', $id)
+            ->where('submitted_documents.received_by', $adminId) // Only assigned to this admin
             ->first();
 
         if (!$document) {
@@ -90,7 +92,7 @@ class AdminDocumentController extends Controller
                 'date' => $document->created_at,
                 'type' => $document->type,
                 'status' => $document->status,
-                'organization' => $organizationName,
+                'organization' => $document->username,
                 'document_url' => $document_url,
                 'attachments' => $attachments, // Add the array of all attachments
                 'remarks' => $document->remarks ?? null,
