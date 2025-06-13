@@ -23,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     
                     const usernameEl = document.getElementById('userUsername');
                     const emailEl = document.getElementById('userEmail');
+                    const recoveryEmailEl = document.getElementById('userRecoveryEmail');
                     const roleEl = document.getElementById('userRole');
                     const acronymField = document.getElementById('acronymField');
                     const acronymEl = document.getElementById('userAcronym');
@@ -46,6 +47,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     if (emailEl) emailEl.textContent = userData.email;
+                    
+                    // Add recovery email population with conditional styling
+                    if (recoveryEmailEl) {
+                        if (userData.recovery_email) {
+                            recoveryEmailEl.textContent = userData.recovery_email;
+                            recoveryEmailEl.classList.remove('text-gray-400', 'italic');
+                            recoveryEmailEl.classList.add('underline', 'decoration-[#3f434a]');
+                        } else {
+                            recoveryEmailEl.textContent = 'Not set';
+                            recoveryEmailEl.classList.add('text-gray-400', 'italic');
+                            recoveryEmailEl.classList.remove('underline', 'decoration-[#3f434a]');
+                        }
+                    }
 
                     // Store user ID for edit/deactivate operations
                     currentUserId = userData.id;

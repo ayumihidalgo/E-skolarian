@@ -27,7 +27,7 @@
                     <div>
                         <h3 class="font-semibold mb-1">Summary</h3>
                         <div class="bg-gray-100 text-black text-sm p-3 rounded-md h-32 overflow-y-auto">
-                            {{ $record->summary }}
+                            {{ $record->overview }}
                         </div>
                     </div>
 
@@ -39,10 +39,10 @@
                                     <div>
                                         <button type="button"
                                             class="bg-white text-black text-sm px-4 py-2 rounded hover:bg-gray-200 transition inline-block preview-document-btn cursor-pointer"
-                                            data-file-url="{{ asset('storage/' . $version->file_path) }}"
-                                            data-file-name="{{ basename($version->file_path) }}">
+                                            data-file-url="{{ asset('storage/' . $version->document_url) }}"
+                                            data-file-name="{{ basename($version->document_url) }}">
                                             Version {{ $version->version }}:
-                                            {{ $version->original_file_name ?? basename($version->file_path) }}
+                                            {{ $version->original_file_name ?? basename($version->document_url) }}
                                         </button>
                                         @if ($version->comments)
                                             <p class="text-xs text-gray-300 mt-1">{{ $version->comments }}</p>

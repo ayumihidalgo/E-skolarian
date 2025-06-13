@@ -54,6 +54,12 @@
                     <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Email</h4>
                     <p id="userEmail" class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] underline decoration-[#3f434a]"></p>
                 </div>
+
+                <!-- Recovery Email field -->
+                <div class="block text-sm font-medium text-gray-700 mb-2">
+                    <h4 class="text-sm font-medium text-black mb-1 font-[Lexend]">Recovery Email</h4>
+                    <p id="userRecoveryEmail" class="text-base font-semibold text-center text-[#3f434a] font-[DM Sans] w-full px-3 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212]"></p>
+                </div>
             </div>
                 <p class="text-sm text-gray-500 mt-4 text-center mb-2">Any changes made will notify the account owner via email.</p>
 

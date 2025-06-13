@@ -59,27 +59,93 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Email input validation
+    // Email input validation with format/domain checks and input prevention for invalid characters
     if (confirmEmailInput) {
-        confirmEmailInput.addEventListener('input', function () {
-            const isMatch = this.value === userEmailToDeactivate;
-
-            // Update input styling
-            if (this.value) {
-                if (!isMatch) {
-                    this.classList.add('border-red-500', 'ring-red-500');
-                    emailError.classList.remove('hidden');
-                    finalDeactivateBtn.disabled = true;
-                } else {
-                    this.classList.remove('border-red-500', 'ring-red-500');
-                    emailError.classList.add('hidden');
-                    finalDeactivateBtn.disabled = false;
-                }
-            } else {
-                this.classList.remove('border-red-500', 'ring-red-500');
-                emailError.classList.add('hidden');
-                finalDeactivateBtn.disabled = true;
+        // Prevent invalid characters as user types
+        confirmEmailInput.addEventListener('keypress', function (e) {
+            // Allow only valid email characters
+            const char = String.fromCharCode(e.which);
+            // Allow: a-z, A-Z, 0-9, @, ., _, -, +
+            if (!/[a-zA-Z0-9@._\-+]/.test(char)) {
+                e.preventDefault();
             }
+        });
+
+        // Prevent pasting invalid content
+        confirmEmailInput.addEventListener('paste', function (e) {
+            const paste = (e.clipboardData || window.clipboardData).getData('text');
+            // Allow only valid email characters in the pasted string
+            if (!/^[a-zA-Z0-9@._\-+]+$/.test(paste)) {
+                e.preventDefault();
+            }
+        });
+
+        confirmEmailInput.addEventListener('input', function () {
+            const email = this.value.trim();
+            const allowedDomains = ['@gmail.com', '@yahoo.com', '@iskolarngbayan.pup.edu.ph'];
+            const maxEmailLength = 100;
+
+            // Reset error state
+            this.classList.remove('border-red-500', 'ring-red-500');
+            emailError.classList.add('hidden');
+            finalDeactivateBtn.disabled = true;
+
+            // Remove any invalid characters that slipped through
+            this.value = this.value.replace(/[^a-zA-Z0-9@._\-+]/g, '');
+
+            // Validation checks
+            if (email === '') {
+                emailError.textContent = 'Email cannot be empty';
+                emailError.classList.remove('hidden');
+                this.classList.add('border-red-500', 'ring-red-500');
+                return;
+            }
+
+            if (email.length > maxEmailLength) {
+                emailError.textContent = `Email must be less than ${maxEmailLength} characters`;
+                emailError.classList.remove('hidden');
+                this.classList.add('border-red-500', 'ring-red-500');
+                return;
+            }
+
+            // Email format
+            if (!/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/.test(email)) {
+                emailError.textContent = 'Please enter a valid email address';
+                emailError.classList.remove('hidden');
+                this.classList.add('border-red-500', 'ring-red-500');
+                return;
+            }
+
+            // Allowed domains
+            const hasValidDomain = allowedDomains.some(domain => email.toLowerCase().endsWith(domain));
+            if (!hasValidDomain) {
+                emailError.textContent = 'Please use a valid @gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph email address';
+                emailError.classList.remove('hidden');
+                this.classList.add('border-red-500', 'ring-red-500');
+                return;
+            }
+
+            // Check for number instead of letter in domain (.c0m instead of .com)
+            if (/\.c0m$|\.c0m@/.test(email.toLowerCase())) {
+                emailError.textContent = 'Invalid domain format';
+                emailError.classList.remove('hidden');
+                this.classList.add('border-red-500', 'ring-red-500');
+                return;
+            }
+
+            // Check if email matches the user's email
+            if (email !== userEmailToDeactivate) {
+                emailError.textContent = '*Email address does not match.';
+                emailError.classList.remove('hidden');
+                this.classList.add('border-red-500', 'ring-red-500');
+                finalDeactivateBtn.disabled = true;
+                return;
+            }
+
+            // All checks passed
+            emailError.classList.add('hidden');
+            this.classList.remove('border-red-500', 'ring-red-500');
+            finalDeactivateBtn.disabled = false;
         });
     }
 

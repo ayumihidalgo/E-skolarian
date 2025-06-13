@@ -171,42 +171,99 @@
 <div class="mt-4 flex justify-center">
     <nav>
         <ul class="inline-flex items-center space-x-2">
+            @php
+                $currentPage = $users->currentPage();
+                $totalPages = $users->lastPage();
+                $maxVisiblePages = 5;
+                
+                if ($totalPages <= $maxVisiblePages) {
+                    $startPage = 1;
+                    $endPage = $totalPages;
+                } else {
+                    $halfVisible = floor($maxVisiblePages / 2);
+                    
+                    if ($currentPage <= $halfVisible + 1) {
+                        $startPage = 1;
+                        $endPage = $maxVisiblePages;
+                    } elseif ($currentPage >= $totalPages - $halfVisible) {
+                        $startPage = $totalPages - $maxVisiblePages + 1;
+                        $endPage = $totalPages;
+                    } else {
+                        $startPage = $currentPage - $halfVisible;
+                        $endPage = $currentPage + $halfVisible;
+                    }
+                }
+            @endphp
+
+            <!-- Previous button -->
             <li>
-                @if ($users->currentPage() == 1)
-                    <span class="pagination-btn-first px-3 py-1 rounded-lg cursor-not-allowed opacity-50">
+                @if ($currentPage == 1)
+                    <span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">
                         <
                     </span>
                 @else
-                    <a href="{{ $users->url(1) }}"
-                        class="pagination-btn-first px-3 py-1 rounded-lg hover:bg-gray-100">
+                    <a href="{{ $users->previousPageUrl() }}"
+                        class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
                         <
                     </a>
                 @endif
             </li>
 
-            @for ($i = 1; $i <= $users->lastPage(); $i++)
+            <!-- First page + ellipsis (if needed) -->
+            @if ($startPage > 1)
                 <li>
-                    @if ($users->currentPage() == $i)
-                        <span class="pagination-btn px-3 py-1 rounded-lg bg-[#7A1212] text-white">
+                    <a href="{{ $users->url(1) }}"
+                        class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
+                        1
+                    </a>
+                </li>
+                @if ($startPage > 2)
+                    <li>
+                        <span class="px-3 py-1 text-gray-400">...</span>
+                    </li>
+                @endif
+            @endif
+
+            <!-- Page numbers in range -->
+            @for ($i = $startPage; $i <= $endPage; $i++)
+                <li>
+                    @if ($currentPage == $i)
+                        <span class="px-3 py-1 rounded-lg bg-[#7A1212] text-white">
                             {{ $i }}
                         </span>
                     @else
                         <a href="{{ $users->url($i) }}"
-                            class="pagination-btn px-3 py-1 rounded-lg hover:bg-gray-100">
+                            class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
                             {{ $i }}
                         </a>
                     @endif
                 </li>
             @endfor
 
+            <!-- Last page + ellipsis (if needed) -->
+            @if ($endPage < $totalPages)
+                @if ($endPage < $totalPages - 1)
+                    <li>
+                        <span class="px-3 py-1 text-gray-400">...</span>
+                    </li>
+                @endif
+                <li>
+                    <a href="{{ $users->url($totalPages) }}"
+                        class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
+                        {{ $totalPages }}
+                    </a>
+                </li>
+            @endif
+
+            <!-- Next button -->
             <li>
-                @if ($users->currentPage() == $users->lastPage())
-                    <span class="pagination-btn-last px-3 py-1 rounded-lg cursor-not-allowed opacity-50">
+                @if ($currentPage == $totalPages)
+                    <span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">
                         >
                     </span>
                 @else
-                    <a href="{{ $users->url($users->lastPage()) }}"
-                        class="pagination-btn-last px-3 py-1 rounded-lg hover:bg-gray-100">
+                    <a href="{{ $users->nextPageUrl() }}"
+                        class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
                         >
                     </a>
                 @endif

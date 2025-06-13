@@ -47,13 +47,14 @@ class User extends Authenticatable
     protected $fillable = [
         'username',
         'email',
+        'recovery_email', // Add this line
+        'password',
         'role',
         'role_name',
-        'password',
-        'active',
         'organization_acronym',
-        'organization_name',
-        'type'
+        'active',
+        'profile_pic',
+        // ... other fields
     ];
 
     /**

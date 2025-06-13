@@ -224,6 +224,14 @@ class SettingsController extends Controller
 
 
         }
+        $this->logActivity(
+            'Added',
+            'Recovery Email',
+            ($user->role === 'admin' ?
+                "{$user->role_name} set their recovery email." :
+                "{$user->organization_acronym} set their recovery email."
+            )
+        );
         return response()->json(['success' => true, 'message' => 'Recovery email set successfully.']);
     }
 
@@ -258,6 +266,14 @@ class SettingsController extends Controller
 
 
         }
+        $this->logActivity(
+            'Removed',
+            'Recovery Email',
+            ($user->role === 'admin' ?
+                "{$user->role_name} removed their recovery email." :
+                "{$user->organization_acronym} removed their recovery email."
+            )
+        );
         return response()->json(['success' => true, 'message' => 'Recovery email removed successfully.']);
     }
 }

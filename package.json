@@ -23,6 +23,7 @@
         "@fullcalendar/core": "^6.1.17",
         "@fullcalendar/daygrid": "^6.1.17",
         "@fullcalendar/interaction": "^6.1.17",
-        "@pdftron/webviewer": "^11.4.0"
+        "@pdftron/webviewer": "^11.4.0",
+        "html2pdf.js": "^0.10.3"
     }
 }

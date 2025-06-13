@@ -100,6 +100,9 @@ class AdminDashboardController extends Controller
             'totalCount',
             'recentDocuments',
             'users'
-        ));
+        ))->with([
+            'currentUserId' => auth()->id(),
+            'currentUserRole' => auth()->user()->role,
+        ]);
     }
 }

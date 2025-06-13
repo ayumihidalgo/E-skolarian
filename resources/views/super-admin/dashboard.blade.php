@@ -4,7 +4,7 @@
     <!-- This is the main content area for the super admin dashboard -->
     @include('components.superAdminNavigation') <!-- Include the super admin navigation component -->
     <!-- Super admin word under the nav var -->
-    <div class="max-h-screen bg-[#F2F4F7] bg-opacity-30 px-15 py-8">
+    <div class="min-h-screen bg-[#F2F4F7] bg-opacity-30 px-15 py-8">
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-[35px] font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
          @if (session('success'))
@@ -321,7 +321,7 @@
                                 <div>
                                     <label class="inline-flex items-center">
                                         <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox">
-                                        <span class="ml-2">Schedule</span>
+                                        <span class="ml-2">Set Due Date</span>
                                     </label>
                                     <div id="scheduleFields" class="mt-2 space-x-2 hidden">
                                         <input type="date" id="scheduleDate" name="schedule_date"
@@ -417,7 +417,7 @@
                 <div class="mb-3">
                     <label class="inline-flex items-center">
                         <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
-                        <span class="ml-2">Schedule</span>
+                        <span class="ml-2">Set Due Date</span>
                     </label>
                     <div id="editScheduleFields" class="mt-2 space-x-2 hidden">
                         <input type="date" id="editScheduleDate" name="schedule_date" class="border rounded px-2 py-1">
@@ -676,45 +676,102 @@
         </div> <!-- This closes the table container div -->
 
     <!-- Pagination controls -->
-    <div class="flex justify-center bg-white py-4">
+    <div class="flex justify-center bg-[#F2F4F7] py-4">
         <nav>
             <ul class="inline-flex items-center space-x-2">
+                @php
+                    $currentPage = $users->currentPage();
+                    $totalPages = $users->lastPage();
+                    $maxVisiblePages = 5;
+                    
+                    if ($totalPages <= $maxVisiblePages) {
+                        $startPage = 1;
+                        $endPage = $totalPages;
+                    } else {
+                        $halfVisible = floor($maxVisiblePages / 2);
+                        
+                        if ($currentPage <= $halfVisible + 1) {
+                            $startPage = 1;
+                            $endPage = $maxVisiblePages;
+                        } elseif ($currentPage >= $totalPages - $halfVisible) {
+                            $startPage = $totalPages - $maxVisiblePages + 1;
+                            $endPage = $totalPages;
+                        } else {
+                            $startPage = $currentPage - $halfVisible;
+                            $endPage = $currentPage + $halfVisible;
+                        }
+                    }
+                @endphp
+
+                <!-- Previous button -->
                 <li>
-                    @if ($users->currentPage() == 1)
-                        <span class="pagination-btn-first px-3 py-1 rounded-lg cursor-not-allowed opacity-50">
+                    @if ($currentPage == 1)
+                        <span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">
                             <
                         </span>
                     @else
-                        <a href="{{ $users->url(1) }}"
-                            class="pagination-btn-first px-3 py-1 rounded-lg hover:bg-gray-100">
+                        <a href="{{ $users->previousPageUrl() }}"
+                            class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
                             <
                         </a>
                     @endif
                 </li>
 
-                @for ($i = 1; $i <= $users->lastPage(); $i++)
+                <!-- First page + ellipsis (if needed) -->
+                @if ($startPage > 1)
                     <li>
-                        @if ($users->currentPage() == $i)
-                            <span class="pagination-btn px-3 py-1 rounded-lg bg-[#7A1212] text-white">
+                        <a href="{{ $users->url(1) }}"
+                            class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
+                            1
+                        </a>
+                    </li>
+                    @if ($startPage > 2)
+                        <li>
+                            <span class="px-3 py-1 text-gray-400">...</span>
+                        </li>
+                    @endif
+                @endif
+
+                <!-- Page numbers in range -->
+                @for ($i = $startPage; $i <= $endPage; $i++)
+                    <li>
+                        @if ($currentPage == $i)
+                            <span class="px-3 py-1 rounded-lg bg-[#7A1212] text-white">
                                 {{ $i }}
                             </span>
                         @else
                             <a href="{{ $users->url($i) }}"
-                                class="pagination-btn px-3 py-1 rounded-lg hover:bg-gray-100">
+                                class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
                                 {{ $i }}
                             </a>
                         @endif
                     </li>
                 @endfor
 
+                <!-- Last page + ellipsis (if needed) -->
+                @if ($endPage < $totalPages)
+                    @if ($endPage < $totalPages - 1)
+                        <li>
+                            <span class="px-3 py-1 text-gray-400">...</span>
+                        </li>
+                    @endif
+                    <li>
+                        <a href="{{ $users->url($totalPages) }}"
+                            class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
+                            {{ $totalPages }}
+                        </a>
+                    </li>
+                @endif
+
+                <!-- Next button -->
                 <li>
-                    @if ($users->currentPage() == $users->lastPage())
-                        <span class="pagination-btn-last px-3 py-1 rounded-lg cursor-not-allowed opacity-50">
+                    @if ($currentPage == $totalPages)
+                        <span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">
                             >
                         </span>
                     @else
-                        <a href="{{ $users->url($users->lastPage()) }}"
-                            class="pagination-btn-last px-3 py-1 rounded-lg hover:bg-gray-100">
+                        <a href="{{ $users->nextPageUrl() }}"
+                            class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
                             >
                         </a>
                     @endif
@@ -904,18 +961,55 @@
                 contentError.style.display = 'none';
             }
 
-            // Schedule validation
+            // Schedule validation (must not be in the past, and if today, time is required and must be in the future)
             const scheduleCheckbox = document.getElementById('scheduleCheckbox');
             const scheduleDate = document.getElementById('scheduleDate');
             const scheduleTime = document.getElementById('scheduleTime');
 
             if (scheduleCheckbox.checked) {
-                const selectedDate = new Date(scheduleDate.value);
-                const today = new Date();
-                today.setHours(0,0,0,0);
-
-                if (!scheduleDate.value || selectedDate < today) {
+                if (!scheduleDate.value) {
                     alert('Please select today or a future date for the schedule.');
+                    valid = false;
+                } else {
+                    const now = new Date();
+                    now.setSeconds(0,0); // ignore seconds/milliseconds for comparison
+
+                    const selectedDate = new Date(scheduleDate.value);
+                    selectedDate.setHours(0,0,0,0);
+
+                    // If selected date is today, require time and it must be in the future
+                    if (
+                        selectedDate.getFullYear() === now.getFullYear() &&
+                        selectedDate.getMonth() === now.getMonth() &&
+                        selectedDate.getDate() === now.getDate()
+                    ) {
+                        if (!scheduleTime.value) {
+                            alert('Please specify a time for today\'s schedule.');
+                            valid = false;
+                        } else {
+                            // Combine date and time for accurate comparison
+                            const selectedDateTime = new Date(scheduleDate.value + 'T' + scheduleTime.value);
+                            if (selectedDateTime <= now) {
+                                alert('Please select a future time for today\'s schedule.');
+                                valid = false;
+                            }
+                        }
+                    } else {
+                        // Not today: must be in the future
+                        if (selectedDate < now) {
+                            alert('Please select today or a future date for the schedule.');
+                            valid = false;
+                        }
+                    }
+                }
+            }
+
+             // Audience validation
+            const audienceCustom = document.getElementById('audienceCustom');
+            if (audienceCustom.checked) {
+                const checkedStudents = document.querySelectorAll('#customAudienceDropdown input[type="checkbox"]:checked');
+                if (checkedStudents.length === 0) {
+                    alert('Please select at least one student for the custom audience.');
                     valid = false;
                 }
             }
@@ -1047,6 +1141,56 @@
             const currentAudience = document.getElementById('editAudienceAll').checked ? 'all' : 'custom';
             const currentAudienceStudents = Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb => cb.value);
 
+            // Audience validation for edit modal
+    if (document.getElementById('editAudienceCustom').checked) {
+        if (currentAudienceStudents.length === 0) {
+            alert('Please select at least one student for the custom audience.');
+            e.preventDefault();
+            return;
+        }
+    }
+    
+            // Validate schedule (must not be in the past, and if today, time is required and must be in the future)
+            if (currentScheduleCheckbox) {
+                if (!currentScheduleDate) {
+                    alert('Please select today or a future date for the schedule.');
+                    e.preventDefault();
+                    return;
+                }
+                const now = new Date();
+                now.setSeconds(0,0); // ignore seconds/milliseconds for comparison
+
+                const selectedDate = new Date(currentScheduleDate);
+                selectedDate.setHours(0,0,0,0);
+
+                // If selected date is today, require time and it must be in the future
+                if (
+                    selectedDate.getFullYear() === now.getFullYear() &&
+                    selectedDate.getMonth() === now.getMonth() &&
+                    selectedDate.getDate() === now.getDate()
+                ) {
+                    if (!currentScheduleTime) {
+                        alert('Please specify a time for today\'s schedule.');
+                        e.preventDefault();
+                        return;
+                    }
+                    // Combine date and time for accurate comparison
+                    const selectedDateTime = new Date(currentScheduleDate + 'T' + currentScheduleTime);
+                    if (selectedDateTime <= now) {
+                        alert('Please select a future time for today\'s schedule.');
+                        e.preventDefault();
+                        return;
+                    }
+                } else {
+                    // Not today: must be in the future
+                    if (selectedDate < now) {
+                        alert('Please select today or a future date for the schedule.');
+                        e.preventDefault();
+                        return;
+                    }
+                }
+            }
+
             // Compare schedule
             let scheduleChanged = false;
             if (originalScheduleDate || currentScheduleDate) {
@@ -1164,7 +1308,231 @@
                 document.getElementById('editCustomAudienceDropdown').classList.remove('hidden');
             }
         });
+
+        // --- Draft Save/Restore Logic ---
+const DRAFT_KEY_POST = 'superAdminAnnouncementDraft';
+const DRAFT_KEY_EDIT = 'superAdminEditAnnouncementDraft';
+
+function saveDraft(type) {
+    if (type === 'post') {
+        localStorage.setItem(DRAFT_KEY_POST, JSON.stringify({
+            title: document.getElementById('titleInput').value,
+            content: document.getElementById('contentInput').value,
+            schedule: document.getElementById('scheduleCheckbox').checked,
+            schedule_date: document.getElementById('scheduleDate').value,
+            schedule_time: document.getElementById('scheduleTime').value,
+            audience: document.getElementById('audienceAll').checked ? 'all' : 'custom',
+            audience_students: Array.from(document.querySelectorAll('#customAudienceDropdown input[type="checkbox"]:checked')).map(cb => cb.value)
+        }));
+    } else if (type === 'edit') {
+        localStorage.setItem(DRAFT_KEY_EDIT, JSON.stringify({
+            id: document.getElementById('editAnnouncementId').value,
+            title: document.getElementById('editTitle').value,
+            content: document.getElementById('editContent').value,
+            schedule: document.getElementById('editScheduleCheckbox').checked,
+            schedule_date: document.getElementById('editScheduleDate').value,
+            schedule_time: document.getElementById('editScheduleTime').value,
+            audience: document.getElementById('editAudienceAll').checked ? 'all' : 'custom',
+            audience_students: Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb => cb.value)
+        }));
+    }
+}
+
+function restoreDraft(type) {
+    let draft = null;
+    if (type === 'post') {
+        draft = localStorage.getItem(DRAFT_KEY_POST);
+        if (draft) {
+            draft = JSON.parse(draft);
+            document.getElementById('titleInput').value = draft.title || '';
+            document.getElementById('contentInput').value = draft.content || '';
+            document.getElementById('scheduleCheckbox').checked = !!draft.schedule;
+            document.getElementById('scheduleFields').classList.toggle('hidden', !draft.schedule);
+            document.getElementById('scheduleDate').value = draft.schedule_date || '';
+            document.getElementById('scheduleTime').value = draft.schedule_time || '';
+            if (draft.audience === 'all') {
+                document.getElementById('audienceAll').checked = true;
+                document.getElementById('customAudienceDropdown').classList.add('hidden');
+            } else {
+                document.getElementById('audienceCustom').checked = true;
+                document.getElementById('customAudienceDropdown').classList.remove('hidden');
+            }
+            document.querySelectorAll('#customAudienceDropdown input[type="checkbox"]').forEach(cb => cb.checked = false);
+            (draft.audience_students || []).forEach(id => {
+                const cb = document.querySelector('#customAudienceDropdown input[type="checkbox"][value="' + String(id) + '"]');
+                if (cb) cb.checked = true;
+            });
+        }
+    } else if (type === 'edit') {
+        draft = localStorage.getItem(DRAFT_KEY_EDIT);
+        if (draft) {
+            draft = JSON.parse(draft);
+            if (draft.id == document.getElementById('editAnnouncementId').value) {
+                document.getElementById('editTitle').value = draft.title || '';
+                document.getElementById('editContent').value = draft.content || '';
+                document.getElementById('editScheduleCheckbox').checked = !!draft.schedule;
+                document.getElementById('editScheduleFields').classList.toggle('hidden', !draft.schedule);
+                document.getElementById('editScheduleDate').value = draft.schedule_date || '';
+                document.getElementById('editScheduleTime').value = draft.schedule_time || '';
+                if (draft.audience === 'all') {
+                    document.getElementById('editAudienceAll').checked = true;
+                    document.getElementById('editCustomAudienceDropdown').classList.add('hidden');
+                } else {
+                    document.getElementById('editAudienceCustom').checked = true;
+                    document.getElementById('editCustomAudienceDropdown').classList.remove('hidden');
+                }
+                document.querySelectorAll('.editAudienceStudent').forEach(cb => cb.checked = false);
+                (draft.audience_students || []).forEach(id => {
+                    const cb = document.querySelector('.editAudienceStudent[value="' + String(id) + '"]');
+                    if (cb) cb.checked = true;
+                });
+            }
+        }
+    }
+}
+
+function clearDraft(type) {
+    if (type === 'post') localStorage.removeItem(DRAFT_KEY_POST);
+    if (type === 'edit') localStorage.removeItem(DRAFT_KEY_EDIT);
+}
+
+// --- Modal State & Change Detection ---
+let isPostModalOpen = false;
+let isEditModalOpen = false;
+let hasPostChanges = false;
+let hasEditChanges = false;
+
+// Watch for changes in post modal
+['input', 'change'].forEach(evt => {
+    document.getElementById('announcementForm').addEventListener(evt, () => {
+        hasPostChanges = true;
+        saveDraft('post');
+    });
+});
+
+// Watch for changes in edit modal
+['input', 'change'].forEach(evt => {
+    document.getElementById('editAnnouncementForm').addEventListener(evt, () => {
+        hasEditChanges = true;
+        saveDraft('edit');
+    });
+});
+
+// Override open/close modal functions
+const originalOpenPostAnnouncementModal = openPostAnnouncementModal;
+openPostAnnouncementModal = function() {
+    isPostModalOpen = true;
+    hasPostChanges = false;
+    originalOpenPostAnnouncementModal();
+    restoreDraft('post');
+};
+const originalClosePostAnnouncementModal = closePostAnnouncementModal;
+closePostAnnouncementModal = function() {
+    if (hasPostChanges && (document.getElementById('titleInput').value || document.getElementById('contentInput').value)) {
+        showDiscardChangesModal('post');
+    } else {
+        isPostModalOpen = false;
+        hasPostChanges = false;
+        clearDraft('post');
+        originalClosePostAnnouncementModal();
+    }
+};
+
+const originalOpenEditModal = openEditModal;
+openEditModal = function(...args) {
+    isEditModalOpen = true;
+    hasEditChanges = false;
+    originalOpenEditModal(...args);
+    restoreDraft('edit');
+};
+const originalCloseEditModal = closeEditModal;
+closeEditModal = function() {
+    if (hasEditChanges && (document.getElementById('editTitle').value || document.getElementById('editContent').value)) {
+        showDiscardChangesModal('edit');
+    } else {
+        isEditModalOpen = false;
+        hasEditChanges = false;
+        clearDraft('edit');
+        originalCloseEditModal();
+    }
+};
+
+// --- Discard Changes Modal Logic ---
+let discardType = null;
+function showDiscardChangesModal(type) {
+    discardType = type;
+    document.getElementById('discardChangesModal').classList.remove('hidden');
+}
+function closeDiscardChangesModal() {
+    document.getElementById('discardChangesModal').classList.add('hidden');
+}
+function confirmDiscardChanges() {
+    closeDiscardChangesModal();
+    if (discardType === 'post') {
+        isPostModalOpen = false;
+        hasPostChanges = false;
+        clearDraft('post');
+        originalClosePostAnnouncementModal();
+    } else if (discardType === 'edit') {
+        isEditModalOpen = false;
+        hasEditChanges = false;
+        clearDraft('edit');
+        originalCloseEditModal();
+    }
+    discardType = null;
+}
+
+// --- Intercept Refresh/Back/Exit ---
+window.addEventListener('beforeunload', function(e) {
+    if ((isPostModalOpen && hasPostChanges) || (isEditModalOpen && hasEditChanges)) {
+        if (isPostModalOpen) saveDraft('post');
+        if (isEditModalOpen) saveDraft('edit');
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// --- On Modal Submit, Clear Draft ---
+document.getElementById('announcementForm').addEventListener('submit', function() {
+    clearDraft('post');
+    hasPostChanges = false;
+    isPostModalOpen = false;
+});
+document.getElementById('editAnnouncementForm').addEventListener('submit', function() {
+    clearDraft('edit');
+    hasEditChanges = false;
+    isEditModalOpen = false;
+});
+
+// Optional: ESC key closes modal with warning
+document.addEventListener('keydown', function(e) {
+    if (e.key === "Escape" || e.key === "Esc") {
+        if (isPostModalOpen && (document.getElementById('titleInput').value || document.getElementById('contentInput').value)) {
+            closePostAnnouncementModal();
+        }
+        if (isEditModalOpen && (document.getElementById('editTitle').value || document.getElementById('editContent').value)) {
+            closeEditModal();
+        }
+    }
+});
     </script>
+    <!-- Discard Changes Modal -->
+<div id="discardChangesModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+    <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
+        <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-lg">Discard Changes?</span>
+            <button onclick="closeDiscardChangesModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <div class="mb-4 text-gray-700">
+            Are you sure you want to discard your changes? All unsaved edits will be lost.
+        </div>
+        <div class="flex justify-end gap-2">
+            <button onclick="confirmDiscardChanges()" class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Close without saving</button>
+            <button onclick="closeDiscardChangesModal()" class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Keep editing</button>
+        </div>
+    </div>
+</div>
     @include('super-admin.super-admin-component.activityLogModal')
     @vite(['resources/js/super-admin/modal-base.js', 'resources/js/super-admin/main.js', 'resources/js/super-admin/add-user.js', 'resources/js/super-admin/user-details.js', 'resources/js/super-admin/edit-user.js', 'resources/js/super-admin/deactivate-user.js', 'resources/js/super-admin/success-modal.js', 'resources/js/super-admin/activity-log-modal.js'])
 @endsection
