@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\LogsActivity;
 use App\Models\Announcement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AnnouncementController extends Controller
 {
+    use LogsActivity;
     public function __construct()
     {
         $this->middleware('auth');
@@ -29,7 +31,7 @@ class AnnouncementController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title'   => 'required|string|max:60',
+            'title' => 'required|string|max:60',
             'content' => 'required|string|max:1000',
             'audience' => 'required|in:all,custom',
             'audience_students.*' => 'exists:users,id',
@@ -69,7 +71,16 @@ class AnnouncementController extends Controller
         ]);
 
         event(new \App\Events\NewAnnouncement($announcement, $announcement->audience, $announcement->audience_students));
+        $user = auth()->user();
 
+        $this->logActivity(
+            'Created',
+            'Announcement',
+            ($user->role === 'admin'
+                ? "{$user->role_name} posted an announcement: {$announcement->title}"
+                : "{$user->organization_acronym} posted an announcement: {$announcement->title}"
+            )
+        );
         return redirect()->route($this->getRedirectRoute())->with('success', 'Announcement posted!');
     }
 
@@ -113,7 +124,16 @@ class AnnouncementController extends Controller
         }
 
         $announcement->save();
+        $user = auth()->user();
 
+        $this->logActivity(
+            'Updated',
+            'Announcement',
+            ($user->role === 'admin'
+                ? "{$user->role_name} updated an announcement: {$announcement->title}"
+                : "{$user->organization_acronym} updated an announcement: {$announcement->title}"
+            )
+        );
         return redirect()->route($this->getRedirectRoute())->with('success', 'Announcement changed successfully!');
     }
 
@@ -136,7 +156,16 @@ class AnnouncementController extends Controller
 
         $announcement->archived = true;
         $announcement->save();
+        $user = auth()->user();
 
+        $this->logActivity(
+            'Archived',
+            'Announcement',
+            ($user->role === 'admin'
+                ? "{$user->role_name} archived an announcement: {$announcement->title}"
+                : "{$user->organization_acronym} archived an announcement: {$announcement->title}"
+            )
+        );
         return redirect()->route($this->getRedirectRoute(), ['archive' => 1])
             ->with('success', 'Announcement moved to archive!');
     }
@@ -155,7 +184,16 @@ class AnnouncementController extends Controller
 
         $announcement->archived = false;
         $announcement->save();
+        $user = auth()->user();
 
+        $this->logActivity(
+            'Restored',
+            'Announcement',
+            ($user->role === 'admin'
+                ? "{$user->role_name} restored an announcement: {$announcement->title}"
+                : "{$user->organization_acronym} restored an announcement: {$announcement->title}"
+            )
+        );
         return redirect()->route($this->getRedirectRoute(), ['archive' => 1])
             ->with('success', 'Announcement restored successfully!');
     }
@@ -173,7 +211,16 @@ class AnnouncementController extends Controller
         }
 
         $announcement->delete();
+        $user = auth()->user();
 
+        $this->logActivity(
+            'Deleted',
+            'Announcement',
+            ($user->role === 'admin'
+                ? "{$user->role_name} permanently deleted an announcement: {$announcement->title}"
+                : "{$user->organization_acronym} permanently deleted an announcement: {$announcement->title}"
+            )
+        );
         return redirect()->route($this->getRedirectRoute(), ['archive' => 1])
             ->with('success', 'Announcement permanently deleted!');
     }
