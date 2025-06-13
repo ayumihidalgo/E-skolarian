@@ -68,7 +68,7 @@
                                 <p class="text-start mx-auto font-[Manrope] font-normal">For document submission without logging in as a Student organization.</p>
                             </div>
                             <div class="self-start">
-                                <a href="{{ route('guest') }}"
+                                <a href="{{ route('guestLogin') }}"
                                     class="inline-block max-w-[200px] p-4 rounded-full bg-[#525866] border border-white py-2 text-center w-full hover:bg-[#404550] transition-bg duration-75">
                                     Continue as Guest
                                 </a>
