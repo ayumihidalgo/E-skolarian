@@ -11,7 +11,7 @@
 
 <div align="center">
   <h3>
-    <a href="#about">About</a> •
+    <a href="#about">Abouttt</a> •
     <a href="#features">Features</a> •
     <a href="#requirements">Requirements</a> •
     <a href="#installation">Installation</a> •
