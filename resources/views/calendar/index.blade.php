@@ -325,6 +325,7 @@ function getCalendarConfig() {
         selectable: false,
         editable: false,
         contentHeight: 'auto',
+        nextDayThreshold: '24:00:00',
         
         // These settings help with mobile
         dayMaxEventRows: isMobile ? 2 : 3,
@@ -352,6 +353,9 @@ function setupMobileMonthYearSelection() {
     
     if (!mobileTriggers.month || !mobileTriggers.year) return;
     
+    // Initialize displays
+    updateMobileSelectors();
+    
     // Setup click handlers for mobile
     mobileTriggers.month.addEventListener('click', function() {
         openMobileMonthSelector();
@@ -360,9 +364,6 @@ function setupMobileMonthYearSelection() {
     mobileTriggers.year.addEventListener('click', function() {
         openMobileYearSelector();
     });
-    
-    // Update the mobile selectors when calendar changes
-    updateMobileSelectors();
 }
 
 // Create a mobile month selector popup
@@ -528,10 +529,10 @@ function openMobileYearSelector() {
 function updateMobileSelectors() {
     if (!calendarObj) return;
     
-    const mobileMonthEl = document.getElementById('mobile-selected-month');
-    const mobileYearEl = document.getElementById('mobile-selected-year');
+    const mobileMonthTrigger = document.getElementById('mobile-month-trigger');
+    const mobileYearTrigger = document.getElementById('mobile-year-trigger');
     
-    if (!mobileMonthEl || !mobileYearEl) return;
+    if (!mobileMonthTrigger || !mobileYearTrigger) return;
     
     const date = calendarObj.getDate();
     const monthNames = [
@@ -539,8 +540,12 @@ function updateMobileSelectors() {
         'July', 'August', 'September', 'October', 'November', 'December'
     ];
     
-    mobileMonthEl.textContent = monthNames[date.getMonth()];
-    mobileYearEl.textContent = date.getFullYear();
+    // Update displays - either find span inside or update directly
+    const mobileMonthText = mobileMonthTrigger.querySelector('span') || mobileMonthTrigger;
+    const mobileYearText = mobileYearTrigger.querySelector('span') || mobileYearTrigger;
+    
+    mobileMonthText.textContent = monthNames[date.getMonth()];
+    mobileYearText.textContent = date.getFullYear();
 }
 
 // Remove mobile selector popups
@@ -721,6 +726,7 @@ function initializeCalendarWhenReady() {
                     updateCustomControls();
                     checkIfCurrentMonth();
                     adjustCalendarHeight();
+                    updateMobileSelectors();
                 },
                
                 // Handle event clicks (read-only)
@@ -736,6 +742,9 @@ function initializeCalendarWhenReady() {
                
                 // Handle event styling
                 eventDidMount: function(info) {
+                    info.el.style.overflow = 'hidden';
+                    info.el.style.textOverflow = 'ellipsis';
+                    info.el.style.whiteSpace = 'nowrap';
                     // Add announcement styling
                     if (info.event.extendedProps.source === 'announcement') {
                         info.el.style.borderLeft = '4px solid #FF6347';
@@ -1307,32 +1316,93 @@ function initializeCalendarWhenReady() {
 
 
     // Update custom controls based on calendar date
-    function updateCustomControls() {
-        if (!calendarObj) return;
-       
-        const calendarDate = calendarObj.getDate();
-        const monthDropdown = document.getElementById('month-dropdown');
-        const yearDropdown = document.getElementById('year-dropdown');
-        const todayBtn = document.getElementById('today-btn');
-       
-        if (monthDropdown) {
-            monthDropdown.value = calendarDate.getMonth();
-        }
-       
-        if (yearDropdown) {
-            yearDropdown.value = calendarDate.getFullYear();
-        }
-       
-        // Show/hide today button based on current month
-        if (todayBtn) {
-            const isCurrentMonth =
-                currentMonth === calendarDate.getMonth() &&
-                currentYear === calendarDate.getFullYear();
+// Update custom controls based on calendar date
+function updateCustomControls() {
+    if (!calendarObj) return;
+   
+    const calendarDate = calendarObj.getDate();
+    const monthDropdown = document.getElementById('month-dropdown');
+    const yearDropdown = document.getElementById('year-dropdown');
+    const selectedMonthText = document.getElementById('selected-month');
+    const selectedYearText = document.getElementById('selected-year');
+    const mobileMonthTrigger = document.getElementById('mobile-month-trigger');
+    const mobileYearTrigger = document.getElementById('mobile-year-trigger');
+    const todayBtn = document.getElementById('today-btn');
+    
+    // Get month name for display
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const newMonth = calendarDate.getMonth();
+    const newYear = calendarDate.getFullYear();
+    const monthName = monthNames[newMonth];
+   
+    // Update month dropdown and its display (desktop)
+    if (monthDropdown) {
+        monthDropdown.value = newMonth;
+        
+        // Update visible month text display
+        if (selectedMonthText) {
+            selectedMonthText.textContent = monthName;
            
-            // Use visibility instead of display to maintain layout
-            todayBtn.style.visibility = isCurrentMonth ? 'hidden' : 'visible';
+            // Update month checkmarks
+            document.querySelectorAll('.checkmark-icon').forEach(icon => {
+                icon.classList.add('invisible');
+            });
+           
+            // Show checkmark for selected month
+            const selectedOption = document.querySelector(`#month-dropdown-menu [data-value="${newMonth}"]`);
+            if (selectedOption) {
+                const checkmark = selectedOption.querySelector('.checkmark-icon');
+                if (checkmark) checkmark.classList.remove('invisible');
+            }
         }
     }
+   
+    // Update year dropdown and its display (desktop)
+    if (yearDropdown) {
+        yearDropdown.value = newYear;
+       
+        // Update visible year text display
+        if (selectedYearText) {
+            selectedYearText.textContent = newYear;
+            
+            // Update year checkmarks
+            document.querySelectorAll('.checkmark-icon-year').forEach(icon => {
+                icon.classList.add('invisible');
+            });
+           
+            // Show checkmark for selected year
+            const selectedOption = document.querySelector(`#year-options-container [data-value="${newYear}"]`);
+            if (selectedOption) {
+                const checkmark = selectedOption.querySelector('.checkmark-icon-year');
+                if (checkmark) checkmark.classList.remove('invisible');
+            }
+        }
+    }
+    
+    // Update mobile month/year display
+    if (mobileMonthTrigger) {
+        const mobileMonthText = mobileMonthTrigger.querySelector('span') || mobileMonthTrigger;
+        mobileMonthText.textContent = monthName;
+    }
+    
+    if (mobileYearTrigger) {
+        const mobileYearText = mobileYearTrigger.querySelector('span') || mobileYearTrigger;
+        mobileYearText.textContent = newYear;
+    }
+   
+    // Show/hide today button based on current month
+    if (todayBtn) {
+        const isCurrentMonth =
+            currentMonth === calendarDate.getMonth() &&
+            currentYear === calendarDate.getFullYear();
+       
+        // Use visibility instead of display to maintain layout
+        todayBtn.style.visibility = isCurrentMonth ? 'hidden' : 'visible';
+    }
+}
 
 
     // Improved Year Selector

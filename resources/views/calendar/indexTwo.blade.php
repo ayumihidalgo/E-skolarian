@@ -331,6 +331,7 @@ function getCalendarConfig() {
         selectable: false,
         editable: false,
         contentHeight: 'auto',
+        nextDayThreshold: '24:00:00',
         
         // These settings help with mobile and create the "3+ more" effect
         dayMaxEventRows: isMobile ? 2 : 3,
@@ -406,30 +407,46 @@ function initializeCalendarWhenReady() {
 
 // Initialize mobile-optimized month/year selection
 function setupMobileMonthYearSelection() {
-    const isMobile = window.innerWidth <= 768;
-    const monthTrigger = document.getElementById('month-dropdown-trigger');
-    const yearTrigger = document.getElementById('year-dropdown-trigger');
+    const mobileTriggers = {
+        month: document.getElementById('mobile-month-trigger'),
+        year: document.getElementById('mobile-year-trigger')
+    };
     
-    if (!isMobile) return; // Only apply on mobile
+    if (!mobileTriggers.month || !mobileTriggers.year) return;
     
-    // Remove any existing click handlers by cloning
-    const newMonthTrigger = monthTrigger.cloneNode(true);
-    const newYearTrigger = yearTrigger.cloneNode(true);
-    monthTrigger.parentNode.replaceChild(newMonthTrigger, monthTrigger);
-    yearTrigger.parentNode.replaceChild(newYearTrigger, yearTrigger);
+    // Initialize displays
+    updateMobileSelectors();
     
-    // Set up the new click handlers for mobile
-    newMonthTrigger.addEventListener('click', function() {
+    // Setup click handlers for mobile
+    mobileTriggers.month.addEventListener('click', function() {
         openMobileMonthSelector();
     });
     
-    newYearTrigger.addEventListener('click', function() {
+    mobileTriggers.year.addEventListener('click', function() {
         openMobileYearSelector();
     });
+}
+
+function updateMobileSelectors() {
+    if (!calendarObj) return;
     
-    // Make sure we update the references to the selected month/year spans
-    window.selectedMonthText = document.getElementById('selected-month');
-    window.selectedYearText = document.getElementById('selected-year');
+    const mobileMonthTrigger = document.getElementById('mobile-month-trigger');
+    const mobileYearTrigger = document.getElementById('mobile-year-trigger');
+    
+    if (!mobileMonthTrigger || !mobileYearTrigger) return;
+    
+    const date = calendarObj.getDate();
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    // Update displays - either find span inside or update directly
+    const mobileMonthText = mobileMonthTrigger.querySelector('span') || mobileMonthTrigger;
+    const mobileYearText = mobileYearTrigger.querySelector('span') || mobileYearTrigger;
+    
+    mobileMonthText.textContent = monthNames[date.getMonth()];
+    mobileYearText.textContent = date.getFullYear();
 }
 
 // Create a mobile month selector popup
@@ -779,6 +796,7 @@ function initCalendar() {
                 updateCustomControls();
                 checkIfCurrentMonth();
                 adjustCalendarHeight();
+                updateMobileSelectors();
             },
            
             // Handle event clicks (read-only)
@@ -811,6 +829,7 @@ function initCalendar() {
                     info.el.style.zIndex = '1';
                     info.el.style.width = 'auto';
                     info.el.style.maxWidth = '100%';
+                    info.el.classList.add('fc-event-single-day');
                 } else if (info.event.extendedProps.source === 'proposal') {
                     info.el.style.borderLeft = '4px solid #0085FF';
                     info.el.setAttribute('title', 'Approved Proposal: ' + info.event.title);
@@ -1355,6 +1374,7 @@ function populateYearDropdown() {
 // Update custom controls based on calendar date
 // Update custom controls based on calendar date
 // Update custom controls based on calendar date
+// Update custom controls based on calendar date
 function updateCustomControls() {
     if (!calendarObj) return;
    
@@ -1363,16 +1383,26 @@ function updateCustomControls() {
     const yearDropdown = document.getElementById('year-dropdown');
     const selectedMonthText = document.getElementById('selected-month');
     const selectedYearText = document.getElementById('selected-year');
+    const mobileMonthTrigger = document.getElementById('mobile-month-trigger');
+    const mobileYearTrigger = document.getElementById('mobile-year-trigger');
     const todayBtn = document.getElementById('today-btn');
+    
+    // Get month name for display
+    const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    const newMonth = calendarDate.getMonth();
+    const newYear = calendarDate.getFullYear();
+    const monthName = monthNames[newMonth];
    
-    // Update month dropdown and its display
+    // Update month dropdown and its display (desktop)
     if (monthDropdown) {
-        const newMonth = calendarDate.getMonth();
         monthDropdown.value = newMonth;
-       
+        
         // Update visible month text display
         if (selectedMonthText) {
-            selectedMonthText.textContent = monthDropdown.options[newMonth].text;
+            selectedMonthText.textContent = monthName;
            
             // Update month checkmarks
             document.querySelectorAll('.checkmark-icon').forEach(icon => {
@@ -1388,15 +1418,14 @@ function updateCustomControls() {
         }
     }
    
-    // Update year dropdown and its display
+    // Update year dropdown and its display (desktop)
     if (yearDropdown) {
-        const newYear = calendarDate.getFullYear();
         yearDropdown.value = newYear;
        
         // Update visible year text display
         if (selectedYearText) {
             selectedYearText.textContent = newYear;
-           
+            
             // Update year checkmarks
             document.querySelectorAll('.checkmark-icon-year').forEach(icon => {
                 icon.classList.add('invisible');
@@ -1409,6 +1438,17 @@ function updateCustomControls() {
                 if (checkmark) checkmark.classList.remove('invisible');
             }
         }
+    }
+    
+    // Update mobile month/year display
+    if (mobileMonthTrigger) {
+        const mobileMonthText = mobileMonthTrigger.querySelector('span') || mobileMonthTrigger;
+        mobileMonthText.textContent = monthName;
+    }
+    
+    if (mobileYearTrigger) {
+        const mobileYearText = mobileYearTrigger.querySelector('span') || mobileYearTrigger;
+        mobileYearText.textContent = newYear;
     }
    
     // Show/hide today button based on current month
