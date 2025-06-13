@@ -164,7 +164,7 @@
                     <!-- Report Header with close button -->
                     <div class="bg-white px-6 py-4 border-b border-gray-300 flex justify-center items-center relative">
                         <h2 id="modalReportId" class="text-[30px] font-semibold text-black font-[Lexend]">REPORT-001</h2>
-                        <button onclick="closeReportModal()" class="absolute right-6 w-6 h-6 bg-[#7A1212] text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors cursor-pointer ">
+                        <button onclick="window.closeReportModal()" class="absolute right-6 w-6 h-6 bg-[#7A1212] text-white rounded flex items-center justify-center hover:bg-red-700 transition-colors cursor-pointer ">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -1023,7 +1023,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Keep existing modal functions
-    function openReportModal(report) {
+    window.openReportModal = function(report) {
         // Mark report as viewed via AJAX
         fetch(`/reports/${report.id}/mark-as-viewed`, {
             method: 'POST',
@@ -1092,15 +1092,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('reportModal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-    }
+    };
 
-    function closeReportModal() {
+    window.closeReportModal = function() {
         const modal = document.getElementById('reportModal');
         modal.classList.add('hidden');
         modal.classList.remove('flex');
-    }
+    };
 
-    function emailResponse() {
+    window.emailResponse = function() {
         const email = document.getElementById('modalEmail').textContent;
         const reportId = document.getElementById('modalReportId').textContent;
 
@@ -1108,13 +1108,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const mailtoLink = 'mailto:' + email + '?subject=' + subject;
 
         window.location.href = mailtoLink;
-    }
+    };
 
     // Close modal when clicking outside
     document.addEventListener('click', function(event) {
         const modal = document.getElementById('reportModal');
         if (event.target === modal) {
-            closeReportModal();
+            window.closeReportModal();
         }
     });
 });
