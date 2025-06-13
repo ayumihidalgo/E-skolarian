@@ -35,6 +35,7 @@
                     inputmode="numeric"
                     pattern="[0-9]*"
                     required
+                    autocomplete="off"
                     class="otp-input 
                     w-10 h-12 text-lg
                     sm:w-12 sm:h-14 sm:text-xl
@@ -70,10 +71,21 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const otpInputs = document.querySelectorAll(".otp-input");
+        const resendLink = document.getElementById("resend-link");
+        const RESEND_DELAY = 60;
+        const STORAGE_KEY = "resend_otp_timer_start";
+        let countdownInterval;
 
+        // === OTP INPUT NAVIGATION ===
         otpInputs.forEach((input, index) => {
+            input.setAttribute("autocomplete", "off");
+            input.setAttribute("autocorrect", "off");
+            input.setAttribute("autocapitalize", "off");
+            input.setAttribute("spellcheck", "false");
+
             input.addEventListener("input", () => {
-                if (input.value.length === 1 && index < otpInputs.length - 1) {
+                input.value = input.value.replace(/\D/g, '').slice(0, 1); // only 1 digit
+                if (input.value && index < otpInputs.length - 1) {
                     otpInputs[index + 1].focus();
                 }
             });
@@ -87,8 +99,10 @@
             input.addEventListener("paste", (e) => {
                 e.preventDefault();
                 const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
-                paste.split('').slice(0, otpInputs.length).forEach((char, i) => {
-                    otpInputs[i].value = char;
+                paste.split('').forEach((char, i) => {
+                    if (i < otpInputs.length) {
+                        otpInputs[i].value = char;
+                    }
                 });
                 if (paste.length >= otpInputs.length) {
                     otpInputs[otpInputs.length - 1].focus();
@@ -98,52 +112,88 @@
             });
         });
 
-        const resendLink = document.getElementById("resend-link");
-        const resendTimer = document.getElementById("resend-timer");
-        const RESEND_DELAY = 60; // in seconds
-        const STORAGE_KEY = "resend_otp_timer_start";
-
-        function startResendCountdown(startTime) {
+        // === RESEND LINK LOGIC ===
+        function disableResendLink() {
+            resendLink.dataset.disabled = "true";
             resendLink.style.pointerEvents = "none";
             resendLink.style.opacity = "0.5";
+        }
 
-            const interval = setInterval(() => {
+        function enableResendLink() {
+            resendLink.dataset.disabled = "false";
+            resendLink.style.pointerEvents = "auto";
+            resendLink.style.opacity = "1";
+        }
+
+        function startResendCountdown(startTime) {
+            disableResendLink();
+            clearInterval(countdownInterval);
+
+            countdownInterval = setInterval(() => {
                 const elapsed = Math.floor((Date.now() - startTime) / 1000);
                 const remaining = RESEND_DELAY - elapsed;
 
                 if (remaining <= 0) {
-                    clearInterval(interval);
+                    clearInterval(countdownInterval);
                     resendLink.textContent = "Resend Code";
-                    resendLink.style.pointerEvents = "auto";
-                    resendLink.style.opacity = "1";
+                    enableResendLink();
                     localStorage.removeItem(STORAGE_KEY);
                 } else {
-                    resendTimer.textContent = remaining;
+                    resendLink.textContent = `Resend Code (${remaining}s)`;
                 }
             }, 1000);
         }
 
-        // On resend link click
-        resendLink.addEventListener("click", () => {
+        resendLink.addEventListener("click", async (e) => {
+            e.preventDefault();
+
+            if (resendLink.dataset.disabled === "true") {
+                return;
+            }
+
+            disableResendLink();
+            resendLink.textContent = `Resend Code (${RESEND_DELAY}s)`;
             localStorage.setItem(STORAGE_KEY, Date.now());
+            startResendCountdown(Date.now());
+
+            try {
+                const response = await fetch(resendLink.href, {
+                    method: "POST",
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error("Request failed");
+                }
+
+                console.log("OTP resent successfully.");
+            } catch (error) {
+                console.error("Resend failed:", error);
+                clearInterval(countdownInterval);
+                enableResendLink();
+                resendLink.textContent = "Resend Code";
+                localStorage.removeItem(STORAGE_KEY);
+            }
         });
 
-        // Initialize timer on page load if needed
+        // Restore countdown on load
         const storedStart = localStorage.getItem(STORAGE_KEY);
         if (storedStart) {
-            const startTime = parseInt(storedStart);
+            const startTime = parseInt(storedStart, 10);
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
-
             if (elapsed < RESEND_DELAY) {
                 startResendCountdown(startTime);
             } else {
+                enableResendLink();
+                resendLink.textContent = "Resend Code";
                 localStorage.removeItem(STORAGE_KEY);
             }
         } else {
-            // Timer not active, show full resend link
+            enableResendLink();
             resendLink.textContent = "Resend Code";
-            resendLink.style.pointerEvents = "auto";
-            resendLink.style.opacity = "1";
         }
     });
 </script>

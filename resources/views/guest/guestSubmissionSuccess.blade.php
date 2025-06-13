@@ -27,17 +27,15 @@
                 <p>Where would you like to go next?</p>
 
                 <div class="flex flex-col md:flex-row justify-between gap-4 w-full">
-                    <button
-                        type="button"
-                        class="w-full md:w-auto font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] cursor-pointer transition">
+                    <a href="{{ route('landing') }}"
+                        class="w-full md:w-auto text-center font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] cursor-pointer transition">
                         Back to Login Page
-                    </button>
-                                                                
-                    <button
-                        type="button"
-                        class="w-full md:w-auto font-semibold px-6 py-2 bg-[#7A1212] text-white rounded-[12px] hover:bg-[#a31515] cursor-pointer transition">
+                    </a>
+
+                    <a href="{{ route('guest.submissionForm') }}"
+                        class="w-full md:w-auto text-center font-semibold px-6 py-2 bg-[#7A1212] text-white rounded-[12px] hover:bg-[#a31515] cursor-pointer transition">
                         Submit Another Document
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>

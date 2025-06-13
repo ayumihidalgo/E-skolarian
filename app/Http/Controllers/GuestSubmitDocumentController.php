@@ -27,9 +27,9 @@ class GuestSubmitDocumentController extends Controller
             'email.ends_with' => 'Please enter a valid PUP Webmail.',
         ]);
 
-        $otp = rand(100000, 999999);
+        $otp = random_int(100000, 999999);
 
-        Session::put('guest_email', $request->email);
+        Session::put('guest_webmail', $request->email);
         Session::put('guest_otp', $otp);
         Session::put('otp_expires_at', now()->addMinutes(10));
 
@@ -42,7 +42,7 @@ class GuestSubmitDocumentController extends Controller
     // Step 3: Show OTP verification form
     public function showOtpForm()
     {
-        if (!Session::has('guest_email')) {
+        if (!Session::has('guest_webmail')) {
             return redirect()->route('guest.login');
         }
 
@@ -57,7 +57,7 @@ class GuestSubmitDocumentController extends Controller
             'otp.*' => ['digits:1']
         ]);
 
-        $enteredOtp = implode('', $request->otp);
+        $enteredOtp = preg_replace('/\D/', '', implode('', $request->otp));
         $storedOtp = Session::get('guest_otp');
         $expiresAt = Session::get('otp_expires_at');
 
@@ -75,11 +75,11 @@ class GuestSubmitDocumentController extends Controller
 
     public function resendOtp(Request $request)
     {
-        if (!Session::has('guest_email')) {
+        if (!Session::has('guest_webmail')) {
             return redirect()->route('guest.login');
         }
 
-        $email = Session::get('guest_email');
+        $email = Session::get('guest_webmail');
 
         if (!$email) {
             return redirect()->route('guest.login')->withErrors(['email' => 'Session expired. Please log in again.']);
@@ -102,7 +102,14 @@ class GuestSubmitDocumentController extends Controller
             return redirect()->route('guest.login');
         }
 
-        return view('guest.guestSubmissionForm');
+        // Fetch admin users for dropdown
+        $adminUsers = \App\Models\User::where('role', 'admin')
+            ->where('active', 1)
+            ->select('id', 'username', 'role_name')
+            ->get();
+
+        // Return view with adminUsers
+        return view('guest.guestSubmissionForm', compact('adminUsers'));
     }
 
     // Step 6: Show document submission success

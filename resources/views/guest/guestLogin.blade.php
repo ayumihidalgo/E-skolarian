@@ -42,6 +42,7 @@
 
                     <button
                         type="submit"
+                        id="submitBtn"
                         class="w-full bg-[#7A1212] text-white py-2 px-4 rounded-md hover:bg-red-700 transition cursor-pointer">
                         Submit
                     </button>
@@ -51,4 +52,16 @@
     </div>
     @include('components.footer')
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('form');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', () => {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+        });
+    });
+</script>
 @endsection
