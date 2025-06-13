@@ -57,25 +57,43 @@ class AdminDashboardController extends Controller
 
         // Document status counts
 
-        // Get IDs of documents that are "Under Review" in the review table
-        $underReviewIds = Review::where('status', 'Under Review')
+        $adminId = auth()->id();
+
+        // Get IDs of documents that are "Returned" in the review table (for this admin)
+        $returnedIds = Review::where('status', 'Returned')
+            ->whereHas('document', function ($q) use ($adminId) {
+                $q->where('received_by', $adminId);
+            })
             ->pluck('document_id')
             ->unique();
 
-        // Pending: documents that are pending and NOT under review
+        // Get IDs of documents that are "Under Review" in the review table, but only for this admin
+        $underReviewIds = Review::where('status', 'Under Review')
+            ->whereHas('document', function ($q) use ($adminId) {
+                $q->where('received_by', $adminId);
+            })
+            ->pluck('document_id')
+            ->unique();
+
+        // Pending: documents that are pending and NOT under review or returned, and received by this admin
         $pendingCount = SubmittedDocument::where('status', 'pending')
+            ->where('received_by', $adminId)
             ->whereNotIn('id', $underReviewIds)
+            ->whereNotIn('id', $returnedIds)
             ->count();
 
-        // Under Review: count from review table
-        $reviewCount = $underReviewIds->count();
+        // Under Review: count from review table, only for this admin, and not returned
+        $reviewCount = $underReviewIds->diff($returnedIds)->count();
 
-        // Approved: from submitted_documents
-        $approvedCount = SubmittedDocument::where('status', 'approved')->count();
+        // Approved: only those received by this admin and not returned
+        $approvedCount = SubmittedDocument::where('status', 'approved')
+            ->where('received_by', $adminId)
+            ->whereNotIn('id', $returnedIds)
+            ->count();
 
-        // Total: only pending, under_review, approved
-        $totalCount = SubmittedDocument::whereIn('status', ['pending', 'under_review', 'approved'])
-            ->orWhereIn('id', $underReviewIds)
+        // Total: only those received by this admin and not returned
+        $totalCount = SubmittedDocument::where('received_by', $adminId)
+            ->whereNotIn('id', $returnedIds)
             ->count();
 
         // Determine which tab to show

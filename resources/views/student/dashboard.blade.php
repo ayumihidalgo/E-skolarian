@@ -57,7 +57,7 @@
                                     <div class="mb-4 pb-4 border-b border-gray-300">
                                         <h3 class="text-xl font-semibold">{{ $announcement->title }}</h3>
                                         <p class="text-sm text-gray-500">
-                                            Posted by {{ $announcement->user->username }} on {{ $postDate }}
+                                            Posted by {{ $announcement->user->role_name }} on {{ $postDate }}
                                             @if($deadlineText)
                                                 <span class="ml-2 text-red-600 font-semibold">{{ $deadlineText }}</span>
                                             @endif
@@ -67,11 +67,11 @@
                                             $preview = mb_substr($announcement->content, 0, $maxLength) . (strlen($announcement->content) > $maxLength ? '...' : '');
                                         @endphp
                                         <span class="text-gray-700 whitespace-pre-line break-words">{{ $preview }}</span>
-                                        <button class="text-indigo-600 hover:underline ml-2 text-sm"
+                                        <button class="text-[#7B2323] hover:underline ml-2 text-sm"
                                             onclick="showAnnouncementModal(
                                                 `{{ addslashes($announcement->title) }}`,
                                                 `{{ addslashes(e($announcement->content)) }}`,
-                                                `{{ addslashes($announcement->user->username) }}`,
+                                                `{{ addslashes($announcement->user->role_name) }}`,
                                                 `{{ $postDate }}`,
                                                 `{{ $deadlineText }}`)">
                                             View Post
@@ -93,7 +93,7 @@
                                     <div class="border-b pb-2 border-gray-300">
                                         <h3 class="text-base font-semibold">{{ $announcement->title }}</h3>
                                         <p class="text-sm text-gray-500">
-                                            Posted by {{ $announcement->user->username }} on
+                                            Posted by {{ $announcement->user->role_name }} on
                                             {{ $announcement->created_at->format('F j, Y') }}
                                         </p>
                                         @php
@@ -105,11 +105,11 @@
                                         @endphp
                                         <span class="text-gray-700 whitespace-pre-line break-words">{{ $preview }}</span>
                                         @if ($isLong)
-                                            <button class="text-indigo-600 hover:underline ml-2 text-sm"
+                                            <button class="text-[#7B2323] hover:underline ml-2 text-sm"
                                                 onclick="showAnnouncementModal(
                                                 `{{ addslashes($announcement->title) }}`,
                                                 `{{ addslashes(e($announcement->content)) }}`,
-                                                `Posted by {{ addslashes($announcement->user->username) }} on {{ $announcement->created_at->format('F j, Y') }}`,
+                                                `Posted by {{ addslashes($announcement->user->role_name) }} on {{ $announcement->created_at->format('F j, Y') }}`,
                                                 'previous'
                                             )">
                                                 Read More
@@ -161,7 +161,7 @@
                                                     $badgeClass =
                                                         $statusColors[$displayStatus] ?? 'bg-gray-400 text-white';
                                                 @endphp
-                                                <tr class="border-b hover:bg-zinc-200 cursor-pointer"
+                                                <tr class="border-b"
                                                     onclick="showDocumentModal(
                                                     '{{ $doc->id }}',
                                                     '{{ \Carbon\Carbon::parse($doc->created_at)->format('F j, Y, g:i A') }}',
@@ -169,7 +169,7 @@
                                                     '{{ addslashes($doc->type) }}',
                                                     '{{ addslashes($doc->summary) }}',
                                                     '{{ $doc->latestVersion ? addslashes($doc->latestVersion->file_path) : '' }}',
-                                                    '{{ addslashes(optional($doc->receiver)->username ?? '') }}',
+                                                    '{{ addslashes(optional($doc->receiver)->role_name ?? '') }}',
                                                     '{{ $displayStatus }}',
                                                     '{{ $doc->control_tag }}'
                                                 )">
@@ -231,7 +231,11 @@
                     <span id="modalPosterName"></span>
                 </span>
                 <span class="flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
-                    <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3M16 7V3M4 11h16M4 19h16M4 15h16"></path></svg>
+                    <!-- Clock Icon SVG -->
+                    <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+                        <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" fill="none"/>
+                    </svg>
                     <span id="modalPostDate"></span>
                 </span>
             </div>
@@ -307,34 +311,6 @@
             document.getElementById('announcementModal').classList.add('hidden');
         }
 
-        function showDocumentModal(id, date, title, type, summary, filePath, reviewer, status, tag) {
-            document.getElementById('docDate').textContent = date;
-            document.getElementById('docTitle').textContent = title;
-            document.getElementById('docType').textContent = type;
-            document.getElementById('docSummary').textContent = summary || 'No summary';
-            if (filePath) {
-                let fileName = filePath.split('/').pop();
-                document.getElementById('docAttachment').innerHTML =
-                    `<a href="${getPreviewUrl(filePath)}" target="_blank" class="bg-white text-gray-900 px-3 py-1 rounded shadow text-xs inline-block hover:bg-gray-200 transition">View: ${fileName}</a>`;
-            } else {
-                document.getElementById('docAttachment').innerHTML = '<span class="text-gray-300">No attachment</span>';
-            }
-            // Status badge
-            let badge = '';
-            if (status === 'Approved') badge = `<span class="inline-block w-3 h-3 rounded-full bg-green-500 mr-1"></span>`;
-            else if (status === 'Rejected') badge =
-                `<span class="inline-block w-3 h-3 rounded-full bg-red-500 mr-1"></span>`;
-            else if (status === 'Under Review') badge =
-                `<span class="inline-block w-3 h-3 rounded-full bg-yellow-400 mr-1"></span>`;
-            else badge = `<span class="inline-block w-3 h-3 rounded-full bg-gray-400 mr-1"></span>`;
-            document.getElementById('docMeta').innerHTML =
-                `<span class="font-semibold">${reviewer || ''}</span> <br>${badge}${status}, ${date}`;
-            document.getElementById('documentModal').classList.remove('hidden');
-        }
-
-        function closeDocumentModal() {
-            document.getElementById('documentModal').classList.add('hidden');
-        }
 
         function showPreviewModal(filePath) {
             let fileName = filePath.split('/').pop();

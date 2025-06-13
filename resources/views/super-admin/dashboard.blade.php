@@ -112,7 +112,9 @@
                                                 method="POST"
                                                 onsubmit="return confirm('Move this announcement to archive?');">
                                                 @csrf
-                                                <button type="button"
+                                                <button 
+                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition border-t border-gray-100 whitespace-nowrap"
+                                                type="button"
                                                     onclick="openArchiveModal({{ $announcement->id }})">
                                                     Move to Archive
                                                 </button>
@@ -121,7 +123,7 @@
                                     </div>
                                 </div>
                                 <p class="text-sm text-gray-500 mb-1">
-                                    Posted by {{ $announcement->user->username }} on
+                                    Posted by {{ $announcement->user->role_name }} on
                                     {{ $announcement->created_at->format('F j, Y') }}
                                     @if($announcement->deadline)
                                         @php
@@ -140,15 +142,15 @@
                                         $preview = $isLong
                                             ? mb_substr($announcement->content, 0, $maxLength) . '...'
                                             : $announcement->content;
-                                        $meta = "Posted by {$announcement->user->username} on {$announcement->created_at->format('F j, Y',)}";
+                                        $meta = "Posted by {$announcement->user->role_name} on {$announcement->created_at->format('F j, Y',)}";
                                     @endphp
                                     <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                     @if ($isLong)
-                                        <button class="text-indigo-600 hover:underline ml-2 text-sm"
+                                        <button class="text-[#7B2323] hover:underline ml-2 text-sm"
                                             onclick="showAnnouncementModal(
                                         `{{ addslashes($announcement->title) }}`,
                                         `{{ addslashes(e($announcement->content)) }}`,
-                                        `Posted by {{ addslashes($announcement->user->username) }} on {{ $announcement->created_at->format('F j, Y') }}`,
+                                        `Posted by {{ addslashes($announcement->user->role_name) }} on {{ $announcement->created_at->format('F j, Y') }}`,
                                         'announcement'
                                     )">
                                             Read More
@@ -248,7 +250,7 @@
                                     @endif
                                 </div>
                                 <p class="text-sm text-gray-500 mb-2">
-                                    Posted by {{ $announcement->user->username }} on
+                                    Posted by {{ $announcement->user->role_name }} on
                                     {{ $announcement->created_at->format('F j, Y') }}
                                     @if($announcement->deadline)
                                         @php
@@ -270,11 +272,11 @@
                                     @endphp
                                     <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                     @if ($isLong)
-                                        <button class="text-indigo-600 hover:underline ml-2 text-sm"
+                                        <button class="text-[#7B2323] hover:underline ml-2 text-sm"
                                             onclick="showAnnouncementModal(
                                 `{{ addslashes($announcement->title) }}`,
                                 `{{ addslashes(e($announcement->content)) }}`,
-                                `Posted by {{ addslashes($announcement->user->username) }} on {{ $announcement->created_at->format('F j, Y g:i A') }}`,
+                                `Posted by {{ addslashes($announcement->user->role_name) }} on {{ $announcement->created_at->format('F j, Y g:i A') }}`,
                                 '{{ $showArchive ? 'archive' : 'previous' }}'
                             )">
                                             Read More
