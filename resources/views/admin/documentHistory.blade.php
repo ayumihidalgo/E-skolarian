@@ -275,7 +275,7 @@
                 </div>
             </div>
 
-            <!-- Pagination controls -->
+            <!-- Pagination controls with ellipsis -->
             @if (count($documents) > 0)
             <div class="mt-4 flex justify-center" id="paginationContainer">
                 <nav>
@@ -284,26 +284,60 @@
                         <li>
                             <a href="{{ $documents->previousPageUrl() }}"
                                 class="pagination-btn-prev px-3 py-1 rounded-lg {{ $documents->currentPage() == 1 ? 'cursor-not-allowed opacity-50' : '' }}">
-                                < </a>
+                                &lt;
+                            </a>
                         </li>
 
-                        <!-- Page numbers -->
-                        @for ($i = 1; $i <= $documents->lastPage(); $i++)
+                        @php
+                            $current = $documents->currentPage();
+                            $last = $documents->lastPage();
+                            $start = max(1, $current - 2);
+                            $end = min($last, $current + 2);
+                        @endphp
+
+                        <!-- First page -->
+                        @if($start > 1)
+                            <li>
+                                <a href="{{ $documents->url(1) }}"
+                                    class="pagination-btn px-3 py-1 rounded-lg {{ $current == 1 ? 'bg-[#7A1212] text-white' : '' }}">
+                                    1
+                                </a>
+                            </li>
+                            @if($start > 2)
+                                <li><span class="px-3 py-1">...</span></li>
+                            @endif
+                        @endif
+
+                        <!-- Page numbers around current page -->
+                        @for ($i = $start; $i <= $end; $i++)
                             <li>
                                 <a href="{{ $documents->url($i) }}"
-                                    class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
+                                    class="pagination-btn px-3 py-1 rounded-lg {{ $current == $i ? 'bg-[#7A1212] text-white' : '' }}">
                                     {{ $i }}
                                 </a>
                             </li>
-                            @endfor
+                        @endfor
 
-                            <!-- Next page button -->
+                        <!-- Last page -->
+                        @if($end < $last)
+                            @if($end < $last - 1)
+                                <li><span class="px-3 py-1">...</span></li>
+                            @endif
                             <li>
-                                <a href="{{ $documents->nextPageUrl() }}"
-                                    class="pagination-btn-next px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
-                                    >
+                                <a href="{{ $documents->url($last) }}"
+                                    class="pagination-btn px-3 py-1 rounded-lg {{ $current == $last ? 'bg-[#7A1212] text-white' : '' }}">
+                                    {{ $last }}
                                 </a>
                             </li>
+                        @endif
+
+                        <!-- Next page button -->
+                        <li>
+                            <a href="{{ $documents->nextPageUrl() }}"
+                                class="pagination-btn-next px-3 py-1 rounded-lg {{ $current == $last ? 'cursor-not-allowed opacity-50' : '' }}">
+                                &gt;
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             </div>

@@ -539,6 +539,8 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class])->group(fu
 Route::post('/check-recovery-email', [SuperAdminController::class, 'checkRecoveryEmailExists'])
     ->name('check-recovery-email');
 
+Route::get('/student/document-history/preview/{id}', [StudentDocumentController::class, 'documentHistoryPreview'])->name('student.document.history.preview');
+
 
 
 

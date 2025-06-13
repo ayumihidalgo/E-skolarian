@@ -28,9 +28,9 @@ class AdminDocumentController extends Controller
             ->orderBy('version', 'desc')
             ->get();
         
-        // Initialize attachments array
+        // Initialize attachments array and document_url
         $attachments = [];
-        $filePath = null;
+        $document_url = null; // Initialize this variable
         
         // Process all versions into attachments array
         if ($documentVersions && count($documentVersions) > 0) {
@@ -48,6 +48,9 @@ class AdminDocumentController extends Controller
             // Get latest version's file path for display
             $latestVersion = $documentVersions->first();
             $document_url = $latestVersion->document_url;
+        } else {
+            // Fallback to original document URL if no versions exist
+            $document_url = $document->document_url ?? null;
         }
 
         // Organization mapping
