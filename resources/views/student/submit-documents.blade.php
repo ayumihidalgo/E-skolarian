@@ -47,7 +47,7 @@
                                 <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Subject<span
                                         class="required-indicator text-red-500"> *</span>:</span>
                                 <input type="text" id="subject" name="subject" autocomplete="off"
-                                    class="flex-1 font-semibold focus:outline-none" maxlength="255">
+                                    class="min-w-0 w-full font-semibold focus:outline-none" maxlength="255">
                             </div>
 
                             <!-- Semester A.Y. Dropdown for Mobile -->
@@ -73,14 +73,14 @@
                             <!-- Document Type Button -->
                             <div class="relative w-full">                                    
                                 <button type="button" id="docTypeButton" aria-expanded
-                                    class="relative font-semibold w-full flex justify-center items-center gap-2 bg-[#7A1212] hover:bg-[#a31515] text-white border-2 border-[#7A1212] hover:border-[#a31515] p-2 rounded-[8px] cursor-pointer transition">
+                                    class="relative w-full bg-[#7A1212] hover:bg-[#a31515] text-white border-2 border-[#7A1212] hover:border-[#a31515] p-2 pl-4 pr-12 rounded-[8px] cursor-pointer transition font-semibold flex items-center justify-center gap-2">
                                     <img src="{{ asset('images/submitDocument.svg') }}" alt="Submit Document" id="docTypeIcon"
-                                        class="w-5 h-5">
-                                    <span id="docTypeSelected">Document Type</span>
+                                        class="w-5 h-5 flex-shrink-0">
+                                    <span id="docTypeSelected" class="whitespace-nowrap truncate">Document Type</span>
 
-                                    <!-- Dropdown Arrow aligned to the right -->
+                                    <!-- Dropdown Arrow absolutely positioned at right -->
                                     <img src="{{ asset('images/white-arrow-down.svg') }}" alt="Dropdown Arrow" id="docTypeArrow"
-                                        class="absolute right-2 w-8 h-3">
+                                        class="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-3 pointer-events-none">
                                 </button>
 
                                 <!-- Dropdown List -->
@@ -112,10 +112,11 @@
 
                             <!-- Document Type Field if "Other" is Selected -->
                             <div id="othersDocTypeContainer" class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full" hidden>
-                                <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Document Type<span
-                                        class="required-indicator text-red-500"> *</span>:</span>
+                                <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">
+                                    Document Type<span class="required-indicator text-red-500"> *</span>:
+                                </span>
                                 <input type="text" name="other_type" id="othersDocTypeInput" autocomplete="off"
-                                    class="flex-1 font-semibold focus:outline-none" maxlength="50">
+                                    class="min-w-0 w-full font-semibold focus:outline-none" maxlength="50">
                             </div>
                             
                             <!-- Semester A.Y. Dropdown for Desktop -->
@@ -146,22 +147,22 @@
                                 class="required-indicator text-red-500"> *</span>:</label>
 
                         <textarea id="overview" name="overview"
-                            class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="255"
+                            class="w-full font-semibold h-[150px] resize-none overflow-y-visible focus:outline-none" maxlength="1000"
                             oninput="overviewUpdateCounter()" placeholder="Write a short description or overview..."></textarea>
 
                         <div class="text-sm text-gray-500 text-right">
-                            <span id="overview-counter">0</span>/255
+                            <span id="overview-counter">0</span>/1000
                         </div>
                     </div>
 
                     <!-- Only shows for Event Proposals -->
                     <div id="event_proposal_container" class="space-y-4 mb-4 hidden">
                         <!-- Venue Field-->
-                        <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                        <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full">
                             <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Venue<span
                             class="required-indicator text-red-500"> *</span>:</span>
                             <input type="text" id="venue" name="venue" autocomplete="off"
-                            class="flex-1 font-semibold focus:outline-none" maxlength="100">
+                            class="min-w-0 w-full font-semibold focus:outline-none" maxlength="100">
                         </div>
                         
                         <!-- Proposed Date & Time Field and Hours Field-->
@@ -169,22 +170,23 @@
                             <!-- Left Side -->
                             <div class="flex flex-col gap-4 w-full md:w-1/2">
                                 <!-- Proposed Date & Time Field -->
-                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
-                                    <span class="text-gray-500 font-semibold mr-2">Proposed Date & Time<span
-                                    class="required-indicator text-red-500"> *</span>:</span>
+                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full">
+                                    <span class="text-gray-500 font-semibold mr-2 whitespace-nowrap">
+                                        Proposed Date & Time<span class="required-indicator text-red-500"> *</span>:
+                                    </span>
                                     <input type="datetime-local" id="proposed_date_time" name="proposed_date_time"
-                                    class="flex-1 font-semibold focus:outline-none">
+                                        class="flex-1 min-w-0 font-semibold focus:outline-none">
                                 </div>
                             </div>
                             
                             <!-- Right Side -->
                             <div class="flex flex-col gap-4 w-full md:w-1/2">
                                 <!-- Hours Field -->
-                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full">
                                     <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">No. of Hours<span
                                     class="required-indicator text-red-500"> *</span>:</span>
-                                    <input type="number" id="hours" name="hours" min="1" step="1" autocomplete="off"
-                                    class="flex-1 font-semibold focus:outline-none">
+                                    <input type="number" id="hours" name="hours" min="1" max ="10" step="1" autocomplete="off"
+                                    class="min-w-0 w-full font-semibold focus:outline-none">
                                 </div>
                             </div>
                         </div>
@@ -194,11 +196,11 @@
                             <!-- Left Side -->
                             <div class="flex flex-col gap-4 w-full md:w-1/2">
                                 <!-- Attendees Field -->
-                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full md:flex">
+                                <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full">
                                     <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">Attendees<span
                                     class="required-indicator text-red-500"> *</span>:</span>
                                     <input type="text" id="attendees" name="attendees" autocomplete="off"
-                                    class="flex-1 font-semibold focus:outline-none" maxlength="50" placeholder="Course/Year/Section">
+                                    class="min-w-0 w-full font-semibold focus:outline-none" maxlength="50" placeholder="Course/Year/Section">
                                 </div>
                             </div>
                             
@@ -206,13 +208,13 @@
                             <div class="relative w-full md:w-1/2">
                                 <!-- Attendees Range Button -->
                                 <button type="button" id="attendeesRangeButton" aria-expanded
-                                    class="relative w-full text-left border-2 border-gray-500 p-2 rounded-[8px] flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
+                                    class="w-full text-left border-2 border-gray-500 p-2 rounded-[8px] relative flex items-center justify-between gap-2 bg-[#F2F4F7] cursor-pointer">
                                     <span class="font-semibold text-gray-500">
                                         Expected No. of Attendees<span class="required-indicator text-red-500"> *</span>:
                                         <span id="attendeesRangeSelected" class="font-semibold text-black"></span>
                                     </span>
                                     <img src="{{ asset('images/gray-arrow-down.svg') }}" alt="Dropdown Arrow"
-                                        id="attendeesRangeArrow" class="absolute right-2 w-8 h-3">
+                                        id="attendeesRangeArrow" class="w-8 h-3">
                                 </button>
 
                                 <!-- Dropdown List -->
@@ -232,21 +234,22 @@
                             </div>
                         </div>                        
                     
-                        <!-- Fees Field-->
-                        <div class="flex items-center w-full flex-wrap md:flex">
-                            <span class="text-gray-500 font-semibold mr-2">
+                        <!-- Fees Field -->
+                        <div class="flex flex-col md:flex-row md:items-center w-full gap-2 md:gap-4">
+                            <span class="text-gray-500 font-semibold md:whitespace-nowrap">
                                 Fee/Contributions per Student/Participant (if applicable):
                             </span>
-                            
-                            <div class="relative">
+
+                            <div class="relative w-full md:w-[150px]">
                                 <span class="absolute inset-y-0 left-0 pl-2 flex items-center text-gray-500">₱</span>
                                 <input type="number" id="fees" name="fees" min="0" step="0.01" autocomplete="off"
-                                class="pl-6 w-full border-2 border-gray-500 font-semibold rounded-[8px] px-2 py-1 focus:outline-none">
+                                    class="pl-6 w-full border-2 border-gray-500 font-semibold rounded-[8px] px-2 py-1 focus:outline-none">
                             </div>
-                            
-                            <div class="ml-4">
+
+                            <div class="flex items-center">
                                 <label class="flex items-center space-x-1">
-                                    <input type="checkbox" id="fee_none" name="fee_none" class="form-checkbox font-semibold border-2 border-gray-500 rounded-[8px] h-5 w-5">
+                                    <input type="checkbox" id="fee_none" name="fee_none"
+                                        class="form-checkbox border-2 border-gray-500 rounded-[8px] h-5 w-5">
                                     <span class="text-gray-500 font-semibold whitespace-nowrap">None</span>
                                 </label>
                             </div>
@@ -292,7 +295,11 @@
                                     <img src="{{ asset('images/photo-upload-icon.svg') }}" alt="Upload Icon" class="w-12 h-12 mb-2">
                                     <p>
                                         <strong class="text-black">Drop your files here</strong> or
-                                        <span class="text-[#7A1212] font-semibold cursor-pointer">browse</span>
+                                        <button type="button"
+                                            class="text-[#7A1212] font-semibold cursor-pointer"
+                                            onclick="document.getElementById('desktopFileInput').click()">
+                                            browse
+                                        </button>
                                     </p>
                                     <p class="text-sm mt-1">
                                         Choose a file up to 5MB. Valid file types: PDF, DOCX, DOC. Maximum of 30 Files
@@ -306,25 +313,36 @@
 
                         <!-- Custom Dropzone Preview Template -->
                         <div id="custom-preview-template" class="hidden">
-                            <div class="dz-preview bg-white rounded-lg border p-3 shadow-sm">
-                                <div class="flex justify-between items-start mb-1">
-                                    <div class="flex items-center gap-2">
-                                        <img src="{{ asset('images/uploaded-file-icon.svg') }}" alt="Uploaded File"/>
-                                        <div>
-                                            <span class="dz-filename text-sm font-medium block"><span data-dz-name></span></span>
+                            <div class="dz-preview bg-white rounded-lg border p-3 shadow-sm overflow-hidden w-full">
+                                <div class="flex items-start justify-between gap-2 mb-1 w-full flex-nowrap">
+                                    <div class="flex items-start gap-2 min-w-0 w-full">
+                                        <img src="{{ asset('images/uploaded-file-icon.svg') }}" alt="Uploaded File"
+                                            class="w-10 h-10 flex-shrink-0" />
+                                        
+                                        <div class="min-w-0">
+                                            <span class="dz-filename text-sm font-medium block truncate">
+                                                <span data-dz-name></span>
+                                            </span>
                                             <span class="dz-size text-xs text-gray-500" data-dz-size></span>
                                         </div>
                                     </div>
 
-                                    <div class="flex gap-2 items-start">
+                                    <div class="flex items-center gap-2 flex-shrink-0 pl-2">
                                         <img src="{{ asset('images/check-circle-icon.svg') }}" alt="Success"
                                             class="w-4 h-4 dz-success-icon hidden" />
-                                        <img src="{{ asset('images/trash-icon.svg') }}" alt="Remove"
-                                            class="w-4 h-4 cursor-pointer dz-remove" data-dz-remove title="Remove File"/>
+                                        
+                                        <button
+                                            class="w-5 h-5 flex items-center justify-center cursor-pointer dz-remove"
+                                            data-dz-remove title="Remove File"
+                                            aria-label="Remove File"
+                                            tabindex="0"
+                                            onkeydown="if (event.key === 'Enter' || event.key === ' ') this.click();">
+                                            <img src="{{ asset('images/trash-icon.svg') }}" alt="Remove" class="w-4 h-4 pointer-events-none" />
+                                        </button>
                                     </div>
                                 </div>
-                                
-                                <div class="relative w-full bg-gray-200 h-2 rounded">
+
+                                <div class="relative w-full bg-gray-200 h-2 rounded overflow-hidden">
                                     <div class="bg-blue-600 h-2 rounded dz-upload" data-dz-uploadprogress style="width: 100%;"></div>
                                 </div>
                             </div>
@@ -434,6 +452,7 @@
     <script>
         // Auto-select receiver when selecting doc type disabled at start
         let receiverAutoSelected = false;
+        let myDropzone;
 
         // Element references
         const docType = {
@@ -598,6 +617,17 @@
             }
         });
 
+
+        // Limits hours field to 10 hrs
+        document.getElementById('hours').addEventListener('input', (e) => {
+            const value = parseInt(e.target.value, 10);
+            if (value > 10) {
+                e.target.value = 10;
+            } else if (value < 1) {
+                e.target.value = 1;
+            }
+        });
+
         // Limits inputs for fees field to positive integers w/ 0 (x >= 0)
         const feesInput = document.getElementById('fees');
 
@@ -759,13 +789,18 @@
 
         // Show academic year in the dropdown
         window.selectAcademicYear = function (value, isMobile) {
-            const target = isMobile ? academicYearMobile : academicYear;
-            target.selected.textContent = value;
-            target.input.value = value;
-            target.dropdown.classList.add('hidden');
+            academicYear.input.value = value;
+            academicYear.selected.textContent = value;
+            academicYearMobile.selected.textContent = value;
 
-            // Fire change event manually
-            target.input.dispatchEvent(new Event('change', { bubbles: true }));
+            if (isMobile) {
+                academicYearMobile.dropdown.classList.add('hidden');
+            } else {
+                academicYear.dropdown.classList.add('hidden');
+            }
+
+            // Fire change event once on the input
+            academicYear.input.dispatchEvent(new Event('change', { bubbles: true }));
         };
 
         // Show attendees range in the dropdown
@@ -899,7 +934,7 @@
                 attendees: () => document.getElementById('attendees').value.trim() !== '',
                 attendeesRange: () => document.getElementById('attendeesRangeInput').value.trim() !== '',
                 fees: () => document.getElementById('fees').value.trim() !== '',
-                file: () => document.getElementById('fileUpload').files.length > 0,
+                file: () => myDropzone && myDropzone.files && myDropzone.files.length > 0,
             };
 
             const submitButton = document.getElementById('mainSubmitButton');
@@ -1000,7 +1035,7 @@
         ];
         const previewTemplate = document.getElementById("custom-preview-template").innerHTML;
 
-        const myDropzone = new Dropzone("#desktopDropzone", {
+        myDropzone = new Dropzone("#desktopDropzone", {
             url: "#",
             autoProcessQueue: false,
             clickable: true,
@@ -1035,7 +1070,7 @@
                     if (dz.files.length > MAX_FILES) {
                         dz.removeFile(file);
                         hideAllToasts();
-                        showToast('error', `Upload limit reached. Max ${MAX_FILES} files.`);
+                        showToast('error', "Upload limit reached. Please remove some files before uploading new ones.");
                         return;
                     }
 
@@ -1064,6 +1099,10 @@
                     // Trigger change again to re-render previews
                     validateForm();
                 });
+
+                dz.on("queuecomplete", function () {
+                    validateForm();
+                });
             }
         });
 
@@ -1075,17 +1114,20 @@
 
             files.forEach(file => {
                 if (!ALLOWED_TYPES.includes(file.type)) {
+                    hideAllToasts();
                     showToast('error', "Invalid file type. Only PDF or DOCX files are allowed.");
                     return;
                 }
 
                 if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+                    hideAllToasts();
                     showToast('error', "File size must not exceed 5 MB.");
                     return;
                 }
 
                 if (myDropzone.files.length >= MAX_FILES) {
-                    showToast('error', `Upload limit reached. Max ${MAX_FILES} files.`);
+                    hideAllToasts();
+                    showToast('error', "Upload limit reached. Please remove some files before uploading new ones.");
                     return;
                 }
 
@@ -1093,7 +1135,15 @@
                 added++;
             });
 
-            // Reset input so same files can be selected again
+            setTimeout(() => {
+                const dt = new DataTransfer();
+                myDropzone.files.forEach(f => dt.items.add(f));
+                fileInput.files = dt.files;
+
+                validateForm();
+            }, 100);
+
+            // Reset so the same file can be selected again
             this.value = "";
         });
 

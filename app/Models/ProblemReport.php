@@ -2,21 +2,26 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ProblemReport extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'email', 
-        'description', 
+        'email',
+        'description',
         'file_path',
-        'viewed'
+        'viewed',
     ];
 
     protected $appends = ['file_url'];
 
     protected $casts = [
-        'viewed' => 'boolean'
+        'viewed' => 'boolean',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
     public function getFileUrlAttribute()

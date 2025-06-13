@@ -81,9 +81,9 @@
                                 <div class="relative flex-1 md:w-40">
                                     <select id="organizationFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-8 rounded-full leading-tight focus:outline-none hover:text-white transition-colors duration-200 truncate">
                                         <option class="bg-white text-black truncate disabled:hover:bg-white disabled:hover:text-black" value="" disabled selected>Organization</option>
-                                        <option class="bg-white text-black truncate" value="">All</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="">All</option>
                                         @foreach($organizations as $org)
-                                            <option class="bg-white text-black truncate" value="{{ $org }}" {{ $selectedOrg == $org ? 'selected' : '' }}>
+                                            <option class="bg-white text-black truncate cursor-pointer" value="{{ $org }}" {{ $selectedOrg == $org ? 'selected' : '' }}>
                                                 {{ $org }}
                                             </option>
                                         @endforeach
@@ -95,15 +95,16 @@
                                 <div class="relative flex-1 md:w-40">
                                     <select id="documentTypeFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-6 rounded-full leading-tight hover:text-white transition-colors duration-200 truncate">
                                         <option class="bg-white text-black truncate" value="" disabled selected>Document Type</option>
-                                        <option class="bg-white text-black truncate" value="">All</option>
-                                        <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
-                                        <option class="bg-white text-black truncate" value="General Plan">General Plan of Activities</option>
-                                        <option class="bg-white text-black truncate" value="Calendar">Calendar of Activities</option>
-                                        <option class="bg-white text-black truncate" value="Accomplishment Report">Accomplishment Report</option>
-                                        <option class="bg-white text-black truncate" value="Constitution">Constitution and By-Laws</option>
-                                        <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
-                                        <option class="bg-white text-black truncate" value="Off-Campus">Off-Campus</option>
-                                        <option class="bg-white text-black truncate" value="Petition">Petition and Concern</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="">All</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Event Proposal">Event Proposal</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="General Plan">General Plan of Activities</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Calendar">Calendar of Activities</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Accomplishment Report">Accomplishment Report</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Constitution">Constitution and By-Laws</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Request Letter">Request Letter</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Off-Campus">Off-Campus</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Petition">Petition and Concern</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Others">Others</option>
                                     </select>
                                     <div class="pointer-events-none absolute top-2 right-0 flex items-center px-3 text-white">
                                         <i class="fa-solid fa-sort-down"></i>
@@ -223,11 +224,13 @@
 
                                                 <!-- Organization -->
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="truncate w-48" title="{{ $document->organization }}">{{ $document->organization }}</div>
+                                                    <div class="truncate w-48" title="{{ $document->organization == 'Unknown' ? 'Guest' : $document->organization }}">
+                                                        {{ $document->organization == 'Unknown' ? 'Guest' : $document->organization }}
+                                                    </div>
                                                 </td>
 
                                                 <!-- Title -->
-                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                <td class="px-6 py-4 whitespace-nowrap truncate">
                                                     <div class="truncate w-64" title="{{ $document->title }}">{{ $document->title }}</div>
                                                 </td>
 
@@ -239,7 +242,18 @@
                                                 <!-- Type -->
                                                 <td class="px-6 py-4 whitespace-nowrap relative">
                                                     <div class="flex items-center justify-between w-full">
-                                                        <span>{{ $document->type }}</span>
+                                                        @php
+                                                            // Define the predefined document types
+                                                            $predefinedDocTypes = [
+                                                                'Event Proposal', 'General Plan of Activities', 'Calendar of Activities',
+                                                                'Accomplishment Report', 'Constitution and By-Laws', 'Request Letter',
+                                                                'Off-Campus', 'Petition and Concern'
+                                                            ];
+                                                            
+                                                            // Display "Others" if the document type is not in the predefined list
+                                                            $displayType = in_array($document->type, $predefinedDocTypes) ? $document->type : 'Others';
+                                                        @endphp
+                                                        <span title="{{ $document->type }}">{{ $displayType }}</span>
                                                         @if(!$document->is_opened)
                                                             <span class="h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>
                                                         @endif
@@ -319,7 +333,7 @@
                             <!-- Header -->
                             <div class="flex justify-between items-start">
                                 <div class="font-bold text-sm md:text-base max-w-[70%]">
-                                    <p id="documentDate" class="text-xs text-[#24191991] md:text-sm mb-1 break-words"></p>
+                                    <p id="documentDate" class="text-xs text-[#FFFFFF91] md:text-sm mb-1 break-words"></p>
                                     <p id="documentOrg" class="break-words"><span class="text-[#FFFFFF91] font-normal">From:</span> </p>
                                     <p id="documentTitle" class="break-words"><span class="text-[#FFFFFF91] font-normal">Title:</span> </p>
                                     <p id="documentType" class="break-words"><span class="text-[#FFFFFF91] font-normal">Document Type:</span> </p>
@@ -333,7 +347,7 @@
                             <!-- Summary -->
                             <div>
                                 <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Summary</h2>
-                                <div class="bg-[#EFEFEF] text-gray-800 rounded-lg p-3 md:p-4 max-h-[200px] overflow-y-auto">
+                                <div class="bg-[#EFEFEF] text-gray-800 rounded-lg p-3 md:p-4 max-h-[200px] overflow-y-auto" style="scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.5) transparent;">
                                     <p class="text-black break-words whitespace-normal text-sm md:text-base" id="documentSummary">
                                         <!-- Summary will be inserted here -->
                                     </p>
@@ -433,7 +447,7 @@
                             <!-- Comment Input -->
                             <div class="mt-4 md:mt-6">
                                 <form id="commentForm" class="flex flex-col space-y-2">
-                                    <div id="commentInput" class="flex items-center bg-[#FFFFFFD6] rounded-full px-3 md:px-4 py-1">
+                                    <div id="commentInputContainer" class="flex items-center bg-[#FFFFFFD6] rounded-full px-3 md:px-4 py-1">
                                         <input type="text"
                                             id="commentInput"
                                             placeholder="Comment..."

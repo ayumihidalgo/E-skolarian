@@ -27,7 +27,7 @@
 
     <!-- Notification Panel -->
    <div id="notificationPanel"
-        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-72 md:w-80 lg:w-96 xl:w-[26rem] 2xl:w-[28rem] sm:h-auto sm:max-h-[85vh] flex flex-col">
+        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-72 md:w-80 lg:w-96 xl:w-[26rem] 2xl:w-[28rem] sm:h-auto sm:max-h-[85vh] flex flex-col">
         
         <!-- Header -->
       <div class="notif-top-content p-4 border-b flex flex-row justify-between w-full flex-shrink-0">
@@ -217,7 +217,7 @@
 </div>
 
 <!-- Confirmation Modal -->
-<div id="confirmationModal" class="fixed inset-0 z-500 items-center justify-center bg-gray-900/75 w-screen min-h-screen hidden">
+<div id="confirmationModal" class="fixed inset-0 z-500 items-center justify-center w-screen min-h-screen hidden bg-black/30 backdrop-blur-sm">
     <div class="bg-white rounded-lg shadow-lg p-6 w-[90vw] sm:w-full sm:max-w-xs">
         <h3 id="confirmationModalTitle" class="text-lg font-semibold mb-2 text-gray-800">Are you sure?</h3>
         <p id="confirmationModalMessage" class="text-gray-600 mb-4 text-sm sm:text-base">Are you sure you want to proceed?</p>
@@ -453,14 +453,14 @@
                 // Update the notification element to show it as read
                 notificationElement.classList.add('opacity-75');
                 
-                // Remove from unread tab if it exists there
-                const unreadEl = document.querySelector('#unreadNotifications [data-notification-id="' + notificationId + '"]');
-                if (unreadEl) unreadEl.remove();
+             
+                document.querySelectorAll(`[data-notification-id="${notificationId}"]`).forEach(el => {
+                    if (el.closest('#unreadNotifications')) {
+                        el.remove();
+                    }
+                });
                 
-                // Update badge count immediately
-                updateNotificationBadge();
-                
-                // Optionally, you can also remove the checkbox or disable it
+          
                 const checkbox = notificationElement.querySelector('.notification-checkbox');
                 if (checkbox) {
                     checkbox.checked = false; // Uncheck the box
@@ -469,12 +469,18 @@
                 
                 // Update options menu state
                 updateOptionsMenu();
+                
+                // Update badge count AFTER removing the notification
+                updateNotificationBadge();
             } else {
                 console.error('Failed to mark notification as read:', response.statusText);
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);
         }
+        
+        // Close the notification panel
+        togglePanel();
         
         // Navigate to the notification link
         window.location.href = link.href;
@@ -573,8 +579,20 @@
                 if (headerBadge) headerBadge.style.display = 'block';
                 if (tabBadge) {
                     tabBadge.style.display = 'block';
-                    tabBadge.textContent = unreadCount;
+                    tabBadge.textContent = unreadCount; // Just set the text to the count directly
                 }
+            }
+            
+            // Prevent any duplicate counting by ensuring we're only counting each notification once
+            const notificationIds = new Set();
+            document.querySelectorAll('#unreadNotifications [data-notification-id]').forEach(el => {
+                notificationIds.add(el.dataset.notificationId);
+            });
+            
+            // Update the badge with the actual count of unique IDs
+            const uniqueCount = notificationIds.size;
+            if (tabBadge && uniqueCount > 0) {
+                tabBadge.textContent = uniqueCount;
             }
         }
 

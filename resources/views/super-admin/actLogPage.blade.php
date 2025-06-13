@@ -167,7 +167,7 @@
             </div>
 
             <!-- Pagination -->
-            <div class="mt-1 flex justify-center mb-1 absolute bottom-5 left-0 w-full p-2 text-center">
+            <div class="mt-1 flex justify-center mb-1 absolute bottom-8 left-0 w-full p-2 text-center">
                 <nav>
                     <ul class="inline-flex items-center space-x-2">
                         <!-- First/Previous Page -->

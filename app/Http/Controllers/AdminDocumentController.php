@@ -6,16 +6,21 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\Document;
+use App\LogsActivity; 
 
 class AdminDocumentController extends Controller
 {
+    use LogsActivity; 
+
     public function preview($id)
     {
         $adminId = auth()->id();
 
         $document = DB::table('submitted_documents')
-            ->where('id', $id)
-            ->where('received_by', $adminId) // Only assigned to this admin
+            ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id')
+            ->select('submitted_documents.*', 'users.username')
+            ->where('submitted_documents.id', $id)
+            ->where('submitted_documents.received_by', $adminId) // Only assigned to this admin
             ->first();
 
         if (!$document) {
@@ -90,7 +95,7 @@ class AdminDocumentController extends Controller
                 'date' => $document->created_at,
                 'type' => $document->type,
                 'status' => $document->status,
-                'organization' => $organizationName,
+                'organization' => $document->username,
                 'document_url' => $document_url,
                 'attachments' => $attachments, // Add the array of all attachments
                 'remarks' => $document->remarks ?? null,
@@ -207,12 +212,26 @@ class AdminDocumentController extends Controller
         }
 
         try {
+            // Get document titles before archiving for logging
+            $documents = DB::table('submitted_documents')
+                ->whereIn('id', $documentIds)
+                ->where('status', 'Approved')
+                ->get(['id', 'subject', 'control_tag']);
+
             DB::table('submitted_documents')
                 ->whereIn('id', $documentIds)
                 ->where('status', 'Approved')
                 ->update([
                     'archived_at' => now()
                 ]);
+
+            // Log the activity
+            $documentTitles = $documents->pluck('subject')->implode(', ');
+            $this->logActivity(
+                'Archived',
+                'Documents',
+                "Admin archived " . count($documentIds) . " document(s): " . $documentTitles
+            );
 
             return response()->json([
                 'success' => true,
@@ -350,11 +369,24 @@ class AdminDocumentController extends Controller
         }
 
         try {
+            // Get document titles before restoring for logging
+            $documents = DB::table('submitted_documents')
+                ->whereIn('id', $documentIds)
+                ->get(['id', 'subject', 'control_tag']);
+
             DB::table('submitted_documents')
                 ->whereIn('id', $documentIds)
                 ->update([
                     'archived_at' => null
                 ]);
+
+            // Log the activity
+            $documentTitles = $documents->pluck('subject')->implode(', ');
+            $this->logActivity(
+                'Restored',
+                'Documents',
+                "Admin restored " . count($documentIds) . " document(s): " . $documentTitles
+            );
 
             return response()->json([
                 'success' => true,

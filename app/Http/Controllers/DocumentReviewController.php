@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use App\Events\DocumentStatusUpdated;
 use App\Models\DocumentTimeline;
 use App\LogsActivity;
+use Illuminate\Support\Facades\Log;
 
 class DocumentReviewController extends Controller
 {
@@ -42,6 +43,7 @@ class DocumentReviewController extends Controller
                 // Get documents assigned to this admin
                 $query->where('received_by', $user->id);
             })
+            ->whereNotIn('submitted_documents.status', ['Approved', 'Returned'])
             ->addSelect(DB::raw("
                 CASE 
                     WHEN reviews.id IS NULL THEN false
@@ -114,22 +116,35 @@ class DocumentReviewController extends Controller
         
         // Apply document type filter if provided
         if ($selectedType && $selectedType !== 'All') {
-            // Create a mapping between short types and full document types
-            $docTypeMap = [
-                'Event Proposal' => 'Event Proposal',
-                'General Plan' => 'General Plan of Activities',
-                'Calendar' => 'Calendar of Activities',
-                'Accomplishment Report' => 'Accomplishment Report',
-                'Constitution' => 'Constitution and By-Laws',
-                'Request Letter' => 'Request Letter',
-                'Off-Campus' => 'Off Campus',
-                'Petition' => 'Petition and Concern'
-            ];
-            
-            // Get full document type name
-            $fullTypeName = $docTypeMap[$selectedType] ?? $selectedType;
-            
-            $documentsQuery->where('type', 'LIKE', "%{$fullTypeName}%");
+            // Check if we're filtering for "Others"
+            if ($selectedType === 'Others') {
+                $excludeTypes = $request->input('excludeTypes');
+                if ($excludeTypes) {
+                    $typesToExclude = explode(',', $excludeTypes);
+                    $documentsQuery->where(function($query) use ($typesToExclude) {
+                        foreach ($typesToExclude as $excludeType) {
+                            $query->where('type', 'NOT LIKE', "%{$excludeType}%");
+                        }
+                    });
+                }
+            } else {
+                // Original code for specific document type filtering
+                $docTypeMap = [
+                    'Event Proposal' => 'Event Proposal',
+                    'General Plan' => 'General Plan of Activities',
+                    'Calendar' => 'Calendar of Activities',
+                    'Accomplishment Report' => 'Accomplishment Report',
+                    'Constitution' => 'Constitution and By-Laws',
+                    'Request Letter' => 'Request Letter',
+                    'Off-Campus' => 'Off Campus',
+                    'Petition' => 'Petition and Concern'
+                ];
+                
+                // Get full document type name
+                $fullTypeName = $docTypeMap[$selectedType] ?? $selectedType;
+                
+                $documentsQuery->where('type', 'LIKE', "%{$fullTypeName}%");
+            }
         }
         
         // Order by updated date (latest first)
@@ -153,22 +168,6 @@ class DocumentReviewController extends Controller
 
             // Add flag to indicate if the current user is the receiver or just a previous forwarder
             $document->is_current_receiver = $document->received_by == $user->id;
-            
-            // Add forwarded status information
-            if (!$document->is_current_receiver) {
-                // Find the forward record
-                $forwardRecord = DB::table('document_forwards')
-                    ->where('document_id', $document->id)
-                    ->where('forwarded_by', $user->id)
-                    ->orderBy('created_at', 'desc')
-                    ->first();
-                    
-                if ($forwardRecord) {
-                    $receiverUser = User::find($forwardRecord->forwarded_to);
-                    $document->forwarded_to = $receiverUser ? $receiverUser->username : 'Unknown Admin';
-                    $document->forwarded_at = \Carbon\Carbon::parse($forwardRecord->created_at);
-                }
-            }
             
             return $document;
         });
@@ -242,6 +241,7 @@ class DocumentReviewController extends Controller
         // Transform document for the view
         $documentData = [
             'id' => $document->id,
+            'guest_webmail' => $document->guest_webmail,
             'subject' => $document->subject,
             'summary' => $document->overview,
             'academic_year' => $document->academic_year,
@@ -432,6 +432,15 @@ class DocumentReviewController extends Controller
             // Dispatch event for notification - AFTER creating the timeline entry
             // This event should NOT create another timeline entry
             event(new DocumentStatusUpdated($document));
+
+            // Check if this is a guest submission (user_id is null)
+            if ($document->user_id) {
+                // Regular user notification through the application
+                // $document->user->notify(new \App\Notifications\DocumentApproved($document, $request->message));
+            } else if ($document->guest_webmail) {
+                // Guest user notification via email
+                \Mail::to($document->guest_webmail)->send(new \App\Mail\DocumentApprovedMail($document, $request->message));
+            }
             
             return response()->json([
                 'success' => true,
@@ -524,6 +533,9 @@ class DocumentReviewController extends Controller
                         \Log::error('Failed to send notification: ' . $e->getMessage());
                     }
                 }
+            } else if ($document->guest_webmail) {
+                // Guest user notification via email
+                \Mail::to($document->guest_webmail)->send(new \App\Mail\DocumentResubmissionMail($document, $request->message));
             }
             
             return response()->json([

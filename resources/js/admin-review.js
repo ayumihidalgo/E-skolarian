@@ -469,6 +469,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // -------------------------------------------------------------
 // ------Document Viewer Functionality--------
+function showDocumentLoader() {
+    // Create loader overlay if it doesn't exist
+    let loader = document.getElementById('document-details-loader');
+    if (!loader) {
+        loader = document.createElement('div');
+        loader.id = 'document-details-loader';
+        loader.className = 'fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50';
+        loader.innerHTML = `
+            <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
+                <svg class="animate-spin h-6 w-6 mr-3 text-[#7A1212]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-gray-800 font-medium">Loading document...</span>
+            </div>
+        `;
+        document.body.appendChild(loader);
+    } else {
+        loader.classList.remove('hidden');
+    }
+}
+
+// Add this function to hide the loader
+function hideDocumentLoader() {
+    const loader = document.getElementById('document-details-loader');
+    if (loader) {
+        loader.classList.add('hidden');
+    }
+}
+
+// Modify the handleRowClick function to show and hide the loader
 function handleRowClick(row) {
     // Get document ID from the data attribute
     const documentId = row.getAttribute('data-document-id');
@@ -479,6 +510,9 @@ function handleRowClick(row) {
         console.error('Document ID is missing for this row.');
         return;
     }
+    
+    // Show the loader immediately when row is clicked
+    showDocumentLoader();
     
     // Store the real document ID in the global variable
     currentDocumentId = documentId;
@@ -541,22 +575,19 @@ function handleRowClick(row) {
         const detailsView = document.getElementById('detailsView');
         tableView.classList.add('hidden');
         detailsView.classList.remove('hidden');
+        
+        // Hide the loader now that everything is loaded
+        hideDocumentLoader();
     })
     .catch(error => {
         console.error('Error:', error);
+        // Hide the loader on error
+        hideDocumentLoader();
+        
+        // Show an error message to the user
+        showDocumentActionToast('error', 'Failed to load document details: ' + error.message, false);
     });
 }
-
-// Initial loading
-document.addEventListener('DOMContentLoaded', function() {
-    const documentRows = document.querySelectorAll('tbody tr');
-    documentRows.forEach(row => {
-        row.addEventListener('click', function(e) {
-            e.preventDefault();
-            handleRowClick(this);
-        });
-    });
-});
 
 // Filter and Search Functions
 document.addEventListener('DOMContentLoaded', function() {
@@ -593,10 +624,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // Set document type filter from URL
         if (documentTypeFilter && urlParams.has('documentType')) {
             const docTypeValue = urlParams.get('documentType');
-            // Check if the option exists before setting it
+            
+            // Define the predefined document types
+            const predefinedDocTypes = [
+                "", "All", "Event Proposal", "General Plan", "Calendar", 
+                "Accomplishment Report", "Constitution", "Request Letter", 
+                "Off-Campus", "Petition"
+            ];
+            
+            // First check if the value exists in the options
             const optionExists = Array.from(documentTypeFilter.options).some(option => option.value === docTypeValue);
+            
             if (optionExists) {
+                // If the option exists, set it directly
                 documentTypeFilter.value = docTypeValue;
+            } else {
+                // If it doesn't exist in options, reset to default
+                documentTypeFilter.selectedIndex = 0;
             }
         }
         
@@ -613,7 +657,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 clearTimeout(searchTimeout);
                 searchTimeout = setTimeout(() => {
                     submitAjaxSearch();
-                }, 500); // 500ms debounce
+                }, 3000); // 500ms debounce
             }
             searchInput.addEventListener('input', handleSearchInput);
             
@@ -631,8 +675,50 @@ document.addEventListener('DOMContentLoaded', function() {
             function handleFilterChange() {
                 // Clear any pending search timeout
                 clearTimeout(searchTimeout);
-                // Apply the combined search and filters
-                submitAjaxSearch();
+                
+                // Special handling for "Others" document type filter
+                if (documentTypeFilter && documentTypeFilter.value === "Others") {
+                    // Show loader first (this line is missing)
+                    showLoader();
+                    
+                    // Create a custom search parameter that indicates we want documents 
+                    // with types not in the predefined list
+                    const searchParams = new URLSearchParams(window.location.search);
+                    
+                    // Define the predefined document types (same list as above)
+                    const predefinedDocTypes = [
+                        "", "All", "Event Proposal", "General Plan", "Calendar", 
+                        "Accomplishment Report", "Constitution", "Request Letter", 
+                        "Off-Campus", "Petition"
+                    ];
+                    
+                    // Set a special parameter to indicate we want "other" document types
+                    searchParams.set('documentType', 'Others');
+                    searchParams.set('excludeTypes', predefinedDocTypes.filter(t => t !== "" && t !== "All").join(','));
+                    
+                    // Update URL
+                    const newUrl = window.location.pathname + '?' + searchParams.toString();
+                    history.pushState(null, '', newUrl);
+                    
+                    // Make the AJAX request with these parameters
+                    fetch(newUrl, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.text())
+                    .then(html => {
+                        updateTableContent(html);
+                        hideLoader(); // Add this to hide loader when done
+                    })
+                    .catch(error => {
+                        console.error('Error fetching results:', error);
+                        hideLoader(); // Add this to hide loader on error
+                    });
+                } else {
+                    // For normal filters, apply the combined search and filters
+                    submitAjaxSearch();
+                }
             }
             organizationFilter.addEventListener('change', handleFilterChange);
             documentTypeFilter.addEventListener('change', handleFilterChange);
@@ -1214,10 +1300,39 @@ function updateDocumentDetailsView(docData) {
             console.error('Error formatting date:', error);
             }
         }
+
+        // Check if user_id is null - add this at the beginning of the function
+        const hasValidUser = docData.user && docData.user.id;
+        
+        // Adjust layout based on user_id
+        const detailsComment = document.getElementById('detailsComment');
+        const documentDetails = document.getElementById('documentDetails');
+        const orgInfoComments = document.getElementById('OrgInfoCommments');
+        
+        if (detailsComment && documentDetails && orgInfoComments) {
+            if (!hasValidUser) {
+                // If user_id is null, hide org info and comments section
+                orgInfoComments.classList.add('hidden');
+                
+                // Remove max-width and make document details take full width
+                detailsComment.classList.remove('max-w-7xl');
+                documentDetails.classList.remove('md:w-2/3');
+                documentDetails.classList.add('w-full');
+            } else {
+                // If user_id exists, show everything normally
+                orgInfoComments.classList.remove('hidden');
+                
+                // Restore original classes
+                detailsComment.classList.add('max-w-7xl');
+                documentDetails.classList.add('md:w-2/3');
+                documentDetails.classList.remove('w-full');
+            }
+        }
         
         // Update document information using direct IDs
         document.getElementById('documentDate').textContent = formattedDate;
-        document.getElementById('documentOrg').innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
+        document.getElementById('documentOrg').innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${
+        docData.user ? docData.organization : docData.guest_webmail || 'N/A'}`;
         document.getElementById('documentTitle').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject || docData.title}`;
         document.getElementById('documentType').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
         document.getElementById('documentYear').innerHTML = `<span class="text-[#FFFFFF91] font-normal">A.Y. Semester:</span> ${docData.academic_year}`;
@@ -1370,14 +1485,15 @@ function updateDocumentDetailsView(docData) {
         }
             
         // Update organization info in right panel
-        document.getElementById('orgName').textContent = docData.user.organization_acronym || 'Organization Name';
+        document.getElementById('orgName').textContent = 
+            (docData.user && docData.user.organization_acronym) || 'Organization Name';
         document.getElementById('orgType').textContent = 'Academic Organization';
 
         // Set organization initial
         const orgInitial = document.getElementById('orgInitial');
         const orgProfileContainer = document.getElementById('orgProfileContainer');
 
-        if (orgInitial && orgProfileContainer && docData.organization) {
+        if (orgInitial && orgProfileContainer) {
             // If the document user has a profile picture
             if (docData.user && docData.user.profile_pic) {
                 // Replace the initial with the profile image
@@ -1391,7 +1507,7 @@ function updateDocumentDetailsView(docData) {
                 // Use the organization_acronym field directly from the user data
                 // Fall back to first letter of organization name if acronym is not available
                 let initial = '';
-                if (docData.user.organization_acronym) {
+                if (docData.user && docData.user.organization_acronym) {
                     initial = docData.user.organization_acronym.charAt(0).toUpperCase();
                 } else if (docData.organization) {
                     initial = docData.organization.charAt(0).toUpperCase();
@@ -1641,110 +1757,6 @@ function timeAgo(dateString) {
 }
 
 // Comment rendering
-// function loadComments(documentId) {
-//     fetch(`/comments/${documentId}`)
-//         .then(response => response.json())
-//         .then(comments => {
-//             const container = document.getElementById('commentsContainer');
-//             if (!container) {
-//                 console.error('Comments container not found');
-//                 return;
-//             }
-            
-//             if (!Array.isArray(comments) || comments.length === 0) {
-//                 container.innerHTML = '<p class="text-gray-400">No comments yet</p>';
-//                 return;
-//             }
-            
-//             container.innerHTML = comments.map(comment => {
-//                 // Determine if there's an attachment
-//                 const hasAttachment = comment.attachment_path && comment.attachment_name;
-                
-//                 // Generate attachment HTML if needed
-//                 let attachmentHTML = '';
-//                 if (hasAttachment) {
-//                     const filePath = `/storage/${comment.attachment_path}`;
-//                     const fileName = comment.attachment_name;
-//                     const fileType = comment.attachment_type;
-//                     const fileExt = fileName.split('.').pop().toLowerCase();
-                    
-//                     // Determine icon based on file type
-//                     let icon = '';
-//                     if (fileType.startsWith('image/')) {
-//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>';
-//                     } else if (fileType === 'application/pdf' || fileExt === 'pdf') {
-//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
-//                     } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-//                               fileExt === 'docx' || 
-//                               fileType === 'application/msword' || 
-//                               fileExt === 'doc') {
-//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
-//                     } else {
-//                         icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
-//                     }
-                    
-//                     attachmentHTML = `
-//                         <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full">
-//                             <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
-//                                 ${icon}
-//                                 <span class="text-xs truncate max-w-[200px]">${fileName}</span>
-//                             </a>
-//                         </div>
-//                     `;
-//                 }
-
-//                 // Determine profile image
-//                 let profileHTML = '';
-//                 if (comment.sender && comment.sender.profile_pic) {
-//                     // Use user's profile image
-//                     profileHTML = `
-//                         <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border border-gray-600">
-//                             <img src="/storage/${comment.sender.profile_pic}" alt="Profile" class="w-full h-full object-cover">
-//                         </div>
-//                     `;
-//                 } else {
-//                     // Use default profile icon
-//                     profileHTML = `
-//                         <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0 border border-gray-600">
-//                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-//                                 stroke="currentColor" class="w-6 h-6 text-gray-600">
-//                                 <path stroke-linecap="round" stroke-linejoin="round"
-//                                     d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
-//                             </svg>
-//                         </div>
-//                     `;
-//                 }
-                
-//                 // Format and wrap comment text to prevent overflow
-//                 const commentText = comment.comment || '';
-                
-//                 // Use timeAgo for relative timestamps
-//                 const relativeTime = timeAgo(comment.created_at);
-                
-//                 return `
-//                     <div class="pb-4 mb-4">
-//                         <div class="flex items-start gap-3">
-//                             <div class="flex-shrink-0">
-//                                 ${profileHTML}
-//                             </div>
-//                             <div class="flex-1 min-w-0"> <!-- Added min-w-0 to make sure flexbox respects child sizes -->
-//                                 <div class="flex justify-between items-center">
-//                                     <h3 class="font-bold text-white text-lg break-words">${comment.sender ? comment.sender.role_name : 'Unknown User'}</h3>
-//                                     <span class="text-white text-sm whitespace-nowrap ml-2" title="${new Date(comment.created_at).toLocaleString()}">${relativeTime}</span>
-//                                 </div>
-//                                 <p class="text-white mt-1 break-words whitespace-pre-wrap">${commentText}</p>
-//                                 ${attachmentHTML}
-//                             </div>
-//                         </div>
-//                     </div>
-//                 `;
-//             }).join('');
-//         })
-//         .catch(error => {
-//             console.error('Error loading comments:', error);
-//         });
-// }
-
 function loadComments(documentId) {
     fetch(`/comments/${documentId}`)
         .then(response => response.json())
@@ -1865,6 +1877,103 @@ function loadComments(documentId) {
 }
 
 // Add the comment attachment preview function
+// function openCommentAttachmentPreview(filePath, fileType, fileName) {
+//     console.log("Opening comment attachment preview for:", filePath);
+//     const modal = document.getElementById('documentViewerModal');
+//     const pdfViewer = document.getElementById('pdfViewer');
+//     const imageViewer = document.getElementById('imageViewer');
+//     const downloadView = document.getElementById('downloadView');
+//     const documentTitle = document.getElementById('documentTitle');
+//     const previewTab = document.getElementById('previewTab');
+//     const downloadTab = document.getElementById('downloadTab');
+//     const downloadButton = document.getElementById('downloadButton');
+//     const downloadFileName = document.getElementById('downloadFileName');
+    
+//     // Set the document title and download filename
+//     documentTitle.textContent = fileName;
+//     downloadFileName.textContent = fileName;
+    
+//     // Set up download link
+//     downloadButton.href = filePath;
+//     downloadButton.setAttribute('download', fileName);
+    
+//     // Show modal first to ensure container is visible
+//     modal.classList.remove('hidden');
+    
+//     // Tab switching event listeners (reuse existing functionality)
+//     previewTab.click(); // Show preview by default
+    
+//     // Determine content type and display appropriately
+//     const isDocx = fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+//                   fileName.toLowerCase().endsWith('.docx') ||
+//                   fileType === 'application/msword' ||
+//                   fileName.toLowerCase().endsWith('.doc');
+                  
+//     const isPdf = fileType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf');
+    
+//     if (isPdf || isDocx) {
+//         // For PDF and DOCX files
+//         pdfViewer.innerHTML = '';
+//         imageViewer.classList.add('hidden');
+//         pdfViewer.classList.remove('hidden');
+        
+//         const viewerDiv = document.createElement('div');
+//         viewerDiv.id = 'pdf-viewer-container';
+//         viewerDiv.className = 'h-full';
+//         pdfViewer.appendChild(viewerDiv);
+        
+//         // Initialize WebViewer
+//         WebViewer({
+//             path: '/webviewer',
+//             initialDoc: filePath,
+//             extension: isDocx ? 'docx' : 'pdf',
+//             enableFilePicker: false,
+//             enableAnnotations: false,
+//         }, viewerDiv).then(instance => {
+//             // Save instance for later cleanup
+//             window.currentPdfViewerInstance = instance;
+            
+//             // Basic configuration
+//             const { docViewer, UI } = instance;
+            
+//             // Enable download button in WebViewer
+//             UI.enableElements(['downloadButton']);
+//             UI.disableElements(['printButton']);
+            
+//             // For DOCX files, configure specific options
+//             if (isDocx) {
+//                 UI.setToolbarGroup('toolbarGroup-View');
+//             }
+//         }).catch(error => {
+//             console.error("Failed to load WebViewer:", error);
+//             pdfViewer.innerHTML = `
+//                 <div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>
+//                 <div class="p-4">
+//                     <a href="${filePath}" download="${fileName}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
+//                         Download Document Instead
+//                     </a>
+//                 </div>
+//             `;
+//         });
+//     } else if (fileType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif'].some(ext => fileName.toLowerCase().endsWith(ext))) {
+//         // For image files
+//         pdfViewer.classList.add('hidden');
+//         imageViewer.classList.remove('hidden');
+//         imageViewer.innerHTML = `<img src="${filePath}" class="max-h-full max-w-full object-contain" alt="Document Preview">`;
+//     } else {
+//         // For other file types, directly show download view
+//         pdfViewer.classList.add('hidden');
+//         imageViewer.classList.add('hidden');
+//         downloadView.classList.remove('hidden');
+        
+//         // Activate download tab
+//         downloadTab.classList.add('bg-blue-500', 'text-white');
+//         downloadTab.classList.remove('text-gray-700');
+//         previewTab.classList.remove('bg-blue-500', 'text-white');
+//         previewTab.classList.add('text-gray-700');
+//     }
+// }   
+
 function openCommentAttachmentPreview(filePath, fileType, fileName) {
     console.log("Opening comment attachment preview for:", filePath);
     const modal = document.getElementById('documentViewerModal');
@@ -1888,19 +1997,59 @@ function openCommentAttachmentPreview(filePath, fileType, fileName) {
     // Show modal first to ensure container is visible
     modal.classList.remove('hidden');
     
-    // Tab switching event listeners (reuse existing functionality)
-    previewTab.click(); // Show preview by default
+    // Clear any existing tab click event listeners to prevent duplicates
+    const newPreviewTab = previewTab.cloneNode(true);
+    const newDownloadTab = downloadTab.cloneNode(true);
+    previewTab.parentNode.replaceChild(newPreviewTab, previewTab);
+    downloadTab.parentNode.replaceChild(newDownloadTab, downloadTab);
+    
+    // Add tab click event listeners
+    newPreviewTab.addEventListener('click', function() {
+        // Show preview tab content, hide download tab content
+        pdfViewer.classList.remove('hidden');
+        imageViewer.classList.remove('hidden'); // One of these will be hidden by file type logic
+        downloadView.classList.add('hidden');
+        
+        // Update tab styling
+        newPreviewTab.classList.add('bg-blue-500', 'text-white');
+        newPreviewTab.classList.remove('text-gray-700');
+        newDownloadTab.classList.remove('bg-blue-500', 'text-white');
+        newDownloadTab.classList.add('text-gray-700');
+    });
+    
+    newDownloadTab.addEventListener('click', function() {
+        // Show download tab content, hide preview tab content
+        pdfViewer.classList.add('hidden');
+        imageViewer.classList.add('hidden');
+        downloadView.classList.remove('hidden');
+        
+        // Update tab styling
+        newDownloadTab.classList.add('bg-blue-500', 'text-white');
+        newDownloadTab.classList.remove('text-gray-700');
+        newPreviewTab.classList.remove('bg-blue-500', 'text-white');
+        newPreviewTab.classList.add('text-gray-700');
+    });
+    
+    // Show preview by default
+    newPreviewTab.click();
+    
+    // Determine file extension for better type detection
+    const fileExt = fileName.toLowerCase().split('.').pop();
     
     // Determine content type and display appropriately
     const isDocx = fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-                  fileName.toLowerCase().endsWith('.docx') ||
+                  fileExt === 'docx' ||
                   fileType === 'application/msword' ||
-                  fileName.toLowerCase().endsWith('.doc');
+                  fileExt === 'doc';
                   
-    const isPdf = fileType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf');
+    const isPdf = fileType === 'application/pdf' || fileExt === 'pdf';
     
-    if (isPdf || isDocx) {
-        // For PDF and DOCX files
+    const isImage = fileType.startsWith('image/') || 
+                   ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(fileExt);
+    
+    // Use WebViewer for both PDFs and images
+    if (isPdf || isDocx || isImage) {
+        // For PDF, DOCX, and image files
         pdfViewer.innerHTML = '';
         imageViewer.classList.add('hidden');
         pdfViewer.classList.remove('hidden');
@@ -1910,44 +2059,100 @@ function openCommentAttachmentPreview(filePath, fileType, fileName) {
         viewerDiv.className = 'h-full';
         pdfViewer.appendChild(viewerDiv);
         
-        // Initialize WebViewer
-        WebViewer({
+        // Initialize WebViewer with appropriate options based on file type
+        const viewerOptions = {
             path: '/webviewer',
             initialDoc: filePath,
-            extension: isDocx ? 'docx' : 'pdf',
             enableFilePicker: false,
-            enableAnnotations: false,
-        }, viewerDiv).then(instance => {
+        };
+        
+        // Add specific options based on file type
+        if (isDocx) {
+            viewerOptions.extension = 'docx';
+        } else if (isImage) {
+            // For images, we may need special handling
+            viewerOptions.extension = fileExt;
+            // Some images may need specific options
+            viewerOptions.disabledElements = [
+                'leftPanel',
+                'annotationPopup',
+                'contextMenuPopup'
+            ];
+        }
+        
+        // Initialize the WebViewer
+        WebViewer(viewerOptions, viewerDiv).then(instance => {
             // Save instance for later cleanup
             window.currentPdfViewerInstance = instance;
             
-            // Basic configuration
-            const { docViewer, UI } = instance;
+            // Basic configuration - FIXED: Check if properties exist before using them
+            const { UI } = instance;
+            const docViewer = instance.Core ? instance.Core.documentViewer : instance.docViewer;
             
-            // Enable download button in WebViewer
-            UI.enableElements(['downloadButton']);
-            UI.disableElements(['printButton']);
+            // Enable download button in WebViewer (if UI exists)
+            if (UI) {
+                UI.enableElements(['downloadButton']);
+                UI.disableElements(['printButton']);
+            }
+            
+            // For images, fit to screen and disable annotations
+            if (isImage && docViewer) {
+                // Check if docViewer exists before using .on()
+                if (docViewer.on) {
+                    docViewer.on('documentLoaded', () => {
+                        // Handle image after loading
+                        if (instance.setFitMode) {
+                            instance.setFitMode(instance.FitMode.FIT_PAGE);
+                        }
+                        if (instance.disableAnnotations) {
+                            instance.disableAnnotations();
+                        }
+                        if (UI && UI.setZoomLevel) {
+                            UI.setZoomLevel(1.0);
+                        }
+                    });
+                } else {
+                    // Fallback if .on() is not available
+                    console.log("docViewer.on method not available, trying alternative approach");
+                    setTimeout(() => {
+                        if (instance.setFitMode) {
+                            instance.setFitMode(instance.FitMode.FIT_PAGE);
+                        }
+                        if (instance.disableAnnotations) {
+                            instance.disableAnnotations();
+                        }
+                    }, 1000); // Give document a second to load
+                }
+                
+                // Set toolbar options appropriate for image viewing
+                if (UI && UI.setToolbarGroup) {
+                    UI.setToolbarGroup('viewerGroup');
+                }
+            }
             
             // For DOCX files, configure specific options
-            if (isDocx) {
+            if (isDocx && UI && UI.setToolbarGroup) {
                 UI.setToolbarGroup('toolbarGroup-View');
             }
         }).catch(error => {
             console.error("Failed to load WebViewer:", error);
-            pdfViewer.innerHTML = `
-                <div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>
-                <div class="p-4">
-                    <a href="${filePath}" download="${fileName}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
-                        Download Document Instead
-                    </a>
-                </div>
-            `;
+            
+            // Fallback to traditional image viewing if WebViewer fails for images
+            if (isImage) {
+                pdfViewer.classList.add('hidden');
+                imageViewer.classList.remove('hidden');
+                imageViewer.innerHTML = `<img src="${filePath}" class="max-h-full max-w-full object-contain" alt="Document Preview">`;
+            } else {
+                pdfViewer.innerHTML = `
+                    <div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>
+                    <div class="p-4">
+                        <a href="${filePath}" download="${fileName}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            Download Document Instead
+                        </a>
+                    </div>
+                `;
+            }
         });
-    } else if (fileType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif'].some(ext => fileName.toLowerCase().endsWith(ext))) {
-        // For image files
-        pdfViewer.classList.add('hidden');
-        imageViewer.classList.remove('hidden');
-        imageViewer.innerHTML = `<img src="${filePath}" class="max-h-full max-w-full object-contain" alt="Document Preview">`;
     } else {
         // For other file types, directly show download view
         pdfViewer.classList.add('hidden');
@@ -1960,7 +2165,7 @@ function openCommentAttachmentPreview(filePath, fileType, fileName) {
         previewTab.classList.remove('bg-blue-500', 'text-white');
         previewTab.classList.add('text-gray-700');
     }
-}   
+}
 
 // Comment submitting
 function submitComment() {
