@@ -5,7 +5,7 @@
     <!-- Content section -->
     <!-- This is the main content area for the super admin dashboard -->
     @include('components.superadminNavigation')
-    <div id="main-content" class="flex flex-col min-h-9/10 ml-0 transition-all duration-300 bg-[#F2F4F7]">
+    <div id="main-content" class="flex flex-col w-full ml-0 transition-all duration-300 bg-[#F2F4F7]">
         <div class="flex-grow">
             @if (session('success'))
                 <div id="Toast"
@@ -72,7 +72,7 @@
                                 {{ strtoupper($user->role_name) }}
                             </h3>
                             <!-- <p class="uppercase text-sm md:text-sm lg:text-lg tracking-wider font-semibold font-['Lexend']">
-                                            {{ $user->role }}</p> -->
+                                                                                                                                                                                                {{ $user->role }}</p> -->
                             <div class="hidden sm:block">
                                 <div id="" class="mt-2 text-sm relative flex items-center gap-3">
                                     <div
@@ -214,7 +214,7 @@
                             <div class="flex items-center justify-end w-1/3">
                                 <button
                                     class="border px-2 sm:px-5 py-2 border-red-950 font-regular cursor-pointer  rounded-lg sm:rounded-xl text-white bg-red-950 text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px] hover:bg-red-800 hover:border-red-800 hover:text-white transition-colors duration-300"
-                                    onclick="openRecoveryEmail()">Change</button>
+                                    onclick="openPrimaryEmailModal()">Change</button>
                             </div>
                         </div>
                         <!-- Recovery Email -->
@@ -227,7 +227,8 @@
                             </div>
                             <div class="flex flex-col items-center justify-center w-1/3 text-center">
                                 @if (!empty($user->recovery_email))
-                                    <p class="text-black font-['Lexend'] text-base">
+                                    <p
+                                        class="text-black font-['Lexend'] text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px] text-base">
                                         {{ $user->recovery_email }}
                                     </p>
                                 @else
@@ -265,7 +266,88 @@
     </div>
 
     <input type="file" name="profile_image" id="profileImageInput" class="hidden" accept="image/*">
-
+    <!-- Change Primary Email Modal -->
+    <div id="primaryEmailModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-2xl w-[545px] max-w-[340px] sm:max-w-md shadow-xl relative space-y-2">
+            <form id="primaryEmailForm" method="POST" class="px-6 pb-6 space-y-2 sm:space-y-3">
+                <div class="w-full flex justify-between pt-5 gap-10">
+                    <h2 class="sm:text-base md:text-lg font-semibold font-['Lexend']">Change Primary Email</h2>
+                    <div class="top-2 right-2">
+                        <button type="button" onclick="closePrimaryEmailModal()"
+                            class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+                            <i class="text-base sm:text-xl fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="pb-1 text-xs sm:text-xs md:text-sm text-gray-600">
+                    Enter your new primary email. A verification code will be sent to confirm this change.
+                </p>
+                @csrf
+                <div class="relative">
+                    <input type="email" name="primary_email" id="primary_email" required
+                        placeholder="Enter new primary email"
+                        class="w-full rounded-lg border border-black px-4 py-2 focus:border-gray-500 focus:ring-gray-500 text-sm lg:text-base placeholder:text-black placeholder:text-sm sm:placeholder:text-base placeholder:font-[Lexend] pr-10">
+                    <div id="primaryEmailError"
+                        class="text-red-500 text-[8px] sm:text-[10px] md:text-[11px] mt-0.5 ml-1 absolute font-['Lexend']">
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <button type="submit" id="changePrimaryEmailButton"
+                        class="w-full rounded-lg bg-red-900 px-4 py-2 border-red-900 text-white font-medium text-sm font-[Lexend] hover:bg-red-800 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        disabled>
+                        <span id="changePrimaryEmailSpinner"
+                            class="hidden animate-spin border-2 text-sm border-white border-t-transparent rounded-full w-5 h-5"></span>
+                        <span id="changePrimaryEmailBtnText" class="text-sm">Change Primary Email</span>
+                    </button>
+                </div>
+            </form>
+            <div id="primaryCodeVerificationForm" class="hidden px-6 pb-6 space-y-3">
+                <div class="w-full flex justify-between pt-5 gap-10">
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="backToPrimaryFormBtn"
+                            class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer mr-2"
+                            title="Back">
+                            <i class="fas fa-arrow-left text-normal"></i>
+                        </button>
+                        <h2 class="text-xl font-semibold font-['Lexend']">Verify Email</h2>
+                    </div>
+                    <div class="top-2 right-2">
+                        <button type="button" onclick="closePrimaryEmailModal()"
+                            class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+                            <i class="text-xl fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="pb-1 text-sm text-gray-600 text-center">
+                    We sent a 6-digit verification code to:
+                    <span id="primaryEmailDisplay" class="font-normal"></span>
+                </p>
+                <div class="relative space-y-2">
+                    <input type="text" id="primary_verification_code" placeholder="Enter the code sent to your email"
+                        class="border rounded-lg w-full px-4 py-2 pr-32 placeholder:text-black placeholder:text-[14px] placeholder:font-[Lexend]" />
+                    <div id="primaryCodeError" class="text-red-500 text-xs font-['Lexend']"></div>
+                    <div class="flex justify-end pt- items-center gap-2">
+                        <span id="primaryResendTimer" class="text-xs text-gray-600"></span>
+                        <button id="primaryResendCodeBtn"
+                            class="text-xs text-blue-700 font-semibold hidden cursor-pointer" type="button">
+                            Resend code
+                        </button>
+                    </div>
+                </div>
+                <div class="pb-1">
+                    <p class="text-xs text-gray-600"><strong>Didn't receive the code?</strong> Check your spam folder or
+                        make sure the email address is correct.</p>
+                </div>
+                <button type="button" onclick="verifyPrimaryCode()"
+                    class="w-full rounded-lg bg-red-900 px-4 py-2 border-red-900 text-white font-medium text-sm font-[Lexend] hover:bg-red-800 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    disabled>
+                    <span id="verifyPrimaryEmailSpinner"
+                        class="hidden animate-spin border-2 text-sm border-white border-t-transparent rounded-full w-5 h-5"></span>
+                    <span id="verifyPrimaryEmailBtnText" class="text-sm">Verify Email</span>
+                </button>
+            </div>
+        </div>
+    </div>
     <!-- Add Recovery Email Modal -->
     <div id="recoveryEmailModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-50">
         <div class="bg-white rounded-2xl w-[545px] max-w-[340px] sm:max-w-md shadow-xl relative space-y-2">
@@ -394,8 +476,7 @@
                         class="font-semibold">{{ $user->recovery_email }}</span> to confirm this action.
                 </p>
                 <div class="relative space-y-2">
-                    <input type="text" id="removeVerificationCode"
-                        placeholder="Enter the 6-digit code sent to your email"
+                    <input type="text" id="removeVerificationCode" placeholder="6-digit code sent to your email"
                         class="border rounded-lg w-full px-4 py-2 pr-32 text-sm lg:text-base placeholder:text-black placeholder:text-sm sm:placeholder:text-base placeholder:font-[Lexend]" />
                     <div id="removeCodeError"
                         class="text-red-500 text-[8px] sm:text-[10px] md:text-[11px] font-['Lexend']"></div>
@@ -744,6 +825,29 @@
             </div>
         </div>
     </div>
+    <div id="leaveWithoutSavingPrimaryEmailModal"
+        class="fixed inset-0 bg-black/40 hidden items-center justify-center z-100">
+        <div
+            class="bg-white rounded-2xl w-[545px] max-w-[340px] sm:max-w-md shadow-xl relative space-y-2 sm:space-y-3 md:space-y-4">
+            <div class="w-full flex justify-between pt-5 px-5">
+                <h2 class="sm:text-base md:text-lg font-semibold font-['Lexend']">Discard Changes?</h2>
+            </div>
+            <div class="px-6 pb-6">
+                <p class="text-xs sm:text-xs md:text-sm text-gray-600 pb-3">You have unsaved changes. Are you sure you want
+                    to leave without
+                    saving?
+                </p>
+                <div class="flex justify-end gap-2 sm:gap-2 md:gap-4 mt-2 sm:mt-3 md:mt-4">
+                    <button type="button" onclick="closeUnsavedPrimaryEmailModal()"
+                        class="rounded-lg text-gray-900 font-medium px-4 py-2 border-1 border-gray-300 text-[11px] md:text-[12px] lg:text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Close
+                        without saving</button>
+                    <button type="button" onclick="keepPrimaryEmailEditing()"
+                        class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[11px] md:text-[12px] lg:text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">Keep
+                        editing</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Success Modal -->
     <div id="successModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-100">
         <div class="bg-white rounded-2xl w-[545] max-w-[340px] sm:max-w-md shadow-xl relative p-6">
@@ -769,6 +873,244 @@
     @vite(['resources/js/settings/changepassword.js'])
     <!-- Update profile Sript -->
     @vite(['resources/js/settings/changeprofile.js'])
+    <script>
+        function openPrimaryEmailModal() {
+            const modal = document.getElementById('primaryEmailModal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            document.getElementById('primaryEmailForm').classList.remove('hidden');
+            document.getElementById('primaryCodeVerificationForm').classList.add('hidden');
+            document.getElementById('primary_email').value = '';
+            document.getElementById('primary_verification_code').value = '';
+            document.getElementById('primaryEmailError').innerText = '';
+            document.getElementById('primaryCodeError').innerText = '';
+        }
+
+        function closePrimaryEmailModal() {
+            const modal = document.getElementById('primaryEmailModal');
+            const emailInput = document.getElementById('primary_email');
+            const codeInput = document.getElementById('primary_verification_code');
+            const leaveModal = document.getElementById('leaveWithoutSavingPrimaryEmailModal');
+
+            // If either input has value, show leave modal
+            if (
+                (modal && !modal.classList.contains('hidden')) &&
+                (
+                    (emailInput && emailInput.value.trim() !== '') ||
+                    (codeInput && codeInput.value.trim() !== '')
+                )
+            ) {
+                leaveModal.classList.remove('hidden');
+                leaveModal.style.display = 'flex';
+                // Store what to close after confirmation
+                window._pendingClosePrimary = true;
+            } else {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+                document.getElementById('primaryEmailForm').classList.remove('hidden');
+                document.getElementById('primaryCodeVerificationForm').classList.add('hidden');
+                emailInput.value = '';
+                codeInput.value = '';
+                document.getElementById('primaryEmailError').innerText = '';
+                document.getElementById('primaryCodeError').innerText = '';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const leaveModal = document.getElementById('leaveWithoutSavingPrimaryEmailModal');
+            const primaryModal = document.getElementById('primaryEmailModal');
+            const emailInput = document.getElementById('primary_email');
+            const codeInput = document.getElementById('primary_verification_code');
+
+            // "Close without saving" button
+            leaveModal.querySelector('button[onclick="closeUnsavedPrimaryEmailModal()"]').onclick = function() {
+                leaveModal.classList.add('hidden');
+                leaveModal.style.display = 'none';
+                if (window._pendingClosePrimary) {
+                    primaryModal.classList.add('hidden');
+                    primaryModal.style.display = 'none';
+                    document.getElementById('primaryEmailForm').classList.remove('hidden');
+                    document.getElementById('primaryCodeVerificationForm').classList.add('hidden');
+                    emailInput.value = '';
+                    codeInput.value = '';
+                    document.getElementById('primaryEmailError').innerText = '';
+                    document.getElementById('primaryCodeError').innerText = '';
+                    window._pendingClosePrimary = false;
+                }
+            };
+
+            // "Keep editing" button
+            leaveModal.querySelector('button[onclick="keepPrimaryEmailEditing()"]').onclick = function() {
+                leaveModal.classList.add('hidden');
+                leaveModal.style.display = 'none';
+                window._pendingClosePrimary = false;
+            };
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            let isPrimaryEmailDirty = false;
+            const emailInput = document.getElementById('primary_email');
+            const codeInput = document.getElementById('primary_verification_code');
+            const primaryEmailModal = document.getElementById('primaryEmailModal');
+
+            function checkPrimaryEmailDirty() {
+                // Only dirty if modal is open and either input has value
+                return (
+                    primaryEmailModal && !primaryEmailModal.classList.contains('hidden') &&
+                    (
+                        (emailInput && emailInput.value.trim() !== '') ||
+                        (codeInput && codeInput.value.trim() !== '')
+                    )
+                );
+            }
+
+            // Listen for input changes
+            emailInput.addEventListener('input', function() {
+                isPrimaryEmailDirty = checkPrimaryEmailDirty();
+            });
+            codeInput.addEventListener('input', function() {
+                isPrimaryEmailDirty = checkPrimaryEmailDirty();
+            });
+
+            // Listen for modal open/close (class changes)
+            const observer = new MutationObserver(() => {
+                isPrimaryEmailDirty = checkPrimaryEmailDirty();
+            });
+            observer.observe(primaryEmailModal, {
+                attributes: true,
+                attributeFilter: ['class']
+            });
+
+            // Prevent leaving if isPrimaryEmailDirty
+            window.addEventListener('beforeunload', function(e) {
+                if (isPrimaryEmailDirty) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+        });
+        // Email validation and enable/disable button
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('primary_email');
+            const addBtn = document.getElementById('changePrimaryEmailButton');
+            const emailError = document.getElementById('primaryEmailError');
+            const recovEmail = @json($user->recovery_email);
+
+            function validateEmail(email) {
+                return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            }
+            emailInput.addEventListener('input', function() {
+                if (emailInput.value.trim() === recovEmail) {
+                    addBtn.disabled = true;
+                    emailError.textContent = 'Recovery email cannot be the same as your primary email.';
+                } else if (validateEmail(emailInput.value.trim())) {
+                    addBtn.disabled = false;
+                    emailError.textContent = '';
+                } else {
+                    addBtn.disabled = true;
+                    if (emailInput.value.trim() !== '') {
+                        emailError.textContent = 'Please enter a valid email address.';
+                    } else {
+                        emailError.textContent = '';
+                    }
+                }
+            });
+            // Submit handler
+            document.getElementById('primaryEmailForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addBtn.disabled = true;
+                document.getElementById('changePrimaryEmailSpinner').classList.remove('hidden');
+                document.getElementById('changePrimaryEmailBtnText').textContent = 'Sending...';
+                fetch('{{ route('superadmin.settings.sendPrimaryEmailCode') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            primary_email: emailInput.value.trim()
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('primaryEmailForm').classList.add('hidden');
+                            document.getElementById('primaryCodeVerificationForm').classList.remove(
+                                'hidden');
+                            document.getElementById('primaryEmailDisplay').textContent = emailInput
+                                .value.trim();
+                            // Start resend timer here if needed
+                        } else {
+                            emailError.textContent = data.message || 'Failed to send code.';
+                        }
+                    })
+                    .finally(() => {
+                        addBtn.disabled = false;
+                        document.getElementById('changePrimaryEmailSpinner').classList.add('hidden');
+                        document.getElementById('changePrimaryEmailBtnText').textContent =
+                            'Change Primary Email';
+                    });
+            });
+            // Verification code logic (similar to recovery email)
+            const codeInput = document.getElementById('primary_verification_code');
+            const verifyBtn = document.querySelector(
+                '#primaryCodeVerificationForm button[onclick="verifyPrimaryCode()"]');
+            const codeError = document.getElementById('primaryCodeError');
+            codeInput.addEventListener('input', function() {
+                if (/^\d{6}$/.test(codeInput.value.trim())) {
+                    verifyBtn.disabled = false;
+                    codeError.textContent = '';
+                } else {
+                    verifyBtn.disabled = true;
+                    if (codeInput.value.trim() !== '') {
+                        codeError.textContent = 'Enter the 6-digit code sent to your email.';
+                    } else {
+                        codeError.textContent = '';
+                    }
+                }
+            });
+            verifyBtn.disabled = true;
+            window.verifyPrimaryCode = function() {
+                if (verifyBtn.disabled) return;
+                verifyBtn.disabled = true;
+                document.getElementById('verifyPrimaryEmailSpinner').classList.remove('hidden');
+                document.getElementById('verifyPrimaryEmailBtnText').textContent = 'Verifying...';
+                fetch('{{ route('superadmin.settings.verifyPrimaryEmailCode') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            code: codeInput.value.trim()
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Primary email change success:', data);
+                            closePrimaryEmailModal();
+                            sessionStorage.setItem('pendingToast', JSON.stringify({
+                                title: 'Primary Email Changed!',
+                                message: 'Your primary email has been updated successfully.'
+                            }));
+                            window.location.reload();
+                        } else {
+                            console.log('Primary email change failed:', data);
+                            codeError.textContent = data.message || 'Invalid code. Please try again.';
+                        }
+                    })
+                    .catch((err) => {
+                        console.log('Primary email change error:', err);
+                        codeError.textContent = 'An error occurred. Please try again.';
+                    })
+                    .finally(() => {
+                        verifyBtn.disabled = false;
+                        document.getElementById('verifyPrimaryEmailSpinner').classList.add('hidden');
+                        document.getElementById('verifyPrimaryEmailBtnText').textContent = 'Verify Email';
+                    });
+            };
+        });
+    </script>
     <!-- Recovery Email Script -->
     <script>
         let isDirty = false;
@@ -1083,6 +1425,7 @@
             const emailInput = document.getElementById('recovery_email');
             const addBtn = document.getElementById('addRecoveryEmailButton');
             const emailError = document.getElementById('recoveryEmailError');
+            const primaryEmail = @json($user->email);
 
             function validateEmail(email) {
                 // Basic email regex
@@ -1090,7 +1433,10 @@
             }
 
             emailInput.addEventListener('input', function() {
-                if (validateEmail(emailInput.value.trim())) {
+                if (emailInput.value.trim() === primaryEmail) {
+                    addBtn.disabled = true;
+                    emailError.textContent = 'Recovery email cannot be the same as your primary email.';
+                } else if (validateEmail(emailInput.value.trim())) {
                     addBtn.disabled = false;
                     emailError.textContent = '';
                 } else {

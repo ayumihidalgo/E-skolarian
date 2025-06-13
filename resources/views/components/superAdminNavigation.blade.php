@@ -151,6 +151,7 @@
     function confirmLogout() {
         document.getElementById('logoutForm').submit();
     }
+
     document.addEventListener('DOMContentLoaded', function() {
         let lastKnownCount = null;
 

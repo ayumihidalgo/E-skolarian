@@ -222,16 +222,24 @@ document
                 return response.json();
             })
             .then((data) => {
-                // Show success modal
-                const successModal = document.getElementById("successModal");
-                const changePasswordModal = document.getElementById(
-                    "changePasswordModal"
-                );
-                changePasswordModal.classList.add("hidden");
-                changePasswordModal.style.display = "none";
-                successModal.classList.remove("hidden");
-                successModal.style.display = "flex";
-                resetDirtyFlags();
+                if (data.logout) {
+                    // Optionally show the modal for a brief moment
+                    const successModal =
+                        document.getElementById("successModal");
+                    const changePasswordModal = document.getElementById(
+                        "changePasswordModal"
+                    );
+                    changePasswordModal.classList.add("hidden");
+                    changePasswordModal.style.display = "none";
+                    successModal.classList.remove("hidden");
+                    successModal.style.display = "flex";
+                    resetDirtyFlags();
+
+                    // Redirect to login after a short delay (e.g., 1 second)
+                    setTimeout(function () {
+                        window.location.href = "/login"; // or use your route helper if available
+                    }, 10000);
+                }
             })
             .catch((error) => {
                 console.error(error);
