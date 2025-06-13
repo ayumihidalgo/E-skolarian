@@ -38,12 +38,15 @@
                             <option class="bg-white text-black truncate" value="All">All Types</option>
                             <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
                             <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan of Activities</option>
-                            <option class="bg-white text-black truncate" value="Calendar of Activities">Calendar of Activities</option>
-                            <option class="bg-white text-black truncate" value="Accomplishment Report">Accomplishment Report</option>
-                            <option class="bg-white text-black truncate" value="Contribution and By-Laws">Contribution and By-Laws</option>
+                            <option class="bg-white text-black truncate" value="Reports of Proceedings">Reports of Proceedings</option>
+                            <option class="bg-white text-black truncate" value="Constitution and By-Laws">Constitution and By-Laws</option>
+                            <option class="bg-white text-black truncate" value="Fundraising Activities">Fundraising Activities</option>
                             <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
-                            <option class="bg-white text-black truncate" value="Off-Campus">Off-Campus</option>
                             <option class="bg-white text-black truncate" value="Petition and Concern">Petition and Concern</option>
+                            <option class="bg-white text-black truncate" value="Memorandum of Agreement">Memorandum of Agreement</option>
+                            <option class="bg-white text-black truncate" value="Off Campus Activities">Off Campus Activities</option>
+                            <!-- Others option for non-standard types -->
+                            <option class="bg-white text-black truncate" value="Others">Others</option>
                         </select>
                         <!-- Custom dropdown arrow icon -->
                         <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -90,6 +93,9 @@
 
                                 // Format archive date for display
                                 $archivedDate = \Carbon\Carbon::parse($document->archived_at)->format('m/d/Y');
+
+                                // Determine display type - show 'Others' for non-standard types
+                                $displayType = in_array($document->type, $standardTypes) ? $document->type : 'Others';
                                 @endphp
                                 <!-- Document row (NO CHECKBOX) -->
                                 <tr class="border-b border-gray-300 hover:bg-gray-100 cursor-pointer"
@@ -110,8 +116,8 @@
                                         {{ $archivedDate }}
                                     </td>
                                     <!-- Document type with tooltip -->
-                                    <td class="px-4 py-2 truncate max-w-[160px]" title="{{ $document->type }}">
-                                        {{ $document->type }}
+                                    <td class="px-4 py-2 truncate max-w-[160px]" title="{{ $displayType }}">
+                                        {{ $displayType }}
                                     </td>
                                     <!-- Status with color-coded badge -->
                                     <td class="px-4 py-2">
@@ -139,7 +145,7 @@
                 </div>
             </div>
 
-            <!-- Pagination controls -->
+            <!-- Pagination controls with ellipsis -->
             @if (count($documents) > 0)
             <div class="mt-4 flex justify-center" id="paginationContainer">
                 <nav>
@@ -152,20 +158,53 @@
                             </a>
                         </li>
 
-                        <!-- Page numbers -->
-                        @for ($i = 1; $i <= $documents->lastPage(); $i++)
+                        @php
+                            $current = $documents->currentPage();
+                            $last = $documents->lastPage();
+                            $start = max(1, $current - 2);
+                            $end = min($last, $current + 2);
+                        @endphp
+
+                        <!-- First page -->
+                        @if($start > 1)
+                            <li>
+                                <a href="{{ $documents->url(1) }}"
+                                    class="pagination-btn px-3 py-1 rounded-lg {{ $current == 1 ? 'bg-[#7A1212] text-white' : '' }}">
+                                    1
+                                </a>
+                            </li>
+                            @if($start > 2)
+                                <li><span class="px-3 py-1">...</span></li>
+                            @endif
+                        @endif
+
+                        <!-- Page numbers around current page -->
+                        @for ($i = $start; $i <= $end; $i++)
                             <li>
                                 <a href="{{ $documents->url($i) }}"
-                                    class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $i ? 'bg-[#7A1212] text-white' : '' }}">
+                                    class="pagination-btn px-3 py-1 rounded-lg {{ $current == $i ? 'bg-[#7A1212] text-white' : '' }}">
                                     {{ $i }}
                                 </a>
                             </li>
                         @endfor
 
+                        <!-- Last page -->
+                        @if($end < $last)
+                            @if($end < $last - 1)
+                                <li><span class="px-3 py-1">...</span></li>
+                            @endif
+                            <li>
+                                <a href="{{ $documents->url($last) }}"
+                                    class="pagination-btn px-3 py-1 rounded-lg {{ $current == $last ? 'bg-[#7A1212] text-white' : '' }}">
+                                    {{ $last }}
+                                </a>
+                            </li>
+                        @endif
+
                         <!-- Next page button -->
                         <li>
                             <a href="{{ $documents->nextPageUrl() }}"
-                                class="pagination-btn-next px-3 py-1 rounded-lg {{ $documents->currentPage() == $documents->lastPage() ? 'cursor-not-allowed opacity-50' : '' }}">
+                                class="pagination-btn-next px-3 py-1 rounded-lg {{ $current == $last ? 'cursor-not-allowed opacity-50' : '' }}">
                                 &gt;
                             </a>
                         </li>
@@ -389,5 +428,20 @@
         }
     }
 </script>
+
+@php
+// Standard document types - matching documentHistory
+$standardTypes = [
+    'Event Proposal',
+    'General Plan of Activities', 
+    'Reports of Proceedings',
+    'Constitution and By-Laws',
+    'Fundraising Activities',
+    'Request Letter',
+    'Petition and Concern',
+    'Memorandum of Agreement',
+    'Off Campus Activities'
+];
+@endphp
 
 @endsection

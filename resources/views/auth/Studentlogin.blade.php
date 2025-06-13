@@ -18,6 +18,16 @@
     @vite('resources/css/app.css')
 
     <script>
+        // Immediate check and redirect (before page render finishes)
+        const isBack = performance.getEntriesByType("navigation")[0]?.type === "back_forward";
+
+        const loginUrl = '/student/login';
+        const landingUrl = '/';
+
+        if (isBack && window.location.pathname === loginUrl) {
+            window.location.replace(landingUrl);
+        }
+
         /* To carousel set of images */
         const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
@@ -639,6 +649,20 @@
             }
         });
 
+        // Prevent spaces in password
+        passwordInput.addEventListener('keydown', function (e) {
+            if (e.key === ' ') e.preventDefault();
+        });
+
+        passwordInput.addEventListener('paste', function (e) {
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            if (/\s/.test(pastedText)) {
+                e.preventDefault();
+                alert('Spaces are not allowed in the password.');
+            }
+        });
+
+
         // Input event handlers
         emailInput.addEventListener('input', function () {
             if (/\s/.test(emailInput.value)) {
@@ -833,10 +857,9 @@ document.addEventListener('DOMContentLoaded', function () {
   const isEmailTooLong = email.length > maxEmailLength;
   const isDescTooLong = desc.length > maxDescLength;
 
-  const isEmailValid = email.length > 0 && !isEmailTooLong;
+  const isEmailValid = email.length > 0 && !isEmailTooLong && isValidWebmail(email);
   const isDescValid = desc.length > 0 && !isDescTooLong;
 
-  // Show warnings only if too long
   document.getElementById('webmailLengthWarning').classList.toggle('hidden', !isEmailTooLong);
   document.getElementById('descLengthWarning').classList.toggle('hidden', !isDescTooLong);
 
@@ -850,37 +873,80 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     const webmailInput = document.getElementById('webmailInput');
+const webmailLengthWarning = document.getElementById('webmailLengthWarning');
 
-     // Prevent spaces in email
-    webmailInput.addEventListener('keydown', function (e) {
-        if (e.key === ' ') e.preventDefault();
-        });
+// Add custom webmail domain warning if not present
+let webmailDomainWarning = document.getElementById('webmailDomainWarning');
+if (!webmailDomainWarning) {
+    webmailDomainWarning = document.createElement('p');
+    webmailDomainWarning.id = 'webmailDomainWarning';
+    webmailDomainWarning.className = 'text-red-600 mt-1 hidden';
+    webmailInput.parentNode.appendChild(webmailDomainWarning);
+}
 
-    webmailInput.addEventListener('paste', function (e) {
-        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
-        if (/\s/.test(pastedText)) {
-            e.preventDefault();
-            alert('Spaces are not allowed in the email address.');
-        }
-    });
-    // Update description counter
-    const descriptionInput = document.getElementById('descriptionInput');
-    const descCounter = document.getElementById('descCounter');
-    const descWarning = document.getElementById('descLengthWarning');
+// Prevent spaces in email
+webmailInput.addEventListener('keydown', function (e) {
+    if (e.key === ' ') e.preventDefault();
+});
 
-    descriptionInput.addEventListener('input', () => {
-        const currentLength = descriptionInput.value.length;
-        descCounter.textContent = `${currentLength} / 255`;
+webmailInput.addEventListener('paste', function (e) {
+    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+    if (/\s/.test(pastedText)) {
+        e.preventDefault();
+        alert('Spaces are not allowed in the email address.');
+    }
+});
 
-        if (currentLength > 255) {
-            descWarning.classList.remove('hidden');
-        } else {
-            descWarning.classList.add('hidden');
-        }
-    });
+// Webmail validation for domain
+function isValidWebmail(email) {
+    return /^[a-zA-Z0-9]+@iskolarngbayan\.pup\.edu\.ph$/.test(email);
+}
 
-    // Initialize counter on load if there's pre-filled text
-    descCounter.textContent = `${descriptionInput.value.length} / 255`;
+webmailInput.addEventListener('input', function () {
+    const email = webmailInput.value.trim();
+    const isTooLong = email.length > 50;
+    const isDomainValid = isValidWebmail(email);
+
+    // Show/hide length warning
+    webmailLengthWarning.classList.toggle('hidden', !isTooLong);
+
+    // Show/hide domain warning
+    if (email.length > 0 && !isTooLong && !isDomainValid) {
+        webmailDomainWarning.textContent = '*Webmail must end with @iskolarngbayan.pup.edu.ph';
+        webmailDomainWarning.classList.remove('hidden');
+    } else {
+        webmailDomainWarning.classList.add('hidden');
+    }
+
+    // Enable/disable submit button
+    validateInputs();
+});
+
+// Update validateInputs to include domain check
+function validateInputs() {
+    const email = reportForm.email.value.trim();
+    const desc = reportForm.description.value.trim();
+
+    const maxEmailLength = 50;
+    const maxDescLength = 255;
+
+    const isEmailTooLong = email.length > maxEmailLength;
+    const isDescTooLong = desc.length > maxDescLength;
+
+    const isEmailValid = email.length > 0 && !isEmailTooLong && isValidWebmail(email);
+    const isDescValid = desc.length > 0 && !isDescTooLong;
+
+    document.getElementById('webmailLengthWarning').classList.toggle('hidden', !isEmailTooLong);
+    document.getElementById('descLengthWarning').classList.toggle('hidden', !isDescTooLong);
+
+    const shouldEnableSubmit = isEmailValid && isDescValid;
+
+    if (shouldEnableSubmit) {
+        enableSubmit();
+    } else {
+        disableSubmit();
+    }
+}
 
 
   // On modal open: reset form, reset flags, disable submit and validate inputs
@@ -1038,7 +1104,8 @@ function closeErrorModal() {
         if (event.persisted) {
             const loader = document.getElementById('loader');
             if (loader) {
-                loader.style.display = 'none';
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
             }
         }
     });

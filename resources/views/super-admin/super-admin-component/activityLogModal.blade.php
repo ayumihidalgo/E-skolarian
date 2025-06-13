@@ -1,4 +1,6 @@
-<div id="activityLogModal" class="fixed hidden z-50" style="margin-top: 10px;">
+<div id="activityLogModal" 
+     class="fixed hidden bg-white border border-gray-200 rounded-lg shadow-lg z-[9999]"
+     style="position: fixed; z-index: 9999;">
     <!-- Modal Content -->
     <div class="bg-white rounded-[16px] shadow-xl w-[500px] relative">
         <div class="p-4">

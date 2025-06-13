@@ -5,8 +5,8 @@
     <!-- Content section -->
     <!-- This is the main content area for the super admin dashboard -->
     @include('components.superadminNavigation')
-    <div id="main-content" class="flex flex-col min-h-screen ml-0 transition-all duration-300 bg-[#F2F4F7]">
-        <div class="flex-grow mb-10">
+    <div id="main-content" class="flex flex-col min-h-9/10 ml-0 transition-all duration-300 bg-[#F2F4F7]">
+        <div class="flex-grow">
             @if (session('success'))
                 <div id="Toast"
                     class="fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-green-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
@@ -29,9 +29,8 @@
             @endif
             <div class="p-4 sm:p-4 md:p-6 lg:p-8">
                 <!-- Profile Settings Heading -->
-                <h2 class="text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-4 md:mb-6 lg:mb-6 font-['Lexend']">Profile
-                    Settings</h2>
-                <a href="{{ route('super-superadmin.dashboard') }}"
+                <h2 class="text-xl sm:text-xl md:text-2xl font-bold mb-4 sm:mb-4 md:mb-6 lg:mb-6 font-['Lexend']">SUPER ADMIN SETTINGS</h2>
+                <a href="{{ route('super-admin.dashboard') }}"
                     class="inline-flex items-center mb-4 text-red-900 hover:text-red-700 font-semibold text-sm md:text-base font-['Lexend'] transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 28 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M23 12H7m0 0l7-7m-7 7l7 7" />
@@ -71,8 +70,8 @@
                             <h3 class="text-sm md:text-xl lg:text-3xl font-black tracking-wider font-['Lexend']">
                                 {{ strtoupper($user->role_name) }}
                             </h3>
-                            <p class="uppercase text-sm md:text-sm lg:text-lg tracking-wider font-semibold font-['Lexend']">
-                                {{ $user->role }}</p>
+                            <!-- <p class="uppercase text-sm md:text-sm lg:text-lg tracking-wider font-semibold font-['Lexend']">
+                                {{ $user->role }}</p> -->
                             <div class="hidden sm:block">
                                 <div id="" class="mt-2 text-sm relative flex items-center gap-3">
                                     <div
@@ -138,9 +137,9 @@
 
                 <!-- Security Info -->
                 <div
-                    class="bg-white w-full [box-shadow:1px_2px_7px_rgba(0,0,0,0.3)] rounded-3xl  px-5 py-3 pb-7 space-y-3 sm:space-y-4 md:space-y-5">
+                    class="bg-white w-full [box-shadow:1px_2px_7px_rgba(0,0,0,0.3)] rounded-3xl  px-5 py-3 pb-7 space-y-3 sm:space-y-4 md:space-y-5 mb-28">
                     <div class="w-full">
-                        <h4 class="text-base sm:text-lg md:text-xl lg:text-2xl font-bold mb-1 sm:mb-2 mt-1 font-['Lexend']">
+                        <h4 class="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold mb-1 sm:mb-2 mt-1 font-[Lexend]">
                             SECURITY
                             INFO
                         </h4>
@@ -267,7 +266,6 @@
                 </div>
             </div>
         </div>
-        @include('components.footer')
     </div>
 
     <input type="file" name="profile_image" id="profileImageInput" class="hidden" accept="image/*">

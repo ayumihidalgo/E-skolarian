@@ -27,10 +27,10 @@
 
     <!-- Notification Panel -->
    <div id="notificationPanel"
-        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 z-50 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-72 md:w-80 lg:w-96 xl:w-[26rem] 2xl:w-[28rem] sm:h-auto sm:max-h-[70vh] md:max-h-[75vh] lg:max-h-[80vh] xl:max-h-[85vh]">
+        class="hidden fixed sm:absolute inset-0 sm:inset-auto sm:right-0 sm:mt-2 z-500 bg-white sm:rounded-xl shadow-lg border border-gray-200 transform opacity-0 scale-95 transition-all duration-300 w-full h-full sm:w-72 md:w-80 lg:w-96 xl:w-[26rem] 2xl:w-[28rem] sm:h-auto sm:max-h-[85vh] flex flex-col">
         
         <!-- Header -->
-      <div class="notif-top-content p-4 border-b flex flex-row justify-between w-full h-[40px]">
+      <div class="notif-top-content p-4 border-b flex flex-row justify-between w-full flex-shrink-0">
             <div class="flex items-center">
                 <!-- Back Icon (visible only on mobile) -->
                 <button id="backBtn" class="mr-2 sm:hidden text-gray-600 cursor-pointer hover:text-gray-800 transition-colors duration-300">
@@ -89,7 +89,7 @@
 
 
         <!-- Tabs -->
-        <div id="tabs-nav" class="flex items-center justify-between text-sm font-medium text-gray-600 shadow mt-4">
+        <div id="tabs-nav" class="flex items-center justify-between text-sm font-medium text-gray-600 shadow flex-shrink-0">
             <div class="flex">
                 <button id="allTab" class="px-4 py-2 border-b-2 border-purple-400 border-opacity-50 text-black font-semibold bg-gray-50 cursor-pointer">All</button>
                 <button id="unreadTab" class="px-4 py-2 hover:bg-gray-100 text-gray-500 cursor-pointer relative">
@@ -108,7 +108,7 @@
         </div>
 
         <!-- Notification Content -->
-        <div id="notificationBody" class="overflow-y-auto transition-all duration-300 w-full h-[18rem] sm:h-[20rem] md:h-[24rem] lg:h-[28rem] xl:h-[32rem]">
+        <div id="notificationBody" class="flex-1 overflow-y-auto transition-all duration-300 w-full min-h-0">
             @if(Auth::check() && Auth::user()->notifications->count() > 0)
             <!-- All Notifications Tab Content -->
             <div id="allNotifications" class="block  cursor-default">
@@ -202,7 +202,7 @@
                 @endif
             </div>
             @else
-            <div class="flex items-center justify-center h-full text-center">
+            <div class="flex items-center justify-center flex-1 min-h-120 text-center p-8">
                 <div class="text-gray-500 text-sm sm:text-base">
                     @if(Auth::check())
                         Hi, {{ Auth::user()->username }}! <br> No notifications for you.
@@ -453,14 +453,14 @@
                 // Update the notification element to show it as read
                 notificationElement.classList.add('opacity-75');
                 
-                // Remove from unread tab if it exists there
-                const unreadEl = document.querySelector('#unreadNotifications [data-notification-id="' + notificationId + '"]');
-                if (unreadEl) unreadEl.remove();
+             
+                document.querySelectorAll(`[data-notification-id="${notificationId}"]`).forEach(el => {
+                    if (el.closest('#unreadNotifications')) {
+                        el.remove();
+                    }
+                });
                 
-                // Update badge count immediately
-                updateNotificationBadge();
-                
-                // Optionally, you can also remove the checkbox or disable it
+          
                 const checkbox = notificationElement.querySelector('.notification-checkbox');
                 if (checkbox) {
                     checkbox.checked = false; // Uncheck the box
@@ -469,12 +469,18 @@
                 
                 // Update options menu state
                 updateOptionsMenu();
+                
+                // Update badge count AFTER removing the notification
+                updateNotificationBadge();
             } else {
                 console.error('Failed to mark notification as read:', response.statusText);
             }
         } catch (error) {
             console.error('Error marking notification as read:', error);
         }
+        
+        // Close the notification panel
+        togglePanel();
         
         // Navigate to the notification link
         window.location.href = link.href;
@@ -561,20 +567,32 @@
         }
 
         function updateNotificationBadge() {
-            // Count unread notifications
+            // Count unread notifications that are still in the unread tab
             const unreadCount = document.querySelectorAll('#unreadNotifications [data-notification-id]').length;
-            const badge = document.querySelector('.bg-red-500.rounded-full');
-            const unreadBadge = document.querySelector('#unreadTab .bg-red-500');
+            const headerBadge = document.querySelector('.bg-red-500.rounded-full');
+            const tabBadge = document.querySelector('#unreadTab .bg-red-500');
             
             if (unreadCount === 0) {
-                if (badge) badge.style.display = 'none';
-                if (unreadBadge) unreadBadge.style.display = 'none';
+                if (headerBadge) headerBadge.style.display = 'none';
+                if (tabBadge) tabBadge.style.display = 'none';
             } else {
-                if (badge) badge.style.display = 'block';
-                if (unreadBadge) {
-                    unreadBadge.style.display = 'block';
-                    unreadBadge.textContent = unreadCount;
+                if (headerBadge) headerBadge.style.display = 'block';
+                if (tabBadge) {
+                    tabBadge.style.display = 'block';
+                    tabBadge.textContent = unreadCount; // Just set the text to the count directly
                 }
+            }
+            
+            // Prevent any duplicate counting by ensuring we're only counting each notification once
+            const notificationIds = new Set();
+            document.querySelectorAll('#unreadNotifications [data-notification-id]').forEach(el => {
+                notificationIds.add(el.dataset.notificationId);
+            });
+            
+            // Update the badge with the actual count of unique IDs
+            const uniqueCount = notificationIds.size;
+            if (tabBadge && uniqueCount > 0) {
+                tabBadge.textContent = uniqueCount;
             }
         }
 

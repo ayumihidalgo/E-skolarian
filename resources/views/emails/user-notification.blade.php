@@ -133,7 +133,7 @@
 <body>
     <div class="card-container">
         <div class="header-card">
-            <img class="logo" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
+            <img class="logo" src="{{ asset('public/images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
         </div>
             <div class="body-card">
         <h1>Hello {{ $user->username }},</h1>
@@ -153,6 +153,10 @@
                 Your account in the E-Skolarian system has been reactivated. You can now access the system again using your existing credentials.
             </p>
             <p>Here are your account details:</p>
+        @elseif($actionType === 'updated')
+            <h2>Account Updated</h2>
+            <p>Your account information has been updated in the E-Skolarian system.</p>
+            <p>Here are your updated account details:</p>
         @else
             <p class="first-p">
                 Your account information has been updated in the E-Skolarian system.
@@ -163,6 +167,9 @@
         <div class="info-box">
             <p><strong>Username:</strong> {{ $user->username }}</p>
             <p><strong>Email:</strong> {{ $user->email }}</p>
+            @if($user->recovery_email)
+                <p><strong>Recovery Email:</strong> {{ $user->recovery_email }}</p>
+            @endif
             <p><strong>Role:</strong> {{ $user->role_name }}</p>
             @if($isNewUser || $isReactivated)
                 <p><strong>Default Password:</strong> {{ $password }}</p>
@@ -178,6 +185,11 @@
             <p>A temporary password has been provided above for your initial login. For security purposes, we recommend changing your password immediately after your first login.</p>
         @elseif($isDeactivated)
             <p>If you believe this action was taken in error or if you need to reactivate your account, please contact the system administrator.</p>
+        @elseif($actionType === 'updated')
+            <p class="last-p">Your account details have been successfully updated by the IT Administrator. If you did not request this change, please contact the IT Administrator immediately.</p>
+            @if($user->recovery_email)
+                <p class="last-p">Your recovery email has been set to help you regain access to your account if needed.</p>
+            @endif
         @elseif($isReactivated)
             <p class="last-p">
                 If you have any questions or need assistance, please don't hesitate to contact our support team.
@@ -190,7 +202,7 @@
             <p>This is an automated message, please do not reply to this email.</p>
             <p class="contact-info">
                 <strong>Contact No:</strong> 0961 802 3780<br>
-                <strong>Email:</strong> starosa@pup.edu.ph
+                <strong>Email:</strong> eskolarian@gmail.com
             </p>
         </div>
     </div>

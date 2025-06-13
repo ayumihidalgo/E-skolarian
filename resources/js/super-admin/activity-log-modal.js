@@ -11,15 +11,17 @@ document.addEventListener('DOMContentLoaded', function() {
             activityLogModal.classList.add('hidden');
         });
     }
+    
     function positionModal() {
         if (activityLogBtn && activityLogModal) {
             const buttonRect = activityLogBtn.getBoundingClientRect();
-            const modalRect = activityLogModal.getBoundingClientRect();
             
-            // Position the modal below the button
+            // Position the modal below the button using fixed positioning
+            // Remove window.scrollY since we're using position: fixed
             activityLogModal.style.position = 'fixed';
-            activityLogModal.style.top = `${buttonRect.bottom + window.scrollY + 10}px`; // 10px gap
+            activityLogModal.style.top = `${buttonRect.bottom + 10}px`; // 10px gap, no scrollY needed
             activityLogModal.style.right = `${window.innerWidth - buttonRect.right}px`;
+            activityLogModal.style.zIndex = '9999'; // Ensure it stays on top
         }
     }
 
@@ -59,6 +61,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Reposition modal on window resize
     window.addEventListener('resize', function() {
+        if (!activityLogModal.classList.contains('hidden')) {
+            positionModal();
+        }
+    });
+
+    // Reposition modal on scroll to keep it aligned with the button
+    window.addEventListener('scroll', function() {
         if (!activityLogModal.classList.contains('hidden')) {
             positionModal();
         }

@@ -18,6 +18,16 @@
     @vite('resources/css/app.css')
 
     <script>
+    // Immediate check and redirect (before page render finishes)
+    const isBack = performance.getEntriesByType("navigation")[0]?.type === "back_forward";
+
+    const loginUrl = '/admin/login';
+    const landingUrl = '/';
+
+    if (isBack && window.location.pathname === loginUrl) {
+        window.location.replace(landingUrl);
+    }
+
        /* To carousel set of images */
        const images = [
             "{{ asset('images/PUP_Bg1.jpg') }}",
@@ -546,6 +556,8 @@
                 <label class="pl-[9px] block font-semibold mb-1">PUP Webmail<span class="text-red-600">*</span></label>
                 <input id="webmailInput" type="email" name="email" placeholder="PUP Email Address" class="w-full border bg-white rounded-lg px-3 py-2" required maxlength="51" />
                 <p id="webmailLengthWarning" class="text-red-600 mt-1 hidden">*Webmail must not exceed 50 characters.</p>
+                <!-- Add custom webmail domain warning if not present -->
+                <p id="webmailDomainWarning" class="text-red-600 mt-1 hidden"></p>
             </div>
 
             <div class="mb-3 relative">
@@ -733,6 +745,19 @@
             }
         });
 
+        // Prevent spaces in password
+        passwordInput.addEventListener('keydown', function (e) {
+            if (e.key === ' ') e.preventDefault();
+        });
+
+        passwordInput.addEventListener('paste', function (e) {
+            const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+            if (/\s/.test(pastedText)) {
+                e.preventDefault();
+                alert('Spaces are not allowed in the password.');
+            }
+        });
+
         // Input event handlers
         emailInput.addEventListener('input', function () {
             if (/\s/.test(emailInput.value)) {
@@ -826,7 +851,7 @@
     const isEmailTooLong = email.length > maxEmailLength;
     const isDescTooLong = desc.length > maxDescLength;
 
-    const isEmailValid = email.length > 0 && !isEmailTooLong;
+    const isEmailValid = email.length > 0 && !isEmailTooLong && isValidWebmail(email);
     const isDescValid = desc.length > 0 && !isDescTooLong;
 
     // Show warnings only if too long
@@ -856,6 +881,66 @@
             alert('Spaces are not allowed in the email address.');
         }
     });
+
+    // Webmail validation for domain and local part (letters/numbers only before @pup.edu.ph)
+    function isValidWebmail(email) {
+        return /^[a-zA-Z0-9]+@pup\.edu\.ph$/.test(email);
+    }
+
+    // Add custom webmail domain warning if not present
+    let webmailDomainWarning = document.getElementById('webmailDomainWarning');
+    if (!webmailDomainWarning) {
+        webmailDomainWarning = document.createElement('p');
+        webmailDomainWarning.id = 'webmailDomainWarning';
+        webmailDomainWarning.className = 'text-red-600 mt-1 hidden';
+        webmailInput.parentNode.appendChild(webmailDomainWarning);
+    }
+
+    webmailInput.addEventListener('input', function () {
+        const email = webmailInput.value.trim();
+        const isTooLong = email.length > 50;
+        const isDomainValid = isValidWebmail(email);
+
+        // Show/hide length warning
+        document.getElementById('webmailLengthWarning').classList.toggle('hidden', !isTooLong);
+
+        // Show/hide domain warning
+        if (email.length > 0 && !isTooLong && !isDomainValid) {
+            webmailDomainWarning.textContent = '*Webmail must end with @pup.edu.ph';
+            webmailDomainWarning.classList.remove('hidden');
+        } else {
+            webmailDomainWarning.classList.add('hidden');
+        }
+
+        // Enable/disable submit button
+        validateInputs();
+    });
+
+    // Update validateInputs to use new isValidWebmail
+    function validateInputs() {
+        const email = reportForm.email.value.trim();
+        const desc = reportForm.description.value.trim();
+
+        const maxEmailLength = 50;
+        const maxDescLength = 255;
+
+        const isEmailTooLong = email.length > maxEmailLength;
+        const isDescTooLong = desc.length > maxDescLength;
+
+        const isEmailValid = email.length > 0 && !isEmailTooLong && isValidWebmail(email);
+        const isDescValid = desc.length > 0 && !isDescTooLong;
+
+        document.getElementById('webmailLengthWarning').classList.toggle('hidden', !isEmailTooLong);
+        document.getElementById('descLengthWarning').classList.toggle('hidden', !isDescTooLong);
+
+        const shouldEnableSubmit = isEmailValid && isDescValid;
+
+        if (shouldEnableSubmit) {
+            enableSubmit();
+        } else {
+            disableSubmit();
+        }
+    }
 
     const descriptionInput = document.getElementById('descriptionInput');
     const descCounter = document.getElementById('descCounter');
@@ -1032,7 +1117,8 @@
         if (event.persisted) {
             const loader = document.getElementById('loader');
             if (loader) {
-                loader.style.display = 'none';
+                loader.classList.add('hidden');
+                loader.classList.remove('flex');
             }
         }
     });

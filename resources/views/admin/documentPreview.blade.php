@@ -19,49 +19,46 @@
             </button>
         </div>
 
-                {{-- Document Details Card --}}
-                <div
-                    class="p-6 bg-[#4D0F0F] text-white rounded-[2rem] shadow-md space-y-6 w-full max-w-[1055px] mx-auto min-h-[450px]">
-                    {{-- General Information Section --}}
-                    <div class="space-y-3">
-                        <!-- Header with date and document tag -->
-                        <div class="flex flex-wrap justify-between items-center">
-                            <!-- Document submission date - formatted for readability -->
-                            <div>
-                                <p class="font-semibold text-white/60">
-                                    {{ \Carbon\Carbon::parse($document['date'])->format('F d, Y') }}</p>
-                            </div>
-                            <!-- Document control tag/identifier -->
-                            <div>
-                                <p class="font-semibold text-white/60">{{ $document['tag'] }}</p>
-                            </div>
-                        </div>
+        {{-- Document Details Card --}}
+        <div
+            class="p-6 bg-[#4D0F0F] text-white rounded-[2rem] shadow-md space-y-6 w-full max-w-[1055px] mx-auto min-h-[450px]">
+            {{-- General Information Section --}}
+            <div class="space-y-3">
+                <!-- Header with date and document tag -->
+                <div class="flex flex-wrap justify-between items-center">
+                    <!-- Document submission date - formatted for readability -->
+                    <div>
+                        <p class="font-semibold text-white/60">
+                            {{ \Carbon\Carbon::parse($document['date'])->format('F d, Y g:i A') }}</p>
+                    </div>
+                    <!-- Document control tag/identifier -->
+                    <div>
+                        <p class="font-semibold text-white/60">{{ $document['tag'] }}</p>
+                    </div>
+                </div>
 
-                        <!-- Submitting organization name -->
-                        <p><strong class="text-white/60">From:</strong> <strong>{{ $document['organization'] }}</strong></p>
-                        <!-- Document title/subject -->
-                        <p><strong class="text-white/60">Title:</strong> <strong>{{ $document['title'] }}</strong></p>
-                        <!-- Document type/category -->
-                        <p><strong class="text-white/60">Type:</strong> <strong>{{ $document['type'] }}</strong></p>
+                <!-- Submitting organization name -->
+                <p><strong class="text-white/60">From:</strong> <strong>{{ $document['organization'] }}</strong></p>
+                <!-- Document title/subject -->
+                <p><strong class="text-white/60">Title:</strong> <strong>{{ $document['title'] }}</strong></p>
+                <!-- Document type/category -->
+                <p><strong class="text-white/60">Type:</strong> <strong>{{ $document['type'] }}</strong></p>
 
-                        <!-- Document summary section -->
-                        <p><strong class="text-white/60">Summary:</strong></p>
-                        <!-- Content display area with contrasting background -->
-                        <div class="p-4 bg-[#f2f4f7] text-black rounded-xl">
-                            <p class="text-sm">{{ $document['content'] }}</p>
-                        </div>
+                <!-- Document summary section -->
+                <p><strong class="text-white/60">Summary:</strong></p>
+                <!-- Content display area with contrasting background -->
+                <div class="p-4 bg-[#f2f4f7] text-black rounded-xl">
+                    <p class="text-sm">{{ $document['content'] }}</p>
+                </div>
 
-
-              
-
-                <!-- ATTACHMENT SECTION -->
+                                <!-- ATTACHMENT SECTION - Updated to match the UI design -->
                 <div class="mt-4">
                     <p><strong class="text-white/60">Attachments:</strong></p>
                     <div class="mt-2">
                         @if(isset($document['attachments']) && count($document['attachments']) > 0)
                             @foreach($document['attachments'] as $attachment)
-                                <a href="{{ asset('storage/' . $attachment['file_path']) }}" target="_blank" 
-                                   class="flex items-center gap-2 p-3 bg-white/10 rounded-lg hover:bg-white/20 transition w-fit mb-2">
+                                <a href="#" onclick="openDocumentViewer('{{ asset('storage/' . $attachment['document_url']) }}', '{{ basename($attachment['document_url']) }}'); return false;" 
+                                   class="flex items-center gap-2 p-3 bg-white/10 rounded-lg hover:bg-white/20 transition w-fit mb-2 {{ isset($document['is_archived']) && $document['is_archived'] ? 'cursor-default' : '' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
@@ -71,9 +68,9 @@
                                     @endif
                                 </a>
                             @endforeach
-                        @elseif(isset($document['file_path']) && $document['file_path'])
-                            <a href="{{ asset('storage/' . $document['file_path']) }}" target="_blank" 
-                               class="flex items-center gap-2 p-3 bg-white/10 rounded-lg hover:bg-white/20 transition w-fit">
+                        @elseif(isset($document['document_url']) && $document['document_url'])
+                            <a href="#" onclick="openDocumentViewer('{{ asset('storage/' . $document['document_url']) }}', '{{ basename($document['document_url']) }}'); return false;" 
+                               class="flex items-center gap-2 p-3 bg-white/10 rounded-lg hover:bg-white/20 transition w-fit {{ isset($document['is_archived']) && $document['is_archived'] ? 'cursor-default' : '' }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
@@ -86,7 +83,8 @@
                         @endif
                     </div>
                 </div>
-                      <!-- Document approval status section -->
+
+                <!-- Document approval status section -->
                 <p>
                     <strong class="text-white/60">Status:</strong><br>
                     <!-- Status pill with color coding based on document status -->
@@ -168,18 +166,6 @@
                 downloadTab.style.display = 'none';
             }
         }
-        
-        // Continue with existing code
-        const attachmentLinks = document.querySelectorAll('a[href*="/storage/"]');
-        
-        attachmentLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const filePath = this.getAttribute('href');
-                const fileName = filePath.split('/').pop();
-                openDocumentViewer(filePath, fileName);
-            });
-        });
     });
 
     function openDocumentViewer(filePath, fileName) {
@@ -207,6 +193,12 @@
         pdfViewer.classList.remove('hidden');
         imageViewer.classList.add('hidden');
         downloadView.classList.add('hidden');
+        
+        // Reset tab styling
+        document.getElementById('previewTab').classList.add('bg-blue-500', 'text-white');
+        document.getElementById('previewTab').classList.remove('text-gray-700');
+        document.getElementById('downloadTab').classList.remove('bg-blue-500', 'text-white');
+        document.getElementById('downloadTab').classList.add('text-gray-700');
         
         // Handle different file types
         if (['pdf'].includes(fileExtension)) {
@@ -263,7 +255,16 @@
             titleElement.textContent = fileName + ' (Archived - Preview Only)';
         }
         
-        // Set up tab switching
+        // Set up tab switching (remove previous event listeners first)
+        const previewTab = document.getElementById('previewTab');
+        const downloadTab = document.getElementById('downloadTab');
+        
+        // Clone nodes to remove event listeners
+        const newPreviewTab = previewTab.cloneNode(true);
+        const newDownloadTab = downloadTab.cloneNode(true);
+        previewTab.parentNode.replaceChild(newPreviewTab, previewTab);
+        downloadTab.parentNode.replaceChild(newDownloadTab, downloadTab);
+        
         document.getElementById('previewTab').addEventListener('click', function() {
             if (['pdf'].includes(fileExtension)) {
                 pdfViewer.classList.remove('hidden');
@@ -287,7 +288,7 @@
                 return;
             }
             
-            // Existing tab switching code
+            // Show download view
             pdfViewer.classList.add('hidden');
             imageViewer.classList.add('hidden');
             downloadView.classList.remove('hidden');

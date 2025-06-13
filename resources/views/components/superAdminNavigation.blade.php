@@ -32,27 +32,31 @@
                     class="group-hover:stroke-red-500" />
             </svg>
             <span class="text-[18px] group-hover:text-red-500">Reports</span>
-
-            @if ($newReportsCount > 0)
-                <div class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                    {{ $newReportsCount }}
-                </div>
-            @endif
         </a>
 
-
-        <!-- <div class="flex justify-center">
-                <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
-                    @if (isset($userProfilePics) && $userProfilePics->has($user->id) && $userProfilePics[$user->id])
-<img src="{{ asset('storage/' . $userProfilePics[$user->id]) }}"
-                            alt="Profile" class="w-full h-full object-cover">
-@else
-<img src="{{ asset('images/dprofile.svg') }}" alt="Default Profile"
-                            class="w-full h-full object-cover">
-@endif
-                </div>
-            </div> -->
-
+        <!-- Profile Picture Container -->
+        <div class="flex justify-center">
+            <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                @php
+                    $currentUser = auth()->user();
+                    $profilePic = null;
+                    if ($currentUser) {
+                        // Use the correct column name from your database
+                        $profilePic = $currentUser->profile_pic ?? null;
+                    }
+                @endphp
+                
+                @if ($profilePic)
+                    <img src="{{ asset('storage/' . $profilePic) }}" 
+                         alt="Profile" 
+                         class="w-full h-full object-cover">
+                @else
+                    <img src="{{ asset('images/dprofile.svg') }}" 
+                         alt="Default Profile" 
+                         class="w-full h-full object-cover">
+                @endif
+            </div>
+        </div>
 
         <!-- Super Admin Dropdown -->
         <div class="relative" id="adminDropdownContainer">
@@ -68,8 +72,7 @@
             <div id="adminDropdownMenu"
                 class="absolute right-0 mt-2 w-40 bg-white rounded-[16px] shadow-lg py-1 hidden z-50 border-2 border-[#4D0F0F] cursor-pointer">
                 <!-- Settings Option -->
-                <a class="flex items-center justify-center px-4 py-2 text-xl text-[#332B2B]"
-                    href="{{ route('superadmin.settings') }}"> {{-- href="{{ route('superadmin.settings') }}" --}}
+                <a href="{{ route('superadmin.settings') }}" class="flex items-center justify-center px-4 py-2 text-xl text-[#332B2B]">
                     <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 21 20"
                         fill="none" class="mr-2">
                         <path
