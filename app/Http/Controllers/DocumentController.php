@@ -44,7 +44,7 @@ class DocumentController extends Controller
                 'academic_year' => 'required|string',
                 'venue' => 'nullable|string|max:100|required_if:type,Event Proposal',
                 'proposed_date_time' => 'nullable|date|required_if:type,Event Proposal',
-                'hours' => 'nullable|integer|min:1|required_if:type,Event Proposal',
+                'hours' => 'nullable|integer|min:1|max:10|required_if:type,Event Proposal',
                 'attendees' => 'nullable|string|max:50|required_if:type,Event Proposal',
                 'attendees_range' => 'nullable|required_if:type,Event Proposal|in:10-50,50-100,100-250,250-500,Above 500',
                 'fees' => 'nullable|numeric|required_if:type,Event Proposal',
