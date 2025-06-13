@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use App\Models\DocumentForward;
+use App\Models\DocumentTimeline;
 
 class SubmittedDocument extends Model
 {
@@ -19,15 +20,20 @@ class SubmittedDocument extends Model
 
     protected $fillable = [
         'user_id',
+        'guest_webmail',
         'received_by',
         'subject',
-        'summary',
+        'overview',
+        'academic_year',
+        'venue',
+        'proposed_date_time',
+        'hours',
+        'attendees',
+        'attendees_range',
+        'fees',
         'type',
         'control_tag',
         'status',
-        'file_path',
-        'created_at',
-        'updated_at',
     ];
 
     /**
@@ -76,5 +82,10 @@ class SubmittedDocument extends Model
     public function latestVersion()
     {
         return $this->hasOne(DocumentVersion::class, 'document_id')->latestOfMany('submitted_at');
+    }
+
+    public function timeline()
+    {
+        return $this->hasMany(DocumentTimeline::class, 'document_id');
     }
 }

@@ -469,6 +469,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // -------------------------------------------------------------
 // ------Document Viewer Functionality--------
+function showDocumentLoader() {
+    // Create loader overlay if it doesn't exist
+    let loader = document.getElementById('document-details-loader');
+    if (!loader) {
+        loader = document.createElement('div');
+        loader.id = 'document-details-loader';
+        loader.className = 'fixed inset-0 bg-transparent backdrop-blur-sm flex items-center justify-center z-50';
+        loader.innerHTML = `
+            <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
+                <svg class="animate-spin h-6 w-6 mr-3 text-[#7A1212]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-gray-800 font-medium">Loading document...</span>
+            </div>
+        `;
+        document.body.appendChild(loader);
+    } else {
+        loader.classList.remove('hidden');
+    }
+}
+
+// Add this function to hide the loader
+function hideDocumentLoader() {
+    const loader = document.getElementById('document-details-loader');
+    if (loader) {
+        loader.classList.add('hidden');
+    }
+}
+
+// Modify the handleRowClick function to show and hide the loader
 function handleRowClick(row) {
     // Get document ID from the data attribute
     const documentId = row.getAttribute('data-document-id');
@@ -479,6 +510,9 @@ function handleRowClick(row) {
         console.error('Document ID is missing for this row.');
         return;
     }
+    
+    // Show the loader immediately when row is clicked
+    showDocumentLoader();
     
     // Store the real document ID in the global variable
     currentDocumentId = documentId;
@@ -541,22 +575,19 @@ function handleRowClick(row) {
         const detailsView = document.getElementById('detailsView');
         tableView.classList.add('hidden');
         detailsView.classList.remove('hidden');
+        
+        // Hide the loader now that everything is loaded
+        hideDocumentLoader();
     })
     .catch(error => {
         console.error('Error:', error);
+        // Hide the loader on error
+        hideDocumentLoader();
+        
+        // Show an error message to the user
+        showDocumentActionToast('error', 'Failed to load document details: ' + error.message, false);
     });
 }
-
-// Initial loading
-document.addEventListener('DOMContentLoaded', function() {
-    const documentRows = document.querySelectorAll('tbody tr');
-    documentRows.forEach(row => {
-        row.addEventListener('click', function(e) {
-            e.preventDefault();
-            handleRowClick(this);
-        });
-    });
-});
 
 // Filter and Search Functions
 document.addEventListener('DOMContentLoaded', function() {
@@ -1269,10 +1300,39 @@ function updateDocumentDetailsView(docData) {
             console.error('Error formatting date:', error);
             }
         }
+
+        // Check if user_id is null - add this at the beginning of the function
+        const hasValidUser = docData.user && docData.user.id;
+        
+        // Adjust layout based on user_id
+        const detailsComment = document.getElementById('detailsComment');
+        const documentDetails = document.getElementById('documentDetails');
+        const orgInfoComments = document.getElementById('OrgInfoCommments');
+        
+        if (detailsComment && documentDetails && orgInfoComments) {
+            if (!hasValidUser) {
+                // If user_id is null, hide org info and comments section
+                orgInfoComments.classList.add('hidden');
+                
+                // Remove max-width and make document details take full width
+                detailsComment.classList.remove('max-w-7xl');
+                documentDetails.classList.remove('md:w-2/3');
+                documentDetails.classList.add('w-full');
+            } else {
+                // If user_id exists, show everything normally
+                orgInfoComments.classList.remove('hidden');
+                
+                // Restore original classes
+                detailsComment.classList.add('max-w-7xl');
+                documentDetails.classList.add('md:w-2/3');
+                documentDetails.classList.remove('w-full');
+            }
+        }
         
         // Update document information using direct IDs
         document.getElementById('documentDate').textContent = formattedDate;
-        document.getElementById('documentOrg').innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${docData.organization}`;
+        document.getElementById('documentOrg').innerHTML = `<span class="text-[#FFFFFF91] font-normal">From:</span> ${
+        docData.user ? docData.organization : docData.guest_webmail || 'N/A'}`;
         document.getElementById('documentTitle').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Title:</span> ${docData.subject || docData.title}`;
         document.getElementById('documentType').innerHTML = `<span class="text-[#FFFFFF91] font-normal">Document Type:</span> ${docData.type}`;
         document.getElementById('documentYear').innerHTML = `<span class="text-[#FFFFFF91] font-normal">A.Y. Semester:</span> ${docData.academic_year}`;
@@ -1425,14 +1485,15 @@ function updateDocumentDetailsView(docData) {
         }
             
         // Update organization info in right panel
-        document.getElementById('orgName').textContent = docData.user.organization_acronym || 'Organization Name';
+        document.getElementById('orgName').textContent = 
+            (docData.user && docData.user.organization_acronym) || 'Organization Name';
         document.getElementById('orgType').textContent = 'Academic Organization';
 
         // Set organization initial
         const orgInitial = document.getElementById('orgInitial');
         const orgProfileContainer = document.getElementById('orgProfileContainer');
 
-        if (orgInitial && orgProfileContainer && docData.organization) {
+        if (orgInitial && orgProfileContainer) {
             // If the document user has a profile picture
             if (docData.user && docData.user.profile_pic) {
                 // Replace the initial with the profile image
@@ -1446,7 +1507,7 @@ function updateDocumentDetailsView(docData) {
                 // Use the organization_acronym field directly from the user data
                 // Fall back to first letter of organization name if acronym is not available
                 let initial = '';
-                if (docData.user.organization_acronym) {
+                if (docData.user && docData.user.organization_acronym) {
                     initial = docData.user.organization_acronym.charAt(0).toUpperCase();
                 } else if (docData.organization) {
                     initial = docData.organization.charAt(0).toUpperCase();

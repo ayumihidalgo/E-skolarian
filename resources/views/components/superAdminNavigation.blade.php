@@ -1,4 +1,5 @@
 @extends('base')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <!-- Top Navigation Header -->
 <div class="w-full bg-[#4d0F0F] h-[90px] flex items-center justify-between px-15">
     <!-- Left side: Logo and Text -->
@@ -32,6 +33,22 @@
                     class="group-hover:stroke-red-500" />
             </svg>
             <span class="text-[18px] group-hover:text-red-500">Reports</span>
+
+            @php
+                $newReportsCount = \App\Models\ProblemReport::where('viewed', false)->count();
+            @endphp
+
+            @if ($newReportsCount > 0)
+                <div id="reportsNotificationBadge"
+                    class="absolute -top-2 -right-2 bg-[#4D0F0F] border-1 border-white text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                    {{ $newReportsCount }}
+                </div>
+            @else
+                <div id="reportsNotificationBadge"
+                    class="absolute -top-2 -right-2 bg-[#4D0F0F] border-1 border-white text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center hidden">
+                    0
+                </div>
+            @endif
         </a>
 
         <!-- Profile Picture Container -->
@@ -45,15 +62,12 @@
                         $profilePic = $currentUser->profile_pic ?? null;
                     }
                 @endphp
-                
+
                 @if ($profilePic)
-                    <img src="{{ asset('storage/' . $profilePic) }}" 
-                         alt="Profile" 
-                         class="w-full h-full object-cover">
+                    <img src="{{ asset('storage/' . $profilePic) }}" alt="Profile" class="w-full h-full object-cover">
                 @else
-                    <img src="{{ asset('images/dprofile.svg') }}" 
-                         alt="Default Profile" 
-                         class="w-full h-full object-cover">
+                    <img src="{{ asset('images/dprofile.svg') }}" alt="Default Profile"
+                        class="w-full h-full object-cover">
                 @endif
             </div>
         </div>
@@ -72,7 +86,8 @@
             <div id="adminDropdownMenu"
                 class="absolute right-0 mt-2 w-40 bg-white rounded-[16px] shadow-lg py-1 hidden z-50 border-2 border-[#4D0F0F] cursor-pointer">
                 <!-- Settings Option -->
-                <a href="{{ route('superadmin.settings') }}" class="flex items-center justify-center px-4 py-2 text-xl text-[#332B2B]">
+                <a href="{{ route('superadmin.settings') }}"
+                    class="flex items-center justify-center px-4 py-2 text-xl text-[#332B2B]">
                     <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" viewBox="0 0 21 20"
                         fill="none" class="mr-2">
                         <path
@@ -85,7 +100,7 @@
                 <!-- Logout Option -->
                 <form method="POST" action="{{ route('superadmin.logout') }}" class="block">
                     @csrf
-                    <button type="submit"
+                    <button type="button" onclick="openLogoutModal()"
                         class="w-full flex items-center justify-center px-4 py-2 text-xl text-[#332B2B] cursor-pointer">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                             fill="none" class="mr-2">
@@ -100,3 +115,100 @@
         </div>
     </div>
 </div>
+<div id="logoutConfirmationModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[9999]">
+    <div
+        class="bg-white rounded-2xl w-[545px] max-w-[340px] sm:max-w-md shadow-xl relative space-y-2 px-6 py-5 md:py-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="sm:text-base md:text-lg font-semibold font-['Lexend']">Logout?</h2>
+            <button type="button" onclick="closeLogoutModal()"
+                class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+                <i class="text-base sm:text-xl fas fa-times"></i>
+            </button>
+        </div>
+        <p class="text-xs sm:text-xs md:text-sm text-gray-700 mb-6">
+            Are you sure you want to logout? You will need to login again to access your account.
+        </p>
+        <div class="flex justify-end gap-2">
+            <button type="button" onclick="closeLogoutModal()"
+                class="rounded-lg text-gray-900 font-medium px-4 py-2 border-1 border-gray-300 text-[11px] md:text-[12px] lg:text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Cancel</button>
+            <button type="button" onclick="confirmLogout()"
+                class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[11px] md:text-[12px] lg:text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">Yes,
+                Logout</button>
+        </div>
+    </div>
+</div>
+<script>
+    function openLogoutModal() {
+        document.getElementById('logoutConfirmationModal').classList.remove('hidden');
+        document.getElementById('logoutConfirmationModal').classList.add('flex');
+    }
+
+    function closeLogoutModal() {
+        document.getElementById('logoutConfirmationModal').classList.add('hidden');
+        document.getElementById('logoutConfirmationModal').classList.remove('flex');
+    }
+
+    function confirmLogout() {
+        document.getElementById('logoutForm').submit();
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        let lastKnownCount = null;
+
+        // Function to update the notification badge
+        function updateReportsNotificationBadge(count) {
+            const badge = document.getElementById('reportsNotificationBadge');
+            if (badge) {
+                lastKnownCount = count; // Store the last known count
+                badge.textContent = count;
+                if (count > 0) {
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        }
+
+        // Check for updates every 30 seconds
+        function checkForNewReports() {
+            fetch('/super-admin/reports/unviewed-count', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                            'content') || ''
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Only update if we don't have a last known count or if the server count is different
+                        // This prevents overriding real-time updates from the reports page
+                        if (lastKnownCount === null || data.count !== lastKnownCount) {
+                            updateReportsNotificationBadge(data.count);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking for new reports:', error);
+                });
+        }
+
+        // Initial check
+        checkForNewReports();
+
+        // Check every 30 seconds for new reports (but don't override real-time updates)
+        setInterval(checkForNewReports, 30000);
+
+        // Listen for report viewed events from the reports page
+        window.addEventListener('reportViewed', function(event) {
+            console.log('Report viewed event received:', event.detail.newCount);
+            updateReportsNotificationBadge(event.detail.newCount);
+        });
+
+        // Listen for custom events to force update the badge
+        window.addEventListener('forceUpdateReportsBadge', function(event) {
+            console.log('Force update badge event received:', event.detail.count);
+            updateReportsNotificationBadge(event.detail.count);
+        });
+    });
+</script>

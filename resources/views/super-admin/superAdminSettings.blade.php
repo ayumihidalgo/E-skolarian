@@ -29,7 +29,8 @@
             @endif
             <div class="p-4 sm:p-4 md:p-6 lg:p-8">
                 <!-- Profile Settings Heading -->
-                <h2 class="text-xl sm:text-xl md:text-2xl font-bold mb-4 sm:mb-4 md:mb-6 lg:mb-6 font-['Lexend']">SUPER ADMIN SETTINGS</h2>
+                <h2 class="text-xl sm:text-xl md:text-2xl font-bold mb-4 sm:mb-4 md:mb-6 lg:mb-6 font-['Lexend']">SUPER
+                    ADMIN SETTINGS</h2>
                 <a href="{{ route('super-admin.dashboard') }}"
                     class="inline-flex items-center mb-4 text-red-900 hover:text-red-700 font-semibold text-sm md:text-base font-['Lexend'] transition-colors">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 28 24">
@@ -71,7 +72,7 @@
                                 {{ strtoupper($user->role_name) }}
                             </h3>
                             <!-- <p class="uppercase text-sm md:text-sm lg:text-lg tracking-wider font-semibold font-['Lexend']">
-                                {{ $user->role }}</p> -->
+                                            {{ $user->role }}</p> -->
                             <div class="hidden sm:block">
                                 <div id="" class="mt-2 text-sm relative flex items-center gap-3">
                                     <div
@@ -139,7 +140,8 @@
                 <div
                     class="bg-white w-full [box-shadow:1px_2px_7px_rgba(0,0,0,0.3)] rounded-3xl  px-5 py-3 pb-7 space-y-3 sm:space-y-4 md:space-y-5 mb-28">
                     <div class="w-full">
-                        <h4 class="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold mb-1 sm:mb-2 mt-1 font-[Lexend]">
+                        <h4
+                            class="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold mb-1 sm:mb-2 mt-1 font-[Lexend]">
                             SECURITY
                             INFO
                         </h4>
@@ -210,15 +212,9 @@
                                 @endif
                             </div>
                             <div class="flex items-center justify-end w-1/3">
-                                @if (!empty($user->recovery_email))
-                                    <button
-                                        class="border px-5 py-2 border-red-950 font-regular cursor-pointer  rounded-xl text-red-950 text-base hover:bg-red-800 hover:border-red-800 hover:text-white transition-colors duration-300"
-                                        onclick="openPreRemoveRecoveryEmailModal()">Remove</button>
-                                @else
-                                    <button
-                                        class="border px-2 sm:px-5 py-2 border-red-950 font-regular cursor-pointer  rounded-lg sm:rounded-xl text-white bg-red-950 text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px] hover:bg-red-800 hover:border-red-800 hover:text-white transition-colors duration-300"
-                                        onclick="openRecoveryEmail()">Change</button>
-                                @endif
+                                <button
+                                    class="border px-2 sm:px-5 py-2 border-red-950 font-regular cursor-pointer  rounded-lg sm:rounded-xl text-white bg-red-950 text-[10px] sm:text-[12px] md:text-[14px] lg:text-[16px] hover:bg-red-800 hover:border-red-800 hover:text-white transition-colors duration-300"
+                                    onclick="openRecoveryEmail()">Change</button>
                             </div>
                         </div>
                         <!-- Recovery Email -->
@@ -795,6 +791,12 @@
             const modal = document.getElementById('recoveryEmailModal');
             modal.classList.add('hidden');
             modal.style.display = 'none';
+            document.getElementById('recoveryEmailForm').classList.remove('hidden');
+            document.getElementById('codeVerificationForm').classList.add('hidden');
+            document.getElementById('recovery_email').value = '';
+            document.getElementById('verification_code').value = '';
+            document.getElementById('recoveryEmailError').innerText = '';
+            document.getElementById('codeError').innerText = '';
         }
 
         document.addEventListener('DOMContentLoaded', function() {

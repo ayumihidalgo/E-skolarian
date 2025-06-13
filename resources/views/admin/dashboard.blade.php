@@ -2,8 +2,8 @@
 
 
 @section('content')
-    @include('components.adminSidebarComponent')
 
+    @include('components.adminSidebarComponent')
     <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
         @include('components.adminNavBarComponent')
         <div class="flex-grow p-6 space-y-6">
@@ -129,7 +129,7 @@
                                                 </div>
                                             </div>
                                             <p class="text-sm text-gray-500 mb-1">
-                                                Posted by {{ $announcement->user->username }} on
+                                                Posted by {{ $announcement->user->role_name }} on
                                                 {{ $announcement->created_at->format('F j, Y') }}
                                                 @if($announcement->deadline)
                                                     @php
@@ -148,15 +148,15 @@
                                                     $preview = $isLong
                                                         ? mb_substr($announcement->content, 0, $maxLength) . '...'
                                                         : $announcement->content;
-                                                    $meta = "Posted by {$announcement->user->username} on {$announcement->created_at->format('F j, Y',)}";
+                                                    $meta = "Posted by {$announcement->user->role_name} on {$announcement->created_at->format('F j, Y',)}";
                                                 @endphp
                                                 <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                                 @if ($isLong)
-                                                    <button class="text-indigo-600 hover:underline ml-2 text-sm"
+                                                    <button class="text-[#7B2323] hover:underline ml-2 text-sm"
                                                         onclick="showAnnouncementModal(
                                                     `{{ addslashes($announcement->title) }}`,
                                                     `{{ addslashes(e($announcement->content)) }}`,
-                                                    `Posted by {{ addslashes($announcement->user->username) }} on {{ $announcement->created_at->format('F j, Y') }}`,
+                                                    `Posted by {{ addslashes($announcement->user->role_name) }} on {{ $announcement->created_at->format('F j, Y') }}`,
                                                     'announcement'
                                                 )">
                                                         Read More
@@ -190,7 +190,11 @@
                                                 <tr class="border-b hover:bg-zinc-200">
                                                     <td class="px-3 py-2 font-bold text-orange-500">{{ $doc->control_tag }}</td>
                                                     <td class="px-3 py-2 max-w-[180px] truncate" title="{{ $doc->user->username ?? '' }}">
-                                                        {{ $doc->user->username ?? '' }}
+                                                        @if(is_null($doc->user_id))
+                                                            Guest Student
+                                                        @else
+                                                            {{ $doc->user->username ?? 'Unknown' }}
+                                                        @endif
                                                     </td>
                                                     <td class="px-3 py-2 max-w-[200px] truncate" title="{{ $doc->subject }}">
                                                         {{ $doc->subject }}
@@ -300,7 +304,7 @@
                                             @endif
                                         </div>
                                         <p class="text-sm text-gray-500 mb-2">
-                                            Posted by {{ $announcement->user->username }} on
+                                            Posted by {{ $announcement->user->role_name }} on
                                             {{ $announcement->created_at->format('F j, Y') }}
                                             @if($announcement->deadline)
                                                 @php
@@ -322,11 +326,11 @@
                                             @endphp
                                             <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                             @if ($isLong)
-                                                <button class="text-indigo-600 hover:underline ml-2 text-sm"
+                                                <button class="text-[#7B2323] hover:underline ml-2 text-sm"
                                                     onclick="showAnnouncementModal(
                                     `{{ addslashes($announcement->title) }}`,
                                     `{{ addslashes(e($announcement->content)) }}`,
-                                    `Posted by {{ addslashes($announcement->user->username) }} on {{ $announcement->created_at->format('F j, Y g:i A') }}`,
+                                    `Posted by {{ addslashes($announcement->user->role_name) }} on {{ $announcement->created_at->format('F j, Y g:i A') }}`,
                                     '{{ $showArchive ? 'archive' : 'previous' }}'
                                 )">
                                                     Read More
@@ -353,7 +357,7 @@
                                 <span class="font-semibold text-lg">Post New Announcement</span>
                                 <button onclick="closePostAnnouncementModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
                             </div>
-                            <form id="announcementForm" action="{{ route('announcements.store') }}" method="POST" class="space-y-4">
+                            <form id="announcementForm" action="{{ route('announcements.store') }}" method="POST" class="show-loader-on-submit space-y-4">
                                 @csrf
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
@@ -448,7 +452,7 @@
                 <span class="font-semibold text-lg">Edit Announcement</span>
                 <button onclick="closeEditModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
             </div>
-            <form id="editAnnouncementForm" method="POST">
+            <form id="editAnnouncementForm" method="POST" class="show-loader-on-submit">
                 @csrf
                 @method('PUT')
                 <input type="hidden" id="editAnnouncementId" name="id">
@@ -604,6 +608,7 @@
             </div>
         </div>
     </div>
+    
     <script>
         function showAnnouncementModal(title, content, meta = '', type = 'announcement') {
             document.getElementById('modalTitle').textContent = title;
@@ -1245,6 +1250,7 @@ document.addEventListener('keydown', function(e) {
 });
 
     </script>
+    
 <!-- Discard Changes Modal -->
 <div id="discardChangesModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
     <div class="absolute inset-0 bg-black opacity-20"></div>
@@ -1259,10 +1265,6 @@ document.addEventListener('keydown', function(e) {
         <div class="flex justify-end gap-2">
             <button onclick="confirmDiscardChanges()" class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Close without saving</button>
             <button onclick="closeDiscardChangesModal()" class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Keep editing</button>
-        </div>
-    </div>
-</div>
-<!-- Edit Not Allowed Toast -->
     <div id="EditNotAllowedToast"
         class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
         role="alert">
@@ -1334,4 +1336,7 @@ document.addEventListener('keydown', function(e) {
             onclick="document.getElementById('DeleteNotAllowedToast').style.display='none';">&times;</button>
     </div>
 </div>
+
+
+
 @endsection

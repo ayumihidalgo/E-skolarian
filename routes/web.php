@@ -52,8 +52,6 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
         ->name('guest.verifyForm');
     Route::post('/guest/verify-otp', [GuestSubmitDocumentController::class, 'verifyOtp'])
         ->name('guest.verifyOtp');
-    Route::get('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])
-        ->name('guest.resendOtp');
     Route::post('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])
         ->name('guest.resendOtp');
     Route::get('/guest/submit', [GuestSubmitDocumentController::class, 'showSubmissionForm'])
@@ -176,11 +174,18 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiv
     Route::get('/super-admin/reports', [App\Http\Controllers\ReportsController::class, 'index'])->name('super-admin.reports');
 
 
-    Route::get('/super-admin/reports/all', [\App\Http\Controllers\SuperAdminController::class, 'allReports'])->name('super-admin.reports.all');
+    Route::get('/super-admin/reports/all', [SuperAdminController::class, 'getAllReports'])->name('super-admin.reports.all');
 
 
     Route::get('/super-admin/activity-logs', [App\Http\Controllers\SuperAdminController::class, 'activityLogs'])->name('super-admin.activity-logs');
     Route::get('/super-admin/activity-logs/all', [\App\Http\Controllers\SuperAdminController::class, 'allActivityLogs'])->name('super-admin.activity-logs.all');
+
+    // Add these routes:
+    Route::post('/super-admin/reports/{report}/mark-as-viewed', [SuperAdminController::class, 'markReportAsViewed'])->name('super-admin.reports.mark-viewed');
+    Route::get('/super-admin/reports/all', [SuperAdminController::class, 'getAllReports'])->name('super-admin.reports.all');
+
+    // Add this new route for getting unviewed reports count
+    Route::get('/super-admin/reports/unviewed-count', [SuperAdminController::class, 'getUnviewedReportsCount'])->name('super-admin.reports.unviewed-count');
 });
 
 Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
@@ -402,6 +407,57 @@ Route::get('/documents/{filename}', function ($filename) {
 })->name('document.view')->middleware('auth');
 
 
+Route::get('/guest/document/{id}/view', [App\Http\Controllers\GuestDocumentController::class, 'view'])
+    ->name('guest.document.view');
+
+// Guest Document Viewing Route
+Route::get('/documents/guest/{filename}', function ($filename) {
+    // Set headers for WebAssembly threads support and PDF viewing
+    header("Cross-Origin-Embedder-Policy: require-corp");
+    header("Cross-Origin-Opener-Policy: same-origin");
+
+    $paths = [
+        storage_path('app/public/documents/' . $filename),
+        public_path('storage/documents/' . $filename),
+    ];
+
+    $filePath = null;
+    foreach ($paths as $path) {
+        if (file_exists($path)) {
+            $filePath = $path;
+            break;
+        }
+    }
+
+    if (!$filePath) {
+        return response()->json(['error' => 'File not found'], 404);
+    }
+
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $contentType = 'application/octet-stream';
+
+    if ($extension === 'pdf') {
+        $contentType = 'application/pdf';
+    } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+        $contentType = 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension);
+    } elseif ($extension === 'docx') {
+        $contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    } elseif ($extension === 'doc') {
+        $contentType = 'application/msword';
+    }
+
+    return response()->file($filePath, [
+        'Content-Type' => $contentType,
+        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        'X-Content-Type-Options' => 'nosniff',
+        'Accept-Ranges' => 'bytes',
+        'Pragma' => 'public',
+        'Cache-Control' => 'public, max-age=86400',
+        'Cross-Origin-Embedder-Policy' => 'require-corp',
+        'Cross-Origin-Opener-Policy' => 'same-origin'
+    ]);
+})->name('document.guest.view');
+
 // Add specific route for comment attachments
 Route::get('/storage/comment_attachments/{filename}', function ($filename) {
     // Set headers for WebAssembly threads support
@@ -551,10 +607,7 @@ Route::post('/check-recovery-email', [SuperAdminController::class, 'checkRecover
 
 Route::get('/student/document-history/preview/{id}', [StudentDocumentController::class, 'documentHistoryPreview'])->name('student.document.history.preview');
 
-
-// Add this line with your other admin routes
 Route::get('/admin/documents/export/pdf', [App\Http\Controllers\DocumentExportController::class, 'exportPdf'])->name('admin.document.export.pdf')->middleware('auth');
-
 
 
 
