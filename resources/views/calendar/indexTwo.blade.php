@@ -877,20 +877,62 @@ function populateYearDropdown() {
 
 // Update custom controls based on calendar date
 // Update custom controls based on calendar date
+// Update custom controls based on calendar date
+// Update custom controls based on calendar date
 function updateCustomControls() {
     if (!calendarObj) return;
     
     const calendarDate = calendarObj.getDate();
     const monthDropdown = document.getElementById('month-dropdown');
     const yearDropdown = document.getElementById('year-dropdown');
+    const selectedMonthText = document.getElementById('selected-month');
+    const selectedYearText = document.getElementById('selected-year');
     const todayBtn = document.getElementById('today-btn');
     
+    // Update month dropdown and its display
     if (monthDropdown) {
-        monthDropdown.value = calendarDate.getMonth();
+        const newMonth = calendarDate.getMonth();
+        monthDropdown.value = newMonth;
+        
+        // Update visible month text display
+        if (selectedMonthText) {
+            selectedMonthText.textContent = monthDropdown.options[newMonth].text;
+            
+            // Update month checkmarks
+            document.querySelectorAll('.checkmark-icon').forEach(icon => {
+                icon.classList.add('invisible');
+            });
+            
+            // Show checkmark for selected month
+            const selectedOption = document.querySelector(`#month-dropdown-menu [data-value="${newMonth}"]`);
+            if (selectedOption) {
+                const checkmark = selectedOption.querySelector('.checkmark-icon');
+                if (checkmark) checkmark.classList.remove('invisible');
+            }
+        }
     }
     
+    // Update year dropdown and its display
     if (yearDropdown) {
-        yearDropdown.value = calendarDate.getFullYear();
+        const newYear = calendarDate.getFullYear();
+        yearDropdown.value = newYear;
+        
+        // Update visible year text display
+        if (selectedYearText) {
+            selectedYearText.textContent = newYear;
+            
+            // Update year checkmarks
+            document.querySelectorAll('.checkmark-icon-year').forEach(icon => {
+                icon.classList.add('invisible');
+            });
+            
+            // Show checkmark for selected year
+            const selectedOption = document.querySelector(`#year-options-container [data-value="${newYear}"]`);
+            if (selectedOption) {
+                const checkmark = selectedOption.querySelector('.checkmark-icon-year');
+                if (checkmark) checkmark.classList.remove('invisible');
+            }
+        }
     }
     
     // Show/hide today button based on current month

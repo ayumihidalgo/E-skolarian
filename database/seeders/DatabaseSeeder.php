@@ -18,7 +18,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'superadmin@gmail.com',
             'password' => Hash::make('@Eskolarian12345'),
             'role' => 'super admin',
-            'organization_acronym' => 'PUPSRC',
+            'organization_acronym' => 'IT Admin Staff',
             'profile_pic' => 'images/profiles/student.png', // Example value,
             'role_name' => 'Super Admin',
         ]);

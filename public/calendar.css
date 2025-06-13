@@ -980,6 +980,36 @@ div.fc-header-toolbar,
 }
 
 
+
+    /* Fixed width containers for navigation elements */
+    .nav-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+    
+    .arrow-container {
+        width: 40px;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .dropdowns-container {
+        display: flex;
+        align-items: center;
+        width: 200px;
+        justify-content: center;
+    }
+    
+    /* Make sure year and month text have consistent width */
+    #selected-month, #selected-year {
+        display: inline-block;
+        min-width: 70px;
+        text-align: center;
+    }
+
+
 [class*="fc-toolbar"] {
     display: none !important;
 }
