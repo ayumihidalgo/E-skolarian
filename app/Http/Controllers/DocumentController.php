@@ -110,6 +110,7 @@ class DocumentController extends Controller
             );
 
             if ($isGuest) {
+                Session::put('guest_submitted', true);
                 return redirect()->route('guest.submissionSuccess');
             }
             return back()->with('success', 'Document submitted successfully!');

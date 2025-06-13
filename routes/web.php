@@ -58,6 +58,8 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
         ->name('guest.submissionForm');
     Route::get('/guest/success', [GuestSubmitDocumentController::class, 'showSubmissionSuccess'])
         ->name('guest.submissionSuccess');
+    Route::post('/guest/logout', [GuestSubmitDocumentController::class, 'logout'])
+        ->name('guest.logout');
 
     // Student Login
     Route::get('/student/login', function () {
@@ -339,7 +341,7 @@ Route::post('/notifications/mark-as-unread', [NotificationController::class, 'ma
 Route::post('/notifications/delete', [NotificationController::class, 'deleteBulk'])->middleware('auth');
 Route::post('/notifications/delete-all', [NotificationController::class, 'deleteAll'])->middleware('auth');
 Route::middleware(['auth', 'role:student'])->group(function () {
-    Route::get('/notifications', [StudentNotificationController::class, 'index'])->name('student.notifications.index');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('student.notifications.index');
 });
 
 

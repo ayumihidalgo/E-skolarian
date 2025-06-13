@@ -43,7 +43,7 @@ class GuestSubmitDocumentController extends Controller
     public function showOtpForm()
     {
         if (!Session::has('guest_webmail')) {
-            return redirect()->route('guest.login');
+            return redirect()->route('guestLogin');
         }
 
         return view('guest.guestVerifyLogin');
@@ -76,13 +76,13 @@ class GuestSubmitDocumentController extends Controller
     public function resendOtp(Request $request)
     {
         if (!Session::has('guest_webmail')) {
-            return redirect()->route('guest.login');
+            return redirect()->route('guestLogin');
         }
 
         $email = Session::get('guest_webmail');
 
         if (!$email) {
-            return redirect()->route('guest.login')->withErrors(['email' => 'Session expired. Please log in again.']);
+            return redirect()->route('guestLogin')->withErrors(['email' => 'Session expired. Please log in again.']);
         }
 
         $otp = rand(100000, 999999);
@@ -99,7 +99,7 @@ class GuestSubmitDocumentController extends Controller
     public function showSubmissionForm()
     {
         if (!Session::get('guest_verified')) {
-            return redirect()->route('guest.login');
+            return redirect()->route('guestLogin');
         }
 
         // Fetch admin users for dropdown
@@ -115,6 +115,25 @@ class GuestSubmitDocumentController extends Controller
     // Step 6: Show document submission success
     public function showSubmissionSuccess()
     {
+        if (!Session::get('guest_verified')) {
+            return redirect()->route('guestLogin');
+        }
+
+        if (!Session::get('guest_submitted')) {
+            return redirect()->route('guest.submissionForm');
+        }
+        
         return view('guest.guestSubmissionSuccess');
+    }
+
+    public function logout(Request $request)
+    {
+        Session::forget('guest_webmail');
+        Session::forget('guest_otp');
+        Session::forget('otp_expires_at');
+        Session::forget('guest_verified');        
+        Session::flush();   // Clears all session data
+
+        return redirect()->route('landing');    // Sends user to landing page
     }
 }
