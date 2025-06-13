@@ -1,5 +1,6 @@
 @extends('base')
 
+
 @push('styles')
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/main.min.css" as="style">
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js" as="script">
@@ -8,6 +9,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 @endpush
+
 
 @section('content')
 @if(Auth::user()->role === 'admin')
@@ -21,7 +23,8 @@
     @include('components.teacherSideBarComponent')
 @endif
 
-<div id="main-content" class="transition-all duration-300 ml-[20%] lg:ml-[20%] md:ml-0 sm:ml-0">
+
+<div id="main-content" class="transition-all duration-300 ml-[20%]">
     <!-- Calendar content section -->
     <div class="py-8 px-10 lg:py-8 lg:px-10 md:py-4 md:px-4 sm:py-2 sm:px-2">
         <!-- Calendar header with title -->
@@ -29,12 +32,13 @@
 <div class="mb-8 lg:mb-8 md:mb-4 sm:mb-4 grid grid-cols-3">
     <!-- Left: Calendar Title -->
     <h1 class="text-black font-manrope text-2xl lg:text-3xl md:text-2xl sm:text-xl font-extrabold leading-normal">
-        Calendar 
+        Calendar
     </h1>
-    
+   
     <!-- Middle: Month & Year Dropdowns with Navigation Arrows (centered) -->
     <div class="flex items-center justify-center">
         <div class="flex items-center gap-6">
+
 
             <!-- Left Arrow (Previous Month) -->
             <button id="prev-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity mr-2">
@@ -42,7 +46,7 @@
                     <path d="M18.75 7.5L11.25 15L18.75 22.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </button>
-            
+           
             <!-- Custom Month Dropdown -->
             <div class="relative mx-2">
                 <!-- Custom dropdown trigger -->
@@ -54,7 +58,7 @@
                         </svg>
                     </div>
                 </div>
-                
+               
                 <!-- Custom dropdown menu -->
                 <div id="month-dropdown-menu" class="absolute mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 w-48 hidden">
                     <div class="py-1 max-h-60 overflow-y-auto">
@@ -156,7 +160,7 @@
                         </div>
                     </div>
                 </div>
-                
+               
                 <!-- Hidden native select (for functionality) -->
                 <select id="month-dropdown" class="hidden">
                     <option value="0">January</option>
@@ -173,7 +177,7 @@
                     <option value="11">December</option>
                 </select>
             </div>
-            
+           
             <!-- Year Dropdown (Custom) -->
             <div class="relative mx-2">
                 <!-- Custom dropdown trigger -->
@@ -185,19 +189,20 @@
                         </svg>
                     </div>
                 </div>
-                
+               
                 <!-- Custom dropdown menu -->
                 <div id="year-dropdown-menu" class="absolute mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 w-48 hidden">
                     <div id="year-options-container" class="py-1 max-h-60 overflow-y-auto">
                         <!-- Year options will be populated by JavaScript -->
                     </div>
                 </div>
-                
+               
                 <!-- Hidden native select (for functionality) -->
                 <select id="year-dropdown" class="hidden">
                     <!-- Years will be populated by JavaScript -->
                 </select>
             </div>
+
 
             <!-- Right Arrow (Next Month) -->
             <button id="next-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity ml-2">
@@ -207,7 +212,7 @@
             </button>
         </div>
     </div>
-    
+   
     <!-- Right: Today Button (fixed position) -->
     <div class="flex justify-end items-center pr-0">
     <button id="today-btn" class="flex justify-center items-center w-[85px] h-[44px] p-[10px] gap-[10px] flex-shrink-0 rounded-[22px] bg-[#DAA520] transition-colors invisible mr-8 hover:bg-[#c99418]">
@@ -216,11 +221,13 @@
 </div>
 </div>
 
+
         <!-- Calendar container with responsive dimensions -->
         <div id="calendar-container" class="bg-white rounded-lg overflow-hidden shadow-md relative z-[5] min-h-[600px] lg:min-h-[600px] md:min-h-[500px] sm:min-h-[400px]">
             <div id="calendar" class="min-h-[600px] lg:min-h-[600px] md:min-h-[500px] sm:min-h-[400px] w-full"></div>
         </div>
     </div>
+
 
     <div id="eventDetailsModal" class="fixed inset-0 modal-backdrop z-50 flex items-center justify-center hidden p-4">
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md lg:max-w-md md:max-w-sm sm:max-w-[95vw] modal-container modal-hidden">
@@ -251,9 +258,10 @@
                     </div>
                 </div>
             </div>
-            
+           
         </div>
     </div>
+
 
     <!-- Add footer here with proper spacing -->
     <div class="mt-auto">
@@ -263,25 +271,28 @@
 
 
 
+
+
+
 @push('scripts')
 <script>
     // Global calendar object
     let calendarObj;
-    
+   
     // Global tracking of current month/year for the Today button
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
-    
+   
     // Mobile detection
     function isMobileDevice() {
         return window.innerWidth <= 768;
     }
-    
+   
     // Adjust calendar settings for mobile
     function getCalendarConfig() {
         const isMobile = isMobileDevice();
-        
+       
         return {
             initialView: 'dayGridMonth',
             initialDate: new Date(),
@@ -301,18 +312,18 @@
             selectable: false,
             editable: false,
             contentHeight: 'auto',
-            
+           
             eventTimeFormat: {
                 hour: 'numeric',
                 minute: '2-digit',
                 meridiem: 'short'  
             },
-            
+           
             // Responsive event settings
             eventMaxStack: isMobile ? 2 : 3,
         };
     }
-    
+   
     document.addEventListener('DOMContentLoaded', function() {
         // Check if FullCalendar is loaded
         if (typeof FullCalendar === 'undefined') {
@@ -329,32 +340,80 @@
         }
     });
 
+
     // Make sure everything is loaded before initializing
     function initializeCalendarWhenReady() {
         // Small delay to ensure DOM is fully ready
         setTimeout(() => {
             initCalendar();
+            setupCalendarResizeObserver(); // NEW LINE ADDED HERE
         }, 100);
     }
-    
+   
+    // NEW FUNCTION - Setup resize observer to handle sidebar toggle effects
+    function setupCalendarResizeObserver() {
+        const mainContent = document.getElementById('main-content');
+        const calendarContainer = document.getElementById('calendar-container');
+       
+        if (!mainContent || !calendarContainer) return;
+       
+        // Create a ResizeObserver to watch for main content size changes
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                // Debounce the calendar update to avoid too many calls
+                clearTimeout(window.calendarResizeTimeout);
+                window.calendarResizeTimeout = setTimeout(() => {
+                    if (calendarObj) {
+                        console.log('Main content resized, updating calendar');
+                        calendarObj.updateSize();
+                       
+                        // Force a re-render after a short delay to ensure proper sizing
+                        setTimeout(() => {
+                            calendarObj.render();
+                        }, 50);
+                    }
+                }, 100);
+            }
+        });
+       
+        // Observe the main content for size changes
+        resizeObserver.observe(mainContent);
+       
+        // Also observe the calendar container itself
+        resizeObserver.observe(calendarContainer);
+       
+        // Additionally, listen for transition end events on the main content
+        mainContent.addEventListener('transitionend', (e) => {
+            if (e.target === mainContent && e.propertyName === 'margin-left') {
+                console.log('Sidebar transition completed, updating calendar');
+                setTimeout(() => {
+                    if (calendarObj) {
+                        calendarObj.updateSize();
+                        calendarObj.render();
+                    }
+                }, 50);
+            }
+        });
+    }
+   
     // Initialize the calendar
     function initCalendar() {
         const calendarEl = document.getElementById('calendar');
-        
+       
         if (!calendarEl) {
             console.error('Calendar element not found');
             return;
         }
-        
+       
         try {
             const config = getCalendarConfig();
             calendarObj = new FullCalendar.Calendar(calendarEl, {
                 ...config,
-                
+               
                 // Complete events function
                 events: function(fetchInfo, successCallback, failureCallback) {
                     console.log('=== Fetching announcements only ===');
-                    
+                   
                     fetch('/calendar/announcements')
                         .then(response => {
                             console.log('Announcements response:', response.status);
@@ -373,25 +432,25 @@
                             successCallback([]);
                         });
                 },
-                
+               
                 // Handle date changes
                 datesSet: function() {
                     updateCustomControls();
                     checkIfCurrentMonth();
                     adjustCalendarHeight();
                 },
-                
+               
                 // Handle event clicks (read-only)
                 eventClick: function(info) {
                     console.log('Event clicked:', info.event);
                     info.jsEvent.preventDefault();
                     openAnnouncementDetailsModal(info.event);
                 },
-                
+               
                 // Display settings
                 eventDisplay: 'block',
                 eventMaxStack: config.eventMaxStack,
-                
+               
                 // Handle event styling
                 eventDidMount: function(info) {
                     // Add announcement styling
@@ -403,7 +462,7 @@
                         info.el.style.borderLeft = '4px solid #0085FF';
                         info.el.setAttribute('title', 'Approved Proposal: ' + info.event.title);
                     }
-                    
+                   
                     // Handle long titles
                     const titleEl = info.el.querySelector('.fc-event-title');
                     if (titleEl) {
@@ -413,19 +472,16 @@
                     }
                 }
             });
-            
+           
             // Render calendar immediately
             calendarObj.render();
             setupCustomNavigation();
-
-
-            
-            
+           
             // Setup year dropdown functionality
             setupYearDropdown();
         } catch (error) {
             console.error('Error initializing calendar:', error);
-            document.getElementById('calendar').innerHTML = 
+            document.getElementById('calendar').innerHTML =
                 '<div class="flex items-center justify-center h-full p-8">' +
                 '<div class="text-red-600 text-center">' +
                 '<p class="text-xl font-bold">Calendar could not be loaded</p>' +
@@ -433,6 +489,8 @@
                 '</div></div>';
         }
     }
+
+
 
 
     // Month dropdown functionality
@@ -443,17 +501,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const monthDropdownMenu = document.getElementById('month-dropdown-menu');
     const selectedMonthText = document.getElementById('selected-month');
     const monthOptions = document.querySelectorAll('#month-dropdown-menu [data-value]');
-    
+   
     // Set initial display based on current month
     function updateSelectedMonth() {
         const monthValue = parseInt(monthDropdown.value);
         selectedMonthText.textContent = monthDropdown.options[monthValue].text;
-        
+       
         // Update checkmarks
         document.querySelectorAll('.checkmark-icon').forEach(icon => {
             icon.classList.add('invisible');
         });
-        
+       
         // Show checkmark for selected month
         const selectedOption = document.querySelector(`#month-dropdown-menu [data-value="${monthValue}"]`);
         if (selectedOption) {
@@ -461,40 +519,41 @@ document.addEventListener('DOMContentLoaded', function() {
             if (checkmark) checkmark.classList.remove('invisible');
         }
     }
-    
+   
     // Toggle dropdown on click
     monthDropdownTrigger.addEventListener('click', () => {
         monthDropdownMenu.classList.toggle('hidden');
     });
-    
+   
     // Handle option clicks
     monthOptions.forEach(option => {
         option.addEventListener('click', () => {
             const value = option.getAttribute('data-value');
             monthDropdown.value = value;
             monthDropdownMenu.classList.add('hidden');
-            
+           
             // Update display
             updateSelectedMonth();
-            
+           
             // Trigger change event on the hidden select
             const event = new Event('change');
             monthDropdown.dispatchEvent(event);
         });
     });
-    
+   
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
         if (!monthDropdownTrigger.contains(e.target) && !monthDropdownMenu.contains(e.target)) {
             monthDropdownMenu.classList.add('hidden');
         }
     });
-    
+   
     // Update custom dropdown when the real one changes
     monthDropdown.addEventListener('change', updateSelectedMonth);
-    
+   
     // Initialize to current month
     updateSelectedMonth();
+
 
     // Year dropdown functionality
     const yearDropdown = document.getElementById('year-dropdown');
@@ -502,17 +561,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const yearDropdownMenu = document.getElementById('year-dropdown-menu');
     const selectedYearText = document.getElementById('selected-year');
     const yearOptionsContainer = document.getElementById('year-options-container');
-    
+   
     // Populate years (from current year - 10 to current year + 10)
     function populateYears() {
         const currentYear = new Date().getFullYear();
         const startYear = currentYear - 10;
         const endYear = currentYear + 10;
-        
+       
         // Clear existing options
         yearOptionsContainer.innerHTML = '';
         yearDropdown.innerHTML = '';
-        
+       
         // Add years
         for (let year = startYear; year <= endYear; year++) {
             // Add to hidden select
@@ -520,54 +579,54 @@ document.addEventListener('DOMContentLoaded', function() {
             option.value = year;
             option.textContent = year;
             yearDropdown.appendChild(option);
-            
+           
             // Add to custom dropdown
             const customOption = document.createElement('div');
             customOption.className = 'flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer';
             customOption.setAttribute('data-value', year);
-            
+           
             // Add checkmark
             const checkmark = document.createElement('div');
             checkmark.className = 'w-5 h-5 checkmark-icon-year' + (year === currentYear ? '' : ' invisible');
             checkmark.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
                 <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>`;
-            
+           
             const text = document.createElement('span');
             text.textContent = year;
-            
+           
             customOption.appendChild(checkmark);
             customOption.appendChild(text);
-            
+           
             // Handle click on year option
             customOption.addEventListener('click', () => {
                 yearDropdown.value = year;
                 yearDropdownMenu.classList.add('hidden');
                 updateSelectedYear();
-                
+               
                 // Trigger change event on the hidden select
                 const event = new Event('change');
                 yearDropdown.dispatchEvent(event);
             });
-            
+           
             yearOptionsContainer.appendChild(customOption);
         }
-        
+       
         // Set default to current year
         yearDropdown.value = currentYear;
         selectedYearText.textContent = currentYear;
     }
-    
+   
     // Update selected year display
     function updateSelectedYear() {
         const yearValue = yearDropdown.value;
         selectedYearText.textContent = yearValue;
-        
+       
         // Update checkmarks
         document.querySelectorAll('.checkmark-icon-year').forEach(icon => {
             icon.classList.add('invisible');
         });
-        
+       
         // Show checkmark for selected year
         const selectedOption = document.querySelector(`#year-options-container [data-value="${yearValue}"]`);
         if (selectedOption) {
@@ -575,62 +634,64 @@ document.addEventListener('DOMContentLoaded', function() {
             if (checkmark) checkmark.classList.remove('invisible');
         }
     }
-    
+   
     // Toggle dropdown on click
     yearDropdownTrigger.addEventListener('click', () => {
         yearDropdownMenu.classList.toggle('hidden');
     });
-    
+   
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
         if (!yearDropdownTrigger.contains(e.target) && !yearDropdownMenu.contains(e.target)) {
             yearDropdownMenu.classList.add('hidden');
         }
     });
-    
+   
     // Update custom dropdown when the real one changes
     yearDropdown.addEventListener('change', updateSelectedYear);
-    
+   
     // Initialize years
     populateYears();
     updateSelectedYear();
 });
 
+
     function adjustCalendarHeight() {
     if (!calendarObj) return;
-    
+   
     const date = calendarObj.getDate();
     const currentView = calendarObj.view;
     const calendarContainer = document.getElementById('calendar-container');
     const calendar = document.getElementById('calendar');
-    
+   
     if (!calendarContainer || !calendar) return;
-    
+   
     // Calculate number of weeks in the current month view
     const start = currentView.currentStart;
     const end = currentView.currentEnd;
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const weeksCount = Math.ceil(diffDays / 7);
-    
+   
     // Base height per week (adjust as needed)
     const baseHeightPerWeek = 120; // pixels
     const minHeight = 400; // minimum height
-    
+   
     // Calculate new height based on weeks
     let newHeight = Math.max(weeksCount * baseHeightPerWeek, minHeight);
-    
+   
     // Apply the new height
     calendarContainer.style.minHeight = `${newHeight}px`;
     calendar.style.minHeight = `${newHeight}px`;
-    
+   
     // Force calendar to update its size
     calendarObj.updateSize();
 }
 
+
     function debugCalendarData() {
         console.log('=== DEBUG: Testing announcement fetch ===');
-        
+       
         fetch('/calendar/announcements')
             .then(response => {
                 console.log('Response status:', response.status);
@@ -645,31 +706,33 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+
     // Call this function after calendar initialization
     setTimeout(debugCalendarData, 2000);
 
+
     function openAnnouncementDetailsModal(event) {
         console.log("Opening announcement details modal for:", event.title);
-        
+       
         const modal = document.getElementById('eventDetailsModal');
         const modalContent = modal.querySelector('.modal-container');
-        
+       
         if (!modal) {
             console.error('Event details modal not found');
             return;
         }
-        
+       
         // Populate the modal with announcement details
         const titleElement = document.getElementById('detail-title');
         const dateElement = document.getElementById('detail-date');
         const colorIndicator = document.getElementById('event-color-indicator');
         const actionContainer = document.getElementById('event-action-buttons');
-        
+       
         if (titleElement) {
             // Use full title and apply word wrapping styles for announcements only
             const fullTitle = event.extendedProps.full_title || event.title.replace('📢 ', '');
             titleElement.textContent = fullTitle;
-            
+           
             // Apply word wrapping styles specifically for announcements
             titleElement.style.wordWrap = 'break-word';
             titleElement.style.overflowWrap = 'break-word';
@@ -677,13 +740,13 @@ document.addEventListener('DOMContentLoaded', function() {
             titleElement.style.maxWidth = '100%';
             titleElement.style.lineHeight = '1.4';
         }
-        
+       
         // Format and display the date
         if (dateElement) {
             let dateStr = '';
             const startDate = event.start ? new Date(event.start) : null;
             const endDate = event.end ? new Date(event.end) : null;
-            
+           
             if (startDate) {
                 const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                 if (event.allDay) {
@@ -701,12 +764,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             dateElement.textContent = dateStr;
         }
-        
+       
         // Set event color indicator
         if (colorIndicator) {
             colorIndicator.style.backgroundColor = '#FF6347';
         }
-        
+       
         // Show announcement-specific content
         if (actionContainer) {
             actionContainer.innerHTML = `
@@ -717,7 +780,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <p class="text-xs text-orange-600 font-medium">📢 Deadline Announcement.</p>
             `;
         }
-        
+       
         // Show modal with animation
         modal.classList.remove('hidden');
         setTimeout(() => {
@@ -726,74 +789,79 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 10);
     }
 
+
 function closeEventDetailsModal() {
     console.log("Closing event details modal");
-    
+   
     const modal = document.getElementById('eventDetailsModal');
     const modalContent = modal.querySelector('.modal-container');
-    
+   
     if (modal && modalContent) {
         // Force hide the modal content first
         modalContent.style.display = 'none';
         modalContent.classList.remove('modal-visible');
         modalContent.classList.add('modal-hidden');
-        
+       
         // Then hide the modal backdrop
         modal.style.display = 'none';
         modal.classList.add('hidden');
-        
+       
         // Reset modal content after hiding
         setTimeout(() => {
             const titleEl = document.getElementById('detail-title');
             const dateEl = document.getElementById('detail-date');
             if (titleEl) titleEl.textContent = '';
             if (dateEl) dateEl.textContent = '';
-            
+           
             // Remove inline styles
             modalContent.style.display = '';
             modal.style.display = '';
-            
+           
             console.log("Modal closed");
         }, 50);
     }
 }
 
+
     // Check if current month is showing
     function checkIfCurrentMonth() {
         if (!calendarObj) return;
-        
+       
         const calendarDate = calendarObj.getDate();
         const calendarMonth = calendarDate.getMonth();
         const calendarYear = calendarDate.getFullYear();
-        
+       
         const todayButton = document.querySelector('.fc-today-button');
         if (!todayButton) return;
-        
+       
         // Hide Today button if already on current month
-        todayButton.style.display = 
-            (currentMonth === calendarMonth && currentYear === calendarYear) 
+        todayButton.style.display =
+            (currentMonth === calendarMonth && currentYear === calendarYear)
             ? 'none' : '';
     }
+
 
     // Improved Year Dropdown implementation
     function setupYearDropdown() {
         // Find the title element and set up a click handler
         const titleElement = document.querySelector('.fc-toolbar-title');
         if (!titleElement) return;
-        
+       
         // Make the title element clickable
         titleElement.style.cursor = 'pointer';
         titleElement.setAttribute('title', 'Click to change year');
-        
+       
         titleElement.addEventListener('click', function() {
             // Extract the current year
             const match = this.textContent.match(/\d{4}/);
             if (!match) return;
-            
+           
             const currentYear = parseInt(match[0]);
             showYearSelector(currentYear, this);
         });
     }
+
+
 
 
     // Setup custom navigation
@@ -804,27 +872,27 @@ function setupCustomNavigation() {
     const monthDropdown = document.getElementById('month-dropdown');
     const yearDropdown = document.getElementById('year-dropdown');
     const todayBtn = document.getElementById('today-btn');
-    
+   
     // Populate year dropdown
     populateYearDropdown();
-    
+   
     // Set initial values
     updateCustomControls();
-    
+   
     // Handle previous month button click
     if (prevBtn) {
         prevBtn.addEventListener('click', function() {
             calendarObj.prev();
         });
     }
-    
+   
     // Handle next month button click
     if (nextBtn) {
         nextBtn.addEventListener('click', function() {
             calendarObj.next();
         });
     }
-    
+   
     // Handle month dropdown change
     if (monthDropdown) {
         monthDropdown.addEventListener('change', function() {
@@ -834,7 +902,7 @@ function setupCustomNavigation() {
             calendarObj.gotoDate(newDate);
         });
     }
-    
+   
     // Handle year dropdown change
     if (yearDropdown) {
         yearDropdown.addEventListener('change', function() {
@@ -844,7 +912,7 @@ function setupCustomNavigation() {
             calendarObj.gotoDate(newDate);
         });
     }
-    
+   
     // Handle today button click
     if (todayBtn) {
         todayBtn.addEventListener('click', function() {
@@ -853,17 +921,18 @@ function setupCustomNavigation() {
     }
 }
 
+
 // Populate year dropdown with range of years
 function populateYearDropdown() {
     const yearDropdown = document.getElementById('year-dropdown');
     if (!yearDropdown) return;
-    
+   
     const currentYear = new Date().getFullYear();
     const startYear = currentYear - 10;
     const endYear = currentYear + 10;
-    
+   
     yearDropdown.innerHTML = '';
-    
+   
     for (let year = startYear; year <= endYear; year++) {
         const option = document.createElement('option');
         option.value = year;
@@ -875,34 +944,35 @@ function populateYearDropdown() {
     }
 }
 
+
 // Update custom controls based on calendar date
 // Update custom controls based on calendar date
 // Update custom controls based on calendar date
 // Update custom controls based on calendar date
 function updateCustomControls() {
     if (!calendarObj) return;
-    
+   
     const calendarDate = calendarObj.getDate();
     const monthDropdown = document.getElementById('month-dropdown');
     const yearDropdown = document.getElementById('year-dropdown');
     const selectedMonthText = document.getElementById('selected-month');
     const selectedYearText = document.getElementById('selected-year');
     const todayBtn = document.getElementById('today-btn');
-    
+   
     // Update month dropdown and its display
     if (monthDropdown) {
         const newMonth = calendarDate.getMonth();
         monthDropdown.value = newMonth;
-        
+       
         // Update visible month text display
         if (selectedMonthText) {
             selectedMonthText.textContent = monthDropdown.options[newMonth].text;
-            
+           
             // Update month checkmarks
             document.querySelectorAll('.checkmark-icon').forEach(icon => {
                 icon.classList.add('invisible');
             });
-            
+           
             // Show checkmark for selected month
             const selectedOption = document.querySelector(`#month-dropdown-menu [data-value="${newMonth}"]`);
             if (selectedOption) {
@@ -911,21 +981,21 @@ function updateCustomControls() {
             }
         }
     }
-    
+   
     // Update year dropdown and its display
     if (yearDropdown) {
         const newYear = calendarDate.getFullYear();
         yearDropdown.value = newYear;
-        
+       
         // Update visible year text display
         if (selectedYearText) {
             selectedYearText.textContent = newYear;
-            
+           
             // Update year checkmarks
             document.querySelectorAll('.checkmark-icon-year').forEach(icon => {
                 icon.classList.add('invisible');
             });
-            
+           
             // Show checkmark for selected year
             const selectedOption = document.querySelector(`#year-options-container [data-value="${newYear}"]`);
             if (selectedOption) {
@@ -934,17 +1004,18 @@ function updateCustomControls() {
             }
         }
     }
-    
+   
     // Show/hide today button based on current month
     if (todayBtn) {
-        const isCurrentMonth = 
-            currentMonth === calendarDate.getMonth() && 
+        const isCurrentMonth =
+            currentMonth === calendarDate.getMonth() &&
             currentYear === calendarDate.getFullYear();
-        
+       
         // Use visibility instead of display to maintain layout
         todayBtn.style.visibility = isCurrentMonth ? 'hidden' : 'visible';
     }
 }
+
 
     // Improved Year Selector with better spacing
     function showYearSelector(currentYear, titleElement) {
@@ -954,35 +1025,35 @@ function updateCustomControls() {
             existingSelector.remove();
             return;
         }
-        
+       
         // Create a custom inline year selector
         const yearSelector = document.createElement('div');
         yearSelector.id = 'year-selector';
         yearSelector.className = 'flex items-center bg-white border border-gray-300 rounded-md';
         yearSelector.style.position = 'absolute';
         yearSelector.style.zIndex = '100';
-        
+       
         // Position it over the title
         const rect = titleElement.getBoundingClientRect();
         yearSelector.style.top = (rect.top + window.scrollY) + 'px';
         yearSelector.style.left = (rect.left + window.scrollX + rect.width/2 - 100) + 'px';
         yearSelector.style.width = '220px';
-        
+       
         // Add a select dropdown
         const selectContainer = document.createElement('div');
         selectContainer.className = 'relative flex-grow';
-        
+       
         const select = document.createElement('select');
         select.className = 'block w-full px-3 py-2 text-base font-medium text-gray-900 focus:outline-none';
         select.style.border = 'none';
         select.style.backgroundColor = 'transparent';
         select.style.appearance = 'none';
         select.style.paddingRight = '1.5rem';
-        
+       
         // Add years (20 years back, 20 years forward)
         const startYear = currentYear - 20;
         const endYear = currentYear + 20;
-        
+       
         for (let year = startYear; year <= endYear; year++) {
             const option = document.createElement('option');
             option.value = year;
@@ -992,7 +1063,7 @@ function updateCustomControls() {
             }
             select.appendChild(option);
         }
-        
+       
         // Add change handler
         select.addEventListener('change', function() {
             const selectedYear = parseInt(this.value);
@@ -1001,15 +1072,15 @@ function updateCustomControls() {
             calendarObj.gotoDate(newDate);
             yearSelector.remove();
         });
-        
+       
         // Add custom arrow inside the select container
         const arrow = document.createElement('div');
         arrow.className = 'pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700';
         arrow.innerHTML = '<svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>';
-        
+       
         selectContainer.appendChild(select);
         selectContainer.appendChild(arrow);
-        
+       
         // Add a cancel button with more spacing
         const cancelBtn = document.createElement('button');
         cancelBtn.className = 'px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 border-l';
@@ -1021,15 +1092,15 @@ function updateCustomControls() {
         cancelBtn.addEventListener('click', function() {
             yearSelector.remove();
         });
-        
+       
         // Append everything
         yearSelector.appendChild(selectContainer);
         yearSelector.appendChild(cancelBtn);
         document.body.appendChild(yearSelector);
-        
+       
         // Auto-focus the select
         select.focus();
-        
+       
         // Close when clicking outside
         document.addEventListener('click', function closeSelector(e) {
             if (!yearSelector.contains(e.target) && e.target !== titleElement) {
@@ -1038,14 +1109,21 @@ function updateCustomControls() {
             }
         });
     }
-    
+   
     // Add window resize handler for responsive updates
     window.addEventListener('resize', function() {
-        if (calendarObj) {
-            calendarObj.updateSize();
-        }
+        clearTimeout(window.globalResizeTimeout);
+        window.globalResizeTimeout = setTimeout(() => {
+            if (calendarObj) {
+                console.log('Window resized, updating calendar');
+                calendarObj.updateSize();
+                calendarObj.render();
+            }
+        }, 150);
     });
 </script>
 @endpush
 
+
 @endsection
+
