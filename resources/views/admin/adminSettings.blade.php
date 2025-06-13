@@ -40,7 +40,8 @@
                             @if ($user->profile_pic)
                                 <!-- Show uploaded profile image -->
                                 <div class="border-3 border-gray-300 rounded-full w-full h-full overflow-hidden">
-                                    <img src="{{ asset('storage/' . $user->profile_pic) }}" alt="Profile" draggable="false"
+                                    <img src="{{ url('/profile-picture/' . basename($user->profile_pic)) }}" alt="Profile"
+                                        draggable="false"
                                         class="select-none pointer-events-none w-full h-full object-cover rounded-full">
                                 </div>
                             @else

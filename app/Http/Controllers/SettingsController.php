@@ -13,6 +13,7 @@ use Storage;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\RecoveryCodeMail;
+use App\Mail\PrimaryEmailCodeMail;
 
 
 
@@ -39,6 +40,66 @@ class SettingsController extends Controller
     {
         $user = Auth::user();
         return view('super-admin.superAdminSettings', compact('user'));
+    }
+    public function sendPrimaryEmailCode(Request $request)
+    {
+
+        $validator = \Validator::make($request->all(), [
+            'primary_email' => [
+                'required',
+                'email',
+                'unique:users,email,' . Auth::id() . ',id',
+                function ($attribute, $value, $fail) {
+                    if ($value === Auth::user()->recovery_email) {
+                        $fail('Primary email cannot be the same as your recovery email.');
+                    }
+                },
+            ],
+        ], [
+            'primary_email.required' => 'The primary email is required.',
+            'primary_email.email' => 'Please enter a valid email address.',
+            'primary_email.unique' => 'This email is already in use.',
+        ]);
+
+        $code = rand(100000, 999999);
+        session(['primary_email_code' => $code, 'pending_primary_email' => $request->input('primary_email')]);
+
+        // Send the code to the new email
+        Mail::to($request->input('primary_email'))->send(new \App\Mail\PrimaryEmailCodeMail($code, Auth::user()));
+
+        return response()->json(['success' => true]);
+    }
+
+    public function verifyPrimaryEmailCode(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|digits:6',
+        ], [
+            'code.required' => 'The verification code is required.',
+            'code.digits' => 'The verification code must be 6 digits.',
+        ]);
+
+        $code = $request->input('code');
+        $storedCode = session('primary_email_code');
+        $pendingEmail = session('pending_primary_email');
+        $user = Auth::user();
+
+        if ($code == $storedCode && $pendingEmail) {
+            $user->email = $pendingEmail;
+            $user->save();
+
+            session()->forget(['primary_email_code', 'pending_primary_email']);
+            return response()->json(['success' => true, 'message' => 'Primary email changed successfully.']);
+        }
+        $this->logActivity(
+            'Changed',
+            'Primary Email',
+            ($user->role === 'admin' ?
+                "{$user->role_name} changed their primary email." :
+                "{$user->organization_acronym} changed their primary email."
+            )
+        );
+        return response()->json(['success' => false, 'message' => 'Invalid code or session expired.']);
     }
     /**
      * Update the profile picture.
@@ -172,17 +233,35 @@ class SettingsController extends Controller
                 "{$user->organization_acronym} changed their password."
             )
         );
-        return response()->json(['message' => 'Password changed successfully.']);
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return response()->json(['logout' => true, 'message' => 'Password changed successfully.']);
     }
     public function sendRecoveryCode(Request $request)
     {
-        $request->validate([
-            'recovery_email' => 'required|email',
+        $validator = \Validator::make($request->all(), [
+            'recovery_email' => [
+                'required',
+                'email',
+                function ($attribute, $value, $fail) {
+                    if ($value === Auth::user()->email) {
+                        $fail('Recovery email cannot be the same as your primary email.');
+                    }
+                },
+            ],
         ], [
             'recovery_email.required' => 'The recovery email is required.',
             'recovery_email.email' => 'Please enter a valid email address.',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first('recovery_email')
+            ], 422);
+        }
 
         $code = rand(100000, 999999);
         session(['recovery_code' => $code, 'pending_recovery_email' => $request->input('recovery_email')]); // Store code and email in session

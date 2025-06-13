@@ -8,7 +8,7 @@
         <div class="flex-grow mb-10">
             <div class="flex-grow p-6 space-y-6">
                 <!-- Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
                         <div>
                             <p class="text-sm text-gray-500">Pending Documents</p>
@@ -128,13 +128,13 @@
                     </div>
                     <!-- Recent Documents -->
                     <div class="md:col-span-2 space-y-2">
-                        <h2 class="text-lg font-semibold">Recent Documents</h2>
-                        <div class="bg-zinc-100 rounded-xl shadow-md p-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Recent Documents</h2>
+                        <div class="bg-white rounded-xl shadow p-4">
                             @if ($recentDocuments->count())
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full text-sm text-left">
                                         <thead>
-                                            <tr class="border-b">
+                                            <tr class="border-b text-gray-500">
                                                 <th class="px-3 py-2 font-semibold">Tag</th>
                                                 <th class="px-3 py-2 font-semibold">Title</th>
                                                 <th class="px-3 py-2 font-semibold">Date</th>
@@ -145,44 +145,34 @@
                                         <tbody>
                                             @foreach ($recentDocuments as $doc)
                                                 @php
-                                                    // Check if the document has any review with status 'Under Review'
-                                                    $isUnderReview = $doc->reviews->contains(function ($review) {
-                                                        return strtolower($review->status) === 'under review';
-                                                    });
-                                                    $displayStatus = $isUnderReview
-                                                        ? 'Under Review'
-                                                        : ucfirst($doc->status);
+                                                    $isUnderReview = $doc->reviews->contains(fn($review) => strtolower($review->status) === 'under review');
+                                                    $displayStatus = $isUnderReview ? 'Under Review' : ucfirst($doc->status);
                                                     $statusColors = [
-                                                        'Approved' => 'bg-green-500 text-white',
-                                                        'Rejected' => 'bg-red-500 text-white',
-                                                        'Under Review' => 'bg-yellow-400 text-gray-800',
-                                                        'Pending' => 'bg-gray-400 text-white',
+                                                        'Approved' => 'bg-green-100 text-green-700',
+                                                        'Rejected' => 'bg-red-100 text-red-600',
+                                                        'Under Review' => 'bg-yellow-100 text-yellow-700',
+                                                        'Pending' => 'bg-gray-200 text-gray-600',
                                                     ];
-                                                    $badgeClass =
-                                                        $statusColors[$displayStatus] ?? 'bg-gray-400 text-white';
+                                                    $badgeClass = $statusColors[$displayStatus] ?? 'bg-gray-200 text-gray-600';
                                                 @endphp
                                                 <tr class="border-b"
                                                     onclick="showDocumentModal(
-                                                    '{{ $doc->id }}',
-                                                    '{{ \Carbon\Carbon::parse($doc->created_at)->format('F j, Y, g:i A') }}',
-                                                    '{{ addslashes($doc->subject) }}',
-                                                    '{{ addslashes($doc->type) }}',
-                                                    '{{ addslashes($doc->summary) }}',
-                                                    '{{ $doc->latestVersion ? addslashes($doc->latestVersion->file_path) : '' }}',
-                                                    '{{ addslashes(optional($doc->receiver)->role_name ?? '') }}',
-                                                    '{{ $displayStatus }}',
-                                                    '{{ $doc->control_tag }}'
-                                                )">
-                                                    <td class="px-3 py-2 font-bold text-orange-500">{{ $doc->control_tag }}
-                                                    </td>
-                                                    <td class="px-3 py-2 max-w-[200px] truncate"
-                                                        title="{{ $doc->subject }}">{{ $doc->subject }}</td>
-                                                    <td class="px-3 py-2">
-                                                        {{ \Carbon\Carbon::parse($doc->created_at)->format('n/j/Y') }}</td>
+                                                        '{{ $doc->id }}',
+                                                        '{{ \Carbon\Carbon::parse($doc->created_at)->format('F j, Y, g:i A') }}',
+                                                        '{{ addslashes($doc->subject) }}',
+                                                        '{{ addslashes($doc->type) }}',
+                                                        '{{ addslashes($doc->summary) }}',
+                                                        '{{ $doc->latestVersion ? addslashes($doc->latestVersion->file_path) : '' }}',
+                                                        '{{ addslashes(optional($doc->receiver)->role_name ?? '') }}',
+                                                        '{{ $displayStatus }}',
+                                                        '{{ $doc->control_tag }}'
+                                                    )">
+                                                    <td class="px-3 py-2 font-extrabold text-black">{{ $doc->control_tag }}</td>
+                                                    <td class="px-3 py-2 max-w-[200px] truncate" title="{{ $doc->subject }}">{{ $doc->subject }}</td>
+                                                    <td class="px-3 py-2">{{ \Carbon\Carbon::parse($doc->created_at)->format('n/j/Y') }}</td>
                                                     <td class="px-3 py-2">{{ $doc->type }}</td>
                                                     <td class="px-3 py-2">
-                                                        <span
-                                                            class="px-3 py-1 rounded-full text-xs font-semibold {{ $badgeClass }}">
+                                                        <span class="inline-block px-3 py-1 rounded-full text-xs font-medium {{ $badgeClass }}">
                                                             {{ $displayStatus }}
                                                         </span>
                                                     </td>
