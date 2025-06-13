@@ -43,9 +43,10 @@
                 </a>
             @endforeach
         </div>
-        <form method="POST" action="{{ route('student.logout') }}" class="mt-60">
+        <!-- Logout Button with Confirmation Modal -->
+        <form method="POST" action="{{ route('student.logout') }}" id="logoutForm" class="mt-60">
             @csrf
-            <button type="submit"
+            <button type="button" onclick="openLogoutModal()"
                 class="flex items-center space-x-3 text-white hover:text-yellow-400 transition duration-200 cursor-pointer">
                 <img src="{{ asset('images/logout.svg') }}" class="h-6 w-6" alt="Logout Icon">
                 <span class="sidebar-text font-[Manrope]">Logout</span>
@@ -106,8 +107,43 @@
         </div>
     </nav>
 </div>
-
+<!-- Logout Confirmation Modal (fixed and centered on screen) -->
+<div id="logoutConfirmationModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center z-[9999]">
+    <div
+        class="bg-white rounded-2xl w-[545px] max-w-[340px] sm:max-w-md shadow-xl relative space-y-2 px-6 py-5 md:py-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="sm:text-base md:text-lg font-semibold font-['Lexend']">Logout?</h2>
+            <button type="button" onclick="closeLogoutModal()"
+                class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+                <i class="text-base sm:text-xl fas fa-times"></i>
+            </button>
+        </div>
+        <p class="text-xs sm:text-xs md:text-sm text-gray-700 mb-6">
+            Are you sure you want to logout? You will need to login again to access your account.
+        </p>
+        <div class="flex justify-end gap-2">
+            <button type="button" onclick="closeLogoutModal()"
+                class="rounded-lg text-gray-900 font-medium px-4 py-2 border-1 border-gray-300 text-[11px] md:text-[12px] lg:text-[14px] font-[Lexend] hover:bg-gray-400 transition cursor-pointer">Cancel</button>
+            <button type="button" onclick="confirmLogout()"
+                class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[11px] md:text-[12px] lg:text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">Yes,
+                Logout</button>
+        </div>
+    </div>
+</div>
 <script>
+    function openLogoutModal() {
+        document.getElementById('logoutConfirmationModal').classList.remove('hidden');
+        document.getElementById('logoutConfirmationModal').classList.add('flex');
+    }
+
+    function closeLogoutModal() {
+        document.getElementById('logoutConfirmationModal').classList.add('hidden');
+        document.getElementById('logoutConfirmationModal').classList.remove('flex');
+    }
+
+    function confirmLogout() {
+        document.getElementById('logoutForm').submit();
+    }
     document.addEventListener('DOMContentLoaded', function() {
         const toggleBtn = document.getElementById('sidebarToggleBtn');
         const sidebar = document.getElementById('sidebar');
