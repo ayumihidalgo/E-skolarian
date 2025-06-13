@@ -529,7 +529,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function validateEmail() {
         const email = emailInput.value.trim();
         const MAX_EMAIL_LENGTH = 50;
-        const ALLOWED_DOMAINS = ['gmail.com', 'yahoo.com', 'iskolarngbayan.pup.edu.ph'];
+        const ALLOWED_DOMAINS = ['gmail.com', 'yahoo.com', 'iskolarngbayan.pup.edu.ph', 'pup.edu.ph']; // Added pup.edu.ph
 
         emailError.classList.add('hidden');
         emailInput.classList.remove('border-red-500');
@@ -548,7 +548,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const domain = email.split('@')[1]?.toLowerCase();
         
         if (!domain || !ALLOWED_DOMAINS.includes(domain)) {
-            showEmailError('Only @gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph email addresses are accepted');
+            showEmailError('Only @gmail.com, @yahoo.com, @iskolarngbayan.pup.edu.ph, or @pup.edu.ph email addresses are accepted'); // Updated error message
             return false;
         }
 
@@ -618,7 +618,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function validateRecoveryEmail() {
         const recoveryEmail = recoveryEmailInput.value.trim();
         const MAX_EMAIL_LENGTH = 50;
-        const ALLOWED_DOMAINS = ['gmail.com', 'yahoo.com', 'iskolarngbayan.pup.edu.ph'];
+        const ALLOWED_DOMAINS = ['gmail.com', 'yahoo.com', 'iskolarngbayan.pup.edu.ph', 'pup.edu.ph']; // Added pup.edu.ph
 
         recoveryEmailError.classList.add('hidden');
         recoveryEmailInput.classList.remove('border-red-500');
@@ -645,7 +645,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         // Domain validation
         if (!domain || !ALLOWED_DOMAINS.includes(domain)) {
-            showRecoveryEmailError('Only @gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph email addresses are accepted');
+            showRecoveryEmailError('Only @gmail.com, @yahoo.com, @iskolarngbayan.pup.edu.ph, or @pup.edu.ph email addresses are accepted'); // Updated error message
             return false;
         }
 

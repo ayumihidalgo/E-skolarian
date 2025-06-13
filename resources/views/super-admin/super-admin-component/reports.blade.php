@@ -1,5 +1,7 @@
 @extends('base')<!-- Extend the base component -->
-@section('content')<!-- Content section -->
+@section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<!-- Content section -->
 <!-- This is the main content area for the super admin dashboard -->
 @include('components.superAdminNavigation')
 
@@ -101,7 +103,7 @@
 
                         <!-- Data Rows -->
                         @forelse($reports as $report)
-                            <tr class="cursor-pointer hover:bg-gray-50" 
+                            <tr class="cursor-pointer hover:bg-gray-50 {{ !$report->viewed ? 'bg-red-50 border-l-4 border-red-500' : '' }}" 
                                     onclick="openReportModal({{ 
                                         json_encode([
                                             'id' => $report->id,
@@ -111,17 +113,24 @@
                                            'attachment' => $report->file_path ? asset('storage/' . $report->file_path) : null
                                         ]) 
                                 }})">
-                                <td class="w-[10%] px-13 py-2 whitespace-nowrap text-l text-[#000000] font-[Lexend]">
+                                <td class="w-[10%] px-13 py-2 whitespace-nowrap text-l {{ !$report->viewed ? 'text-red-700 font-semibold' : 'text-[#000000]' }} font-[Lexend]">
                                     {{ $report->created_at->format('F j, Y') }}<br>
-                                    <span class="text-m text-gray-500">{{ $report->created_at->format('h:i A') }}</span>
+                                    <span class="text-m {{ !$report->viewed ? 'text-red-500' : 'text-gray-500' }}">{{ $report->created_at->format('h:i A') }}</span>
                                 </td>
-                                <td class="w-[15%] px-6 py-1 whitespace-nowrap">
-                                    RPT-{{ str_pad($report->id, 3, '0', STR_PAD_LEFT) }}
+                                <td class="w-[15%] px-6 py-1 whitespace-nowrap {{ !$report->viewed ? 'text-red-700 font-bold' : '' }}">
+                                    @if(!$report->viewed)
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></div>
+                                            RPT-{{ str_pad($report->id, 3, '0', STR_PAD_LEFT) }}
+                                        </div>
+                                    @else
+                                        RPT-{{ str_pad($report->id, 3, '0', STR_PAD_LEFT) }}
+                                    @endif
                                 </td>
-                                <td class="w-[25%] px-6 py-2 whitespace-nowrap">
+                                <td class="w-[25%] px-6 py-2 whitespace-nowrap {{ !$report->viewed ? 'text-red-700 font-semibold' : '' }}">
                                     {{ $report->email }}
                                 </td>
-                                <td class="w-[45%] px-6 py-2 text-l text-gray-900 font-[Lexend] max-w-l truncate">
+                                <td class="w-[45%] px-6 py-2 text-l {{ !$report->viewed ? 'text-red-700 font-semibold' : 'text-gray-900' }} font-[Lexend] max-w-l truncate">
                                     <div class="max-w-full overflow-hidden text-ellipsis">
                                         {{ Str::limit($report->description, 85) }}
                                     </div>
@@ -134,7 +143,7 @@
             </div>
             
             <!-- Pagination -->
-            <div class="mt-4 flex justify-center mb-1 absolute bottom-20 left-0 w-full p-2 text-center">    
+            <div class="mt-4 flex justify-center mb-1 absolute bottom-8 left-0 w-full p-2 text-center">    
                 <nav>
                     <ul class="inline-flex items-center space-x-2">
                         <!-- Pagination will be dynamically updated by JavaScript -->
@@ -278,7 +287,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Fetch all reports from server on page load
     async function fetchAllReports() {
         try {
-            const response = await fetch('/super-admin/reports/all');
+            const response = await fetch('{{ url('/super-admin/reports/all') }}');
             allReports = await response.json();
             filteredReports = [...allReports];
             return true;
@@ -327,7 +336,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create report row element
     function createReportRow(report) {
         const row = document.createElement('tr');
-        row.className = 'cursor-pointer hover:bg-gray-50';
+        
+        // Add highlighting classes for unread reports
+        const isUnread = !report.viewed;
+        row.className = `cursor-pointer hover:bg-gray-50 ${isUnread ? 'bg-red-50 border-l-4 border-red-500' : ''}`;
         
         const dateObj = new Date(report.created_at);
         const formattedDate = dateObj.toLocaleDateString('en-US', { 
@@ -342,17 +354,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         row.innerHTML = `
-            <td class="w-[10%] px-13 py-2 whitespace-nowrap text-l text-[#000000] font-[Lexend]">
+            <td class="w-[10%] px-13 py-2 whitespace-nowrap text-l ${isUnread ? 'text-red-700 font-semibold' : 'text-[#000000]'} font-[Lexend]">
                 ${formattedDate}<br>
-                <span class="text-m text-gray-500">${formattedTime}</span>
+                <span class="text-m ${isUnread ? 'text-red-500' : 'text-gray-500'}">${formattedTime}</span>
             </td>
-            <td class="w-[15%] px-6 py-1 whitespace-nowrap">
-                RPT-${String(report.id).padStart(3, '0')}
+            <td class="w-[15%] px-6 py-1 whitespace-nowrap ${isUnread ? 'text-red-700 font-bold' : ''}">
+                ${isUnread ? `
+                    <div class="flex items-center">
+                        <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></div>
+                        RPT-${String(report.id).padStart(3, '0')}
+                    </div>
+                ` : `RPT-${String(report.id).padStart(3, '0')}`}
             </td>
-            <td class="w-[25%] px-6 py-2 whitespace-nowrap">
+            <td class="w-[25%] px-6 py-2 whitespace-nowrap ${isUnread ? 'text-red-700 font-semibold' : ''}">
                 ${report.email}
             </td>
-            <td class="w-[45%] px-6 py-2 text-l text-gray-900 font-[Lexend] max-w-l truncate">
+            <td class="w-[45%] px-6 py-2 text-l ${isUnread ? 'text-red-700 font-semibold' : 'text-gray-900'} font-[Lexend] max-w-l truncate">
                 <div class="max-w-full overflow-hidden text-ellipsis">
                     ${report.description.length > 85 ? report.description.substring(0, 85) + '...' : report.description}
                 </div>
@@ -1022,28 +1039,82 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Keep existing modal functions
+    // Update the openReportModal function in reports.blade.php
     window.openReportModal = function(report) {
+        console.log('Opening report modal for:', report);
+        
         // Mark report as viewed via AJAX
-        fetch(`/reports/${report.id}/mark-as-viewed`, {
+        fetch(`{{ url('/super-admin/reports') }}/${report.id}/mark-as-viewed`, {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
-        }).then(response => response.json())
-          .then(data => {
-              const notificationBadge = document.querySelector('.absolute.bg-red-500.rounded-full');
-              if (notificationBadge) {
-                  const newCount = parseInt(notificationBadge.textContent) - 1;
-                  if (newCount <= 0) {
-                      notificationBadge.remove();
-                  } else {
-                      notificationBadge.textContent = newCount;
-                  }
-              }
-          });
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data);
+            
+            if (data.success) {
+                // Update the report's viewed status in local data
+                const reportIndex = allReports.findIndex(r => r.id === report.id);
+                if (reportIndex !== -1) {
+                    allReports[reportIndex].viewed = true;
+                    const filteredIndex = filteredReports.findIndex(r => r.id === report.id);
+                    if (filteredIndex !== -1) {
+                        filteredReports[filteredIndex].viewed = true;
+                    }
+                    // Re-render to remove highlighting
+                    const currentDisplayReports = applyCurrentFilters(allReports);
+                    renderReports(currentDisplayReports, currentSearchTerm);
+                }
+                
+                // Update notification badge immediately on the reports page
+                const notificationBadge = document.getElementById('reportsNotificationBadge');
+                if (notificationBadge) {
+                    notificationBadge.textContent = data.newCount;
+                    if (data.newCount === 0) {
+                        notificationBadge.classList.add('hidden');
+                    } else {
+                        notificationBadge.classList.remove('hidden');
+                    }
+                }
 
+                // Dispatch event for navigation component - with more specific data
+                window.dispatchEvent(new CustomEvent('reportViewed', {
+                    detail: { 
+                        newCount: data.newCount,
+                        reportId: report.id,
+                        timestamp: Date.now()
+                    }
+                }));
+
+                // Also dispatch a force update event to ensure the navigation updates
+                window.dispatchEvent(new CustomEvent('forceUpdateReportsBadge', {
+                    detail: { 
+                        count: data.newCount,
+                        timestamp: Date.now()
+                    }
+                }));
+
+                console.log('Events dispatched with count:', data.newCount);
+            } else {
+                console.error('Failed to mark report as viewed:', data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error marking report as viewed:', error);
+        });
+
+        // Rest of your existing modal code...
         document.getElementById('modalReportId').textContent = 'RPT-' + String(report.id).padStart(3, '0');
 
         const date = new Date(report.created_at);
@@ -1076,9 +1147,9 @@ document.addEventListener('DOMContentLoaded', function() {
                target="_blank" 
                class="inline-flex items-center bg-yellow-500 px-4 py-2 rounded text-black font-bold hover:bg-yellow-600 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                    </path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                </path>
                 </svg>
                 <span class="whitespace-nowrap">View Attachment</span>
             </a>`;

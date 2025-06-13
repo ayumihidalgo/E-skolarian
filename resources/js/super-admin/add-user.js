@@ -1099,7 +1099,7 @@ function truncateOrgName(name, acronym, maxLength = 55) {
     async function validateStudentEmail() {
         const email = studentEmailInput.value.trim();
         const MAX_EMAIL_LENGTH = 50;
-        const ALLOWED_DOMAINS = ['@gmail.com', '@yahoo.com', '@iskolarngbayan.pup.edu.ph'];
+        const ALLOWED_DOMAINS = ['@gmail.com', '@yahoo.com', '@iskolarngbayan.pup.edu.ph', '@pup.edu.ph']; // Added @pup.edu.ph
 
         // Reset error state
         studentEmailError.classList.add('hidden');
@@ -1128,7 +1128,7 @@ function truncateOrgName(name, acronym, maxLength = 55) {
         );
         
         if (!hasValidDomain) {
-            showStudentEmailError('Please use a valid @gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph email address');
+            showStudentEmailError('Please use a valid @gmail.com, @yahoo.com, @iskolarngbayan.pup.edu.ph, or @pup.edu.ph email address'); // Updated error message
             return false;
         }
 
@@ -1220,7 +1220,7 @@ function truncateOrgName(name, acronym, maxLength = 55) {
     async function validateAdminEmail() {
         const email = adminEmailInput.value.trim();
         const MAX_EMAIL_LENGTH = 100;
-        const ALLOWED_DOMAINS = ['@gmail.com', '@yahoo.com', '@iskolarngbayan.pup.edu.ph'];
+        const ALLOWED_DOMAINS = ['@gmail.com', '@yahoo.com', '@iskolarngbayan.pup.edu.ph', '@pup.edu.ph']; // Added @pup.edu.ph
 
         // Reset error state
         adminEmailError.classList.add('hidden');
@@ -1249,7 +1249,7 @@ function truncateOrgName(name, acronym, maxLength = 55) {
         );
         
         if (!hasValidDomain) {
-            showAdminEmailError('Please use a valid @gmail.com, @yahoo.com, or @iskolarngbayan.pup.edu.ph email address');
+            showAdminEmailError('Please use a valid @gmail.com, @yahoo.com, @iskolarngbayan.pup.edu.ph, or @pup.edu.ph email address'); // Updated error message
             return false;
         }
 

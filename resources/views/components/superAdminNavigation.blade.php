@@ -1,4 +1,5 @@
 @extends('base')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <!-- Top Navigation Header -->
 <div class="w-full bg-[#4d0F0F] h-[90px] flex items-center justify-between px-15">
     <!-- Left side: Logo and Text -->
@@ -32,6 +33,20 @@
                     class="group-hover:stroke-red-500" />
             </svg>
             <span class="text-[18px] group-hover:text-red-500">Reports</span>
+            
+            @php
+                $newReportsCount = \App\Models\ProblemReport::where('viewed', false)->count();
+            @endphp
+            
+            @if ($newReportsCount > 0)
+                <div id="reportsNotificationBadge" class="absolute -top-2 -right-2 bg-[#4D0F0F] border-1 border-white text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center">
+                    {{ $newReportsCount }}
+                </div>
+            @else
+                <div id="reportsNotificationBadge" class="absolute -top-2 -right-2 bg-[#4D0F0F] border-1 border-white text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] text-center hidden">
+                    0
+                </div>
+            @endif
         </a>
 
         <!-- Profile Picture Container -->
@@ -100,3 +115,65 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let lastKnownCount = null;
+
+    // Function to update the notification badge
+    function updateReportsNotificationBadge(count) {
+        const badge = document.getElementById('reportsNotificationBadge');
+        if (badge) {
+            lastKnownCount = count; // Store the last known count
+            badge.textContent = count;
+            if (count > 0) {
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+    }
+
+    // Check for updates every 30 seconds
+    function checkForNewReports() {
+        fetch('/super-admin/reports/unviewed-count', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Only update if we don't have a last known count or if the server count is different
+                // This prevents overriding real-time updates from the reports page
+                if (lastKnownCount === null || data.count !== lastKnownCount) {
+                    updateReportsNotificationBadge(data.count);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error checking for new reports:', error);
+        });
+    }
+
+    // Initial check
+    checkForNewReports();
+    
+    // Check every 30 seconds for new reports (but don't override real-time updates)
+    setInterval(checkForNewReports, 30000);
+
+    // Listen for report viewed events from the reports page
+    window.addEventListener('reportViewed', function(event) {
+        console.log('Report viewed event received:', event.detail.newCount);
+        updateReportsNotificationBadge(event.detail.newCount);
+    });
+
+    // Listen for custom events to force update the badge
+    window.addEventListener('forceUpdateReportsBadge', function(event) {
+        console.log('Force update badge event received:', event.detail.count);
+        updateReportsNotificationBadge(event.detail.count);
+    });
+});
+</script>

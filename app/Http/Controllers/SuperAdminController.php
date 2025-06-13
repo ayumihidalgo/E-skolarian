@@ -304,17 +304,25 @@ class SuperAdminController extends Controller
 
     public function markReportAsViewed(ProblemReport $report)
     {
-        $report->update(['viewed' => true]);
-        
-        // Get the new count of unviewed reports
-        $newCount = ProblemReport::where('viewed', false)
-                                ->where('created_at', '>=', now()->subDay())
-                                ->count();
-        
-        return response()->json([
-            'success' => true,
-            'newCount' => $newCount
-        ]);
+        try {
+            // Update the report as viewed
+            $report->update(['viewed' => true]);
+            
+            // Get the new count of unviewed reports (all unviewed, not just last 24 hours)
+            $newCount = ProblemReport::where('viewed', false)->count();
+            
+            return response()->json([
+                'success' => true,
+                'newCount' => $newCount,
+                'message' => 'Report marked as viewed'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error marking report as viewed: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to mark report as viewed'
+            ], 500);
+        }
     }
 
     public function checkRecoveryEmailExists(Request $request)
@@ -343,5 +351,52 @@ class SuperAdminController extends Controller
     {
         $reports = \App\Models\ProblemReport::orderBy('created_at', 'desc')->get();
         return response()->json($reports);
+    }
+
+    public function reports()
+    {
+        $reports = ProblemReport::orderBy('created_at', 'desc')->paginate(10);
+        
+        // Calculate new reports count
+        $newReportsCount = ProblemReport::where('viewed', false)
+                                  ->where('created_at', '>=', now()->subDay())
+                                  ->count();
+        
+        return view('super-admin.super-admin-component.reports', compact('reports', 'newReportsCount'));
+    }
+
+    public function getAllReports()
+    {
+        try {
+            $reports = ProblemReport::select('id', 'created_at', 'email', 'description', 'file_path', 'viewed')
+                                   ->orderBy('created_at', 'desc')
+                                   ->get();
+            
+            return response()->json($reports);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching all reports: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch reports'
+            ], 500);
+        }
+    }
+
+    public function getUnviewedReportsCount()
+    {
+        try {
+            $count = ProblemReport::where('viewed', false)->count();
+            
+            return response()->json([
+                'success' => true,
+                'count' => $count
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error getting unviewed reports count: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to get unviewed reports count'
+            ], 500);
+        }
     }
 }
