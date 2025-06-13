@@ -43,10 +43,122 @@
                 </svg>
             </button>
             
-
-
+            <!-- Custom Month Dropdown -->
             <div class="relative mx-2">
-                <select id="month-dropdown" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-2xl font-medium leading-normal hover:border-blue-500 focus:border-blue-500 focus:outline-none transition-colors">
+                <!-- Custom dropdown trigger -->
+                <div id="month-dropdown-trigger" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-2xl font-medium leading-normal hover:border-blue-500 focus:border-blue-500 transition-colors flex items-center">
+                    <span id="selected-month">January</span>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-1 text-gray-700 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" class="flex-shrink-0">
+                            <path d="M1 1.5L6 6.5L11 1.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Custom dropdown menu -->
+                <div id="month-dropdown-menu" class="absolute mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 w-48 hidden">
+                    <div class="py-1 max-h-60 overflow-y-auto">
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="0">
+                            <div class="w-5 h-5 checkmark-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>January</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="1">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>February</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="2">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>March</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="3">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>April</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="4">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>May</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="5">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>June</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="6">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>July</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="7">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>August</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="8">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>September</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="9">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>October</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="10">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>November</span>
+                        </div>
+                        <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="11">
+                            <div class="w-5 h-5 checkmark-icon invisible">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                                    <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <span>December</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hidden native select (for functionality) -->
+                <select id="month-dropdown" class="hidden">
                     <option value="0">January</option>
                     <option value="1">February</option>
                     <option value="2">March</option>
@@ -60,25 +172,32 @@
                     <option value="10">November</option>
                     <option value="11">December</option>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" class="flex-shrink-0">
-                        <path d="M1 1.5L6 6.5L11 1.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
             </div>
             
-            <!-- Year Dropdown -->
+            <!-- Year Dropdown (Custom) -->
             <div class="relative mx-2">
-                <select id="year-dropdown" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-2xl font-medium leading-normal hover:border-blue-500 focus:border-blue-500 focus:outline-none transition-colors">
+                <!-- Custom dropdown trigger -->
+                <div id="year-dropdown-trigger" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-2xl font-medium leading-normal hover:border-blue-500 focus:border-blue-500 transition-colors flex items-center">
+                    <span id="selected-year">2023</span>
+                    <div class="absolute inset-y-0 right-0 flex items-center px-1 text-gray-700 pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" class="flex-shrink-0">
+                            <path d="M1 1.5L6 6.5L11 1.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                
+                <!-- Custom dropdown menu -->
+                <div id="year-dropdown-menu" class="absolute mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 w-48 hidden">
+                    <div id="year-options-container" class="py-1 max-h-60 overflow-y-auto">
+                        <!-- Year options will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Hidden native select (for functionality) -->
+                <select id="year-dropdown" class="hidden">
                     <!-- Years will be populated by JavaScript -->
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-gray-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" class="flex-shrink-0">
-                        <path d="M1 1.5L6 6.5L11 1.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </div>
             </div>
-            
 
             <!-- Right Arrow (Next Month) -->
             <button id="next-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity ml-2">
@@ -314,6 +433,168 @@
                 '</div></div>';
         }
     }
+
+
+    // Month dropdown functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Setup custom month dropdown
+    const monthDropdown = document.getElementById('month-dropdown');
+    const monthDropdownTrigger = document.getElementById('month-dropdown-trigger');
+    const monthDropdownMenu = document.getElementById('month-dropdown-menu');
+    const selectedMonthText = document.getElementById('selected-month');
+    const monthOptions = document.querySelectorAll('#month-dropdown-menu [data-value]');
+    
+    // Set initial display based on current month
+    function updateSelectedMonth() {
+        const monthValue = parseInt(monthDropdown.value);
+        selectedMonthText.textContent = monthDropdown.options[monthValue].text;
+        
+        // Update checkmarks
+        document.querySelectorAll('.checkmark-icon').forEach(icon => {
+            icon.classList.add('invisible');
+        });
+        
+        // Show checkmark for selected month
+        const selectedOption = document.querySelector(`#month-dropdown-menu [data-value="${monthValue}"]`);
+        if (selectedOption) {
+            const checkmark = selectedOption.querySelector('.checkmark-icon');
+            if (checkmark) checkmark.classList.remove('invisible');
+        }
+    }
+    
+    // Toggle dropdown on click
+    monthDropdownTrigger.addEventListener('click', () => {
+        monthDropdownMenu.classList.toggle('hidden');
+    });
+    
+    // Handle option clicks
+    monthOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const value = option.getAttribute('data-value');
+            monthDropdown.value = value;
+            monthDropdownMenu.classList.add('hidden');
+            
+            // Update display
+            updateSelectedMonth();
+            
+            // Trigger change event on the hidden select
+            const event = new Event('change');
+            monthDropdown.dispatchEvent(event);
+        });
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!monthDropdownTrigger.contains(e.target) && !monthDropdownMenu.contains(e.target)) {
+            monthDropdownMenu.classList.add('hidden');
+        }
+    });
+    
+    // Update custom dropdown when the real one changes
+    monthDropdown.addEventListener('change', updateSelectedMonth);
+    
+    // Initialize to current month
+    updateSelectedMonth();
+
+    // Year dropdown functionality
+    const yearDropdown = document.getElementById('year-dropdown');
+    const yearDropdownTrigger = document.getElementById('year-dropdown-trigger');
+    const yearDropdownMenu = document.getElementById('year-dropdown-menu');
+    const selectedYearText = document.getElementById('selected-year');
+    const yearOptionsContainer = document.getElementById('year-options-container');
+    
+    // Populate years (from current year - 10 to current year + 10)
+    function populateYears() {
+        const currentYear = new Date().getFullYear();
+        const startYear = currentYear - 10;
+        const endYear = currentYear + 10;
+        
+        // Clear existing options
+        yearOptionsContainer.innerHTML = '';
+        yearDropdown.innerHTML = '';
+        
+        // Add years
+        for (let year = startYear; year <= endYear; year++) {
+            // Add to hidden select
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            yearDropdown.appendChild(option);
+            
+            // Add to custom dropdown
+            const customOption = document.createElement('div');
+            customOption.className = 'flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer';
+            customOption.setAttribute('data-value', year);
+            
+            // Add checkmark
+            const checkmark = document.createElement('div');
+            checkmark.className = 'w-5 h-5 checkmark-icon-year' + (year === currentYear ? '' : ' invisible');
+            checkmark.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 21" fill="none">
+                <path d="M16.6668 5.5L7.50016 14.6667L3.3335 10.5" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>`;
+            
+            const text = document.createElement('span');
+            text.textContent = year;
+            
+            customOption.appendChild(checkmark);
+            customOption.appendChild(text);
+            
+            // Handle click on year option
+            customOption.addEventListener('click', () => {
+                yearDropdown.value = year;
+                yearDropdownMenu.classList.add('hidden');
+                updateSelectedYear();
+                
+                // Trigger change event on the hidden select
+                const event = new Event('change');
+                yearDropdown.dispatchEvent(event);
+            });
+            
+            yearOptionsContainer.appendChild(customOption);
+        }
+        
+        // Set default to current year
+        yearDropdown.value = currentYear;
+        selectedYearText.textContent = currentYear;
+    }
+    
+    // Update selected year display
+    function updateSelectedYear() {
+        const yearValue = yearDropdown.value;
+        selectedYearText.textContent = yearValue;
+        
+        // Update checkmarks
+        document.querySelectorAll('.checkmark-icon-year').forEach(icon => {
+            icon.classList.add('invisible');
+        });
+        
+        // Show checkmark for selected year
+        const selectedOption = document.querySelector(`#year-options-container [data-value="${yearValue}"]`);
+        if (selectedOption) {
+            const checkmark = selectedOption.querySelector('.checkmark-icon-year');
+            if (checkmark) checkmark.classList.remove('invisible');
+        }
+    }
+    
+    // Toggle dropdown on click
+    yearDropdownTrigger.addEventListener('click', () => {
+        yearDropdownMenu.classList.toggle('hidden');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!yearDropdownTrigger.contains(e.target) && !yearDropdownMenu.contains(e.target)) {
+            yearDropdownMenu.classList.add('hidden');
+        }
+    });
+    
+    // Update custom dropdown when the real one changes
+    yearDropdown.addEventListener('change', updateSelectedYear);
+    
+    // Initialize years
+    populateYears();
+    updateSelectedYear();
+});
 
     function adjustCalendarHeight() {
     if (!calendarObj) return;
