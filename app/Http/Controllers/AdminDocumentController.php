@@ -6,9 +6,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\Document;
+use App\LogsActivity; 
 
 class AdminDocumentController extends Controller
 {
+    use LogsActivity; 
+
     public function preview($id)
     {
         $adminId = auth()->id();
@@ -209,12 +212,26 @@ class AdminDocumentController extends Controller
         }
 
         try {
+            // Get document titles before archiving for logging
+            $documents = DB::table('submitted_documents')
+                ->whereIn('id', $documentIds)
+                ->where('status', 'Approved')
+                ->get(['id', 'subject', 'control_tag']);
+
             DB::table('submitted_documents')
                 ->whereIn('id', $documentIds)
                 ->where('status', 'Approved')
                 ->update([
                     'archived_at' => now()
                 ]);
+
+            // Log the activity
+            $documentTitles = $documents->pluck('subject')->implode(', ');
+            $this->logActivity(
+                'Archived',
+                'Documents',
+                "Admin archived " . count($documentIds) . " document(s): " . $documentTitles
+            );
 
             return response()->json([
                 'success' => true,
@@ -352,11 +369,24 @@ class AdminDocumentController extends Controller
         }
 
         try {
+            // Get document titles before restoring for logging
+            $documents = DB::table('submitted_documents')
+                ->whereIn('id', $documentIds)
+                ->get(['id', 'subject', 'control_tag']);
+
             DB::table('submitted_documents')
                 ->whereIn('id', $documentIds)
                 ->update([
                     'archived_at' => null
                 ]);
+
+            // Log the activity
+            $documentTitles = $documents->pluck('subject')->implode(', ');
+            $this->logActivity(
+                'Restored',
+                'Documents',
+                "Admin restored " . count($documentIds) . " document(s): " . $documentTitles
+            );
 
             return response()->json([
                 'success' => true,

@@ -684,7 +684,7 @@ class DocumentExportController extends Controller
             <thead>
                 <tr>
                     <th class="col-tag">Control Tag</th>
-                    <th class="col-org">Username</th>
+                    <th class="col-org">Organization</th>
                     <th class="col-title">Title</th>
                     <th class="col-date">Date Submitted</th>
                     <th class="col-type">Type</th>
