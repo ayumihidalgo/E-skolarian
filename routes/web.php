@@ -214,7 +214,6 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
     Route::post('admin/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('admin.settings.verifyRecoveryCode');
     Route::post('admin/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('admin.settings.removeRecoveryEmail');
 
-
     // Document processing
     Route::get('/admin/documents', [DocumentReviewController::class, 'index'])->name('admin.documents');
     Route::get('/admin/documents/{id}/details', [DocumentReviewController::class, 'getDetails'])->name('admin.documents.details');
@@ -251,7 +250,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiv
 
 
     // ---------------- Shared Routes ----------------
-
+    Route::get('/profile-picture/{filename}', [UserController::class, 'serveProfileImage']);
 
     // Student Logout
     Route::post('/student/logout', [StudentLoginController::class, 'logout'])->name('student.logout');

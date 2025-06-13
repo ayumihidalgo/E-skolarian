@@ -47,7 +47,8 @@
                             @if ($user->profile_pic)
                                 <!-- Show uploaded profile image -->
                                 <div class="border-3 border-gray-300 rounded-full w-full h-full overflow-hidden">
-                                    <img src="{{ asset('storage/' . $user->profile_pic) }}" alt="Profile" draggable="false"
+                                    <img src="{{ url('/profile-picture/' . basename($user->profile_pic)) }}" alt="Profile"
+                                        draggable="false"
                                         class="select-none pointer-events-none w-full h-full object-cover rounded-full">
                                 </div>
                             @else
@@ -72,7 +73,7 @@
                                 {{ strtoupper($user->role_name) }}
                             </h3>
                             <!-- <p class="uppercase text-sm md:text-sm lg:text-lg tracking-wider font-semibold font-['Lexend']">
-                                                                                                                                                                                                {{ $user->role }}</p> -->
+                                                                                                                                                                                                    {{ $user->role }}</p> -->
                             <div class="hidden sm:block">
                                 <div id="" class="mt-2 text-sm relative flex items-center gap-3">
                                     <div
