@@ -198,7 +198,7 @@
                             <div class="flex items-center border-2 border-gray-500 p-2 rounded-[8px] w-full">
                                 <span class="text-gray-500 font-semibold whitespace-nowrap mr-2">No. of Hours<span
                                 class="required-indicator text-red-500"> *</span>:</span>
-                                <input type="number" id="hours" name="hours" min="1" step="1" autocomplete="off"
+                                <input type="number" id="hours" name="hours" min="1" max="10" step="1" autocomplete="off"
                                 class="min-w-0 w-full font-semibold focus:outline-none">
                             </div>
                         </div>
@@ -599,6 +599,16 @@
             });
         }
     });
+
+    // Limits hours field to 10 hrs
+        document.getElementById('hours').addEventListener('input', (e) => {
+            const value = parseInt(e.target.value, 10);
+            if (value > 10) {
+                e.target.value = 10;
+            } else if (value < 1) {
+                e.target.value = 1;
+            }
+        });
 
     // Limits inputs for hours field to positive integers (x > 0)
     const hoursInput = document.getElementById('hours');

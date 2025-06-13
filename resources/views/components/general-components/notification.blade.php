@@ -217,7 +217,7 @@
 </div>
 
 <!-- Confirmation Modal -->
-<div id="confirmationModal" class="fixed inset-0 z-500 items-center justify-center bg-gray-900/75 w-screen min-h-screen hidden">
+<div id="confirmationModal" class="fixed inset-0 z-500 items-center justify-center w-screen min-h-screen hidden bg-black/30 backdrop-blur-sm">
     <div class="bg-white rounded-lg shadow-lg p-6 w-[90vw] sm:w-full sm:max-w-xs">
         <h3 id="confirmationModalTitle" class="text-lg font-semibold mb-2 text-gray-800">Are you sure?</h3>
         <p id="confirmationModalMessage" class="text-gray-600 mb-4 text-sm sm:text-base">Are you sure you want to proceed?</p>
