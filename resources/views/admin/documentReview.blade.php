@@ -224,11 +224,13 @@
 
                                                 <!-- Organization -->
                                                 <td class="px-6 py-4 whitespace-nowrap">
-                                                    <div class="truncate w-48" title="{{ $document->organization }}">{{ $document->organization }}</div>
+                                                    <div class="truncate w-48" title="{{ $document->organization == 'Unknown' ? 'Guest' : $document->organization }}">
+                                                        {{ $document->organization == 'Unknown' ? 'Guest' : $document->organization }}
+                                                    </div>
                                                 </td>
 
                                                 <!-- Title -->
-                                                <td class="px-6 py-4 whitespace-nowrap">
+                                                <td class="px-6 py-4 whitespace-nowrap truncate">
                                                     <div class="truncate w-64" title="{{ $document->title }}">{{ $document->title }}</div>
                                                 </td>
 
@@ -345,7 +347,7 @@
                             <!-- Summary -->
                             <div>
                                 <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Summary</h2>
-                                <div class="bg-[#EFEFEF] text-gray-800 rounded-lg p-3 md:p-4 max-h-[200px] overflow-y-auto">
+                                <div class="bg-[#EFEFEF] text-gray-800 rounded-lg p-3 md:p-4 max-h-[200px] overflow-y-auto" style="scrollbar-width: thin; scrollbar-color: rgba(0,0,0,0.5) transparent;">
                                     <p class="text-black break-words whitespace-normal text-sm md:text-base" id="documentSummary">
                                         <!-- Summary will be inserted here -->
                                     </p>

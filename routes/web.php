@@ -402,6 +402,57 @@ Route::get('/documents/{filename}', function ($filename) {
 })->name('document.view')->middleware('auth');
 
 
+Route::get('/guest/document/{id}/view', [App\Http\Controllers\GuestDocumentController::class, 'view'])
+    ->name('guest.document.view');
+
+// Guest Document Viewing Route
+Route::get('/documents/guest/{filename}', function ($filename) {
+    // Set headers for WebAssembly threads support and PDF viewing
+    header("Cross-Origin-Embedder-Policy: require-corp");
+    header("Cross-Origin-Opener-Policy: same-origin");
+
+    $paths = [
+        storage_path('app/public/documents/' . $filename),
+        public_path('storage/documents/' . $filename),
+    ];
+
+    $filePath = null;
+    foreach ($paths as $path) {
+        if (file_exists($path)) {
+            $filePath = $path;
+            break;
+        }
+    }
+
+    if (!$filePath) {
+        return response()->json(['error' => 'File not found'], 404);
+    }
+
+    $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    $contentType = 'application/octet-stream';
+
+    if ($extension === 'pdf') {
+        $contentType = 'application/pdf';
+    } elseif (in_array($extension, ['jpg', 'jpeg', 'png'])) {
+        $contentType = 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension);
+    } elseif ($extension === 'docx') {
+        $contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+    } elseif ($extension === 'doc') {
+        $contentType = 'application/msword';
+    }
+
+    return response()->file($filePath, [
+        'Content-Type' => $contentType,
+        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        'X-Content-Type-Options' => 'nosniff',
+        'Accept-Ranges' => 'bytes',
+        'Pragma' => 'public',
+        'Cache-Control' => 'public, max-age=86400',
+        'Cross-Origin-Embedder-Policy' => 'require-corp',
+        'Cross-Origin-Opener-Policy' => 'same-origin'
+    ]);
+})->name('document.guest.view');
+
 // Add specific route for comment attachments
 Route::get('/storage/comment_attachments/{filename}', function ($filename) {
     // Set headers for WebAssembly threads support
