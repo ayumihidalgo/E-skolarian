@@ -43,7 +43,7 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
 
 
     // Guest
-    Route::get('/guest/login', function() {
+    Route::get('/guest/login', function () {
         return view('guest.guestLogin');
     })->name('guestLogin');
     Route::post('/guest/send-otp', [GuestSubmitDocumentController::class, 'sendOtp'])
@@ -58,6 +58,8 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
         ->name('guest.submissionForm');
     Route::get('/guest/success', [GuestSubmitDocumentController::class, 'showSubmissionSuccess'])
         ->name('guest.submissionSuccess');
+    Route::post('/guest/logout', [GuestSubmitDocumentController::class, 'logout'])
+        ->name('guest.logout');
 
     // Student Login
     Route::get('/student/login', function () {
@@ -131,7 +133,7 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiv
     Route::post('/super-admin/announcements', [AnnouncementController::class, 'store'])
         ->name('super-admin.announcements.store');
     //Route::put('/announcements/{id}', [AnnouncementController::class, 'update'])
-       // ->name('super-admin.announcements.update');
+    // ->name('super-admin.announcements.update');
     Route::post('/super-admin/announcements/{id}/archive', [AnnouncementController::class, 'moveToArchive'])
         ->name('super-admin.announcements.archive');
     Route::post('/super-admin/announcements/{id}/restore', [AnnouncementController::class, 'restore'])
@@ -165,6 +167,8 @@ Route::middleware(['auth', NoBackHistory::class, IsSuperAdmin::class, CheckActiv
     Route::post('/super-admin/settings/send-recovery-code', [SettingsController::class, 'sendRecoveryCode'])->name('superadmin.settings.sendRecoveryCode');
     Route::post('/super-admin/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('superadmin.settings.verifyRecoveryCode');
     Route::post('/super-admin/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('superadmin.settings.removeRecoveryEmail');
+    Route::post('/settings/send-primary-email-code', [SettingsController::class, 'sendPrimaryEmailCode'])->name('superadmin.settings.sendPrimaryEmailCode');
+    Route::post('/settings/verify-primary-email-code', [SettingsController::class, 'verifyPrimaryEmailCode'])->name('superadmin.settings.verifyPrimaryEmailCode');
     // Super Admin Reports
     Route::get('/super-admin/reports', function () {
         return view('super-admin.super-admin-component.reports');
@@ -210,7 +214,6 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
     Route::post('admin/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('admin.settings.verifyRecoveryCode');
     Route::post('admin/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('admin.settings.removeRecoveryEmail');
 
-
     // Document processing
     Route::get('/admin/documents', [DocumentReviewController::class, 'index'])->name('admin.documents');
     Route::get('/admin/documents/{id}/details', [DocumentReviewController::class, 'getDetails'])->name('admin.documents.details');
@@ -247,7 +250,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiv
 
 
     // ---------------- Shared Routes ----------------
-
+    Route::get('/profile-picture/{filename}', [UserController::class, 'serveProfileImage']);
 
     // Student Logout
     Route::post('/student/logout', [StudentLoginController::class, 'logout'])->name('student.logout');
@@ -276,7 +279,7 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiv
     // ----------------------------------------
 // Calendar IndexTwo (Shared)
 // ----------------------------------------
-Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->name('calendar.indexTwo');
+    Route::get('/calendar/indexTwo', [IndexTwoController::class, 'viewIndexTwo'])->name('calendar.indexTwo');
 
     // User
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
@@ -339,7 +342,7 @@ Route::post('/notifications/mark-as-unread', [NotificationController::class, 'ma
 Route::post('/notifications/delete', [NotificationController::class, 'deleteBulk'])->middleware('auth');
 Route::post('/notifications/delete-all', [NotificationController::class, 'deleteAll'])->middleware('auth');
 Route::middleware(['auth', 'role:student'])->group(function () {
-    Route::get('/notifications', [StudentNotificationController::class, 'index'])->name('student.notifications.index');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('student.notifications.index');
 });
 
 
