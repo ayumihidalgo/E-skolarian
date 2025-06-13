@@ -437,16 +437,41 @@
                 <button type="button" onclick="hideActionToast()" class="text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer self-center">&times;</button>
             </div>
 
-            <!-- Generate Reports button -->
+            <!-- Generate Reports button with dropdown -->
             <div class="w-full px-6 flex justify-end mb-8 mt-4">
-                <button id="floatingExportBtn"
-                    class="px-4 py-2 bg-[#7A1212] text-white rounded-full shadow-lg hover:bg-[#DAA520] transition-colors duration-200 flex items-center gap-2"
-                    onclick="exportDocumentHistory()">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Generate Reports
-                </button>
+                <div class="relative inline-block">
+                    <button id="floatingExportBtn"
+                        class="px-4 py-2 bg-[#7A1212] text-white rounded-full shadow-lg hover:bg-[#DAA520] transition-colors duration-200 flex items-center gap-2"
+                        onclick="toggleExportDropdown()">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Generate Reports
+                        <svg class="w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- Dropdown menu -->
+                    <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-50 border border-gray-200">
+                        <div class="py-1">
+                            <button onclick="exportDocumentHistory('excel')" 
+                                class="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                                Download as Excel
+                            </button>
+                            <button onclick="exportDocumentHistory('pdf')" 
+                                class="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                Download as PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1561,7 +1586,10 @@
     }
 
     // Function to export document history
-    function exportDocumentHistory() {
+    function exportDocumentHistory(format = 'excel') {
+        // Close dropdown
+        document.getElementById('exportDropdown').classList.add('hidden');
+        
         // Check if button is disabled
         const floatingExportBtn = document.getElementById('floatingExportBtn');
         if (floatingExportBtn.disabled) {
@@ -1576,7 +1604,9 @@
         const search = document.querySelector('input[placeholder="Search..."]').value;
 
         // Build export URL with current filters
-        let exportUrl = "{{ route('admin.document.export') }}";
+        let exportUrl = format === 'pdf' 
+            ? "{{ route('admin.document.export.pdf') }}" 
+            : "{{ route('admin.document.export') }}";
         const params = new URLSearchParams();
 
         // Store original HTML
@@ -1606,10 +1636,10 @@
             });
             
             // Set loading state for selected export
-            floatingExportBtn.innerHTML = `<span class="animate-pulse">Exporting ${selectedItems.size} selected...</span>`;
+            floatingExportBtn.innerHTML = `<span class="animate-pulse">Exporting ${selectedItems.size} selected as ${format.toUpperCase()}...</span>`;
         } else {
             // Set loading state for full export
-            floatingExportBtn.innerHTML = '<span class="animate-pulse">Generating...</span>';
+            floatingExportBtn.innerHTML = `<span class="animate-pulse">Generating ${format.toUpperCase()}...</span>`;
         }
 
         floatingExportBtn.disabled = true;
@@ -1633,13 +1663,13 @@
             if (selectedItems.size > 0) {
                 showActionToast(
                     'Export Successful',
-                    `Successfully exported ${selectedItems.size} selected documents.`,
+                    `Successfully exported ${selectedItems.size} selected documents as ${format.toUpperCase()}.`,
                     true
                 );
             } else {
                 showActionToast(
                     'Export Successful',
-                    'Document history exported successfully.',
+                    `Document history exported successfully as ${format.toUpperCase()}.`,
                     true
                 );
             }
@@ -1655,5 +1685,21 @@
             }
         }, 5000);
     }
+
+    // Toggle export dropdown visibility
+    function toggleExportDropdown() {
+        const dropdown = document.getElementById('exportDropdown');
+        dropdown.classList.toggle('hidden');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('exportDropdown');
+        const button = document.getElementById('floatingExportBtn');
+        
+        if (!button.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
 </script>
 @endsection
