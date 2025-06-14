@@ -17,7 +17,7 @@
         </a>
     </div>
     
-    <div class="bg-white rounded-[25px] shadow-lg overflow-hidden mb-12" style= "width: 100%; height: 725px; flex-shrink:0;">
+    <div class="bg-white rounded-[25px] shadow-lg overflow-hidden mb-12 relative" style= "width: 100%; height: 725px; flex-shrink:0;">
         <!-- Header with title and filters -->
         <div class="px-8 py-4 flex justify-between items-center">
             <h2 class="text-[30px] font-bold text-[#161616] font-[Lexend]">REPORTS</h2>
@@ -60,7 +60,7 @@
         </div>
         
         <!-- Reports Table Container -->
-        <div class="overflow-x-auto rounded-md mx-auto">
+        <div class="overflow-x-auto rounded-md mx-auto" style="height: calc(100% - 105px);">
             <div class="overflow-x-auto">
                 <table class="w-full">
                     <thead class="bg-white">
@@ -141,9 +141,11 @@
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Pagination -->
-            <div class="mt-4 flex justify-center mb-1 absolute bottom-8 left-0 w-full p-2 text-center">    
+        </div>
+        
+        <!-- Pagination - Fixed at bottom with proper positioning -->
+        <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 rounded-b-[25px]">
+            <div class="flex justify-center">
                 <nav>
                     <ul class="inline-flex items-center space-x-2">
                         <!-- Pagination will be dynamically updated by JavaScript -->
