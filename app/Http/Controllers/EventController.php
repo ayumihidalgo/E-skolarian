@@ -282,6 +282,7 @@ class EventController extends Controller
         }
     }
 
+
 public function getCalendarAnnouncements()
 {
     try {
@@ -290,12 +291,24 @@ public function getCalendarAnnouncements()
         $userRole = auth()->user()->role;
         \Log::info('User role: ' . $userRole);
         
+        // Check if user wants to show past deadlines
+        $showPastDeadlines = request()->get('show_past', false);
+        \Log::info('Show past deadlines parameter: ' . ($showPastDeadlines ? 'true' : 'false'));
+        
         // Get announcements that are scheduled (have deadline) and not archived
-        $query = Announcement::where('archived', 0) // Use 'archived' not 'is_archived'
-            ->whereNotNull('deadline') // Use 'deadline' as the scheduled date
-            ->where('deadline', '>=', Carbon::now()); // Only show future/current announcements
+        $query = Announcement::where('archived', 0)
+            ->whereNotNull('deadline');
+            
+        // Filter by date based on toggle - THIS IS THE KEY FIX
+        if (!$showPastDeadlines) {
+            // Only show future deadlines (not expired)
+            $query->where('deadline', '>', Carbon::now());
+            \Log::info('Filtering to show only future deadlines after: ' . Carbon::now());
+        } else {
+            \Log::info('Showing all deadlines (including past)');
+        }
 
-        \Log::info('Base query count: ' . $query->count());
+        \Log::info('Base query count after date filter: ' . $query->count());
 
         // Filter by audience for students
         if ($userRole === 'student') {
@@ -308,7 +321,6 @@ public function getCalendarAnnouncements()
                       $subQ->where('audience', 'custom')
                            ->whereNotNull('audience_students')
                            ->where(function($jsonQ) use ($userId) {
-                               // Check if user ID is in the JSON array
                                $jsonQ->whereRaw("JSON_CONTAINS(audience_students, '\"$userId\"')")
                                      ->orWhereRaw("JSON_CONTAINS(audience_students, '$userId')");
                            });
@@ -318,30 +330,45 @@ public function getCalendarAnnouncements()
 
         $announcements = $query->with('user')->get();
         \Log::info('Final filtered announcements: ' . $announcements->count());
-        
-        // Log each announcement details
-        foreach($announcements as $announcement) {
-            \Log::info('Announcement: ' . $announcement->title . ' | Deadline: ' . $announcement->deadline . ' | Audience: ' . $announcement->audience);
+
+        // Log each announcement to debug
+        foreach ($announcements as $announcement) {
+            \Log::info('Announcement: ' . $announcement->title . ' - Deadline: ' . $announcement->deadline);
         }
 
         $announcementEvents = $announcements->map(function($announcement) {
             $deadline = Carbon::parse($announcement->deadline);
+            $now = Carbon::now();
             
+            // Check if announcement is expired
+            $isExpired = $deadline->isPast();
+            $isMissedToday = $deadline->isToday() && $deadline->isPast();
 
             $title = $announcement->title;
-            $maxTitleLength = 60; // Set maximum characters for display
+            $maxTitleLength = 60;
             
             if (strlen($title) > $maxTitleLength) {
                 $displayTitle = substr($title, 0, $maxTitleLength) . '...';
             } else {
                 $displayTitle = $title;
             }
+            
+            // Determine background color based on status
+            $backgroundColor = '#FF6347'; // Default orange
+            $titlePrefix = '📢 ';
+
+            if ($isExpired) {
+                $backgroundColor = '#9CA3AF'; // Gray for expired
+                $titlePrefix = '⏰ '; // Just one icon for all past deadlines
+            }
+            
+            // **FIX: Only set start date, no end date for single-time announcements**
             return [
                 'id' => 'announcement_' . $announcement->id,
-                'title' => '📢 ' . $announcement->title,
+                'title' => $titlePrefix . $announcement->title,
                 'start' => $deadline->format('Y-m-d H:i:s'),
-                'end' => $deadline->format('Y-m-d H:i:s'),
-                'backgroundColor' => '#FF6347',
+                'end' => null, // **CHANGED: Set to null instead of same datetime**
+                'backgroundColor' => $backgroundColor,
                 'textColor' => '#ffffff',
                 'allDay' => $deadline->format('H:i:s') === '00:00:00',
                 'source' => 'announcement',
@@ -350,7 +377,11 @@ public function getCalendarAnnouncements()
                 'announcement_id' => $announcement->id,
                 'content' => $announcement->content,
                 'poster' => $announcement->user->username ?? 'Unknown',
-                'deadline_text' => $deadline->format('F j, Y g:i A')
+                'deadline_text' => $deadline->format('F j, Y g:i A'),
+                'full_title' => $announcement->title,
+                'is_expired' => $isExpired,
+                'is_missed_today' => $isMissedToday,
+                'status_text' => $isExpired ? 'Past Deadline' : 'Active'
             ];
         });
         
@@ -405,21 +436,17 @@ private function getScheduledAnnouncements()
             $scheduledDate = Carbon::parse($announcement->scheduled_date);
             $deadline = $announcement->deadline ? Carbon::parse($announcement->deadline) : null;
             
-            // Use scheduled date as start, deadline as end (if exists)
+            // Use scheduled date as start
             $startDate = $scheduledDate;
-            $endDate = $deadline;
-
-            
             
             return [
                 'id' => 'announcement_' . $announcement->id,
                 'title' => '📢 ' . $announcement->title,
                 'start' => $startDate->format('Y-m-d H:i:s'),
-                'end' => $endDate ? $endDate->format('Y-m-d H:i:s') : null,
+                'end' => null, // **CHANGED: Set to null instead of deadline**
                 'backgroundColor' => '#FF6347', // Tomato color for announcements
                 'textColor' => '#ffffff',
-                'allDay' => $startDate->format('H:i:s') === '00:00:00' && 
-                          (!$endDate || $endDate->format('H:i:s') === '00:00:00'),
+                'allDay' => $startDate->format('H:i:s') === '00:00:00',
                 'source' => 'announcement',
                 'editable' => false,
                 'deletable' => false,

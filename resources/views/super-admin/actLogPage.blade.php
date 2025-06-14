@@ -20,23 +20,23 @@
         </div>
 
         <!-- Activity Table -->
-        <div class="bg-white rounded-[25px] shadow-lg overflow-hidden mb-12" style= "width: 100%; height: 725px; flex-shrink:0;">
+        <div class="bg-white rounded-[25px] shadow-lg overflow-hidden mb-12 relative" style="width: 100%; height: 725px; flex-shrink:0;">
             <!-- Table Header -->
             <div class="px-8 py-4 flex justify-between items-center">
                 <h2 class="text-[30px] font-bold text-[#161616] font-[Lexend]">ACTIVITY LOG</h2>
                 <!-- Header Actions -->
-            <div class="flex items-center space-x-3">
-                <!-- Search Box -->
-                <div class="relative">
-                    <input type="text" id="searchInput" placeholder="Search activities..."
-                        class="w-64 px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7A1212] focus:border-transparent font-[Lexend]">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                <div class="flex items-center space-x-3">
+                    <!-- Search Box -->
+                    <div class="relative">
+                        <input type="text" id="searchInput" placeholder="Search activities..."
+                            class="w-64 px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7A1212] focus:border-transparent font-[Lexend]">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
                     </div>
-                </div>
 
                 <!-- Filter Button -->
                 <button
@@ -48,28 +48,20 @@
                     Filter
                 </button>
 
-                <!-- Export Button -->
-                <button id="generatePDFBtn"
-                    class="bg-[#4D0F0F] px-2 py-1 rounded-[8px] text-white font-[Lexend] hover:bg-red-800 transition duration-200 flex items-center cursor-pointer">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    Generate Report
-                </button>
-            </div>
-                <!-- <span class="text-sm text-gray-500 font-[Lexend]">
-                    Last updated:
-                    @if ($activities->count())
-                        {{ \Carbon\Carbon::parse($activities->first()->created_at)->format('F j, Y') }}
-                    @else
-                        N/A
-                    @endif
-                </span> -->
+                    <!-- Export Button -->
+                    <button id="generatePDFBtn"
+                        class="bg-[#4D0F0F] px-2 py-1 rounded-[8px] text-white font-[Lexend] hover:bg-red-800 transition duration-200 flex items-center cursor-pointer">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Generate Report
+                    </button>
+                </div>
             </div>
 
             <!-- Table Content -->
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto" style="height: calc(100% - 110px);">
                 <table class="w-full">
                     <thead class="bg-white">
                         <tr>
@@ -143,8 +135,10 @@
                                         {{ $activity->target }}
                                     </span>
                                 </td>
-                                <td class="w-[25%] px-6 py-2 text-l text-gray-900 font-[Lexend] max-w-l truncate">
-                                    {{ $activity->description }}
+                                <td class="w-[25%] px-6 py-2 text-l text-gray-900 font-[Lexend]">
+                                    <div class="max-w-xs truncate" title="{{ $activity->description }}">
+                                        {{ $activity->description }}
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -166,50 +160,51 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
-            <div class="mt-1 flex justify-center mb-1 absolute bottom-8 left-0 w-full p-2 text-center">
-                <nav>
-                    <ul class="inline-flex items-center space-x-2">
-                        <!-- First/Previous Page -->
-                        <li>
-                            @if ($activities->currentPage() == 1)
-                                <span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">
-                                    <
-                                </span>
-                            @else
-                                <a href="{{ $activities->url(1) }}" 
-                                   class="px-3 py-1 rounded-lg text-black">
-                                    <
-                                </a>
-                            @endif
-                        </li>
-
-                        <!-- Page Numbers -->
-                        @for ($i = 1; $i <= $activities->lastPage(); $i++)
+            <!-- Pagination - Fixed at bottom with proper positioning -->
+            <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 rounded-b-[25px]">
+                <div class="flex justify-center">
+                    <nav>
+                        <ul class="inline-flex items-center space-x-2">
+                            <!-- First/Previous Page -->
                             <li>
-                                <a href="{{ $activities->url($i) }}"
-
-                                    class="px-3 py-1 rounded-lg {{ $activities->currentPage() == $i ? 'bg-[#4D0F0F] text-white' : 'text-black' }}">
-                                    {{ $i }}
-                                </a>
+                                @if ($activities->currentPage() == 1)
+                                    <span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">
+                                        <
+                                    </span>
+                                @else
+                                    <a href="{{ $activities->url(1) }}" 
+                                       class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
+                                        <
+                                    </a>
+                                @endif
                             </li>
-                        @endfor
 
-                        <!-- Next/Last Page -->
-                        <li>
-                            @if ($activities->currentPage() == $activities->lastPage())
-                                <span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">
-                                    >
-                                </span>
-                            @else
-                                <a href="{{ $activities->url($activities->lastPage()) }}" 
-                                   class="px-3 py-1 rounded-lg text-black">
-                                    >
-                                </a>
-                            @endif
-                        </li>
-                    </ul>
-                </nav>
+                            <!-- Page Numbers -->
+                            @for ($i = 1; $i <= $activities->lastPage(); $i++)
+                                <li>
+                                    <a href="{{ $activities->url($i) }}"
+                                        class="px-3 py-1 rounded-lg {{ $activities->currentPage() == $i ? 'bg-[#4D0F0F] text-white' : 'text-black hover:bg-gray-100' }}">
+                                        {{ $i }}
+                                    </a>
+                                </li>
+                            @endfor
+
+                            <!-- Next/Last Page -->
+                            <li>
+                                @if ($activities->currentPage() == $activities->lastPage())
+                                    <span class="px-3 py-1 rounded-lg text-gray-400 cursor-not-allowed">
+                                        >
+                                    </span>
+                                @else
+                                    <a href="{{ $activities->url($activities->lastPage()) }}" 
+                                       class="px-3 py-1 rounded-lg text-black hover:bg-gray-100">
+                                        >
+                                    </a>
+                                @endif
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
             </div>
         </div>
     </div>
@@ -513,8 +508,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${activity.target || ''}
                 </span>
             </td>
-            <td class="w-[25%] px-6 py-2 text-l text-gray-900 font-[Lexend] max-w-l truncate">
-                ${activity.description || ''}
+            <td class="w-[25%] px-6 py-2 text-l text-gray-900 font-[Lexend]">
+                <div class="max-w-xs truncate" title="${activity.description || ''}">
+                    ${activity.description || ''}
+                </div>
             </td>
         `;
 
