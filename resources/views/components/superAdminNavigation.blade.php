@@ -64,7 +64,7 @@
                 @endphp
 
                 @if ($profilePic)
-                    <img src="{{ url('/profile-picture/' . basename($user->profile_pic)) }}" alt="Profile"
+                    <img src="{{ url('/profile-picture/' . basename($currentUser->profile_pic)) }}" alt="Profile"
                         class="w-full h-full object-cover">
                 @else
                     <img src="{{ asset('images/dprofile.svg') }}" alt="Default Profile"
