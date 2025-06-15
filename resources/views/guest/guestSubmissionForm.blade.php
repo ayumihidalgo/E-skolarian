@@ -759,11 +759,11 @@
             currentAcademicYearStart = today.getFullYear() - 1;
         }
 
-        const endYear = 1990;
+        const minYear = currentAcademicYearStart - 1;
         const terms = ['1st Semester', '2nd Semester', 'Midyear'];
 
-        // Loop from current academic year down to end year (1990)
-        for (let year = currentAcademicYearStart; year >= endYear; year--) {
+        // Loop from current academic year down to the previous year
+        for (let year = currentAcademicYearStart; year >= minYear; year--) {
             for (let term of terms) {
                 const label = `${year}-${year + 1} ${term}`;
                 const li = document.createElement('li');
