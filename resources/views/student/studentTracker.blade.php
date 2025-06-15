@@ -1,4 +1,4 @@
-<!-- STUDENT TRACKER PAGE -->
+<!-- STUDENT TRACKER PAGEE -->
 
 @extends('base')
 

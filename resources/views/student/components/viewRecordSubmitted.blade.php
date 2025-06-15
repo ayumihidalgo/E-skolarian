@@ -1,3 +1,4 @@
+<!--CHANGES in TRACKER-->
 @extends('base')
 
 @section('content')
