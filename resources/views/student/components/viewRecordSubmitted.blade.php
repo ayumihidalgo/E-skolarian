@@ -1,3 +1,4 @@
+<!--CHANGES in TRACKER-->
 @extends('base')
 
 @section('content')
@@ -137,9 +138,11 @@
                                                 </span>
                                                 <div class="flex items-center gap-3">
                                                     <span
+
                                                         class=" ml-[2.5px] mt-[2px]
                                                             w-2 h-2 rounded-full transition-all duration-300
                                                             {{ $record->status === 'Pending' ? 'bg-yellow-400 border-yellow-400' : 'bg-[#D4B2B2]' }}
+
                                                             border-2 border-[#D4B2B2]  bg-[#D4B2B2] shadow-lg z-10">
                                                     </span>
                                                     <span class="text-gray-300 text-sm mt-1 ml-1.5">
@@ -176,14 +179,37 @@
                                                     </span>
                                                     <div class="flex items-center gap-3" id="underReviewStatus">
                                                         <span
-                                                            class="ml-[2.5px] mt-[2px]  w-2 h-2 rounded-full transition-all duration-300 {{ in_array($record->status, ['under_review', 'Under Review']) ? 'bg-blue-400 border-blue-400 ' : 'bg-[#D4B2B2] border-[#D4B2B2]' }} border-2 border-[#D4B2B2]  bg-[#D4B2B2] shadow-lg z-10">
+
+                                                            class="ml-[1.2px] mt-[0.8px]  w-3 h-3 rounded-full transition-all duration-300
+            {{ $record->status === 'under_review' || $record->status === 'Under Review' ? 'bg-blue-400 ' : 'bg-[#D4B2B2] ' }}
+            border-2 border-[#D4B2B2]  bg-[#D4B2B2] shadow-lg z-10">
+
                                                         </span>
                                                         <span class="text-gray-300 text-sm mt-1 ml-1.5">
                                                             Under Review,
-                                                            {{ $review->created_at->format('F j Y, g:iA') }}</span>
+
+                                                            {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'April 15 2025, 1:45PM' }}</span>
                                                     </div>
-                                                    {{-- Return status below Under Review --}}
-                                                    @if (in_array($record->status, ['Returned']))
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <!-- approved/returned -->
+                                    @if (in_array($record->status, ['Approved', 'rejected', 'Returned', 'returned']))
+                                        <div class="flex items-start mb-6 relative pl-0.2">
+                                            <div class="gap-3">
+                                                <div class="flex flex-col gap-0.5 relative pl-0.5">
+                                                    <div class="flex items-center gap-3">
+                                                        <span
+                                                            class="w-4 h-4 rounded-full bg-[#D4B2B2] transition-all duration-300 border-2 border-[#D4B2B2] shadow-lg z-10">
+                                                        </span>
+                                                        <span class="font-semibold text-white">
+                                                            {{ $record->reviewer->name ?? 'Office of the Student Services' }}
+                                                        </span>
+                                                    </div>
+                                                    <!-- Connect the circle to the first circle if under review or beyond -->
+                                                    @if (in_array($record->status, ['Approved', 'under_review', 'approved', 'rejected', 'returned', 'Returned']))
                                                         <span
                                                             class="absolute left-[9px] top-[40px] w-0.5 h-[14px] bg-white z-0"
                                                             style="border-left: 0.2px dashed #fff; background: none;">
@@ -201,22 +227,162 @@
                                                     {{-- Approved status below Returned/Under Review --}}
                                                     @if (in_array($record->status, ['approved', 'Approved']))
                                                         <span
-                                                            class="absolute left-[9px] top-[40px] w-0.5 h-[14px] bg-white z-0"
-                                                            style="border-left: 0.2px dashed #fff; background: none;">
+                                                            class="ml-[1.2px] mt-[0.8px] w-3 h-3 rounded-full transition-all duration-300
+                                                            @if ($record->status === 'under_review' || $record->status === 'Approved') bg-green-400
+                                                            @elseif ($record->status === 'Returned' || $record->status === 'returned')
+                                                                bg-red-400
+                                                            @else
+                                                                bg-[#D4B2B2] @endif
+                                                            border-2 border-[#D4B2B2] shadow-lg z-10">
                                                         </span>
-                                                        <div class="flex items-center gap-3" id="approvedStatus">
-                                                            <span
-                                                                class="ml-[2.5px] mt-[1px] w-2 h-2 rounded-full transition-all duration-300 bg-green-400 border-green-400 border-2 shadow-lg z-10">
-                                                            </span>
-                                                            <span class="text-gray-300 text-sm  ml-1.5">
+                                                        @if ($record->status === 'Approved')
+                                                            <span>
                                                                 Approved,
-                                                                {{ $review ? $review->updated_at->format('F j Y, g:iA') : 'Not yet approved' }}
+                                                                {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'April 15 2025, 1:45PM' }}
                                                             </span>
-                                                        </div>
-                                                    @endif
+                                                        @elseif ($record->status === 'Returned' || $record->status === 'returned')
+                                                            <span>
+                                                                Returned, Submitted on
+                                                                {{ $record->returned_at ? $record->returned_at->format('F j Y, g:iA') : ($record->updated_at ? $record->updated_at->format('F j Y, g:iA') : 'N/A') }}
+                                                            </span>
+                                                            <div class="block text-red-400 text-l font-semibold mt-2">
+                                                                <span class="">
+                                                                    This document was returned on
+                                                                    {{ $record->returned_at ? $record->returned_at->format('F j Y, g:iA') : ($record->updated_at ? $record->updated_at->format('F j Y, g:iA') : 'N/A') }}.
+                                                                </span>
+                                                            </div>
+                                                            <div class="div">
+                                                                @php
+                                                                    $timelineMessage = \App\Models\DocumentTimeline::where(
+                                                                        'document_id',
+                                                                        $record->id,
+                                                                    )
+                                                                        ->where('status', 'Returned')
+                                                                        ->orderByDesc('created_at')
+                                                                        ->value('message');
+                                                                @endphp
+                                                                @if ($timelineMessage)
+                                                                    <div class="text-red-300 text-sm mt-2">
+                                                                        <strong>Return Reason:</strong>
+                                                                        {{ $timelineMessage }}
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                            <div class="div">
+                                                                <button type="button" onclick="openReturnedImageModal()"
+                                                                    class="mt-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition">
+                                                                    Return Document
+                                                                </button>
+                                                            </div>
+                                                        @elseif ($record->status === 'rejected')
+                                                            <span>
+                                                                Rejected,
+                                                                {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'April 15 2025, 1:45PM' }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+
                                                 </div>
                                             </div>
                                         </div>
+
+                                        {{-- Returned Reason Image Modal --}}
+                                        @if ($record->status === 'Returned' || $record->status === 'returned')
+                                            <div id="returnedImageModal"
+                                                class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                                                <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full relative">
+                                                    <button onclick="closeReturnedImageModal()"
+                                                        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                    <h3 class="text-lg font-semibold mb-4 text-black">Return Document</h3>
+                                                    <div class="mb-2">
+                                                        <span class="font-semibold text-black">Title:</span>
+                                                        <span class="text-gray-800">{{ $record->subject }}</span>
+                                                    </div>
+                                                    <div class="mb-4">
+                                                        <span class="font-semibold text-black">Summary:</span>
+                                                        <textarea name="returned_summary" class="w-full p-2 border rounded text-black" rows="3"
+                                                            placeholder="Enter your summary here...">{{ old('returned_summary', $record->overview) }}</textarea>
+                                                    </div>
+                                                    <div class="mb-4">
+                                                        <label for="returned_attachment"
+                                                            class="block font-semibold text-black mb-1">Upload
+                                                            Document:</label>
+                                                        <input type="file" name="returned_attachment"
+                                                            id="returned_attachment"
+                                                            class="w-full p-2 border rounded text-black"
+                                                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" />
+                                                    </div>
+                                                    <div class="flex justify-end gap-2 mt-6">
+                                                        <button onclick="closeReturnedImageModal()"
+                                                            class="bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded">
+                                                            Close
+                                                        </button>
+                                                        <button
+                                                            class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
+                                                            type="button" onclick="openFinalizeModal()">
+                                                            Return
+                                                        </button>
+
+                                                        <!-- Finalize Document Modal -->
+                                                        <div id="finalizeModal"
+                                                            class="hidden fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                                                            <div
+                                                                class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full relative">
+                                                                <button onclick="closeFinalizeModal()"
+                                                                    class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                                                                    <svg class="w-6 h-6" fill="none"
+                                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round"
+                                                                            stroke-linejoin="round" stroke-width="2"
+                                                                            d="M6 18L18 6M6 6l12 12" />
+                                                                    </svg>
+                                                                </button>
+                                                                <h3 class="text-lg font-semibold mb-4 text-black">Finalize
+                                                                    Document</h3>
+                                                                <p class="mb-6 text-gray-700">Are you sure you want to
+                                                                    finalize the return of this document?</p>
+                                                                <div class="flex justify-end gap-2">
+                                                                    <button onclick="closeFinalizeModal()"
+                                                                        class="bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded">
+                                                                        Cancel
+                                                                    </button>
+                                                                    <button
+                                                                        class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
+                                                                        type="submit">
+                                                                        Finalize
+                                                                    </button>
+                                                                    </form>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <script>
+                                                            function openFinalizeModal() {
+                                                                document.getElementById('finalizeModal').classList.remove('hidden');
+                                                            }
+
+                                                            function closeFinalizeModal() {
+                                                                document.getElementById('finalizeModal').classList.add('hidden');
+                                                            }
+                                                        </script>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <script>
+                                                function openReturnedImageModal() {
+                                                    document.getElementById('returnedImageModal').classList.remove('hidden');
+                                                }
+
+                                                function closeReturnedImageModal() {
+                                                    document.getElementById('returnedImageModal').classList.add('hidden');
+                                                }
+                                            </script>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
@@ -247,10 +413,7 @@
                         <!-- Organization Details -->
                         <div class="overflow-hidden">
                             <p class="font-bold text-base md:text-lg break-words">
-                                {{ $record->receiver->username ?? 'Organization Name' }}
-                            </p>
-                            <p class="text-xs md:text-sm text-gray-300 break-words">
-                                {{ $record->receiver->role_name ?? 'Academic Organization' }}
+                                {{ $record->receiver->role_name ?? 'Organization Name' }}
                             </p>
                         </div>
                     </div>
@@ -326,7 +489,7 @@
                                         <div class="flex justify-between items-center">
                                             <div>
                                                 <p class="font-medium truncate">
-                                                    {{ $comment->sender->username ?? 'Unknown User' }}</p>
+                                                    {{ $record->organization_acronym ?? 'Unknown Org' }}</p>
                                                 <p class="text-xs text-gray-300">
                                                     {{ $comment->sender->role_name ?? 'Unknown User' }}</p>
                                             </div>
@@ -427,6 +590,12 @@
         #commentsContainer::-webkit-scrollbar-thumb {
             background-color: rgba(255, 255, 255, 0.3);
             border-radius: 6px;
+        }
+
+        .comment-container {
+            overflow-x: hidden;
+            word-break: break-word;
+            width: 100%;
         }
     </style>
 

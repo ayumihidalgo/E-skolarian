@@ -49,13 +49,13 @@
 
     .pagination-item:not(.active):not(.disabled) {
         background-color: #f8f9fa;
-        color: #374151;
+        color: #0d1117;
         border: 1px solid #d1d5db;
     }
 
     .pagination-item:not(.active):not(.disabled):hover {
         background-color: #e5e7eb;
-        color: #1f2937;
+        color: #0d1117;
     }
 
     .pagination-item.active {
@@ -91,7 +91,7 @@
                 onclick="window.location='{{ url('/records/' . $record->id) }}'"
                 class="hover:bg-gray-100 cursor-pointer transition"
             >
-                <td class="py-3 px-4">DOC-{{ $record->user->organization_acronym ?? 'N/A' }}</td>
+                <td class="py-3 px-4">{{ $record->control_tag ?? 'N/A' }}</td>
                 <td class="py-3 px-4">{{ $record->subject }}</td>
                 <td class="py-3 px-4">{{ \Carbon\Carbon::parse($record->created_at)->format('m/d/Y') }}</td>
                 <td class="py-3 px-4">{{ $record->type }}</td>
