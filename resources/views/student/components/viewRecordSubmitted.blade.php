@@ -9,10 +9,18 @@
         <!-- Comments section -->
         @php
             $documentId = $record->id;
+            $review = \App\Models\Review::where('document_id', $documentId)->latest()->first();
             $comments = \App\Models\Comment::where('document_id', $documentId)
                 ->with('sender')
                 ->orderBy('created_at')
                 ->get();
+
+            // Fetch the latest returned timeline entry
+            $returnedTimeline = \App\Models\DocumentTimeline::where('document_id', $documentId)
+                ->where('status', 'Returned')
+                ->orderByDesc('created_at')
+                ->with('user')
+                ->first();
         @endphp
         <div class="flex flex-wrap gap-[15px] px-[15px]">
             <!-- Submission Details Component (Left) -->
@@ -119,22 +127,22 @@
                                             <div class="flex flex-col gap-0.5 relative pl-0.5">
                                                 <div class="flex items-center gap-3">
                                                     <span
-                                                        class="w-4 h-4 rounded-full bg-[#D4B2B2] transition-all duration-300 border-2 border-[#D4B2B2] shadow-lg z-10">
+                                                        class="w-3.5 h-3.5 rounded-full bg-[#D4B2B2] transition-all duration-300 border-2 border-[#D4B2B2] shadow-lg z-10">
                                                     </span>
                                                     <span
                                                         class="font-semibold text-white">{{ $record->user->organization_acronym ?? 'N/A' }}</span>
                                                 </div>
-                                                <span class="absolute left-[9px] top-[18px] w-0.5 h-[14px] bg-white z-0"
+                                                <span class="absolute left-[8.5px] top-[17px] w-0.5 h-[14px] bg-white z-0"
                                                     style="border-left: 0.2px dashed #fff; background: none;">
                                                 </span>
                                                 <div class="flex items-center gap-3">
                                                     <span
-                                                        class=" ml-[1.2px] mt-[0.8px] 
-                                                            w-3 h-3 rounded-full transition-all duration-300
-                                                            {{ $record->status === 'Pending' ? 'bg-yellow-400' : 'bg-[#D4B2B2]' }}
+                                                        class=" ml-[2.5px] mt-[2px] 
+                                                            w-2 h-2 rounded-full transition-all duration-300
+                                                            {{ $record->status === 'Pending' ? 'bg-yellow-400 border-yellow-400' : 'bg-[#D4B2B2]' }}
                                                             border-2 border-[#D4B2B2]  bg-[#D4B2B2] shadow-lg z-10">
                                                     </span>
-                                                    <span class="text-gray-300 text-sm mt-1">
+                                                    <span class="text-gray-300 text-sm mt-1 ml-1.5">
                                                         {{ $record->status === 'Pending' ? 'Pending' : 'Pending' }},
                                                         Submitted on
                                                         {{ $record->created_at->format('F j Y, g:iA') }}</span>
@@ -143,76 +151,69 @@
                                         </div>
                                     </div>
                                     <!--  Under Review Status  -->
-                                    @if (in_array($record->status, ['Under Review', 'under_review', 'approved', 'rejected']))
+                                    @if (in_array($record->status, ['Under Review', 'under_review', 'approved', 'Approved', 'Returned']))
                                         <div class="flex items-start mb-6 relative pl-0.2">
                                             <div class="gap-3">
                                                 <div class="flex flex-col gap-0.5 relative pl-0.5">
                                                     <div class="flex items-center gap-3">
                                                         <span
-                                                            class="w-4 h-4 rounded-full bg-[#D4B2B2] transition-all duration-300 border-2 border-[#D4B2B2] shadow-lg z-10">
+                                                            class="w-3.5 h-3.5 rounded-full bg-[#D4B2B2] transition-all duration-300 border-2 border-[#D4B2B2] shadow-lg z-10">
                                                         </span>
                                                         <span class="font-semibold text-white">
                                                             {{ $record->reviewer->name ?? 'Office of the Student Services' }}
                                                         </span>
                                                     </div>
                                                     <!-- Connect the circle to the first circle if under review or beyond -->
-                                                    @if (in_array($record->status, ['Under Review', 'under_review', 'approved', 'rejected']))
+                                                    @if (in_array($record->status, ['Under Review', 'under_review', 'approved', 'Approved', 'Returned']))
                                                         <span
-                                                            class="absolute left-[9px] -top-[14px] w-0.5 h-[32px] bg-white z-0"
+                                                            class="absolute left-[8.5px] -top-[12px] w-0.5 h-[19px] bg-white z-0"
                                                             style="border-left: 0.2px dashed #fff; background: none;">
                                                         </span>
                                                     @endif
-                                                    <span class="absolute left-[9px] top-[18px] w-0.5 h-[14px] bg-white z-0"
+                                                    <span id="underReviewLine"
+                                                        class="absolute left-[8.5px] top-[18px] w-0.5 h-[14px] bg-white z-0"
                                                         style="border-left: 0.2px dashed #fff; background: none;">
                                                     </span>
-                                                    <div class="flex items-center gap-3">
+                                                    <div class="flex items-center gap-3" id="underReviewStatus">
                                                         <span
-                                                            class="ml-[1.2px] mt-[0.8px]  w-3 h-3 rounded-full transition-all duration-300
-            {{ $record->status === 'under_review' || $record->status === 'Under Review' ? 'bg-blue-400 ' : 'bg-[#D4B2B2] ' }} 
-            border-2 border-[#D4B2B2]  bg-[#D4B2B2] shadow-lg z-10">
+                                                            class="ml-[2.5px] mt-[2px]  w-2 h-2 rounded-full transition-all duration-300 {{ in_array($record->status, ['under_review', 'Under Review']) ? 'bg-blue-400 border-blue-400 ' : 'bg-[#D4B2B2] border-[#D4B2B2]' }} border-2 border-[#D4B2B2]  bg-[#D4B2B2] shadow-lg z-10">
                                                         </span>
-                                                        <span>
+                                                        <span class="text-gray-300 text-sm mt-1 ml-1.5">
                                                             Under Review,
-                                                            {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'April 15 2025, 1:45PM' }}</span>
+                                                            {{ $review->created_at->format('F j Y, g:iA') }}</span>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endif
-
-                                    <!-- approved/rejected -->
-                                    @if (in_array($record->status, ['Approved', 'rejected']))
-                                        <div class="flex items-start mb-6 relative pl-0.2">
-                                            <div class="gap-3">
-                                                <div class="flex flex-col gap-0.5 relative pl-0.5">
-                                                    <div class="flex items-center gap-3">
+                                                    {{-- Return status below Under Review --}}
+                                                    @if (in_array($record->status, ['Returned']))
                                                         <span
-                                                            class="w-4 h-4 rounded-full bg-[#D4B2B2] transition-all duration-300 border-2 border-[#D4B2B2] shadow-lg z-10">
-                                                        </span>
-                                                        <span class="font-semibold text-white">
-                                                            {{ $record->reviewer->name ?? 'Office of the Student Services' }}
-                                                        </span>
-                                                    </div>
-                                                    <!-- Connect the circle to the first circle if under review or beyond -->
-                                                    @if (in_array($record->status, ['Approved', 'under_review', 'approved', 'rejected']))
-                                                        <span
-                                                            class="absolute left-[9px] -top-[14px] w-0.5 h-[32px] bg-white z-0"
+                                                            class="absolute left-[9px] top-[40px] w-0.5 h-[14px] bg-white z-0"
                                                             style="border-left: 0.2px dashed #fff; background: none;">
                                                         </span>
+                                                        <div class="flex items-center gap-3" id="approvedStatus">
+                                                            <span
+                                                                class="ml-[2.5px] mt-[1px] w-2 h-2 rounded-full transition-all duration-300 bg-green-400 border-green-400 border-2 shadow-lg z-10">
+                                                            </span>
+                                                            <span class="text-gray-300 text-sm  ml-1.5">
+                                                                Returned,
+                                                                {{ $record->updated_at ? $record->updated_at->format('F j Y, g:iA') : ($record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : '') }}
+                                                            </span>
+                                                        </div>
                                                     @endif
-                                                    <span class="absolute left-[9px] top-[18px] w-0.5 h-[14px] bg-white z-0"
-                                                        style="border-left: 0.2px dashed #fff; background: none;">
-                                                    </span>
-                                                    <div class="flex items-center gap-3">
+                                                    {{-- Approved status below Returned/Under Review --}}
+                                                    @if (in_array($record->status, ['approved', 'Approved']))
                                                         <span
-                                                            class="ml-[1.2px] mt-[0.8px]  w-3 h-3 rounded-full transition-all duration-300
-            {{ $record->status === 'under_review' || $record->status === 'Approved' ? 'bg-green-400 ' : 'bg-[#D4B2B2] ' }} 
-            border-2 border-[#D4B2B2]  bg-[#D4B2B2] shadow-lg z-10">
+                                                            class="absolute left-[9px] top-[40px] w-0.5 h-[14px] bg-white z-0"
+                                                            style="border-left: 0.2px dashed #fff; background: none;">
                                                         </span>
-                                                        <span>
-                                                            Approved,
-                                                            {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'April 15 2025, 1:45PM' }}</span>
-                                                    </div>
+                                                        <div class="flex items-center gap-3" id="approvedStatus">
+                                                            <span
+                                                                class="ml-[2.5px] mt-[1px] w-2 h-2 rounded-full transition-all duration-300 bg-green-400 border-green-400 border-2 shadow-lg z-10">
+                                                            </span>
+                                                            <span class="text-gray-300 text-sm  ml-1.5">
+                                                                Approved,
+                                                                {{ $review ? $review->updated_at->format('F j Y, g:iA') : 'Not yet approved' }}
+                                                            </span>
+                                                        </div>
+                                                    @endif
                                                 </div>
                                             </div>
                                         </div>
@@ -259,6 +260,49 @@
                     <!-- Comments Section (Latest at top, scrollbar starts at top) -->
                     <div id="commentCont" class="overflow-y-auto max-h-80 pr-2 flex flex-col-reverse scroll-smooth"
                         style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;">
+
+                        @if ($returnedTimeline)
+                            <div class="border-b border-[#782626] pb-4 mb-4 bg-yellow-100 bg-opacity-10 rounded">
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0">
+                                        @if ($returnedTimeline->user && $returnedTimeline->user->profile_pic)
+                                            <div
+                                                class="border-1 border-gray-300 rounded-full w-10 h-10 bg-white flex items-center justify-center">
+                                                <img src="{{ asset('storage/' . $returnedTimeline->user->profile_pic) }}"
+                                                    alt="Profile" class="w-10 h-10 rounded-full object-cover">
+                                            </div>
+                                        @else
+                                            <div
+                                                class="w-10 h-10 bg-white rounded-full flex items-center border-1 justify-center text-white text-3xl font-bold">
+                                                <img src="{{ asset('images/dprofile.svg') }}" class="w-10 h-10"
+                                                    alt="camera icon">
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between items-center">
+                                            <div>
+                                                <p class="font-medium truncate">
+                                                    {{ $returnedTimeline->user->username ?? 'System' }}
+                                                </p>
+                                                <p class="text-xs text-gray-300">
+                                                    {{ $returnedTimeline->user->role_name ?? 'System' }}
+                                                </p>
+                                            </div>
+                                            <span class="text-gray-300 text-sm" id="returnedTime">
+                                                {{ $returnedTimeline->created_at->format('h:i A') }}
+                                            </span>
+                                        </div>
+                                        <p class="text-yellow-300 mt-1 font-semibold">Returned:
+                                            {{ $returnedTimeline->message }}</p>
+                                        <button id="resubmitBtn"
+                                            class="mt-2 bg-blue-500 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded">
+                                            Resubmit
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                         @foreach ($comments->reverse() as $comment)
                             <div class="border-b border-[#782626] pb-4 mb-4">
                                 <div class="flex items-start gap-3">
