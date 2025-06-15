@@ -137,7 +137,7 @@
                                                 </span>
                                                 <div class="flex items-center gap-3">
                                                     <span
-                                                        class=" ml-[2.5px] mt-[2px] 
+                                                        class=" ml-[2.5px] mt-[2px]
                                                             w-2 h-2 rounded-full transition-all duration-300
                                                             {{ $record->status === 'Pending' ? 'bg-yellow-400 border-yellow-400' : 'bg-[#D4B2B2]' }}
                                                             border-2 border-[#D4B2B2]  bg-[#D4B2B2] shadow-lg z-10">
@@ -389,8 +389,10 @@
     <!-- Include student comments script -->
     @vite(['resources/js/student-comments.js'])
 
+
     <style>
         /* Add fade-in animation for new comments */
+        /*    Styles for the document viewer modal */
         @keyframes fadeIn {
             from {
                 opacity: 0;
