@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Review extends Model
 {
     use HasFactory;
-    
-    public $timestamps = false;
-    
+
+    public $timestamps = true;
+
     protected $fillable = [
         'reviewed_by',
         'document_id',
