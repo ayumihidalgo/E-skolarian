@@ -121,19 +121,22 @@
             <p style="margin-bottom: 16px;">Hello,</p>
 
             <p style="margin-bottom: 16px;">
-                Thank you for using the E-Skolarian document submission system. Your One-Time Password (OTP) is:
+                Thank you for using the E-Skolarian document submission system. We have successfully received your document, and it will be under review by {{ $receiver->role_name ? 'the ' . $receiver->role_name : 'the administration' }}.
             </p>
 
-            <h1 style="text-align: center; font-size: 32px; letter-spacing: 8px; color: #4D0F0F; margin: 24px 0;">
-                {{ $otp }}
-            </h1>
+            <ul style="margin-bottom: 16px; padding-left: 20px;">
+                <li><strong>Subject:</strong> {{ $document->subject }}</li>
+                <li><strong>Type:</strong> {{ $document->type }}</li>
+                <li><strong>Submitted At:</strong> {{ $document->created_at->format('F j, Y g:i A') }}</li>
+            </ul>
 
-            <p style="text-align: center; font-size: 14px; color: #555; margin-bottom: 24px;">
-                This code will expire in 10 minutes.
+            <p style="margin-bottom: 16px;">
+                If you wish to follow up on your submission, you may email us at 
+                <a href="mailto:{{ $receiver->email }}" style="color: #4D0F0F;">{{ $receiver->email }}</a>.
             </p>
 
             <p style="margin-bottom: 0;">
-                If you did not request this code, please ignore this email.
+                Thank you and have a great day!
             </p>
         </div>
             <hr>
