@@ -41,6 +41,7 @@ class StudentDashboardController extends Controller
         $sevenDaysAgo = Carbon::now()->subDays(7);
 
         $latestAnnouncements = Announcement::with('user')
+             ->where('archived', 0)
             ->where(function($query) use ($userId, $sevenDaysAgo) {
                 $query->where(function($q) use ($userId, $sevenDaysAgo) {
                     // No deadline: show if within 7 days
@@ -73,6 +74,7 @@ class StudentDashboardController extends Controller
             ->get();
 
         $previousAnnouncements = Announcement::with('user')
+             ->where('archived', 0)
             ->where(function($query) use ($userId, $sevenDaysAgo) {
                 $query->where(function($q) use ($userId, $sevenDaysAgo) {
                     // No deadline: move to previous after 7 days
