@@ -260,4 +260,49 @@ class CommentController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Check for new comments since a given timestamp
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $document_id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkNewComments(Request $request, $document_id)
+    {
+        try {
+            // Get the timestamp of the last update from the request
+            $lastUpdate = $request->input('lastUpdate');
+            
+            // Query for comments newer than the last update
+            $query = Comment::with('sender')
+                ->where('document_id', $document_id)
+                ->orderBy('created_at', 'desc');
+                
+            if ($lastUpdate) {
+                $query->where('created_at', '>', $lastUpdate);
+            }
+            
+            $comments = $query->get();
+            
+            // Get the timestamp of the most recent comment for the next check
+            $latestTimestamp = $comments->isNotEmpty() 
+                ? $comments->first()->created_at 
+                : ($lastUpdate ?? now()->toISOString());
+                
+            return response()->json([
+                'hasNewComments' => $comments->isNotEmpty(),
+                'comments' => $comments,
+                'latestTimestamp' => $latestTimestamp
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error checking for new comments: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to check for new comments',
+                'details' => $e->getMessage(),
+                'hasNewComments' => false,
+                'comments' => []
+            ], 200); // Return 200 to prevent frontend errors
+        }
+    }
 }
