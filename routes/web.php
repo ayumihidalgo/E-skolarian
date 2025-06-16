@@ -612,6 +612,6 @@ Route::get('/student/document-history/preview/{id}', [StudentDocumentController:
 
 Route::get('/admin/documents/export/pdf', [App\Http\Controllers\DocumentExportController::class, 'exportPdf'])->name('admin.document.export.pdf')->middleware('auth');
 
-
-
-
+// Add this route for real-time activity log fetching
+Route::get('/super-admin/activity-logs/new-since', [SuperAdminController::class, 'getNewActivitiesSince'])
+    ->name('super-admin.activity-logs.new-since');

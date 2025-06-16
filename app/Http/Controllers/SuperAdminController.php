@@ -97,7 +97,8 @@ class SuperAdminController extends Controller
             'role_name', 
             'organization_acronym', 
             'active',
-            'created_at'
+            'created_at',
+            'profile_pic'
         ])
         ->where('active', true)
         ->where('id', '>', 1) // Exclude super admin
@@ -406,6 +407,29 @@ class SuperAdminController extends Controller
                 'success' => false,
                 'message' => 'Failed to get unviewed reports count'
             ], 500);
+        }
+    }
+
+    public function getNewActivitiesSince(Request $request)
+    {
+        try {
+            $timestamp = $request->query('timestamp');
+            
+            if (!$timestamp) {
+                return response()->json([]);
+            }
+            
+            $activities = ActivityLog::with(['user' => function($query) {
+                $query->select('id', 'username', 'role_name', 'role');
+            }])
+            ->where('created_at', '>', $timestamp)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+            return response()->json($activities);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching new activities: ' . $e->getMessage());
+            return response()->json([]);
         }
     }
 }

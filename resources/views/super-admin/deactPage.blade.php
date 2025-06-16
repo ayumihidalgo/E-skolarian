@@ -18,7 +18,7 @@
         </div>
 
     <!-- Table Header and Container -->
-    <div class="overflow-hidden rounded-[25px] shadow bg-[#FFFFFFA6] mt-4" style="width: 100%; height: 540px; flex-shrink:0;">
+    <div class="overflow-x-auto overflow-y-hidden rounded-[25px] shadow bg-[#FFFFFFA6] mt-4" style="width: 100%; height: 540px; flex-shrink:0;">
         <table class="min-w-full bg-[#625B5B] text-white rounded-t-[24px] table-fixed">
             <thead>
                 <tr>

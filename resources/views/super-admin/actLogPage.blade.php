@@ -22,14 +22,14 @@
         <!-- Activity Table -->
         <div class="bg-white rounded-[25px] shadow-lg overflow-hidden mb-12 relative" style="width: 100%; height: 725px; flex-shrink:0;">
             <!-- Table Header -->
-            <div class="px-8 py-4 flex justify-between items-center">
-                <h2 class="text-[30px] font-bold text-[#161616] font-[Lexend]">ACTIVITY LOG</h2>
+            <div class="px-4 md:px-8 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
+                <h2 class="text-[22px] md:text-[30px] font-bold text-[#161616] font-[Lexend]">ACTIVITY LOG</h2>
                 <!-- Header Actions -->
-                <div class="flex items-center space-x-3">
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
                     <!-- Search Box -->
-                    <div class="relative">
+                    <div class="relative w-full sm:w-64">
                         <input type="text" id="searchInput" placeholder="Search activities..."
-                            class="w-64 px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7A1212] focus:border-transparent font-[Lexend]">
+                            class="w-full px-4 py-2 pl-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7A1212] focus:border-transparent font-[Lexend]">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -38,15 +38,16 @@
                         </div>
                     </div>
 
-                <!-- Filter Button -->
-                <button
-                    class="bg-white border border-gray-300 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded-lg font-[Lexend] inline-flex items-center cursor-pointer" id="openFilterModal">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-                    </svg>
-                    Filter
-                </button>
+                    <!-- Filter Button -->
+                    <button
+                        class="bg-white border border-gray-300 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded-lg font-[Lexend] inline-flex items-center cursor-pointer"
+                        id="openFilterModal">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        <span class="sm:inline">Filter</span>
+                    </button>
 
                     <!-- Export Button -->
                     <button id="generatePDFBtn"
@@ -55,7 +56,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                        Generate Report
+                        <span class="sm:inline">Generate Report</span>
                     </button>
                 </div>
             </div>
@@ -279,17 +280,88 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentEndDate = null;
     let currentSearchTerm = '';
 
+    // Add these variables after the existing ones
+    let lastUpdateTimestamp = null;
+    let realTimeInterval = null;
+    const REAL_TIME_INTERVAL = 5000; // 5 seconds
+
     // Fetch all activities from server on page load
     async function fetchAllActivities() {
         try {
             const response = await fetch('/super-admin/activity-logs/all');
             allActivities = await response.json();
-            filteredActivities = [...allActivities]; // Copy all activities initially
+            filteredActivities = [...allActivities];
+            
+            // Set initial timestamp
+            if (allActivities.length > 0) {
+                lastUpdateTimestamp = new Date(allActivities[0].created_at);
+            }
+            
             return true;
         } catch (error) {
             console.error('Error fetching activities:', error);
             return false;
         }
+    }
+
+    // Fetch new activities since last update
+    async function fetchNewActivities() {
+        if (!lastUpdateTimestamp) return [];
+        
+        try {
+            const response = await fetch(`/super-admin/activity-logs/new-since?timestamp=${lastUpdateTimestamp.toISOString()}`);
+            const newActivities = await response.json();
+            return newActivities;
+        } catch (error) {
+            console.error('Error fetching new activities:', error);
+            return [];
+        }
+    }
+
+    // Start real-time updates
+    function startRealTimeUpdates() {
+        if (realTimeInterval) {
+            clearInterval(realTimeInterval);
+        }
+        
+        realTimeInterval = setInterval(async () => {
+            const newActivities = await fetchNewActivities();
+            
+            if (newActivities.length > 0) {
+                // Add new activities to the beginning of the array
+                allActivities = [...newActivities, ...allActivities];
+                
+                // Update last timestamp
+                lastUpdateTimestamp = new Date(newActivities[0].created_at);
+                
+                // Reapply current filters and search
+                applyCurrentFiltersAndSearch();
+            }
+        }, REAL_TIME_INTERVAL);
+    }
+
+    // Apply current filters and search after real-time update
+    function applyCurrentFiltersAndSearch() {
+        let result = [...allActivities];
+        
+        // Apply date/sort filters
+        if (currentFilterType) {
+            if (currentFilterType === 'newest' || currentFilterType === 'oldest') {
+                result = sortActivities(result, currentFilterType);
+            } else if (currentFilterType === 'custom') {
+                result = filterActivities(result, 'custom', currentStartDate, currentEndDate);
+            } else {
+                result = filterActivities(result, currentFilterType);
+            }
+        }
+        
+        // Apply search filter
+        if (currentSearchTerm) {
+            result = searchActivities(result, currentSearchTerm);
+        }
+        
+        filteredActivities = result;
+        renderActivities(filteredActivities, currentSearchTerm);
     }
 
     // Render activities in table with pagination
@@ -633,7 +705,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Failed to load activity data');
             return;
         }
+        
         renderActivities(filteredActivities);
+        
+        // Start real-time updates
+        startRealTimeUpdates();
     }
 
     // Toggle filter modal
@@ -902,7 +978,7 @@ document.addEventListener('DOMContentLoaded', function() {
             thead.appendChild(headerRow);
             cleanTable.appendChild(thead);
 
-            // Create table body with filtered data - MODIFIED to use filteredData
+            // Create table body with filtered data - MODIFIED
             const tbody = document.createElement('tbody');
             filteredData.forEach((activity, index) => {
                 const newRow = document.createElement('tr');
@@ -1142,6 +1218,25 @@ document.addEventListener('DOMContentLoaded', function() {
             recordCount: `Filtered Records: ${filteredData.length} of ${allActivities.length}`
         };
     }
+
+    // Handle page visibility change (pause/resume real-time updates)
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            if (realTimeInterval) {
+                clearInterval(realTimeInterval);
+                realTimeInterval = null;
+            }
+        } else {
+            startRealTimeUpdates();
+        }
+    });
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+        if (realTimeInterval) {
+            clearInterval(realTimeInterval);
+        }
+    });
 });
 </script>
 @endsection
