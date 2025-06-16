@@ -11,9 +11,17 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Events\NewChatMessage;
 use App\Models\User;
+use App\Services\ProfanityFilter;
 
 class CommentController extends Controller
 {
+    protected $profanityFilter;
+
+    public function __construct(ProfanityFilter $profanityFilter)
+    {
+        $this->profanityFilter = $profanityFilter;
+    }
+
     /**
      * Store a newly created comment.
      *
@@ -34,6 +42,16 @@ class CommentController extends Controller
                 'success' => false,
                 'errors' => $validator->errors()
             ], 422);
+        }   
+
+        // Add debugging for comment text
+        if ($request->has('comment') && !empty($request->comment)) {
+            if ($this->profanityFilter->hasProfanity($request->comment)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your comment contains inappropriate language. Please revise and try again.'
+                ], 422);
+            }
         }
 
         // Check if file size meets minimum requirement
