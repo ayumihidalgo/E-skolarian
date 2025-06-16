@@ -1015,6 +1015,15 @@
                 setTimeout(validateForm, 50); // slight delay to allow DOM changes
             };
 
+            // Make sure past dates can't be selected
+            const proposedDateAndTimeInput = document.getElementById('proposed_date_time');
+        
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset()); // Adjust for timezone
+            const minDateTime = now.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:MM
+            
+            proposedDateAndTimeInput.min = minDateTime;
+
             // Called on page load just in case
             validateForm();
         });
