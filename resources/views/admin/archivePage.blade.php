@@ -1043,5 +1043,15 @@
     function viewDocument(id) {
     window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
 }
+
+    // Handle close button ("X")
+    document.getElementById('closeRestoreModalBtn').addEventListener('click', function() {
+        document.getElementById('restoreConfirmationModal').classList.add('hidden');
+    });
+
+    // Handle cancel button
+    document.getElementById('cancelRestoreBtn').addEventListener('click', function() {
+        document.getElementById('restoreConfirmationModal').classList.add('hidden');
+    });
 </script>
 @endsection
