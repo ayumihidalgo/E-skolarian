@@ -5,7 +5,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     @include('components.studentSideBarComponent')
     <div id="main-content" class="flex flex-col min-h-screen md:ml-[20%] ml-0 transition-all duration-300 bg-[#F2F4F7]">
-        @include('components.studentNavBarComponent')
         <div class="flex-grow mb-10">
             @if (session('success'))
                 <div id="Toast"

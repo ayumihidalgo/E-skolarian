@@ -8,7 +8,7 @@
         <div class="w-full px-6 py-8 flex flex-col">
             <!-- Header section with title and archive page link -->
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-extrabold">Document History Table</h2>
+                <h2 class="text-2xl font-extrabold">Document Repository</h2>
 
                 <!-- Link to archive page for viewing archived documents -->
                 <a href="{{ route('admin.archivePage') }}"
@@ -43,20 +43,12 @@
                             <option class="bg-white text-black" value="Organization" disabled selected>Organization
                             </option>
                             <option class="bg-white text-black" value="All">All Organizations</option>
-                            <!-- Organization options -->
-                            <option class="bg-white text-black" value="ACAP">ACAP</option>
-                            <option class="bg-white text-black" value="AECES">AECES</option>
-                            <option class="bg-white text-black" value="ELITE">ELITE</option>
-                            <option class="bg-white text-black" value="GIVE">GIVE</option>
-                            <option class="bg-white text-black" value="JEHRA">JEHRA</option>
-                            <option class="bg-white text-black" value="JMAP">JMAP</option>
-                            <option class="bg-white text-black" value="JPIA">JPIA</option>
-                            <option class="bg-white text-black" value="PIIE">PIIE</option>
-                            <option class="bg-white text-black" value="AGDS">AGDS</option>
-                            <option class="bg-white text-black" value="Chorale">Chorale</option>
-                            <option class="bg-white text-black" value="SIGMA">SIGMA</option>
-                            <option class="bg-white text-black" value="TAPNOTCH">TAPNOTCH</option>
-                            <option class="bg-white text-black" value="OSC">OSC</option>
+                            <!-- Dynamic organization options from database -->
+                            @if(isset($availableOrganizations))
+                                @foreach($availableOrganizations as $org)
+                                    <option class="bg-white text-black" value="{{ $org }}">{{ $org }}</option>
+                                @endforeach
+                            @endif
                         </select>
                         <!-- Custom dropdown arrow -->
                         <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -69,18 +61,11 @@
                             class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 truncate">
                             <option class="bg-white text-black truncate" value="Type" disabled selected>Type</option>
                             <option class="bg-white text-black truncate" value="All">All Types</option>
-                            <!-- Standard document type options -->
-                            <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
-                            <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan of Activities</option>
-                            <option class="bg-white text-black truncate" value="Reports of Proceedings">Reports of Proceedings</option>
-                            <option class="bg-white text-black truncate" value="Constitution and By-Laws">Constitution and By-Laws</option>
-                            <option class="bg-white text-black truncate" value="Fundraising Activities">Fundraising Activities</option>
-                            <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
-                            <option class="bg-white text-black truncate" value="Petition and Concern">Petition and Concern</option>
-                            <option class="bg-white text-black truncate" value="Memorandum of Agreement">Memorandum of Agreement</option>
-                            <option class="bg-white text-black truncate" value="Off Campus Activities">Off Campus Activities</option>
-                            <!-- Others option for non-standard types -->
-                            <option class="bg-white text-black truncate" value="Others">Others</option>
+                            @if(isset($availableTypes))
+                                @foreach($availableTypes as $type)
+                                    <option class="bg-white text-black truncate" value="{{ $type }}">{{ $type }}</option>
+                                @endforeach
+                            @endif
                         </select>
                         <!-- Custom dropdown arrow -->
                         <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -152,20 +137,27 @@
                                             </button>
                                         </div>
                                     </th>
-                                    <!-- Column headers with sort functionality -->
-                                    @php $headers = ['Tag', 'Organization', 'Title', 'Date Submitted', 'Type', 'Status']; @endphp
+                                    <!-- Replace this section in documentHistory.blade.php -->
+                                    @php $headers = ['Tag', 'Organization', 'Title', 'Date Submitted', 'Type', 'Submitted to']; @endphp
                                     @foreach ($headers as $i => $header)
                                     <th class="px-4 py-2 whitespace-nowrap {{ $header === 'Date Submitted' ? 'max-w-[140px]' : 'max-w-[160px]' }} truncate">
-                                        @if ($header !== 'Status')
-                                        <button onclick="sortTable({{ $i + 1 }})"
-                                            class="flex items-center gap-1 group">
-                                            <span>{{ $header }}</span>
-                                            <img src="{{ asset('images/sortIcon.svg') }}" alt="Sort"
-                                                class="w-3 h-3 text-gray-500 group-hover:text-black transition">
-                                        </button>
+                                    @if ($header !== 'Status')
+                                        @if ($header === 'Organization' || $header === 'Type' || $header === 'Submitted to')
+                                            <!-- These headers have no icon but keep sorting functionality -->
+                                            <button onclick="sortTable({{ $i + 1 }})" class="group">
+                                                <span>{{ $header }}</span>
+                                            </button>
                                         @else
-                                        <span>{{ $header }}</span>
+                                            <!-- Other headers have normal sort icon -->
+                                            <button onclick="sortTable({{ $i + 1 }})" class="flex items-center gap-1 group">
+                                                <span>{{ $header }}</span>
+                                                <img src="{{ asset('images/sortIcon.svg') }}" alt="Sort"
+                                                    class="w-3 h-3 text-gray-500 group-hover:text-black transition">
+                                            </button>
                                         @endif
+                                    @else
+                                        <span>{{ $header }}</span>
+                                    @endif
                                     </th>
                                     @endforeach
                                 </tr>
@@ -206,7 +198,7 @@
 
                                 <!-- Document row with data attributes for filtering -->
                                 <tr class="border-b border-gray-300 hover:bg-gray-100"
-                                    data-org-acronym="{{ $acronym }}" data-status="{{ $document->status }}"
+                                    data-org-acronym="{{ $acronym }}" data-role="{{ $document->role_name }}"
                                     data-type="{{ $document->type }}" data-id="{{ $document->id }}">
                                     <!-- Checkbox for row selection -->
                                     <td class="px-4 py-2">
@@ -242,18 +234,10 @@
                                         title="{{ $displayType }}">
                                         {{ $displayType }}
                                     </td>
-                                    <!-- Status with color-coded badge -->
+                                    <!-- Role column -->
                                     <td class="px-4 py-2 cursor-pointer"
                                         onclick="viewDocument({{ $document->id }})">
-                                        <span
-                                            class="px-4 py-1 rounded-full text-white inline-block min-w-[100px] text-center 
-                                              {{ $document->status === 'Approved'
-                                                  ? 'bg-[#10B981]'
-                                                  : ($document->status === 'Rejected'
-                                                      ? 'bg-[#EF4444]'
-                                                      : 'bg-[#F59E0B]') }}">
-                                            {{ $document->status }}
-                                        </span>
+                                        {{ $document->role_name ?? 'N/A' }}
                                     </td>
                                 </tr>
                                 @empty
@@ -818,203 +802,8 @@
 
     // Updated function to maintain selection across filter changes
     function applyServerSideFilters() {
-        const tableContainer = document.querySelector('#tableContainer');
-        tableContainer.classList.add('opacity-50');
+        console.log('Starting filter application...');
         
-        // Reset server-side selection when filters change
-        if (isSelectAllActive) {
-            deselectAllDocuments();
-        }
-        
-        // Reset selections
-        selectedItems.clear();
-        updateSelectedCount();
-
-        // Build the query parameters
-        const params = new URLSearchParams();
-
-        const organizationFilter = document.getElementById("organizationFilter");
-        const typeFilter = document.getElementById("typeFilter");
-        const searchInput = document.querySelector('input[placeholder="Search..."]');
-
-        if (organizationFilter.value !== 'Organization') {
-            params.append('organization', organizationFilter.value);
-        }
-
-        if (typeFilter.value !== 'Type') {
-            params.append('type', typeFilter.value);
-        }
-
-        if (searchInput.value.trim() !== '') {
-            params.append('search', searchInput.value);
-        }
-
-        // Add date filter parameters
-        if (currentDateFilter.start) {
-            params.append('start_date', currentDateFilter.start);
-        }
-        if (currentDateFilter.end) {
-            params.append('end_date', currentDateFilter.end);
-        }
-
-        // Create the URL
-        const url = `${window.location.pathname}?${params.toString()}`;
-
-        // Fetch filtered results
-        fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            })
-            .then(response => response.text())
-            .then(html => {
-                // Parse the HTML response
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-
-                // Update the table body
-                const newTableBody = doc.querySelector('#documentTable tbody');
-                if (newTableBody) {
-                    document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
-                }
-
-                // Update pagination
-                const newPagination = doc.querySelector('#paginationContainer');
-                const currentPagination = document.querySelector('#paginationContainer');
-
-                if (newPagination) {
-                    if (currentPagination) {
-                        currentPagination.outerHTML = newPagination.outerHTML;
-                    }
-                } else if (currentPagination) {
-                    // If no new pagination but we had one before, hide it
-                    currentPagination.style.display = 'none';
-                }
-
-                // Update URL without reload for bookmarking
-                window.history.pushState({}, '', url);
-
-                // Uncheck "select all" checkbox
-                const selectAllCheckbox = document.getElementById('selectAll');
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = false;
-
-                    // Disable checkbox if no results
-                    const visibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
-                    selectAllCheckbox.disabled = visibleRows === 0;
-                }
-
-                // Update export button state
-                updateExportButtonState();
-                
-                // Update select all link text
-                updateSelectAllLinkText();
-
-                // Remove loading state
-                tableContainer.classList.remove('opacity-50');
-            })
-            .catch(error => {
-                console.error('Error applying filters:', error);
-                tableContainer.classList.remove('opacity-50');
-            });
-    }
-
-    // Remove the old click handler for selectAll checkbox and add the new logic
-    document.addEventListener('click', function(e) {
-        // Handle individual row checkbox
-        if (e.target.classList.contains('row-checkbox')) {
-            const id = e.target.getAttribute('data-id');
-
-            if (e.target.checked) {
-                selectedItems.add(id);
-            } else {
-                selectedItems.delete(id);
-                
-                // If user unchecks any item and server-side select all was active
-                if (isSelectAllActive) {
-                    isSelectAllActive = false;
-                    const selectAllCheckbox = document.getElementById('selectAll');
-                    if (selectAllCheckbox) {
-                        selectAllCheckbox.checked = false;
-                    }
-                    updateSelectAllLinkText();
-                }
-            }
-
-            updateSelectedCount();
-        }
-        // Handle archive button - ONLY SHOW MODAL, NO ARCHIVING
-        else if (e.target.id === 'archiveSelectedBtn') {
-            showArchiveConfirmation();
-        }
-        // Handle date filter button
-        else if (e.target.id === 'dateFilterBtn' || e.target.closest('#dateFilterBtn')) {
-            document.getElementById('dateFilterModal').classList.remove('hidden');
-        }
-    });
-
-    // Close button functionality for the archive modal
-    document.getElementById("closeArchiveModalBtn").addEventListener("click", function() {
-        document.getElementById("archiveConfirmationModal").classList.add("hidden");
-    });
-
-    document.getElementById("cancelArchiveBtn").addEventListener("click", function() {
-        document.getElementById("archiveConfirmationModal").classList.add("hidden");
-    });
-
-    // ONLY THIS BUTTON SHOULD TRIGGER THE ACTUAL ARCHIVING
-    document.getElementById("confirmArchiveBtn").addEventListener("click", function() {
-        processArchiving(); // Call the function that actually does the archiving
-        document.getElementById("archiveConfirmationModal").classList.add("hidden");
-    });
-
-    // Date filter modal event listeners
-    document.getElementById("closeDateModalBtn").addEventListener("click", function() {
-        document.getElementById("dateFilterModal").classList.add("hidden");
-    });
-
-    document.getElementById("startDate").addEventListener("change", function() {
-        validateDateRange();
-        // Update the minimum date for end date
-        const startDate = this.value;
-        if (startDate) {
-            document.getElementById('endDate').min = startDate;
-        }
-    });
-
-    document.getElementById("endDate").addEventListener("change", validateDateRange);
-
-    document.getElementById("clearDateFilterBtn").addEventListener("click", function() {
-        document.getElementById('startDate').value = '';
-        document.getElementById('endDate').value = '';
-        document.getElementById('endDate').removeAttribute('min');
-        currentDateFilter = {
-            start: '',
-            end: ''
-        };
-        updateDateFilterDisplay(); // This will reset to "Date Range"
-        document.getElementById("dateFilterModal").classList.add("hidden");
-        // Apply the cleared filter using global function
-        if (typeof handleFilterChange === 'function') {
-            handleFilterChange();
-        }
-    });
-
-    document.getElementById("applyDateFilterBtn").addEventListener("click", function() {
-        if (validateDateRange()) {
-            currentDateFilter.start = document.getElementById('startDate').value;
-            currentDateFilter.end = document.getElementById('endDate').value;
-            updateDateFilterDisplay(); // This will keep it as "Date Range"
-            document.getElementById("dateFilterModal").classList.add("hidden");
-            // Apply the date filter using global function
-            if (typeof handleFilterChange === 'function') {
-                handleFilterChange();
-            }
-        }
-    });
-
-    // Function to apply server-side filters
-    function applyServerSideFilters() {
         // Show loading state
         const tableContainer = document.querySelector('#tableContainer');
         tableContainer.classList.add('opacity-50');
@@ -1035,45 +824,82 @@
         const typeFilter = document.getElementById("typeFilter");
         const searchInput = document.querySelector('input[placeholder="Search..."]');
 
-        if (organizationFilter.value !== 'Organization') {
+        // Log current filter values
+        console.log('Current filter values:', {
+            organization: organizationFilter ? organizationFilter.value : 'null',
+            type: typeFilter ? typeFilter.value : 'null',
+            search: searchInput ? searchInput.value : 'null',
+            dateStart: currentDateFilter.start,
+            dateEnd: currentDateFilter.end
+        });
+
+        if (organizationFilter && organizationFilter.value !== 'Organization' && organizationFilter.value !== 'All') {
             params.append('organization', organizationFilter.value);
+            console.log('Added organization filter:', organizationFilter.value);
         }
 
-        if (typeFilter.value !== 'Type') {
+        if (typeFilter && typeFilter.value !== 'Type' && typeFilter.value !== 'All') {
             params.append('type', typeFilter.value);
+            console.log('Added type filter:', typeFilter.value);
         }
 
-        if (searchInput.value.trim() !== '') {
-            params.append('search', searchInput.value);
+        if (searchInput && searchInput.value.trim() !== '') {
+            params.append('search', searchInput.value.trim());
+            console.log('Added search filter:', searchInput.value.trim());
         }
 
         // Add date filter parameters
         if (currentDateFilter.start) {
             params.append('start_date', currentDateFilter.start);
+            console.log('Added start date filter:', currentDateFilter.start);
         }
         if (currentDateFilter.end) {
             params.append('end_date', currentDateFilter.end);
+            console.log('Added end date filter:', currentDateFilter.end);
         }
 
         // Create the URL
         const url = `${window.location.pathname}?${params.toString()}`;
+        console.log('Making request to:', url);
 
         // Fetch filtered results
         fetch(url, {
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
             })
-            .then(response => response.text())
-            .then(html => {
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Filter response received:', {
+                    hasHtml: !!data.html,
+                    availableOrgs: data.availableOrganizations ? data.availableOrganizations.length : 0,
+                    availableTypes: data.availableTypes ? data.availableTypes.length : 0
+                });
+                
                 // Parse the HTML response
                 const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+                const doc = parser.parseFromString(data.html, 'text/html');
 
-                // Update the table body
+                // Directly replace the entire table body content
                 const newTableBody = doc.querySelector('#documentTable tbody');
-                if (newTableBody) {
-                    document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+                const currentTableBody = document.querySelector('#documentTable tbody');
+                
+                if (newTableBody && currentTableBody) {
+                    // IMPORTANT: This line is the key fix - replacing innerHTML instead of the element itself
+                    currentTableBody.innerHTML = newTableBody.innerHTML;
+                    console.log('Table body updated successfully');
+                } else {
+                    console.error('Table body not found', {
+                        newTableBodyFound: !!newTableBody,
+                        currentTableBodyFound: !!currentTableBody
+                    });
                 }
 
                 // Update pagination
@@ -1083,10 +909,11 @@
                 if (newPagination) {
                     if (currentPagination) {
                         currentPagination.outerHTML = newPagination.outerHTML;
-                        currentPagination.style.display = 'block'; // Make sure it's visible
+                        console.log('Pagination updated');
                     }
                 } else if (currentPagination) {
                     currentPagination.style.display = 'none';
+                    console.log('No pagination in response, hiding current pagination');
                 }
 
                 // Update URL without reload for bookmarking
@@ -1098,17 +925,25 @@
                     const visibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
                     selectAllCheckbox.disabled = visibleRows === 0;
                     selectAllCheckbox.checked = false;
+                    console.log('Updated select all checkbox, visible rows:', visibleRows);
                 }
 
                 // Update export button state
                 updateExportButtonState();
 
+                // Update select all link text
+                updateSelectAllLinkText();
+
                 // Remove loading state
                 tableContainer.classList.remove('opacity-50');
+                console.log('Filter application completed');
             })
             .catch(error => {
                 console.error('Error applying filters:', error);
                 tableContainer.classList.remove('opacity-50');
+                
+                // Show error to user
+                showActionToast('Filter Error', 'An error occurred while applying filters.', false);
             });
     }
 

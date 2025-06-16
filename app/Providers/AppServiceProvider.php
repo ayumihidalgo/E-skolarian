@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use App\Models\ProblemReport;
 use Carbon\Carbon;
+use App\Services\ProfanityFilter;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -17,7 +18,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(ProfanityFilter::class, function ($app) {
+            return new ProfanityFilter();
+        });
     }
 
     /**

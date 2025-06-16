@@ -50,6 +50,34 @@
             width: 100%;
         }
     }
+
+    .new-comment-highlight {
+        animation: highlightFade 3s ease-in-out;
+    }
+
+    @keyframes highlightFade {
+        0% {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        100% {
+            background-color: transparent;
+        }
+    }
+
+    .profanity-error {
+        animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        transform: translate3d(0, 0, 0);
+        backface-visibility: hidden;
+        perspective: 1000px;
+        border-color: #e53e3e !important;
+    }
+
+    @keyframes shake {
+        10%, 90% { transform: translate3d(-1px, 0, 0); }
+        20%, 80% { transform: translate3d(2px, 0, 0); }
+        30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+        40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
 </style>
 
 @section('content')
@@ -98,12 +126,13 @@
                                         <option class="bg-white text-black truncate cursor-pointer" value="">All</option>
                                         <option class="bg-white text-black truncate cursor-pointer" value="Event Proposal">Event Proposal</option>
                                         <option class="bg-white text-black truncate cursor-pointer" value="General Plan">General Plan of Activities</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Calendar">Calendar of Activities</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Accomplishment Report">Accomplishment Report</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Constitution">Constitution and By-Laws</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Reports of Proceedings">Reports of Proceedings</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Constitution and By-Laws">Constitution and By-Laws</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Fundraising Activities">Fundraising Activities</option>
                                         <option class="bg-white text-black truncate cursor-pointer" value="Request Letter">Request Letter</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Off-Campus">Off-Campus</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Petition">Petition and Concern</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Off-Petition and Concern">Petition and Concern</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Memorandum of Agreement">Memorandum of Agreement</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Off Campus Activities">Off Campus Activities</option>
                                         <option class="bg-white text-black truncate cursor-pointer" value="Others">Others</option>
                                     </select>
                                     <div class="pointer-events-none absolute top-2 right-0 flex items-center px-3 text-white">
@@ -131,17 +160,23 @@
                                 'CHO' => 'text-blue-500'
                             ];
                             $types = [
-                                'Event Proposal', 'General Plan of Activities', 'Calendar of Activities',
-                                'Accomplishment Report', 'Contribution and By-Laws', 'Request Letter',
-                                'Off-Campus', 'Petition and Concern'
+                                'Event Proposal',
+                                'General Plan of Activities',
+                                'Reports of Proceedings',
+                                'Constitution and By-Laws',
+                                'Fundraising Activities',
+                                'Request Letter',
+                                'Petition and Concern',
+                                'Memorandum of Agreement',
+                                'Off Campus Activities'
                             ];
                         @endphp
 
                         <!-- Table Section -->
                         @if ($documents->isNotEmpty())
                             <div id="tableSection" class="bg-white rounded-[24px] overflow-x-auto shadow-md pt-2 flex flex-col min-h-[500px]">
-                                <table class="min-w-full text-sm rounded-[24px]">
-                                    <thead class="bg-white text-black font-extrabold text-lg">
+                                <table class="min-w-full text-md rounded-[24px]">
+                                    <thead class="bg-white text-black font-extrabold">
                                         <tr>
                                             <th class="px-6 py-3 text-left">
                                                 <div class="flex items-center cursor-pointer" onclick="sortTable(0, 'text')">
@@ -187,7 +222,7 @@
                                     </thead>
                                     <tbody>
                                         @foreach ($documents as $document)
-                                        <tr class="border-2 {{ !$document->is_opened ? 'border-[#7A1212] bg-white' : 'border-[#D9D9D9] bg-[#D9ACAC33]' }} cursor-pointer transition-all duration-150 hover:bg-[#DAA52080]" data-document-id="{{ $document->id }}">
+                                        <tr id="document-row-{{ $document->id }}" class="border-2 {{ !$document->is_opened ? 'border-[#7A1212] bg-white' : 'border-[#D9D9D9] bg-[#D9ACAC33]' }} cursor-pointer transition-all duration-150 hover:bg-[#DAA52080] text-sm" data-document-id="{{ $document->id }}">
                                                 <!-- Tag -->
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="flex items-center">
@@ -197,7 +232,7 @@
                                                             $acronym = !empty($tagParts) ? strtoupper($tagParts[0]) : '';
 
                                                             // Map to color key
-                                                            $colorKey = match($acronym) {
+                                                            /*$colorKey = match($acronym) {
                                                                 'ACAP' => 'PSY',
                                                                 'AECES' => 'ECE',
                                                                 'ELITE' => 'IT',
@@ -214,7 +249,8 @@
                                                                 'DOC' => 'DOC',
                                                                 default => 'text-gray-500'
                                                             };
-                                                            $tagColor = $tagColors[$colorKey] ?? 'text-gray-500';
+                                                            $tagColor = $tagColors[$colorKey] ?? 'text-gray-500'; */
+                                                            $tagColor = 'text-black';
                                                         @endphp
                                                         <span class="font-bold {{ $tagColor }}">
                                                             {{ $document->tag }}
@@ -245,18 +281,26 @@
                                                         @php
                                                             // Define the predefined document types
                                                             $predefinedDocTypes = [
-                                                                'Event Proposal', 'General Plan of Activities', 'Calendar of Activities',
-                                                                'Accomplishment Report', 'Constitution and By-Laws', 'Request Letter',
-                                                                'Off-Campus', 'Petition and Concern'
+                                                                'Event Proposal',
+                                                                'General Plan of Activities',
+                                                                'Reports of Proceedings',
+                                                                'Constitution and By-Laws',
+                                                                'Fundraising Activities',
+                                                                'Request Letter',
+                                                                'Petition and Concern',
+                                                                'Memorandum of Agreement',
+                                                                'Off Campus Activities'
                                                             ];
                                                             
                                                             // Display "Others" if the document type is not in the predefined list
                                                             $displayType = in_array($document->type, $predefinedDocTypes) ? $document->type : 'Others';
                                                         @endphp
-                                                        <span title="{{ $document->type }}">{{ $displayType }}</span>
-                                                        @if(!$document->is_opened)
-                                                            <span class="h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>
-                                                        @endif
+                                                        <div class="flex justify-between items-center space-x-2 max-w-[150px]">
+                                                            <span class="truncate" title="{{ $document->type }}">{{ $displayType }}</span>
+                                                            @if(!$document->is_opened)
+                                                                <span class="flex-shrink-0 h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </tr>

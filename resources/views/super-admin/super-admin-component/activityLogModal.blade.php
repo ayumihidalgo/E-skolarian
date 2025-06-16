@@ -2,7 +2,7 @@
      class="fixed hidden bg-white border border-gray-200 rounded-lg shadow-lg z-[9999]"
      style="position: fixed; z-index: 9999;">
     <!-- Modal Content -->
-    <div class="bg-white rounded-[16px] shadow-xl w-[500px] relative">
+    <div class="bg-white rounded-[16px] shadow-xl w-full max-w-[500px] sm:w-[400px] md:w-[500px] relative"></div>
         <div class="p-4">
             <div class="divide-y divide-gray-200 max-h-[370px] overflow-y-auto">
                 @forelse($activities as $activity)

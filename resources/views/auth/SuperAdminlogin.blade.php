@@ -124,6 +124,10 @@
                                 Too many login attempts. Please try again in <span id="lockout-timer"></span>.
                             </p>
                         </div>
+
+                        <div class="flex justify-end items-center pt-1">
+                        <a href="{{ route('superadmin.password.request') }}" class="inline-block font-normal text-[14px] active:text-[var(--secondary-color)] transition-all duration-75">Forgot Password?</a>
+                    </div>
                         <!-- Submit -->
                         <div class="pt-8 flex justify-center">
                             <button type="submit" id="signInButton"

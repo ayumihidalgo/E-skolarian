@@ -42,12 +42,15 @@ class DocumentExportController extends Controller
         $selectedDocuments = $request->input('selected_documents', []);
         $isSelectiveExport = !empty($selectedDocuments) && is_array($selectedDocuments);
 
-        // Build the query with LEFT JOIN to get usernames and the same filtering logic as documentHistory method
+        // Build the query with LEFT JOIN to get usernames and admin role_name - UPDATED to match documentHistory query
         $query = DB::table('submitted_documents')
-            ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id')
-            ->select('submitted_documents.*', 'users.username')
+            ->leftJoin('users as submitter', 'submitted_documents.user_id', '=', 'submitter.id')
+            ->leftJoin('users as admin', 'submitted_documents.received_by', '=', 'admin.id')
+            ->select('submitted_documents.*', 'submitter.username', 'admin.role_name')
             ->whereNull('submitted_documents.archived_at')
-            ->where('submitted_documents.status', 'Approved');
+            ->where('submitted_documents.status', 'Approved')
+            ->where('admin.role_name', '!=', 'Student')
+            ->whereNotNull('admin.role_name');
         
         // If specific documents are selected, filter by those IDs ONLY
         if ($isSelectiveExport) {
@@ -60,9 +63,9 @@ class DocumentExportController extends Controller
                 $documents = collect([]);
             }
         } else {
-            // Apply the same filters as in documentHistory method when not selective export
+            // UPDATED: Use username for organization filter instead of control_tag
             if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
-                $query->where('submitted_documents.control_tag', 'LIKE', $request->organization . '_%');
+                $query->where('submitter.username', $request->organization);
             }
             
             // Apply type filter - handle "Others" category
@@ -87,14 +90,14 @@ class DocumentExportController extends Controller
                 $query->where('submitted_documents.created_at', '<=', $endDate);
             }
             
-            // Apply search filter (including username search)
+            // Apply search filter (including username search) - UPDATED to use submitter.username
             if ($request->has('search') && !empty($request->search)) {
                 $searchTerm = $request->search;
                 $query->where(function($q) use ($searchTerm) {
                     $q->where('submitted_documents.subject', 'LIKE', "%{$searchTerm}%")
                       ->orWhere('submitted_documents.control_tag', 'LIKE', "%{$searchTerm}%")
                       ->orWhere('submitted_documents.type', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('users.username', 'LIKE', "%{$searchTerm}%");
+                      ->orWhere('submitter.username', 'LIKE', "%{$searchTerm}%");
                 });
             }
             
@@ -105,7 +108,7 @@ class DocumentExportController extends Controller
                 
                 if ($column === 'organization') {
                     // Sort by username instead of organization acronym
-                    $query->orderBy('users.username', $direction);
+                    $query->orderBy('submitter.username', $direction);
                 } else {
                     // Prefix columns with table name to avoid ambiguity
                     $query->orderBy('submitted_documents.' . $column, $direction);
@@ -121,70 +124,69 @@ class DocumentExportController extends Controller
             $documents = $query->get();
         }
         
-        // Organization mapping data (keeping for reference even though we use username now)
-        $orgMap = [
-            'ACAP' => 'Association of Competent and Aspiring Psychologists',
-            'AECES' => 'Association of Electronics and Communications Engineering Students',
-            'ELITE' => 'Eligible League of Information Technology Enthusiasts',
-            'GIVE' => 'Guild of Imporous and Valuable Educators',
-            'JEHRA' => 'Junior Executive of Human Resource Association',
-            'JMAP' => 'Junior Marketing Association of the Philippines',
-            'JPIA' => 'Junior Philippine Institute of Accountants',
-            'PIIE' => 'Philippine Institute of Industrial Engineers',
-            'AGDS' => 'Artist Guild Dance Squad',
-            'Chorale' => 'PUP SRC Chorale',
-            'SIGMA' => 'Supreme Innovators Guild for Mathematics Advancements',
-            'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
-            'OSC' => 'Office of the Student Council',
-        ];
-
         // Create new Spreadsheet object
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        // Set document properties with admin information
-        $spreadsheet->getProperties()
-            ->setCreator('E-Skolarian - ' . $adminUsername . ' (' . $adminRole . ')')
-            ->setLastModifiedBy($adminUsername . ' (' . $adminRole . ')')
-            ->setTitle('Document History Report')
-            ->setSubject('Document History Report')
-            ->setDescription('Document History filtered report generated by ' . $adminUsername . ' (' . $adminRole . ') on ' . Carbon::now()->format('Y-m-d H:i'));
-        
-        // Set document title
-        $sheet->setTitle('Document History');
-        
-        // Add header with filter information
-        $reportTitle = 'Document History Report'; // Always use this title
-        $sheet->setCellValue('A1', $reportTitle);
-        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(18);
+        // Add PUP header section to the report
         $sheet->mergeCells('A1:F1');
+        $sheet->setCellValue('A1', 'Polytechnic University of the Philippines');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        
-        // Add admin and generation information
-        $row = 3;
-        $sheet->setCellValue('A' . $row, 'Generated by: ' . $adminUsername . ' (' . $adminRole . ')');
-        $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(12);
-        $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->mergeCells('A' . $row . ':F' . $row);
-        $row++;
-        
-        $sheet->setCellValue('A' . $row, 'Generated on: ' . now()->format('F j, Y g:i A'));
-        $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('A' . $row)->getFont()->setSize(11);
-        $sheet->mergeCells('A' . $row . ':F' . $row);
-        $row++;
-        
-        // Add export type information
-        if ($isSelectiveExport) {
-            $sheet->setCellValue('A' . $row, 'Export Type: Selected Documents (' . count($documents) . ' selected)');
-            $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(11);
-            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-            $sheet->mergeCells('A' . $row . ':F' . $row);
-            $row++;
+
+        $sheet->mergeCells('A2:F2');
+        $sheet->setCellValue('A2', 'SANTA ROSA CAMPUS');
+        $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A2')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->mergeCells('A3:F3');
+        $sheet->setCellValue('A3', 'City of Santa Rosa, Laguna');
+        $sheet->getStyle('A3')->getFont()->setSize(12);
+        $sheet->getStyle('A3')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Get admin's role_name
+        $adminRole = Auth::user()->role_name ?? 'Administrator';
+
+        $sheet->mergeCells('A5:F5');
+        $sheet->setCellValue('A5', $adminRole); // CHANGED: Use admin's role_name
+        $sheet->getStyle('A5')->getFont()->setBold(true)->setSize(12);
+        $sheet->getStyle('A5')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        $sheet->mergeCells('A6:F6');
+        $sheet->setCellValue('A6', 'Document Repository Report'); // CHANGED from List of Activities
+        $sheet->getStyle('A6')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A6')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Dynamic date range display
+        $dateRangeText = '';
+        if ($request->has('start_date') && $request->has('end_date') && !empty($request->start_date) && !empty($request->end_date)) {
+            $startDisplay = $request->has('start_date_display') ? $request->start_date_display : Carbon::parse($request->start_date)->format('F j, Y');
+            $endDisplay = $request->has('end_date_display') ? $request->end_date_display : Carbon::parse($request->end_date)->format('F j, Y');
+            $dateRangeText = $startDisplay . ' - ' . $endDisplay;
+        } elseif ($request->has('start_date') && !empty($request->start_date)) {
+            $startDisplay = $request->has('start_date_display') ? $request->start_date_display : Carbon::parse($request->start_date)->format('F j, Y');
+            $dateRangeText = 'From ' . $startDisplay;
+        } elseif ($request->has('end_date') && !empty($request->end_date)) {
+            $endDisplay = $request->has('end_date_display') ? $request->end_date_display : Carbon::parse($request->end_date)->format('F j, Y');
+            $dateRangeText = 'Until ' . $endDisplay;
         }
+
+        $sheet->mergeCells('A7:F7');
+        $sheet->setCellValue('A7', $dateRangeText);
+        $sheet->getStyle('A7')->getFont()->setSize(12);
+        $sheet->getStyle('A7')->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+
+        // Add space after header
+        $row = 9;
+
+        // Original report title (could be removed as we now have Document Repository Report above)
+        $reportTitle = 'Document Repository Report';
+        $sheet->setCellValue('A' . $row, $reportTitle);
+        $sheet->getStyle('A' . $row)->getFont()->setBold(true)->setSize(14);
+        $sheet->mergeCells('A' . $row . ':F' . $row);
+        $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         
-        // Add a separator line
-        $row++;
+        // Continue with existing code...
         
         // Show applied filters (for both selective and non-selective exports)
         $filters = [];
@@ -251,7 +253,8 @@ class DocumentExportController extends Controller
 
         $row++; // Add extra space
         
-        $headers = ['Control Tag', 'Organization', 'Title', 'Date Submitted', 'Type', 'Status'];
+        // UPDATED HEADERS: Changed "Status" to "Submitted to"
+        $headers = ['Control Tag', 'Organization', 'Title', 'Date Submitted', 'Type', 'Submitted to'];
         $column = 'A';
         
         foreach ($headers as $header) {
@@ -279,7 +282,7 @@ class DocumentExportController extends Controller
             $sheet->setCellValue('C' . $row, $document->subject);
             $sheet->setCellValue('D' . $row, Carbon::parse($document->created_at)->format('m/d/Y g:i A'));
             $sheet->setCellValue('E' . $row, $actualType); // Use actual type value instead of display type
-            $sheet->setCellValue('F' . $row, $document->status);
+            $sheet->setCellValue('F' . $row, $document->role_name ?? 'N/A'); // CHANGED: Show admin role_name instead of status
             
             // Apply font size to data rows
             $sheet->getStyle('A' . $row . ':F' . $row)->getFont()->setSize(10);
@@ -319,7 +322,7 @@ class DocumentExportController extends Controller
         $sheet->getColumnDimension('C')->setWidth(30); // Subject
         $sheet->getColumnDimension('D')->setWidth(18); // Date Submitted
         $sheet->getColumnDimension('E')->setWidth(20); // Type
-        $sheet->getColumnDimension('F')->setWidth(12); // Status
+        $sheet->getColumnDimension('F')->setWidth(15); // Submitted to (role_name)
 
         // Add borders to the data table
         $dataStartRow = $headerRow;
@@ -338,7 +341,7 @@ class DocumentExportController extends Controller
         $sheet->getRowDimension($headerRow)->setRowHeight(25);
         
         // Create filename with timestamp, admin, and export type
-        $filename = $isSelectiveExport ? 'selected_documents_' . $adminUsername : 'document_history_' . $adminUsername;
+        $filename = $isSelectiveExport ? 'selected_documents_' . $adminUsername : 'document_repository_' . $adminUsername; // CHANGED from document_history to document_repository
         $filename .= '_' . now()->format('Y-m-d_H-i-s');
         
         if (!$isSelectiveExport && $request->has('start_date') && $request->has('end_date') && !empty($request->start_date) && !empty($request->end_date)) {
@@ -388,12 +391,15 @@ class DocumentExportController extends Controller
             $selectedDocuments = $request->input('selected_documents', []);
             $isSelectiveExport = !empty($selectedDocuments) && is_array($selectedDocuments);
 
-            // Build the query with LEFT JOIN to get usernames and the same filtering logic as documentHistory method
+            // Build the query with LEFT JOIN to get usernames and admin role_name - UPDATED to match documentHistory query
             $query = DB::table('submitted_documents')
-                ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id')
-                ->select('submitted_documents.*', 'users.username')
+                ->leftJoin('users as submitter', 'submitted_documents.user_id', '=', 'submitter.id')
+                ->leftJoin('users as admin', 'submitted_documents.received_by', '=', 'admin.id')
+                ->select('submitted_documents.*', 'submitter.username', 'admin.role_name')
                 ->whereNull('submitted_documents.archived_at')
-                ->where('submitted_documents.status', 'Approved');
+                ->where('submitted_documents.status', 'Approved')
+                ->where('admin.role_name', '!=', 'Student')
+                ->whereNotNull('admin.role_name');
             
             // If specific documents are selected, filter by those IDs ONLY
             if ($isSelectiveExport) {
@@ -407,8 +413,9 @@ class DocumentExportController extends Controller
                 }
             } else {
                 // Apply the same filters as in documentHistory method when not selective export
+                // UPDATED: Use username for organization filter instead of control_tag
                 if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
-                    $query->where('submitted_documents.control_tag', 'LIKE', $request->organization . '_%');
+                    $query->where('submitter.username', $request->organization);
                 }
                 
                 // Apply type filter - handle "Others" category
@@ -433,14 +440,14 @@ class DocumentExportController extends Controller
                     $query->where('submitted_documents.created_at', '<=', $endDate);
                 }
                 
-                // Apply search filter (including username search)
+                // Apply search filter (including username search) - UPDATED to use submitter.username
                 if ($request->has('search') && !empty($request->search)) {
                     $searchTerm = $request->search;
                     $query->where(function($q) use ($searchTerm) {
                         $q->where('submitted_documents.subject', 'LIKE', "%{$searchTerm}%")
                           ->orWhere('submitted_documents.control_tag', 'LIKE', "%{$searchTerm}%")
                           ->orWhere('submitted_documents.type', 'LIKE', "%{$searchTerm}%")
-                          ->orWhere('users.username', 'LIKE', "%{$searchTerm}%");
+                          ->orWhere('submitter.username', 'LIKE', "%{$searchTerm}%");
                     });
                 }
                 
@@ -451,7 +458,7 @@ class DocumentExportController extends Controller
                     
                     if ($column === 'organization') {
                         // Sort by username instead of organization acronym
-                        $query->orderBy('users.username', $direction);
+                        $query->orderBy('submitter.username', $direction);
                     } else {
                         // Prefix columns with table name to avoid ambiguity
                         $query->orderBy('submitted_documents.' . $column, $direction);
@@ -509,7 +516,7 @@ class DocumentExportController extends Controller
             $dompdf->render();
 
             // Create filename (same structure as Excel)
-            $filename = $isSelectiveExport ? 'selected_documents_' . str_replace(' ', '_', $adminUsername) : 'document_history_' . str_replace(' ', '_', $adminUsername);
+            $filename = $isSelectiveExport ? 'selected_documents_' . str_replace(' ', '_', $adminUsername) : 'document_repository_' . str_replace(' ', '_', $adminUsername); 
             $filename .= '_' . now()->format('Y-m-d_H-i-s');
             
             if (!$isSelectiveExport && $request->has('start_date') && $request->has('end_date') && !empty($request->start_date) && !empty($request->end_date)) {
@@ -538,136 +545,186 @@ class DocumentExportController extends Controller
 
     private function generatePdfHtml($documents, $filters, $dateRangeFilter, $isSelectiveExport, $adminUsername, $adminRole)
     {
+        // Create a dynamic date range string from the dateRangeFilter parameter
+        $dateRangeText = '';
+        if (!empty($dateRangeFilter)) {
+            if (strpos($dateRangeFilter, 'Date Range:') !== false) {
+                $dateRangeText = str_replace('Date Range: ', '', $dateRangeFilter);
+            } elseif (strpos($dateRangeFilter, 'From Date:') !== false) {
+                $dateRangeText = str_replace('From Date: ', 'From ', $dateRangeFilter);
+            } elseif (strpos($dateRangeFilter, 'Until Date:') !== false) {
+                $dateRangeText = str_replace('Until Date: ', 'Until ', $dateRangeFilter);
+            }
+        }
+        
         $html = '<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Document History Report</title>
+    <title>Document Repository Report</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
         body {
             font-family: Arial, sans-serif;
-            font-size: 10px;
-            line-height: 1.3;
+            font-size: 11pt;
+            line-height: 1.4;
             color: #333;
-            padding: 15px;
+            margin: 0;
+            padding: 20px;
         }
-        .header {
+        .header-section {
             text-align: center;
+            margin-bottom: 30px;
+        }
+        .university {
+            font-size: 16pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .campus {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .location {
+            font-size: 12pt;
+            margin-bottom: 15px;
+        }
+        .department {
+            font-size: 12pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .report-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .date-range {
+            font-size: 12pt;
             margin-bottom: 20px;
         }
-        .title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #7A1212;
-            margin-bottom: 10px;
+        .report-info {
+            margin-bottom: 20px;
         }
-        .admin-info {
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .generated-info {
-            font-size: 11px;
-            margin-bottom: 10px;
-        }
-        .export-type {
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-        .filters {
-            margin-bottom: 15px;
-            font-size: 10px;
-        }
-        .filters-title {
-            font-weight: bold;
-            font-size: 11px;
-            margin-bottom: 5px;
-        }
-        .filter-item {
-            margin-left: 10px;
-            margin-bottom: 2px;
-        }
-        .note {
-            font-style: italic;
-            font-size: 9px;
-            margin-top: 5px;
-        }
+        
+        /* TABLE STYLES */
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-            font-size: 9px;
+            margin-bottom: 30px;
+            font-size: 10pt;
         }
         th {
             background-color: #7A1212;
             color: white;
+            padding: 10px;
+            border: 1px solid #ddd;
             font-weight: bold;
-            padding: 8px 4px;
-            text-align: center;
-            border: 1px solid #000;
+            text-align: left;
         }
         td {
-            padding: 6px 4px;
-            border: 1px solid #ccc;
+            padding: 8px 10px;
+            border: 1px solid #ddd;
             vertical-align: top;
-            word-wrap: break-word;
         }
         tr:nth-child(even) {
-            background-color: #f8f9fa;
+            background-color: #f9f9f9;
+        }
+        
+        .filters {
+            margin-bottom: 15px;
+            font-size: 10pt;
+        }
+        .filters-title {
+            font-weight: bold;
+        }
+        
+        /* FIX: SIGNATURE TABLES INSTEAD OF FLOATING DIVS */
+        .signature-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        .signature-table td {
+            padding: 10px;
+            border: none;
+            vertical-align: top;
+        }
+        .signature-title {
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .signature-line {
+            width: 80%;
+            border-bottom: 1px solid black;
+            margin-bottom: 5px;
+        }
+        .signature-line-right {
+            width: 80%;
+            border-bottom: 1px solid black;
+            margin-bottom: 5px;
+            margin-left: auto; /* This pushes the line to the right */
+        }
+        .signature-name {
+            margin-top: 5px;
+        }
+        .signature-position {
+            font-style: italic;
+            margin-top: 2px;
         }
         .summary {
             text-align: center;
             font-weight: bold;
-            font-size: 11px;
-            margin-top: 15px;
+            margin: 20px 0;
         }
         .footer {
-            text-align: center;
+            font-size: 9pt;
             font-style: italic;
-            font-size: 9px;
-            margin-top: 10px;
+            text-align: center;
+            margin-top: 20px;
         }
-        .col-tag { width: 12%; }
-        .col-org { width: 15%; }
-        .col-title { width: 35%; }
-        .col-date { width: 18%; }
-        .col-type { width: 15%; }
-        .col-status { width: 5%; }
+        .text-right {
+            text-align: right;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="title">Document History Report</div>
-        <div class="admin-info">Generated by: ' . htmlspecialchars($adminUsername) . ' (' . htmlspecialchars($adminRole) . ')</div>
-        <div class="generated-info">Generated on: ' . now()->format('F j, Y g:i A') . '</div>';
+    <div class="header-section">
+        <div class="university">Polytechnic University of the Philippines</div>
+        <div class="campus">SANTA ROSA CAMPUS</div>
+        <div class="location">City of Santa Rosa, Laguna</div>
+        <div class="department">' . htmlspecialchars($adminRole) . '</div>
+        <div class="report-title">Document Repository Report</div>
+        <div class="date-range">' . htmlspecialchars($dateRangeText) . '</div>
+    </div>
+    
+    <div class="report-info">
+        <div>Generated by: ' . htmlspecialchars($adminUsername) . ' (' . htmlspecialchars($adminRole) . ')</div>
+        <div>Generated on: ' . now()->format('F j, Y g:i A') . '</div>';
         
         if ($isSelectiveExport) {
-            $html .= '<div class="export-type">Export Type: Selected Documents (' . count($documents) . ' selected)</div>';
+            $html .= '<div>Export Type: Selected Documents (' . count($documents) . ' selected)</div>';
         }
         
         $html .= '</div>';
 
-        // Add filters section (same as Excel)
+        // Add filters section
         if (!empty($filters) || !empty($dateRangeFilter)) {
             $html .= '<div class="filters">
                 <div class="filters-title">Applied Filters:</div>';
             
             if (!empty($dateRangeFilter)) {
-                $html .= '<div class="filter-item">• ' . htmlspecialchars($dateRangeFilter) . '</div>';
+                $html .= '<div>• ' . htmlspecialchars($dateRangeFilter) . '</div>';
             }
             
             foreach ($filters as $filter) {
-                $html .= '<div class="filter-item">• ' . htmlspecialchars($filter) . '</div>';
+                $html .= '<div>• ' . htmlspecialchars($filter) . '</div>';
             }
             
             if ($isSelectiveExport) {
-                $html .= '<div class="note">Note: Above filters were active when documents were selected, but export contains only selected documents.</div>';
+                $html .= '<div style="font-style: italic; margin-top: 5px;">Note: Above filters were active when documents were selected, but export contains only selected documents.</div>';
             }
             
             $html .= '</div>';
@@ -679,47 +736,68 @@ class DocumentExportController extends Controller
             }
         }
 
-        // Add table (same structure as Excel)
+        // Table structure
         $html .= '<table>
             <thead>
                 <tr>
-                    <th class="col-tag">Control Tag</th>
-                    <th class="col-org">Organization</th>
-                    <th class="col-title">Title</th>
-                    <th class="col-date">Date Submitted</th>
-                    <th class="col-type">Type</th>
-                    <th class="col-status">Status</th>
+                    <th>Control Tag</th>
+                    <th>Organization</th>
+                    <th>Title</th>
+                    <th>Date Submitted</th>
+                    <th>Type</th>
+                    <th>Submitted to</th>
                 </tr>
             </thead>
             <tbody>';
 
-        foreach ($documents as $document) {
-            $actualType = $document->type; // Use actual type from database
-            $html .= '<tr>
-                <td>' . htmlspecialchars($document->control_tag) . '</td>
-                <td>' . htmlspecialchars($document->username ?? 'N/A') . '</td>
-                <td>' . htmlspecialchars($document->subject) . '</td>
-                <td>' . Carbon::parse($document->created_at)->format('m/d/Y g:i A') . '</td>
-                <td>' . htmlspecialchars($actualType) . '</td>
-                <td>' . htmlspecialchars($document->status) . '</td>
-            </tr>';
+        if (count($documents) > 0) {
+            foreach ($documents as $document) {
+                $actualType = $document->type;
+                $html .= '<tr>
+                    <td>' . htmlspecialchars($document->control_tag ?? "") . '</td>
+                    <td>' . htmlspecialchars($document->username ?? "N/A") . '</td>
+                    <td>' . htmlspecialchars($document->subject ?? "") . '</td>
+                    <td>' . Carbon::parse($document->created_at)->format("m/d/Y g:i A") . '</td>
+                    <td>' . htmlspecialchars($actualType ?? "") . '</td>
+                    <td>' . htmlspecialchars($document->role_name ?? "N/A") . '</td>
+                </tr>';
+            }
+        } else {
+            $html .= '<tr><td colspan="6" style="text-align: center;">No documents found matching your criteria.</td></tr>';
         }
 
         $html .= '</tbody>
-        </table>
+        </table>';
         
-        <div class="summary">';
-        
+        // Document count summary
+        $html .= '<div class="summary">';
         if ($isSelectiveExport) {
-            $html .= 'Selected Documents: ' . count($documents);
+            $html .= "Selected Documents: " . count($documents);
         } else {
-            $html .= 'Total Documents: ' . count($documents);
+            $html .= "Total Documents: " . count($documents);
         }
+        $html .= '</div>';
         
-        $html .= '</div>
-        
+        // FIX: REPLACING FLOATING DIVS WITH HTML TABLES FOR SIGNATURES
+        $html .= '
+        <!-- Only row: Notes and Submitted by -->
+        <table class="signature-table">
+            <tr>
+                <td style="width: 50%;">
+                    <div class="signature-title">Notes:</div>
+                    <div style="height: 50px;"></div>
+                </td>
+                <td style="width: 50%;" class="text-right">
+                    <div class="signature-title">Submitted by:</div>
+                    <div class="signature-line-right">&nbsp;</div>
+                    <div class="signature-name">Name and Signature</div>
+                    <div class="signature-position">' . htmlspecialchars($adminRole) . '</div>
+                </td>
+            </tr>
+        </table>
+
         <div class="footer">
-            Report generated by: ' . htmlspecialchars($adminUsername) . ' (' . htmlspecialchars($adminRole) . ') on ' . now()->format('F j, Y g:i A') . '
+            Report generated on ' . now()->format("F j, Y g:i A") . '
         </div>
     </body>
     </html>';

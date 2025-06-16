@@ -99,11 +99,17 @@
                     @endif
                 </button>
             </div>
-            <div class="hover:bg-gray-100 rounded cursor-pointer transition-colors duration-300 hidden" id="collapseArrow">
-                <svg id="arrowIcon" width="20" height="20" viewBox="0 0 20 20" fill="none"
-                    xmlns="http://www.w3.org/2000/svg" class="transform transition-transform duration-300">
-                    <path d="M10.0001 10.879L13.7126 7.1665L14.7731 8.227L10.0001 13L5.22705 8.227L6.28755 7.1665L10.0001 10.879Z" fill="#525866"/>
-                </svg>
+            <div class="flex items-center">
+                <!-- Select All button - hidden by default -->
+                <button id="selectAllBtn" class="px-4 py-2 text-purple-600 hover:bg-gray-100 cursor-pointer hidden">
+                    Select All
+                </button>
+                <div class="hover:bg-gray-100 rounded cursor-pointer transition-colors duration-300 hidden" id="collapseArrow">
+                    <svg id="arrowIcon" width="20" height="20" viewBox="0 0 20 20" fill="none"
+                        xmlns="http://www.w3.org/2000/svg" class="transform transition-transform duration-300">
+                        <path d="M10.0001 10.879L13.7126 7.1665L14.7731 8.227L10.0001 13L5.22705 8.227L6.28755 7.1665L10.0001 10.879Z" fill="#525866"/>
+                    </svg>
+                </div>
             </div>
         </div>
 
@@ -261,27 +267,124 @@
         let isCollapsed = false;
         let isPanelVisible = false;
 
-        // Handle checkbox selection to show/hide options menu (GitHub style)
+        // Update the updateOptionsMenu function to handle the Select All button
         function updateOptionsMenu() {
             const checkedBoxes = document.querySelectorAll('.notification-checkbox:checked');
             const optionsMenuBtn = document.getElementById('optionsMenuBtn');
             const optionsMenu = document.getElementById('optionsMenu');
+            const selectAllBtn = document.getElementById('selectAllBtn');
             
             if (checkedBoxes.length > 0) {
                 // Show dots icon when checkboxes are selected
                 optionsMenuBtn.classList.remove('hidden');
                 optionsMenuBtn.classList.add('shadow-lg', 'bg-gray-100');
                 
+                // Show Select All button
+                if (selectAllBtn) {
+                    selectAllBtn.classList.remove('hidden');
+                }
+                
                 // Enable all buttons
                 document.getElementById('markAsReadBtn').disabled = false;
                 document.getElementById('markAsUnreadBtn').disabled = false;
                 document.getElementById('deleteBtn').disabled = false;
                 document.getElementById('deleteAllBtn').disabled = false;
+                
+                // Update Select All button text if all are selected
+                const isAllTabActive = !document.getElementById('allTab').classList.contains('text-gray-500');
+                const currentTab = isAllTabActive ? 'allNotifications' : 'unreadNotifications';
+                const checkboxes = document.querySelectorAll(`#${currentTab} .notification-checkbox`);
+                const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+                
+                if (selectAllBtn) {
+                    selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
+                }
             } else {
                 // Hide dots icon when no checkboxes are selected
                 optionsMenuBtn.classList.add('hidden');
                 optionsMenuBtn.classList.remove('shadow-lg', 'bg-gray-100');
                 optionsMenu.classList.add('hidden');
+                
+                // Hide Select All button
+                if (selectAllBtn) {
+                    selectAllBtn.classList.add('hidden');
+                }
+                
+                // Disable all buttons
+                document.getElementById('markAsReadBtn').disabled = true;
+                document.getElementById('markAsUnreadBtn').disabled = true;
+                document.getElementById('deleteBtn').disabled = true;
+                document.getElementById('deleteAllBtn').disabled = true;
+            }
+        }
+
+        // Select All functionality
+        const selectAllBtn = document.getElementById('selectAllBtn');
+        if (selectAllBtn) {
+            selectAllBtn.addEventListener('click', function() {
+                // Determine which tab is currently active
+                const isAllTabActive = !allTab.classList.contains('text-gray-500');
+                const currentTab = isAllTabActive ? 'allNotifications' : 'unreadNotifications';
+                const checkboxes = document.querySelectorAll(`#${currentTab} .notification-checkbox`);
+                
+                // Check if all are already selected
+                const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+                
+                // Toggle all checkboxes
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = !allSelected;
+                });
+                
+                // Update the options menu visibility
+                updateOptionsMenu();
+                
+                // Update button text
+                this.textContent = allSelected ? 'Select All' : 'Deselect All';
+            });
+        }
+        
+        // Handle checkbox selection to show/hide options menu (GitHub style)
+        function updateOptionsMenu() {
+            const checkedBoxes = document.querySelectorAll('.notification-checkbox:checked');
+            const optionsMenuBtn = document.getElementById('optionsMenuBtn');
+            const optionsMenu = document.getElementById('optionsMenu');
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            
+            if (checkedBoxes.length > 0) {
+                // Show dots icon when checkboxes are selected
+                optionsMenuBtn.classList.remove('hidden');
+                optionsMenuBtn.classList.add('shadow-lg', 'bg-gray-100');
+                
+                // Show Select All button
+                if (selectAllBtn) {
+                    selectAllBtn.classList.remove('hidden');
+                }
+                
+                // Enable all buttons
+                document.getElementById('markAsReadBtn').disabled = false;
+                document.getElementById('markAsUnreadBtn').disabled = false;
+                document.getElementById('deleteBtn').disabled = false;
+                document.getElementById('deleteAllBtn').disabled = false;
+                
+                // Update Select All button text if all are selected
+                const isAllTabActive = !document.getElementById('allTab').classList.contains('text-gray-500');
+                const currentTab = isAllTabActive ? 'allNotifications' : 'unreadNotifications';
+                const checkboxes = document.querySelectorAll(`#${currentTab} .notification-checkbox`);
+                const allSelected = Array.from(checkboxes).every(cb => cb.checked);
+                
+                if (selectAllBtn) {
+                    selectAllBtn.textContent = allSelected ? 'Deselect All' : 'Select All';
+                }
+            } else {
+                // Hide dots icon when no checkboxes are selected
+                optionsMenuBtn.classList.add('hidden');
+                optionsMenuBtn.classList.remove('shadow-lg', 'bg-gray-100');
+                optionsMenu.classList.add('hidden');
+                
+                // Hide Select All button
+                if (selectAllBtn) {
+                    selectAllBtn.classList.add('hidden');
+                }
                 
                 // Disable all buttons
                 document.getElementById('markAsReadBtn').disabled = true;
@@ -295,7 +398,13 @@
       function initializeCheckboxes() {
     document.querySelectorAll('.notification-checkbox').forEach(checkbox => {
         checkbox.addEventListener('change', function(event) {
+            event.stopPropagation(); // Prevent clicking the notification
             updateOptionsMenu();
+        });
+        
+        // Also add click handler to prevent propagation
+        checkbox.addEventListener('click', function(event) {
+            event.stopPropagation();
         });
     });
 }
