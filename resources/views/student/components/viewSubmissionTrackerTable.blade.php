@@ -95,6 +95,7 @@
             @forelse($records as $record)
                 <tr onclick="window.location='{{ url('/records/' . $record->id) }}'"
                     class="hover:bg-gray-100 cursor-pointer transition">
+                    <td class="py-3 px-4">{{ $record->control_tag }}</td>
                     <td class="py-3 px-4">{{ $record->subject }}</td>
                     <td class="py-3 px-4">{{ \Carbon\Carbon::parse($record->created_at)->format('m/d/Y') }}</td>
                     <td class="py-3 px-4">{{ $record->type }}</td>
