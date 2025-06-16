@@ -81,7 +81,25 @@
                         @foreach ($latestAnnouncements as $announcement)
                             <div class="mb-4 pb-4 border-b border-gray-300 relative">
                                 <div class="flex items-center justify-between">
-                                    <h3 class="text-xl font-bold text-[#332B2B] mb-1">{{ $announcement->title }}</h3>
+                                     <h3 class="text-sm md:text-xl font-bold text-[#332B2B] mb-1">
+                                        @if (strlen($announcement->title) > 40)
+                                            <!-- For desktop -->
+                                            <span class="hidden md:inline cursor-help group relative">
+                                                {{ Str::limit($announcement->title, 40) }}
+                                                <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                    bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                    {{ $announcement->title }}
+                                                </span>
+                                            </span>
+                                            
+                                            <!-- For mobile -->
+                                            <span class="md:hidden">
+                                                {{ $announcement->title }}
+                                            </span>
+                                        @else
+                                            {{ $announcement->title }}
+                                        @endif
+                                    </h3>
                                     <!-- Ellipsis Button -->
                                     <div class="relative">
                                         <button class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition"
@@ -190,7 +208,23 @@
                         @foreach ($announcements as $announcement)
                             <div class="mb-4 pb-4 border-b border-gray-300 relative">
                                 <div class="flex items-center justify-between">
-                                    <h3 class="text-md font-bold text-gray-800 mb-1">{{ $announcement->title }}
+                                    <h3 class="text-lg md:text-md font-bold text-gray-800 mb-1">
+                                        @if (strlen($announcement->title) > 40)
+                                            <!-- Desktop: truncated with tooltip -->
+                                            <span class="hidden md:inline cursor-help group relative">
+                                                {{ Str::limit($announcement->title, 40) }}
+                                                <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                    bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                    {{ $announcement->title }}
+                                                </span>
+                                            </span>
+                                            <!-- Mobile: full title, smaller text -->
+                                            <span class="md:hidden">
+                                                {{ $announcement->title }}
+                                            </span>
+                                        @else
+                                            {{ $announcement->title }}
+                                        @endif
                                     </h3>
                                     @if ($showArchive)
                                         <!-- Ellipsis for archived (Restore/Delete) -->
@@ -298,126 +332,8 @@
                 </div>
             </div>
         </div>
-        <!-- Post New Announcements Modal -->
-                <div id="postAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-                    <div class="absolute inset-0 bg-black opacity-75"></div>
-                    <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="font-semibold text-lg flex items-center">
-                                Post Announcement
-                                <!-- Tooltip Icon -->
-                                <button type="button" id="announcementInfoBtn" class="ml-2 focus:outline-none">
-                                    <img src="{{ asset('images/tooltip.png') }}" alt="Info" class="w-5 h-5 inline-block align-middle" />
-                                </button>
-                            </span>
-                            <button onclick="closePostAnnouncementModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
-                        </div>
-                        <!-- Tooltip Content (responsive) -->
-                        <div id="announcementInfoTooltip" class="hidden absolute top-12 left-1/2 transform -translate-x-1/2 w-80 sm:w-96 max-w-xs sm:max-w-md bg-gray-800 text-white text-sm rounded-lg shadow-lg p-4 z-50 break-words">
-                            <div class="mb-2 font-semibold">You can now create and share announcements with your team or organization!</div>
-                            <ol class="list-decimal list-inside mb-2">
-                                <li>
-                                    <span class="font-semibold">Regular Announcements</span> – Ideal for general updates, reminders, or important messages.
-                                </li>
-                                <li>
-                                    <span class="font-semibold">Announcements with Deadlines</span> – Perfect for time-sensitive updates like submission schedules, event registrations, or task deadlines. These announcements allow you to set a due date to help users stay on track.
-                                </li>
-                            </ol>
-                            <span>Start posting announcements to keep everyone informed and organized!</span>
-                        </div>
-                        <form id="announcementForm" action="{{ auth()->user()->role === 'super admin' ? route('super-admin.announcements.store') : route('announcements.store') }}" method="POST">
-                            @csrf
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                                    <input type="text" id="titleInput" name="title" maxlength="60"
-                                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                        placeholder="Enter announcement title">
-                                    <p id="titleError" class="text-red-500 text-sm mt-1" style="display: none;">Title is required.</p>
-                                </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                                    <textarea name="content" id="contentInput" rows="4" maxlength="1000"
-                                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                        placeholder="Enter announcement content"></textarea>
-                                    <p id="contentError" class="text-red-500 text-sm mt-1" style="display: none;">Content is required.</p>
-                                </div>
-                                <!-- Schedule Section -->
-                                <div>
-                                    <label class="inline-flex items-center mb-2">
-                                        <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox">
-                                        <span class="ml-2">Set Due Date</span>
-                                    </label>
-                                    <div id="scheduleFields" class="hidden">
-                                        <div class="flex items-end space-x-4">
-                                            <div>
-                                                <label for="scheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                                                <input type="date" id="scheduleDate" name="schedule_date"
-                                                    class="border rounded px-2 py-1" min="{{ date('Y-m-d') }}">
-                                            </div>
-                                            <div>
-                                                <label for="scheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
-                                                <input type="time" id="scheduleTime" name="schedule_time"
-                                                    class="border rounded px-2 py-1">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!-- Audience Section -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
-                                    <div class="flex items-center space-x-4">
-                                        <label class="inline-flex items-center">
-                                            <input type="radio" name="audience" value="all" checked class="form-radio" id="audienceAll">
-                                            <span class="ml-2">All Student</span>
-                                        </label>
-                                        <label class="inline-flex items-center">
-                                            <input type="radio" name="audience" value="custom" class="form-radio" id="audienceCustom">
-                                            <span class="ml-2">Custom</span>
-                                        </label>
-                                    </div>
-                                    <div id="customAudienceDropdown" class="mt-2 hidden border rounded-lg px-2 py-2 max-h-40 overflow-y-auto bg-white">
-                                        @foreach($users as $user)
-                                            @if($user->role === 'student')
-                                                <label class="flex items-center py-1 border-b last:border-b-0">
-                                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}" class="form-checkbox mr-2">
-                                                    <span>{{ $user->username }}</span>
-                                                </label>
-                                            @endif
-                                        @endforeach
-                                        <p class="text-xs text-gray-500 mt-1">Check students who should see the announcement.</p>
-                                    </div>
-                                </div>
-                                <div class="text-right">
-                                    <button type="submit" id="submitBtn"
-                                    class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c]"
-                                    style="background-color: #7A1212;">
-                                    Post Announcement
-                                </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-        </div>
 
-       {{-- Modal for full announcement --}}
-            <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-                <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
-                <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="flex items-center gap-2">
-                            <img src="{{ asset('images/annc.svg') }}" alt="Announcement" class="w-8 h-8 inline-block align-middle" />
-                            <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
-                        </div>
-                        <button onclick="closeAnnouncementModal()"
-                            class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
-                    </div>
-                    <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
-                    <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
-                    <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words"></div>
-                </div>
-            </div>
-            
-        <!-- Table Header and Container -->
+         <!-- Table Header and Container -->
         <div class="overflow-x-auto overflow-y-hidden rounded-[25px] shadow bg-[#D9D9D9]" style="width: 100%; height: 540px; flex-shrink:0;">
             <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
                 <thead>
@@ -647,6 +563,125 @@
             </ul>
         </nav>
     </div>
+    </div>
+        <!-- Post New Announcements Modal -->
+                <div id="postAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+                    <div class="absolute inset-0 bg-black opacity-75"></div>
+                    <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-semibold text-lg flex items-center">
+                                Post Announcement
+                                <!-- Tooltip Icon -->
+                                <button type="button" id="announcementInfoBtn" class="ml-2 focus:outline-none">
+                                    <img src="{{ asset('images/tooltip.png') }}" alt="Info" class="w-5 h-5 inline-block align-middle" />
+                                </button>
+                            </span>
+                            <button onclick="closePostAnnouncementModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                        </div>
+                        <!-- Tooltip Content (responsive) -->
+                        <div id="announcementInfoTooltip" class="hidden absolute top-12 left-1/2 transform -translate-x-1/2 w-80 sm:w-96 max-w-xs sm:max-w-md bg-gray-800 text-white text-sm rounded-lg shadow-lg p-4 z-50 break-words">
+                            <div class="mb-2 font-semibold">You can now create and share announcements with your team or organization!</div>
+                            <ol class="list-decimal list-inside mb-2">
+                                <li>
+                                    <span class="font-semibold">Regular Announcements</span> – Ideal for general updates, reminders, or important messages.
+                                </li>
+                                <li>
+                                    <span class="font-semibold">Announcements with Deadlines</span> – Perfect for time-sensitive updates like submission schedules, event registrations, or task deadlines. These announcements allow you to set a due date to help users stay on track.
+                                </li>
+                            </ol>
+                            <span>Start posting announcements to keep everyone informed and organized!</span>
+                        </div>
+                        <form id="announcementForm" action="{{ auth()->user()->role === 'super admin' ? route('super-admin.announcements.store') : route('announcements.store') }}" method="POST">
+                            @csrf
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                    <input type="text" id="titleInput" name="title" maxlength="60"
+                                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                        placeholder="Enter announcement title">
+                                    <p id="titleError" class="text-red-500 text-sm mt-1" style="display: none;">Title is required.</p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                                    <textarea name="content" id="contentInput" rows="4" maxlength="1000"
+                                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                        placeholder="Enter announcement content"></textarea>
+                                    <p id="contentError" class="text-red-500 text-sm mt-1" style="display: none;">Content is required.</p>
+                                </div>
+                                <!-- Schedule Section -->
+                                <div>
+                                    <label class="inline-flex items-center mb-2">
+                                        <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox">
+                                        <span class="ml-2">Set Due Date</span>
+                                    </label>
+                                    <div id="scheduleFields" class="hidden">
+                                        <div class="flex items-end space-x-4">
+                                            <div>
+                                                <label for="scheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                                <input type="date" id="scheduleDate" name="schedule_date"
+                                                    class="border rounded px-2 py-1" min="{{ date('Y-m-d') }}">
+                                            </div>
+                                            <div>
+                                                <label for="scheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
+                                                <input type="time" id="scheduleTime" name="schedule_time"
+                                                    class="border rounded px-2 py-1">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Audience Section -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
+                                    <div class="flex items-center space-x-4">
+                                        <label class="inline-flex items-center">
+                                            <input type="radio" name="audience" value="all" checked class="form-radio" id="audienceAll">
+                                            <span class="ml-2">All Student</span>
+                                        </label>
+                                        <label class="inline-flex items-center">
+                                            <input type="radio" name="audience" value="custom" class="form-radio" id="audienceCustom">
+                                            <span class="ml-2">Custom</span>
+                                        </label>
+                                    </div>
+                                    <div id="customAudienceDropdown" class="mt-2 hidden border rounded-lg px-2 py-2 max-h-40 overflow-y-auto bg-white">
+                                        @foreach($users as $user)
+                                            @if($user->role === 'student')
+                                                <label class="flex items-center py-1 border-b last:border-b-0">
+                                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}" class="form-checkbox mr-2">
+                                                    <span>{{ $user->username }}</span>
+                                                </label>
+                                            @endif
+                                        @endforeach
+                                        <p class="text-xs text-gray-500 mt-1">Check students who should see the announcement.</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <button type="submit" id="submitBtn"
+                                    class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c]"
+                                    style="background-color: #7A1212;">
+                                    Post Announcement
+                                </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+        </div>
+
+       {{-- Modal for full announcement --}}
+            <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+                <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
+                <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <img src="{{ asset('images/annc.svg') }}" alt="Announcement" class="w-8 h-8 inline-block align-middle" />
+                            <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
+                        </div>
+                        <button onclick="closeAnnouncementModal()"
+                            class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                    </div>
+                    <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
+                    <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
+                    <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words"></div>
+                </div>
+            </div>
         </div>
 
     {{-- Edit Announcement Modal --}}
@@ -824,7 +859,8 @@
             </div>
         </div>
     </div>
-    </div>
+
+       
 
     <!-- Modal for Add User Button -->
     <div id="addUserModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">

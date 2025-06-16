@@ -85,8 +85,25 @@
                                     @foreach ($latestAnnouncements as $announcement)
                                         <div class="mb-4 pb-4 border-b border-gray-300 relative">
                                             <div class="flex items-center justify-between">
-                                                <h3 class="text-xl font-bold text-gray-800 mb-1">{{ $announcement->title }}
-                                                </h3>
+                                                <h3 class="text-md md:text-xl font-bold text-gray-800 mb-1">
+                                                                    @if (strlen($announcement->title) > 40)
+                                                                        <!-- For desktop -->
+                                                                        <span class="hidden md:inline cursor-help group relative">
+                                                                            {{ Str::limit($announcement->title, 40) }}
+                                                                            <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                                                bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                                                {{ $announcement->title }}
+                                                                            </span>
+                                                                        </span>
+                                                                        
+                                                                        <!-- For mobile -->
+                                                                        <span class="md:hidden">
+                                                                            {{ $announcement->title }}
+                                                                        </span>
+                                                                    @else
+                                                                        {{ $announcement->title }}
+                                                                    @endif
+                                                                </h3>
                                                 <!-- Ellipsis Button -->
                                                 <div class="relative">
                                                     <button
@@ -247,8 +264,24 @@
                                 @foreach ($announcements as $announcement)
                                     <div class="mb-4 pb-4 border-b border-gray-300 relative">
                                         <div class="flex items-center justify-between">
-                                            <h3 class="text-md font-bold text-gray-800 mb-1">{{ $announcement->title }}
-                                            </h3>
+                                            <h3 class="text-sm md:text-md font-bold text-gray-800 mb-1">
+                                            @if (strlen($announcement->title) > 40)
+                                                <!-- For desktop -->
+                                                <span class="hidden md:inline cursor-help group relative">
+                                                    {{ Str::limit($announcement->title, 40) }}
+                                                    <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                        bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                        {{ $announcement->title }}
+                                                    </span>
+                                                </span>
+                                                <!-- For mobile -->
+                                                <span class="md:hidden">
+                                                    {{ $announcement->title }}
+                                                </span>
+                                            @else
+                                                {{ $announcement->title }}
+                                            @endif
+                                        </h3>
                                             @if ($showArchive)
                                                 <!-- Ellipsis for archived (Restore/Delete) -->
                                                 <div class="relative">

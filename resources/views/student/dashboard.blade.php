@@ -62,7 +62,25 @@
                                         $postDate = \Carbon\Carbon::parse($announcement->created_at)->format('F j, Y');
                                     @endphp
                                     <div class="mb-4 pb-4 border-b border-gray-300">
-                                        <h3 class="text-xl font-semibold">{{ $announcement->title }}</h3>
+                                        <h3 class="text-lg md:text-xl font-semibold">
+                                        @if (strlen($announcement->title) > 40)
+                                            <!-- For desktop -->
+                                            <span class="hidden md:inline cursor-help group relative">
+                                                {{ Str::limit($announcement->title, 40) }}
+                                                <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                    bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                    {{ $announcement->title }}
+                                                </span>
+                                            </span>
+                                            
+                                            <!-- For mobile -->
+                                            <span class="md:hidden">
+                                                {{ $announcement->title }}
+                                            </span>
+                                        @else
+                                            {{ $announcement->title }}
+                                        @endif
+                                    </h3>
                                         <p class="text-sm text-gray-500">
                                             Posted by {{ $announcement->user->role_name }} on {{ $postDate }}
                                             @if($deadlineText)
@@ -98,7 +116,24 @@
                             <div class="space-y-4 h-[32rem] overflow-y-auto pr-2">
                                 @foreach ($previousAnnouncements as $announcement)
                                     <div class="border-b pb-2 border-gray-300">
-                                        <h3 class="text-base font-semibold">{{ $announcement->title }}</h3>
+                                        <h3 class="text-sm md:text-base font-semibold">
+                                        @if (strlen($announcement->title) > 40)
+                                            <!-- Desktop: truncated with tooltip -->
+                                            <span class="hidden md:inline cursor-help group relative">
+                                                {{ Str::limit($announcement->title, 40) }}
+                                                <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                    bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                    {{ $announcement->title }}
+                                                </span>
+                                            </span>
+                                            <!-- Mobile: full title, smaller text -->
+                                            <span class="md:hidden">
+                                                {{ $announcement->title }}
+                                            </span>
+                                        @else
+                                            {{ $announcement->title }}
+                                        @endif
+                                    </h3>
                                         <p class="text-sm text-gray-500">
                                             Posted by {{ $announcement->user->role_name }} on
                                             {{ $announcement->created_at->format('F j, Y') }}
