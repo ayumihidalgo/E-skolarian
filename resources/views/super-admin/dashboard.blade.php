@@ -416,184 +416,7 @@
                     <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words"></div>
                 </div>
             </div>
-        </div>
-
-    {{-- Edit Announcement Modal --}}
-    <div id="editAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-75"></div>
-        <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
-            <div class="flex items-center justify-between mb-2">
-                <span class="font-semibold text-lg">Edit Announcement</span>
-                <button onclick="closeEditModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
-            </div>
-            <form id="editAnnouncementForm" method="POST">
-                @csrf
-                @method('PUT')
-                <input type="hidden" id="editAnnouncementId" name="id">
-                <input type="hidden" id="originalTitle">
-                <input type="hidden" id="originalContent">
-                <input type="hidden" id="originalScheduleDate">
-                <input type="hidden" id="originalScheduleTime">
-                <input type="hidden" id="originalAudience">
-                <input type="hidden" id="originalAudienceStudents">
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                    <input type="text" id="editTitle" name="title" maxlength="60"
-                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                        required>
-                </div>
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                    <textarea id="editContent" name="content" rows="4" maxlength="1000"
-                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" required></textarea>
-                </div>
-                <!-- Schedule Section -->
-                <div class="mb-3">
-                    <label class="inline-flex items-center mb-2">
-                        <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
-                        <span class="ml-2">Set Due Date</span>
-                    </label>
-                    <div id="editScheduleFields" class="hidden">
-                        <div class="flex items-end space-x-4">
-                            <div>
-                                <label for="editScheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                                <input type="date" id="editScheduleDate" name="schedule_date" 
-                                    class="border rounded px-2 py-1">
-                            </div>
-                            <div>
-                                <label for="editScheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
-                                <input type="time" id="editScheduleTime" name="schedule_time" 
-                                    class="border rounded px-2 py-1">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- Audience Section -->
-                <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
-                    <div class="flex items-center space-x-4">
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="audience" value="all" class="form-radio" id="editAudienceAll">
-                            <span class="ml-2">All Student</span>
-                        </label>
-                        <label class="inline-flex items-center">
-                            <input type="radio" name="audience" value="custom" class="form-radio" id="editAudienceCustom">
-                            <span class="ml-2">Custom</span>
-                        </label>
-                    </div>
-                    <div id="editCustomAudienceDropdown" class="mt-2 hidden border rounded-lg px-2 py-2 max-h-40 overflow-y-auto bg-white">
-                        @foreach($users as $user)
-                            @if($user->role === 'student')
-                                <label class="flex items-center py-1 border-b last:border-b-0">
-                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}" class="form-checkbox mr-2 editAudienceStudent">
-                                    <span>{{ $user->username }}</span>
-                            </label>
-                            @endif
-                        @endforeach
-                        <p class="text-xs text-gray-500 mt-1">Check students who should see the announcement.</p>
-                    </div>
-                </div>
-                <div class="text-right">
-                    <button type="submit" id="saveChangesBtn"
-                        class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c]"
-                        style="background-color: #7A1212;">
-                        Save
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="NoChangeToast"
-        class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-yellow-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
-        role="alert">
-        <div class="w-full flex justify-between">
-            <div class="flex items-center gap-4">
-                <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
-                <div>
-                    <h6 class="font-bold font-['Manrope']">
-                        There was no change.
-                    </h6>
-                </div>
-            </div>
-            <button type="button"
-                class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
-                onclick="document.getElementById('NoChangeToast').style.display='none';">&times;</button>
-        </div>
-    </div>
-
-    <!-- Archive Confirmation Modal -->
-    <div id="archiveConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-75"></div>
-        <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
-            <div class="flex items-center justify-between mb-2">
-                <span class="font-semibold text-lg">Archive Announcement Confirmation</span>
-                <button onclick="closeArchiveModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
-            </div>
-            <div class="mb-4 text-gray-700">
-                Are you sure you want to archive this Announcement? Once archived, it will be removed from your list and
-                will no longer be visible there.
-            </div>
-            <div class="flex justify-end gap-2">
-                <button onclick="closeArchiveModal()"
-                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
-                <form id="archiveForm" method="POST" class="inline">
-                    @csrf
-                    <button type="submit"
-                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Archive</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Restore Confirmation Modal -->
-    <div id="restoreConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-75"></div>
-        <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
-            <div class="flex items-center justify-between mb-2">
-                <span class="font-semibold text-lg">Restore Announcement Confirmation</span>
-                <button onclick="closeRestoreModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
-            </div>
-            <div class="mb-4 text-gray-700">
-                Are you sure you want to restore this announcement?<br>
-                It will be moved back to the previous announcements list and become visible to users again.
-            </div>
-            <div class="flex justify-end gap-2">
-                <button onclick="closeRestoreModal()"
-                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
-                <form id="restoreForm" method="POST" class="inline">
-                    @csrf
-                    <button type="submit"
-                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Restore</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div id="deleteConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-75"></div>
-        <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
-            <div class="flex items-center justify-between mb-2">
-                <span class="font-semibold text-lg">Delete Announcement Confirmation</span>
-                <button onclick="closeDeleteModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
-            </div>
-            <div class="mb-4 text-gray-700">
-                Are you sure you want to permanently delete this announcement? This action cannot be undone.
-            </div>
-            <div class="flex justify-end gap-2">
-                <button onclick="closeDeleteModal()"
-                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
-                <form id="deleteForm" method="POST" class="inline">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit"
-                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Delete</button>
-                </form>
-            </div>
-        </div>
-    </div>
-
+            
         <!-- Table Header and Container -->
         <div class="overflow-x-auto overflow-y-hidden rounded-[25px] shadow bg-[#D9D9D9]" style="width: 100%; height: 540px; flex-shrink:0;">
             <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
@@ -823,6 +646,183 @@
                 </li>
             </ul>
         </nav>
+    </div>
+        </div>
+
+    {{-- Edit Announcement Modal --}}
+    <div id="editAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black opacity-75"></div>
+        <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-lg">Edit Announcement</span>
+                <button onclick="closeEditModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <form id="editAnnouncementForm" method="POST">
+                @csrf
+                @method('PUT')
+                <input type="hidden" id="editAnnouncementId" name="id">
+                <input type="hidden" id="originalTitle">
+                <input type="hidden" id="originalContent">
+                <input type="hidden" id="originalScheduleDate">
+                <input type="hidden" id="originalScheduleTime">
+                <input type="hidden" id="originalAudience">
+                <input type="hidden" id="originalAudienceStudents">
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                    <input type="text" id="editTitle" name="title" maxlength="60"
+                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                        required>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                    <textarea id="editContent" name="content" rows="4" maxlength="1000"
+                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" required></textarea>
+                </div>
+                <!-- Schedule Section -->
+                <div class="mb-3">
+                    <label class="inline-flex items-center mb-2">
+                        <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
+                        <span class="ml-2">Set Due Date</span>
+                    </label>
+                    <div id="editScheduleFields" class="hidden">
+                        <div class="flex items-end space-x-4">
+                            <div>
+                                <label for="editScheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                <input type="date" id="editScheduleDate" name="schedule_date" 
+                                    class="border rounded px-2 py-1">
+                            </div>
+                            <div>
+                                <label for="editScheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
+                                <input type="time" id="editScheduleTime" name="schedule_time" 
+                                    class="border rounded px-2 py-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Audience Section -->
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
+                    <div class="flex items-center space-x-4">
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="audience" value="all" class="form-radio" id="editAudienceAll">
+                            <span class="ml-2">All Student</span>
+                        </label>
+                        <label class="inline-flex items-center">
+                            <input type="radio" name="audience" value="custom" class="form-radio" id="editAudienceCustom">
+                            <span class="ml-2">Custom</span>
+                        </label>
+                    </div>
+                    <div id="editCustomAudienceDropdown" class="mt-2 hidden border rounded-lg px-2 py-2 max-h-40 overflow-y-auto bg-white">
+                        @foreach($users as $user)
+                            @if($user->role === 'student')
+                                <label class="flex items-center py-1 border-b last:border-b-0">
+                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}" class="form-checkbox mr-2 editAudienceStudent">
+                                    <span>{{ $user->username }}</span>
+                            </label>
+                            @endif
+                        @endforeach
+                        <p class="text-xs text-gray-500 mt-1">Check students who should see the announcement.</p>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <button type="submit" id="saveChangesBtn"
+                        class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c]"
+                        style="background-color: #7A1212;">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="NoChangeToast"
+        class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-yellow-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+        role="alert">
+        <div class="w-full flex justify-between">
+            <div class="flex items-center gap-4">
+                <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
+                <div>
+                    <h6 class="font-bold font-['Manrope']">
+                        There was no change.
+                    </h6>
+                </div>
+            </div>
+            <button type="button"
+                class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+                onclick="document.getElementById('NoChangeToast').style.display='none';">&times;</button>
+        </div>
+    </div>
+
+    <!-- Archive Confirmation Modal -->
+    <div id="archiveConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black opacity-75"></div>
+        <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-lg">Archive Announcement Confirmation</span>
+                <button onclick="closeArchiveModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <div class="mb-4 text-gray-700">
+                Are you sure you want to archive this Announcement? Once archived, it will be removed from your list and
+                will no longer be visible there.
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeArchiveModal()"
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+                <form id="archiveForm" method="POST" class="inline">
+                    @csrf
+                    <button type="submit"
+                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Archive</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Restore Confirmation Modal -->
+    <div id="restoreConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black opacity-75"></div>
+        <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-lg">Restore Announcement Confirmation</span>
+                <button onclick="closeRestoreModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <div class="mb-4 text-gray-700">
+                Are you sure you want to restore this announcement?<br>
+                It will be moved back to the previous announcements list and become visible to users again.
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeRestoreModal()"
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+                <form id="restoreForm" method="POST" class="inline">
+                    @csrf
+                    <button type="submit"
+                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Restore</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black opacity-75"></div>
+        <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-lg">Delete Announcement Confirmation</span>
+                <button onclick="closeDeleteModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            <div class="mb-4 text-gray-700">
+                Are you sure you want to permanently delete this announcement? This action cannot be undone.
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="closeDeleteModal()"
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+                <form id="deleteForm" method="POST" class="inline">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Delete</button>
+                </form>
+            </div>
+        </div>
     </div>
     </div>
 
