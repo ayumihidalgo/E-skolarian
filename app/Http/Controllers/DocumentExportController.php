@@ -42,12 +42,15 @@ class DocumentExportController extends Controller
         $selectedDocuments = $request->input('selected_documents', []);
         $isSelectiveExport = !empty($selectedDocuments) && is_array($selectedDocuments);
 
-        // Build the query with LEFT JOIN to get usernames and the same filtering logic as documentHistory method
+        // Build the query with LEFT JOIN to get usernames and admin role_name - UPDATED to match documentHistory query
         $query = DB::table('submitted_documents')
-            ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id')
-            ->select('submitted_documents.*', 'users.username')
+            ->leftJoin('users as submitter', 'submitted_documents.user_id', '=', 'submitter.id')
+            ->leftJoin('users as admin', 'submitted_documents.received_by', '=', 'admin.id')
+            ->select('submitted_documents.*', 'submitter.username', 'admin.role_name')
             ->whereNull('submitted_documents.archived_at')
-            ->where('submitted_documents.status', 'Approved');
+            ->where('submitted_documents.status', 'Approved')
+            ->where('admin.role_name', '!=', 'Student')
+            ->whereNotNull('admin.role_name');
         
         // If specific documents are selected, filter by those IDs ONLY
         if ($isSelectiveExport) {
@@ -60,9 +63,9 @@ class DocumentExportController extends Controller
                 $documents = collect([]);
             }
         } else {
-            // Apply the same filters as in documentHistory method when not selective export
+            // UPDATED: Use username for organization filter instead of control_tag
             if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
-                $query->where('submitted_documents.control_tag', 'LIKE', $request->organization . '_%');
+                $query->where('submitter.username', $request->organization);
             }
             
             // Apply type filter - handle "Others" category
@@ -87,14 +90,14 @@ class DocumentExportController extends Controller
                 $query->where('submitted_documents.created_at', '<=', $endDate);
             }
             
-            // Apply search filter (including username search)
+            // Apply search filter (including username search) - UPDATED to use submitter.username
             if ($request->has('search') && !empty($request->search)) {
                 $searchTerm = $request->search;
                 $query->where(function($q) use ($searchTerm) {
                     $q->where('submitted_documents.subject', 'LIKE', "%{$searchTerm}%")
                       ->orWhere('submitted_documents.control_tag', 'LIKE', "%{$searchTerm}%")
                       ->orWhere('submitted_documents.type', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('users.username', 'LIKE', "%{$searchTerm}%");
+                      ->orWhere('submitter.username', 'LIKE', "%{$searchTerm}%");
                 });
             }
             
@@ -105,7 +108,7 @@ class DocumentExportController extends Controller
                 
                 if ($column === 'organization') {
                     // Sort by username instead of organization acronym
-                    $query->orderBy('users.username', $direction);
+                    $query->orderBy('submitter.username', $direction);
                 } else {
                     // Prefix columns with table name to avoid ambiguity
                     $query->orderBy('submitted_documents.' . $column, $direction);
@@ -121,23 +124,6 @@ class DocumentExportController extends Controller
             $documents = $query->get();
         }
         
-        // Organization mapping data (keeping for reference even though we use username now)
-        $orgMap = [
-            'ACAP' => 'Association of Competent and Aspiring Psychologists',
-            'AECES' => 'Association of Electronics and Communications Engineering Students',
-            'ELITE' => 'Eligible League of Information Technology Enthusiasts',
-            'GIVE' => 'Guild of Imporous and Valuable Educators',
-            'JEHRA' => 'Junior Executive of Human Resource Association',
-            'JMAP' => 'Junior Marketing Association of the Philippines',
-            'JPIA' => 'Junior Philippine Institute of Accountants',
-            'PIIE' => 'Philippine Institute of Industrial Engineers',
-            'AGDS' => 'Artist Guild Dance Squad',
-            'Chorale' => 'PUP SRC Chorale',
-            'SIGMA' => 'Supreme Innovators Guild for Mathematics Advancements',
-            'TAPNOTCH' => 'Transformation Advocates through Purpose-driven and Noble Objectives Toward Community Holism',
-            'OSC' => 'Office of the Student Council',
-        ];
-
         // Create new Spreadsheet object
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
@@ -146,15 +132,15 @@ class DocumentExportController extends Controller
         $spreadsheet->getProperties()
             ->setCreator('E-Skolarian - ' . $adminUsername . ' (' . $adminRole . ')')
             ->setLastModifiedBy($adminUsername . ' (' . $adminRole . ')')
-            ->setTitle('Document History Report')
-            ->setSubject('Document History Report')
-            ->setDescription('Document History filtered report generated by ' . $adminUsername . ' (' . $adminRole . ') on ' . Carbon::now()->format('Y-m-d H:i'));
+            ->setTitle('Document Repository Report') // CHANGED from Document History to Document Repository
+            ->setSubject('Document Repository Report') // CHANGED from Document History to Document Repository
+            ->setDescription('Document Repository filtered report generated by ' . $adminUsername . ' (' . $adminRole . ') on ' . Carbon::now()->format('Y-m-d H:i'));
         
         // Set document title
-        $sheet->setTitle('Document History');
+        $sheet->setTitle('Document Repository'); // CHANGED from Document History to Document Repository
         
         // Add header with filter information
-        $reportTitle = 'Document History Report'; // Always use this title
+        $reportTitle = 'Document Repository Report'; // CHANGED from Document History to Document Repository
         $sheet->setCellValue('A1', $reportTitle);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(18);
         $sheet->mergeCells('A1:F1');
@@ -251,7 +237,8 @@ class DocumentExportController extends Controller
 
         $row++; // Add extra space
         
-        $headers = ['Control Tag', 'Organization', 'Title', 'Date Submitted', 'Type', 'Status'];
+        // UPDATED HEADERS: Changed "Status" to "Submitted to"
+        $headers = ['Control Tag', 'Organization', 'Title', 'Date Submitted', 'Type', 'Submitted to'];
         $column = 'A';
         
         foreach ($headers as $header) {
@@ -279,7 +266,7 @@ class DocumentExportController extends Controller
             $sheet->setCellValue('C' . $row, $document->subject);
             $sheet->setCellValue('D' . $row, Carbon::parse($document->created_at)->format('m/d/Y g:i A'));
             $sheet->setCellValue('E' . $row, $actualType); // Use actual type value instead of display type
-            $sheet->setCellValue('F' . $row, $document->status);
+            $sheet->setCellValue('F' . $row, $document->role_name ?? 'N/A'); // CHANGED: Show admin role_name instead of status
             
             // Apply font size to data rows
             $sheet->getStyle('A' . $row . ':F' . $row)->getFont()->setSize(10);
@@ -319,7 +306,7 @@ class DocumentExportController extends Controller
         $sheet->getColumnDimension('C')->setWidth(30); // Subject
         $sheet->getColumnDimension('D')->setWidth(18); // Date Submitted
         $sheet->getColumnDimension('E')->setWidth(20); // Type
-        $sheet->getColumnDimension('F')->setWidth(12); // Status
+        $sheet->getColumnDimension('F')->setWidth(15); // Submitted to (role_name)
 
         // Add borders to the data table
         $dataStartRow = $headerRow;
@@ -338,7 +325,7 @@ class DocumentExportController extends Controller
         $sheet->getRowDimension($headerRow)->setRowHeight(25);
         
         // Create filename with timestamp, admin, and export type
-        $filename = $isSelectiveExport ? 'selected_documents_' . $adminUsername : 'document_history_' . $adminUsername;
+        $filename = $isSelectiveExport ? 'selected_documents_' . $adminUsername : 'document_repository_' . $adminUsername; // CHANGED from document_history to document_repository
         $filename .= '_' . now()->format('Y-m-d_H-i-s');
         
         if (!$isSelectiveExport && $request->has('start_date') && $request->has('end_date') && !empty($request->start_date) && !empty($request->end_date)) {
@@ -388,12 +375,15 @@ class DocumentExportController extends Controller
             $selectedDocuments = $request->input('selected_documents', []);
             $isSelectiveExport = !empty($selectedDocuments) && is_array($selectedDocuments);
 
-            // Build the query with LEFT JOIN to get usernames and the same filtering logic as documentHistory method
+            // Build the query with LEFT JOIN to get usernames and admin role_name - UPDATED to match documentHistory query
             $query = DB::table('submitted_documents')
-                ->leftJoin('users', 'submitted_documents.user_id', '=', 'users.id')
-                ->select('submitted_documents.*', 'users.username')
+                ->leftJoin('users as submitter', 'submitted_documents.user_id', '=', 'submitter.id')
+                ->leftJoin('users as admin', 'submitted_documents.received_by', '=', 'admin.id')
+                ->select('submitted_documents.*', 'submitter.username', 'admin.role_name')
                 ->whereNull('submitted_documents.archived_at')
-                ->where('submitted_documents.status', 'Approved');
+                ->where('submitted_documents.status', 'Approved')
+                ->where('admin.role_name', '!=', 'Student')
+                ->whereNotNull('admin.role_name');
             
             // If specific documents are selected, filter by those IDs ONLY
             if ($isSelectiveExport) {
@@ -407,8 +397,9 @@ class DocumentExportController extends Controller
                 }
             } else {
                 // Apply the same filters as in documentHistory method when not selective export
+                // UPDATED: Use username for organization filter instead of control_tag
                 if ($request->has('organization') && $request->organization != 'All' && $request->organization != 'Organization') {
-                    $query->where('submitted_documents.control_tag', 'LIKE', $request->organization . '_%');
+                    $query->where('submitter.username', $request->organization);
                 }
                 
                 // Apply type filter - handle "Others" category
@@ -433,14 +424,14 @@ class DocumentExportController extends Controller
                     $query->where('submitted_documents.created_at', '<=', $endDate);
                 }
                 
-                // Apply search filter (including username search)
+                // Apply search filter (including username search) - UPDATED to use submitter.username
                 if ($request->has('search') && !empty($request->search)) {
                     $searchTerm = $request->search;
                     $query->where(function($q) use ($searchTerm) {
                         $q->where('submitted_documents.subject', 'LIKE', "%{$searchTerm}%")
                           ->orWhere('submitted_documents.control_tag', 'LIKE', "%{$searchTerm}%")
                           ->orWhere('submitted_documents.type', 'LIKE', "%{$searchTerm}%")
-                          ->orWhere('users.username', 'LIKE', "%{$searchTerm}%");
+                          ->orWhere('submitter.username', 'LIKE', "%{$searchTerm}%");
                     });
                 }
                 
@@ -451,7 +442,7 @@ class DocumentExportController extends Controller
                     
                     if ($column === 'organization') {
                         // Sort by username instead of organization acronym
-                        $query->orderBy('users.username', $direction);
+                        $query->orderBy('submitter.username', $direction);
                     } else {
                         // Prefix columns with table name to avoid ambiguity
                         $query->orderBy('submitted_documents.' . $column, $direction);
@@ -509,7 +500,7 @@ class DocumentExportController extends Controller
             $dompdf->render();
 
             // Create filename (same structure as Excel)
-            $filename = $isSelectiveExport ? 'selected_documents_' . str_replace(' ', '_', $adminUsername) : 'document_history_' . str_replace(' ', '_', $adminUsername);
+            $filename = $isSelectiveExport ? 'selected_documents_' . str_replace(' ', '_', $adminUsername) : 'document_repository_' . str_replace(' ', '_', $adminUsername); // CHANGED from document_history to document_repository
             $filename .= '_' . now()->format('Y-m-d_H-i-s');
             
             if (!$isSelectiveExport && $request->has('start_date') && $request->has('end_date') && !empty($request->start_date) && !empty($request->end_date)) {
@@ -542,7 +533,7 @@ class DocumentExportController extends Controller
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Document History Report</title>
+    <title>Document Repository Report</title> <!-- CHANGED from Document History to Document Repository -->
     <style>
         * {
             margin: 0;
@@ -638,12 +629,12 @@ class DocumentExportController extends Controller
         .col-title { width: 35%; }
         .col-date { width: 18%; }
         .col-type { width: 15%; }
-        .col-status { width: 5%; }
+        .col-submitted { width: 5%; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="title">Document History Report</div>
+        <div class="title">Document Repository Report</div> <!-- CHANGED from Document History to Document Repository -->
         <div class="admin-info">Generated by: ' . htmlspecialchars($adminUsername) . ' (' . htmlspecialchars($adminRole) . ')</div>
         <div class="generated-info">Generated on: ' . now()->format('F j, Y g:i A') . '</div>';
         
@@ -679,7 +670,7 @@ class DocumentExportController extends Controller
             }
         }
 
-        // Add table (same structure as Excel)
+        // Add table - UPDATED HEADERS: Changed "Status" to "Submitted to"
         $html .= '<table>
             <thead>
                 <tr>
@@ -688,7 +679,7 @@ class DocumentExportController extends Controller
                     <th class="col-title">Title</th>
                     <th class="col-date">Date Submitted</th>
                     <th class="col-type">Type</th>
-                    <th class="col-status">Status</th>
+                    <th class="col-submitted">Submitted to</th>
                 </tr>
             </thead>
             <tbody>';
@@ -701,7 +692,7 @@ class DocumentExportController extends Controller
                 <td>' . htmlspecialchars($document->subject) . '</td>
                 <td>' . Carbon::parse($document->created_at)->format('m/d/Y g:i A') . '</td>
                 <td>' . htmlspecialchars($actualType) . '</td>
-                <td>' . htmlspecialchars($document->status) . '</td>
+                <td>' . htmlspecialchars($document->role_name ?? 'N/A') . '</td>
             </tr>';
         }
 

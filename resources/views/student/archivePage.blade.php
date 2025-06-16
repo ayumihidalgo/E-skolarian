@@ -30,23 +30,17 @@
 
                 <!-- Filter dropdowns only -->
                 <div class="flex flex-wrap items-center gap-4 justify-end">
-                    <!-- Document type filter dropdown -->
+                    <!-- Document type filter dropdown - UPDATED WITH DYNAMIC OPTIONS -->
                     <div class="relative w-40">
                         <select id="typeFilter"
                             class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 truncate">
                             <option class="bg-white text-black truncate" value="Type" disabled selected>Type</option>
                             <option class="bg-white text-black truncate" value="All">All Types</option>
-                            <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
-                            <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan of Activities</option>
-                            <option class="bg-white text-black truncate" value="Reports of Proceedings">Reports of Proceedings</option>
-                            <option class="bg-white text-black truncate" value="Constitution and By-Laws">Constitution and By-Laws</option>
-                            <option class="bg-white text-black truncate" value="Fundraising Activities">Fundraising Activities</option>
-                            <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
-                            <option class="bg-white text-black truncate" value="Petition and Concern">Petition and Concern</option>
-                            <option class="bg-white text-black truncate" value="Memorandum of Agreement">Memorandum of Agreement</option>
-                            <option class="bg-white text-black truncate" value="Off Campus Activities">Off Campus Activities</option>
-                            <!-- Others option for non-standard types -->
-                            <option class="bg-white text-black truncate" value="Others">Others</option>
+                            @if(isset($availableTypes))
+                                @foreach($availableTypes as $type)
+                                    <option class="bg-white text-black truncate" value="{{ $type }}">{{ $type }}</option>
+                                @endforeach
+                            @endif
                         </select>
                         <!-- Custom dropdown arrow icon -->
                         <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -257,20 +251,28 @@
 
                 fetch(url, {
                         headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
                         }
                     })
-                    .then(response => response.text())
-                    .then(html => {
+                    .then(response => response.json())
+                    .then(data => {
                         const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
+                        const doc = parser.parseFromString(data.html, 'text/html');
 
-                        const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
-                        document.querySelector('#documentTable tbody').innerHTML = newTableBody;
+                        const newTableBody = doc.querySelector('#documentTable tbody');
+                        if (newTableBody) {
+                            document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+                        }
 
                         const newPagination = doc.querySelector('#paginationContainer');
                         if (newPagination) {
                             document.querySelector('#paginationContainer').outerHTML = newPagination.outerHTML;
+                        }
+
+                        // Update available types if present in response
+                        if (data.availableTypes) {
+                            updateTypeFilterOptions(data.availableTypes);
                         }
 
                         window.history.pushState({}, '', url);
@@ -284,7 +286,7 @@
         });
     });
 
-    // Apply server-side filters via AJAX 
+    // Apply server-side filters via AJAX - UPDATED TO HANDLE JSON RESPONSES 
     function applyServerSideFilters() {
         const tableContainer = document.querySelector('#tableContainer');
         tableContainer.classList.add('opacity-50');
@@ -293,7 +295,7 @@
         const typeFilter = document.getElementById("typeFilter").value;
         const searchInput = document.querySelector('input[placeholder="Search..."]').value;
 
-        if (typeFilter !== 'Type') {
+        if (typeFilter !== 'Type' && typeFilter !== 'All') {
             params.append('type', typeFilter);
         }
 
@@ -305,19 +307,23 @@
 
         fetch(url, {
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
             })
-            .then(response => response.text())
-            .then(html => {
+            .then(response => response.json())
+            .then(data => {
+                // Parse the HTML response
                 const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+                const doc = parser.parseFromString(data.html, 'text/html');
 
+                // Update the table body
                 const newTableBody = doc.querySelector('#documentTable tbody');
                 if (newTableBody) {
                     document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
                 }
 
+                // Update pagination
                 const newPagination = doc.querySelector('#paginationContainer');
                 const currentPagination = document.querySelector('#paginationContainer');
 
@@ -329,6 +335,12 @@
                     currentPagination.style.display = 'none';
                 }
 
+                // Update available types in dropdown
+                if (data.availableTypes) {
+                    updateTypeFilterOptions(data.availableTypes);
+                }
+
+                // Update URL without reload for bookmarking
                 window.history.pushState({}, '', url);
                 tableContainer.classList.remove('opacity-50');
             })
@@ -343,7 +355,7 @@
         window.location.href = "{{ route('student.documentPreview', ['id' => ':id']) }}".replace(':id', id);
     }
 
-    // Server-side sorting functionality 
+    // Server-side sorting functionality - UPDATED TO HANDLE JSON RESPONSES
     function sortTable(columnIndex) {
         const columnMap = [
             'control_tag', // Tag - index 0
@@ -385,13 +397,14 @@
 
         fetch(url, {
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
             })
-            .then(response => response.text())
-            .then(html => {
+            .then(response => response.json())
+            .then(data => {
                 const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+                const doc = parser.parseFromString(data.html, 'text/html');
 
                 const newTableBody = doc.querySelector('#documentTable tbody');
                 if (newTableBody) {
@@ -403,6 +416,11 @@
 
                 if (newPagination && currentPagination) {
                     currentPagination.outerHTML = newPagination.outerHTML;
+                }
+
+                // Update available types if present in response
+                if (data.availableTypes) {
+                    updateTypeFilterOptions(data.availableTypes);
                 }
 
                 window.history.pushState({}, '', url);
@@ -425,6 +443,35 @@
         const clickedIcon = document.querySelector(`thead th:nth-child(${columnIndex + 1}) button img`);
         if (clickedIcon && !sortDirection[columnIndex]) {
             clickedIcon.classList.add('rotate-180');
+        }
+    }
+
+    // Update type filter options dynamically - MATCHING DOCUMENTHISTORY.BLADE.PHP IMPLEMENTATION
+    function updateTypeFilterOptions(availableTypes) {
+        const typeSelect = document.getElementById('typeFilter');
+        if (!typeSelect) return;
+        
+        const currentValue = typeSelect.value;
+        
+        // Get all type options except the first two (Type and All)
+        const typeOptions = typeSelect.querySelectorAll('option');
+        typeOptions.forEach((option, index) => {
+            const value = option.value;
+            // Keep "Type" and "All" options always visible
+            if (index < 2) {
+                option.style.display = 'block';
+            } else {
+                // Show/hide other options based on availability
+                const shouldShow = availableTypes && availableTypes.includes(value);
+                option.style.display = shouldShow ? 'block' : 'none';
+            }
+        });
+        
+        // Reset to default if current selection is no longer available
+        if (currentValue !== 'Type' && currentValue !== 'All') {
+            if (!availableTypes || !availableTypes.includes(currentValue)) {
+                typeSelect.value = 'Type';
+            }
         }
     }
 </script>

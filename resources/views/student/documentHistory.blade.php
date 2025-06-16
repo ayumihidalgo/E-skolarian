@@ -35,20 +35,13 @@
                             class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 truncate">
                             <option class="bg-white text-black truncate" value="Type" disabled selected>Type</option>
                             <option class="bg-white text-black truncate" value="All">All Types</option>
-                            <!-- Standard document type options - matching AdminDocumentController -->
-                            <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
-                            <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan of Activities</option>
-                            <option class="bg-white text-black truncate" value="Reports of Proceedings">Reports of Proceedings</option>
-                            <option class="bg-white text-black truncate" value="Constitution and By-Laws">Constitution and By-Laws</option>
-                            <option class="bg-white text-black truncate" value="Fundraising Activities">Fundraising Activities</option>
-                            <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
-                            <option class="bg-white text-black truncate" value="Petition and Concern">Petition and Concern</option>
-                            <option class="bg-white text-black truncate" value="Memorandum of Agreement">Memorandum of Agreement</option>
-                            <option class="bg-white text-black truncate" value="Off Campus Activities">Off Campus Activities</option>
-                            <!-- Others option for non-standard types -->
-                            <option class="bg-white text-black truncate" value="Others">Others</option>
+                            @if(isset($availableTypes))
+                                @foreach($availableTypes as $type)
+                                    <option class="bg-white text-black truncate" value="{{ $type }}">{{ $type }}</option>
+                                @endforeach
+                            @endif
                         </select>
-                        <!-- Custom dropdown arrow -->
+                        <!-- Custom dropdown arrow icon -->
                         <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
                             class="absolute top-1/2 right-3 -translate-y-1/2 w-4 h-4 pointer-events-none" />
                     </div>
@@ -283,35 +276,28 @@
                     const tableContainer = document.querySelector('#tableContainer');
                     tableContainer.classList.add('opacity-50');
 
-                    // Fetch the new page content
                     fetch(url, {
                             headers: {
-                                'X-Requested-With': 'XMLHttpRequest'
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json'
                             }
                         })
-                        .then(response => response.text())
-                        .then(html => {
-                            // Create a temporary element to parse the HTML
+                        .then(response => response.json())
+                        .then(data => {
                             const parser = new DOMParser();
-                            const doc = parser.parseFromString(html, 'text/html');
+                            const doc = parser.parseFromString(data.html, 'text/html');
 
-                            // Extract the table body content
-                            const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
-                            document.querySelector('#documentTable tbody').innerHTML = newTableBody;
-
-                            // Update pagination
-                            const newPagination = doc.querySelector('#paginationContainer');
-                            if (newPagination) {
-                                const currentPagination = document.querySelector('#paginationContainer');
-                                if (currentPagination) {
-                                    currentPagination.outerHTML = newPagination.outerHTML;
-                                }
+                            const newTableBody = doc.querySelector('#documentTable tbody');
+                            if (newTableBody) {
+                                document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
                             }
 
-                            // Update URL without reload
-                            window.history.pushState({}, '', url);
+                            const newPagination = doc.querySelector('#paginationContainer');
+                            if (newPagination) {
+                                document.querySelector('#paginationContainer').outerHTML = newPagination.outerHTML;
+                            }
 
-                            // Remove loading state
+                            window.history.pushState({}, '', url);
                             tableContainer.classList.remove('opacity-50');
                         })
                         .catch(error => {
@@ -326,17 +312,14 @@
          * Apply server-side filters via AJAX
          */
         function applyServerSideFilters() {
-            // Show loading state
             const tableContainer = document.querySelector('#tableContainer');
             tableContainer.classList.add('opacity-50');
 
-            // Build the query parameters
             const params = new URLSearchParams();
-
             const typeFilter = document.getElementById("typeFilter").value;
             const searchInput = document.querySelector('input[placeholder="Search..."]').value;
 
-            if (typeFilter !== 'Type') {
+            if (typeFilter !== 'Type' && typeFilter !== 'All') {
                 params.append('type', typeFilter);
             }
 
@@ -344,20 +327,19 @@
                 params.append('search', searchInput);
             }
 
-            // Create the URL
             const url = `${window.location.pathname}?${params.toString()}`;
 
-            // Fetch filtered results
             fetch(url, {
                     headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
                     }
                 })
-                .then(response => response.text())
-                .then(html => {
+                .then(response => response.json())
+                .then(data => {
                     // Parse the HTML response
                     const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
+                    const doc = parser.parseFromString(data.html, 'text/html');
 
                     // Update the table body
                     const newTableBody = doc.querySelector('#documentTable tbody');
@@ -374,14 +356,11 @@
                             currentPagination.outerHTML = newPagination.outerHTML;
                         }
                     } else if (currentPagination) {
-                        // If no new pagination but we had one before, hide it
                         currentPagination.style.display = 'none';
                     }
-
+                    
                     // Update URL without reload for bookmarking
                     window.history.pushState({}, '', url);
-
-                    // Remove loading state
                     tableContainer.classList.remove('opacity-50');
                 })
                 .catch(error => {
@@ -391,104 +370,40 @@
         }
 
         /**
-         * Navigate to document preview page for a specific document
+         * Navigate to document preview page when a row is clicked
+         * @param {number} id - Document ID to preview
          */
         function viewDocument(id) {
+            // Use the correct route for document preview
             window.location.href = "{{ route('student.documentPreview', ['id' => ':id']) }}".replace(':id', id);
         }
 
-        // Server-side sorting functionality
-        function sortTable(columnIndex) {
-            const columnMap = [
-                'control_tag', // Tag - index 0
-                'subject', // Title - index 1
-                'created_at', // Date Submitted - index 2
-                'type' // Type - index 3
-            ];
-
-            const columnName = columnMap[columnIndex];
-            if (!columnName) return;
-
-            // Toggle sort direction
-            sortDirection[columnIndex] = !sortDirection[columnIndex];
-            const direction = sortDirection[columnIndex] ? 'asc' : 'desc';
-
-            // Show loading state
-            const tableContainer = document.querySelector('#tableContainer');
-            tableContainer.classList.add('opacity-50');
-
-            // Get current filter values to preserve them
-            const typeFilter = document.getElementById("typeFilter").value;
-            const searchInput = document.querySelector('input[placeholder="Search..."]').value;
-
-            // Build query parameters
-            const params = new URLSearchParams(window.location.search);
-
-            // Add sorting parameters
-            params.set('sort_by', columnName);
-            params.set('sort_dir', direction);
-
-            // Keep filter parameters
-            if (typeFilter !== 'Type') {
-                params.set('type', typeFilter);
-            }
-
-            if (searchInput.trim() !== '') {
-                params.set('search', searchInput);
-            }
-
-            const url = `${window.location.pathname}?${params.toString()}`;
-
-            // Fetch sorted results from server
-            fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-
-                    // Update table content
-                    const newTableBody = doc.querySelector('#documentTable tbody');
-                    if (newTableBody) {
-                        document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
-                    }
-
-                    // Update pagination if needed
-                    const newPagination = doc.querySelector('#paginationContainer');
-                    const currentPagination = document.querySelector('#paginationContainer');
-
-                    if (newPagination && currentPagination) {
-                        currentPagination.outerHTML = newPagination.outerHTML;
-                    }
-
-                    // Update URL without page reload
-                    window.history.pushState({}, '', url);
-
-                    // Update sort indicator
-                    updateSortIndicator(columnIndex);
-
-                    // Remove loading state
-                    tableContainer.classList.remove('opacity-50');
-                })
-                .catch(error => {
-                    console.error('Error sorting table:', error);
-                    tableContainer.classList.remove('opacity-50');
-                });
-        }
-
-        // Update the sort direction indicator
-        function updateSortIndicator(columnIndex) {
-            const sortIcons = document.querySelectorAll('thead button img');
-            sortIcons.forEach(icon => {
-                icon.classList.remove('rotate-180');
+        // Add this new function to update type filter options
+        function updateTypeFilterOptions(availableTypes) {
+            const typeSelect = document.getElementById('typeFilter');
+            if (!typeSelect) return;
+            
+            const currentValue = typeSelect.value;
+            
+            // Get all type options except the first two (Type and All)
+            const typeOptions = typeSelect.querySelectorAll('option');
+            typeOptions.forEach((option, index) => {
+                const value = option.value;
+                // Keep "Type" and "All" options always visible
+                if (index < 2) {
+                    option.style.display = 'block';
+                } else {
+                    // Show/hide other options based on availability
+                    const shouldShow = availableTypes && availableTypes.includes(value);
+                    option.style.display = shouldShow ? 'block' : 'none';
+                }
             });
-
-            const clickedIcon = document.querySelector(`thead th:nth-child(${columnIndex + 1}) button img`);
-            if (clickedIcon && !sortDirection[columnIndex]) {
-                clickedIcon.classList.add('rotate-180');
+            
+            // Reset to default if current selection is no longer available
+            if (currentValue !== 'Type' && currentValue !== 'All') {
+                if (!availableTypes || !availableTypes.includes(currentValue)) {
+                    typeSelect.value = 'Type';
+                }
             }
         }
     </script>
