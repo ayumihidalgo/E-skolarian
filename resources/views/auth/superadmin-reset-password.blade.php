@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="admin">
+<head>
+    <meta charset="UTF-8" >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <link rel="icon" href="{{ asset('images/officialLogo.svg') }}" type="image/svg+xml">
+
+    <title>Reset Password</title>
+    <style>
+        input[type="password"]::-ms-reveal {
+            display: none;
+        }
+    </style>
+    @vite('resources/css/app.css')
+
+    <script>
+        window.addEventListener('load', setBackgroundImage)
+        window.addEventListener('resize', setBackgroundImage);
+
+        function setBackgroundImage() {
+            const box = document.getElementById('box');
+            if (!box) return;
+
+            box.style.backgroundImage = `linear-gradient(var(--login-bg-color), var(--login-bg-color)), url('{{ asset('images/PUP_Bg1.jpg') }}')`;
+            box.style.backgroundRepeat = 'no-repeat';
+            box.style.backgroundSize = 'cover';
+        }
+
+            /* Toggle Show/Hide Password */
+        function togglePassword() {
+            const input = document.getElementById('password');
+
+            showPassIcon = document.getElementById('showPass');
+            hidePassIcon = document.getElementById('hidePass');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                showPassIcon.classList.add('hidden');
+                hidePassIcon.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                showPassIcon.classList.remove('hidden');
+                hidePassIcon.classList.add('hidden');
+            }
+        }
+
+        function togglePasswordConfirm() {
+            const input = document.getElementById('password_confirmation');
+
+            showPassIcon = document.getElementById('showPassConfirm');
+            hidePassIcon = document.getElementById('hidePassConfirm');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                showPassIcon.classList.add('hidden');
+                hidePassIcon.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                showPassIcon.classList.remove('hidden');
+                hidePassIcon.classList.add('hidden');
+            }
+        }
+
+        /* Fade Messages  */
+        document.addEventListener('DOMContentLoaded', function () {
+            const statusMessages = document.querySelectorAll('.status-message');
+
+            statusMessages.forEach(function (message) {
+                setTimeout(function () {
+                    message.classList.add('opacity-0');
+                    message.classList.add('transition-opacity');
+
+
+                    setTimeout(function () {
+                        message.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
+    </script>
+</head>
+<body id="box" class="min-h-screen flex items-center justify-center font-['Manrope'] font-bold bg-gradient-to-r from-[var(--login-color-left)] to-[var(--login-color-right)]  md:backdrop-blur-xs ">
+    @include('loading')
+
+    {{-- Modal for expired token --}}
+    @if (!empty($tokenExpired) && $tokenExpired)
+         <div id="expiredModal" class="fixed inset-0 flex items-center flex-col justify-center bg-black/80 z-50">
+            <div class="flex items-center justify-center gap-4 pb-5">
+                <img class="h-[80px]" src="{{asset('images/e-skolarianIcon.svg')}}">
+                <img class="h-[35px]" src="{{asset('images/E-skolarianWhite.svg')}}">
+            </div>
+            <div class="bg-[#FFFFFFCC] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+                <div class="w-[80%] mx-auto">
+                    <h2 class="text-xl font-[Lexend] mb-4 text-[var(--secondary-color)]">RESET TOKEN EXPIRED</h2>
+                    <p class="mb-6 font-[Manrope] font-normal">Your password reset link has expired or is invalid. Please request a new one.</p>
+                    <a href="{{ route('superadmin.password.request') }}" class="inline-block px-6 py-2 bg-[var(--secondary-color)] text-white rounded-full font-bold hover:bg-[var(--primary-color)] transition">Back to Forgot Password</a>                </div>
+            </div>
+        </div>
+        <script>
+            // Prevent form interaction when modal is open
+            document.addEventListener('DOMContentLoaded', function() {
+                document.querySelector('form').style.filter = 'blur(2px)';
+                document.querySelector('form').style.pointerEvents = 'none';
+
+                // Prevent beforeunload when clicking "Back to Forgot Password"
+                // Prevent beforeunload when clicking "Back to Forgot Password"
+                const backToForgot = document.querySelector('#expiredModal a[href="{{ route('superadmin.password.request') }}"]');
+                if (backToForgot) {
+                    backToForgot.addEventListener('click', function(e) {
+                        window.isSafeExit = true; // Set global flag
+                    });
+                }
+            });
+        </script>
+    @endif
+    <div class="p-5 w-full">
+        <div class="w-full mx-auto py-10 rounded-[40px] max-md:max-w-[520px] max-md:bg-white/60 max-md:shadow-md">
+            <div class="flex justify-center pb-4">
+                <img class="md:h-20" src="{{asset('images/e-skolarianLogo.svg')}}" alt="E-skolarian Logo">
+            </div>
+            <div class="w-full max-w-[550px] mx-auto  md:bg-[var(--forgot-color-bg)]/50 px-8 md:py-12 rounded-[40px] md:shadow-md md:backdrop-blur-lg">
+                <h1 class="text-2xl md:text-3xl font-bold text-center mb-6 font-['Lexend'] uppercase text-[var(--secondary-color)]">Reset Password</h1>
+                <form method="POST" action="{{ route('superadmin.password.update') }}">
+                    @csrf
+                    <input type="hidden" name="token" value="{{ $token }}">
+                    <input type="hidden" name="email" value="{{ request()->get('email') }}">
+                    <input type="hidden" name="role" value="super admin">
+
+                    <div class="mt-5 mb-2">
+                        <label id="passwordLabel" class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
+                            <input id="password" type="password" name="password" placeholder="New Password" required
+                            class="w-0 flex-grow outline-none mr-3">
+                            <button type="button" onclick="togglePassword()" class="cursor-pointer">
+                                <img id="showPass" src="{{ asset('images/show_pass.svg') }}" alt="Show Password" class="w-5 md:w-6" />
+                                <img id="hidePass" src="{{ asset('images/hide_pass.svg') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
+                            </button>
+                        </label>
+                        <p id="password-requirements" class="hidden text-red-600 text-xs mt-2 w-full rounded-full max-w-[380px] mx-auto pl-[10px] font-[Lexend] font-normal">
+                            *Password must not contain spaces and must be at least 8 characters long and contain an uppercase letter, a lowercase letter, a number, and a special character (@$!%*?&#).
+                        </p>
+                    </div>
+
+                    <div class="mt-5 mb-2">
+                        <label id="confirmLabel" class="w-full rounded-full max-w-[380px] mx-auto px-4 py-3 ring bg-white flex focus-within:ring-3 focus-within:ring-[var(--secondary-color)]">
+                            <input id="password_confirmation" type="password" name="password_confirmation" placeholder="Confirm New Password" required
+                            class="w-0 flex-grow outline-none mr-3">
+                            <button type="button" onclick="togglePasswordConfirm();" class="cursor-pointer">
+                                <img id="showPassConfirm" src="{{ asset('images/show_pass.svg') }}" alt="Show Password" class="w-5 md:w-6" />
+                                <img id="hidePassConfirm" src="{{ asset('images/hide_pass.svg') }}" alt="Hide Password" class="w-5 md:w-6 hidden" />
+                            </button>
+                        </label>
+                        <p id="match-message" class="w-full rounded-full max-w-[380px] mx-auto text-xs mt-2 text-red-500 pl-[10px] font-[Lexend] font-normal hidden">*Passwords do not match</p>
+                    </div>
+
+                    {{-- Success Message --}}
+                    @if (session('status'))
+                            <div class="status-message mb-4 text-green-600 text-xs text-center w-full max-w-[380px] mx-auto font-[Lexend] font-normal">
+                                *{{ session('status') }}
+                            </div>
+                        @endif
+
+                    {{-- Error Messages --}}
+                    @if ($errors->any())
+                        <div class="status-message text-red-600 text-center text-xs mb-4 w-full max-w-[380px] mx-auto pt-0.5 font-[Lexend] font-normal">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>*{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <button type="submit" id="submit-button" disabled
+                        class="disabled:opacity-50 mt-6 w-full rounded-full text-white max-w-[380px] block mx-auto mb-5 bg-[var(--secondary-color)] py-2 md:hover:text-white md:hover:bg-[var(--primary-color)] transition-all duration-200">
+                        Reset Password
+                    </button>
+                </form>
+                <div class="mt-4 text-center">
+                    <a href="#" id="backToLogin" class="flex items-center justify-center md:text-[var(--forgot-color-text)] font-normal group transition-all duration-75">
+                        <img class="md:h-[25px] pr-5 pt-0.5 group-hover:translate-x-1 transition-all duration-75" src="{{asset('images/arrow-left-admin.svg')}}" alt="Arrow Left Icon">
+                        <span class="border-b-2 border-transparent group-hover:border-[var(--forgot-color-text)] transition-all duration-75">Back to Login</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Confirmation Modal -->
+<div id="unsavedChangesModal" class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 hidden z-50">
+    <div class="flex items-center justify-center gap-4 pb-3">
+        <img class="h-[80px]" src="{{asset('images/e-skolarianIcon.svg')}}">
+        <img class="h-[35px]" src="{{asset('images/E-skolarianWhite.svg')}}">
+    </div>
+    <div class="bg-white/90 font-[Manrope] rounded-4xl shadow-lg py-6 px-4 max-w-lg w-full text-center">
+        <div class="w-[80%] mx-auto">
+            <h1 class="text-xl mb-4 text-[var(--secondary-color)]">Go back to Login Page?</h1>
+            <p class="mb-6 font-normal text-black">You have unsaved changes. Do you wish to go back to the Login Page?</p>
+            <div class="flex justify-around gap-5">
+                <button id="confirmLeave" class="bg-[var(--secondary-color)] text-white px-4 py-2 rounded-full hover:brightness-75">Back to Login Page</button>
+                <button id="cancelLeave" class="bg-[#D9D9D9CC] text-black px-4 py-2 rounded-full hover:bg-gray-400">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script>
+        const hasFormErrors = {{ $errors->any() ? 'true' : 'false' }};
+    </script>
+    <script>
+        const passwordLabel = document.getElementById('passwordLabel');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordLabel = document.getElementById('confirmLabel');
+        const confirmPasswordInput = document.getElementById('password_confirmation');
+        const submitButton = document.getElementById('submit-button');
+
+        let serverErrorPassword = (hasFormErrors === true || hasFormErrors === 'true');
+        let serverErrorConfirmPass = (hasFormErrors === true || hasFormErrors === 'true');
+
+        const spaceErrorMessage = document.createElement('p');
+        spaceErrorMessage.className = 'w-full rounded-full max-w-[380px] mx-auto text-xs mt-2 text-red-500 pl-[10px] font-[Lexend] font-normal';
+        spaceErrorMessage.textContent = '*Password must not contain spaces';
+        spaceErrorMessage.style.display = 'none';
+        passwordLabel.parentNode.insertBefore(spaceErrorMessage, passwordLabel.nextSibling);
+
+        function checkForSpaces(input, label) {
+            if (/\s/.test(input.value)) {
+                spaceErrorMessage.style.display = '';
+                label.classList.add('ring-3', '!ring-red-600');
+                submitButton.disabled = true;
+                return true;
+            } else {
+                spaceErrorMessage.style.display = 'none';
+                label.classList.remove('ring-3', '!ring-red-600');
+                return false;
+            }
+        }
+
+        // Prevent space character on keydown
+        [passwordInput, confirmPasswordInput].forEach((input, idx) => {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === ' ') {
+                    e.preventDefault();
+                    checkForSpaces(input, idx === 0 ? passwordLabel : confirmPasswordLabel);
+                }
+            });
+            // Also check on input (for paste)
+            input.addEventListener('input', function() {
+                checkForSpaces(input, idx === 0 ? passwordLabel : confirmPasswordLabel);
+                validateForm();
+            });
+        });
+
+        const requirements = {
+            length: document.getElementById('length'),
+            uppercase: document.getElementById('uppercase'),
+            lowercase: document.getElementById('lowercase'),
+            number: document.getElementById('number'),
+            special: document.getElementById('special'),
+        };
+
+        const matchMessage = document.getElementById('match-message');
+
+        function validatePassword() {
+            const password = passwordInput.value;
+            const requirementsText = document.getElementById('password-requirements');
+
+            if (password.length > 0) {
+                requirementsText.classList.remove('hidden');
+            }
+
+            const lengthValid = password.length >= 8;
+            const uppercaseValid = /[A-Z]/.test(password);
+            const lowercaseValid = /[a-z]/.test(password);
+            const numberValid = /[0-9]/.test(password);
+            const specialValid = /[@$!%*?&#]/.test(password);
+
+            const allValid = lengthValid && uppercaseValid && lowercaseValid && numberValid && specialValid;
+
+            requirementsText.classList.toggle('text-green-700', allValid);
+            requirementsText.classList.toggle('text-red-500', !allValid);
+            requirementsText.classList.toggle('hidden', allValid); // Hide if valid
+
+            return allValid;
+        }
+
+
+        function validateMatch() {
+            const password = passwordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+
+            const match = password === confirmPassword;
+
+            if (confirmPassword.length > 0) {
+                matchMessage.classList.toggle('hidden', match);
+
+                if (!match) {
+                    passwordLabel.classList.add('ring-3', '!ring-red-600');
+                    confirmPasswordLabel.classList.add('ring-3', '!ring-red-600');
+                }
+                else {
+                    passwordLabel.classList.remove('ring-3', '!ring-red-600');
+                    confirmPasswordLabel.classList.remove('ring-3', '!ring-red-600');
+                }
+            } else {
+                matchMessage.classList.add('hidden'); // Always hide if user hasn't typed anything
+
+                    passwordLabel.classList.remove('ring-3', '!ring-red-600');
+
+                    confirmPasswordLabel.classList.remove('ring-3', '!ring-red-600');
+            }
+
+            return match;
+        }
+
+
+        function validateForm() {
+            const passwordValid = validatePassword();
+            const matchValid = validateMatch();
+
+            // Enable the submit button only if all conditions are met
+            submitButton.disabled = !(passwordValid && matchValid);
+        }
+
+        passwordInput.addEventListener('input', function () {
+            if (serverErrorPassword) {
+                passwordLabel.classList.remove('ring-3', '!ring-red-600');
+                serverErrorPassword = false;
+            }
+
+            validateForm();
+        });
+
+        passwordInput.addEventListener('focus', function () {
+            if (serverErrorPassword) {
+                passwordLabel.classList.remove('ring-3', '!ring-red-600');
+                serverErrorPassword = false;
+            }
+        });
+
+        confirmPasswordInput.addEventListener('input', function () {
+            if (serverErrorConfirmPass) {
+                confirmPasswordLabel.classList.remove('ring-3', '!ring-red-600');
+                serverErrorConfirmPass = false;
+            }
+
+            validateForm();
+        });
+
+        confirmPasswordInput.addEventListener('focus', function () {
+            if (serverErrorConfirmPass) {
+                confirmPasswordLabel.classList.remove('ring-3', '!ring-red-600');
+                serverErrorConfirmPass = false;
+            }
+        });
+
+
+        // Initial server-side red rings
+        if (hasFormErrors === true || hasFormErrors === 'true') {
+            passwordLabel.classList.add('ring-3', '!ring-red-600');
+            confirmPasswordLabel.classList.add('ring-3', '!ring-red-600');
+        }
+
+        document.querySelector('form').addEventListener('submit', function (e) {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Please wait...';
+
+        // Show loader
+        document.getElementById('loader').classList.toggle('hidden');
+        document.getElementById('loader').classList.toggle('flex');
+    });
+        const backToLogin = document.getElementById('backToLogin');
+        const modal = document.getElementById('unsavedChangesModal');
+        const confirmLeave = document.getElementById('confirmLeave');
+        const cancelLeave = document.getElementById('cancelLeave');
+
+        let isDirty = false;
+
+        // Track changes on all inputs
+        function checkDirtyState() {
+            const password = passwordInput?.value.trim() || '';
+            const confirmPassword = confirmPasswordInput?.value.trim() || '';
+
+            isDirty = password !== '' || confirmPassword !== '';
+        }
+
+        [passwordInput, confirmPasswordInput].forEach(input => {
+            if (input) {
+                input.addEventListener('input', checkDirtyState);
+            }
+        });
+
+         let isSafeExit = false;
+
+    // Mark exit as safe when user clicks "Back to Login"
+    document.getElementById('backToLogin').addEventListener('click', function (e) {
+    e.preventDefault();
+
+    if (isDirty) {
+        // Show the modal only if there are unsaved changes
+        modal.classList.remove('hidden');
+    } else {
+        // If not dirty, navigate immediately without modal
+        isSafeExit = true; // mark as safe exit to skip beforeunload
+        setTimeout(function() {
+            window.location.href = "{{ route('superadmin.login') }}";
+        }, 10);
+    }
+});
+
+// If user confirms going back
+document.getElementById('confirmLeave').addEventListener('click', function () {
+    isSafeExit = true; // Allow leaving without beforeunload
+    setTimeout(function() {
+        window.location.href = "{{ route('superadmin.login') }}";
+    }, 10);
+});
+
+// ...existing code...
+
+// Mark exit as safe when user clicks "Back to Login"
+document.getElementById('backToLogin').addEventListener('click', function (e) {
+    e.preventDefault();
+
+    if (isDirty) {
+        // Show the modal only if there are unsaved changes
+        modal.classList.remove('hidden');
+    } else {
+        // If not dirty, navigate immediately without modal
+        window.isSafeExit = true; // Use window-scoped variable
+        setTimeout(function() {
+            window.location.href = "{{ route('student.login') }}";
+        }, 10);
+    }
+});
+
+// If user confirms going back
+document.getElementById('confirmLeave').addEventListener('click', function () {
+    window.isSafeExit = true; // Use window-scoped variable
+    setTimeout(function() {
+        window.location.href = "{{ route('student.login.form') }}";
+    }, 10);
+});
+
+// Also for "Back to Forgot Password" in expired token modal
+const backToForgot = document.querySelector('#expiredModal a[href="{{ route('student.password.request') }}"]');
+if (backToForgot) {
+    backToForgot.addEventListener('click', function(e) {
+        window.isSafeExit = true;
+        // No need for setTimeout here if it's a normal anchor, but you can add for consistency:
+        setTimeout(function() {
+            // Let the anchor work as normal
+            window.location.href = "{{ route('student.password.request') }}";
+        }, 10);
+    });
+}
+
+
+// Cancel going back
+document.getElementById('cancelLeave').addEventListener('click', function () {
+    document.getElementById('unsavedChangesModal').classList.add('hidden');
+});
+
+
+window.addEventListener('beforeunload', function (e) {
+    if (!window.isSafeExit) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// Also make sure form submission sets safe exit
+const form = document.querySelector('form');
+form.addEventListener('submit', function () {
+    window.isSafeExit = true;
+});
+
+
+// Hide loader on bfcache restore
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        const loader = document.getElementById('loader');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+    }
+});
+
+        </script>
+
+</body>
+</html>
