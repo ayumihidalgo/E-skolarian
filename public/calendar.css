@@ -1171,3 +1171,75 @@ div.fc-header-toolbar,
             min-height: 0 !important;
             height: auto !important;
         }
+
+             /* Remove grid lines from day headers */
+                .fc .fc-col-header-cell {
+                    border: none !important;
+                }
+                
+                .fc .fc-scrollgrid-section-header th {
+                    border: none !important;
+                }
+                
+                /* Remove horizontal line below header */
+                .fc .fc-scrollgrid-section-header {
+                    border-bottom: none !important;
+                }
+                
+                /* Only keep a light bottom border for the entire header section */
+                .fc .fc-scrollgrid-section.fc-scrollgrid-section-header > td {
+                    border-bottom: 1px solid #f0f0f0 !important;
+                }
+                
+                /* Make sure this applies to all views */
+                .fc-theme-standard .fc-scrollgrid {
+                    border: 1px solid #f0f0f0;
+                }
+
+
+
+                @media (max-width: 640px) {
+                    .mobile-month-year-nav {
+                      position: absolute;
+                      top: 300px; /* Adjust this value to position higher or lower */
+                      left: 0;
+                      right: 0;
+                      z-index: 10;
+                    }
+                  }
+
+
+                  #next-month {
+                    position: relative;
+                    z-index: 10; /* Ensure button is above other elements */
+                }
+
+
+
+                .fc-header-toolbar .fc-button-group,
+.fc-header-toolbar .fc-today-button,
+.fc-header-toolbar .fc-button {
+    position: sticky !important;
+    top: 0;
+    z-index: 15;
+}
+
+/* Add a background to make buttons more visible */
+.fc-header-toolbar {
+    position: sticky !important;
+    top: 0;
+    background-color: white;
+    z-index: 15;
+    padding: 8px 0;
+}
+
+/* Make sure the toolbar doesn't collapse in height */
+.fc .fc-toolbar {
+    min-height: 50px;
+}
+
+#month-dropdown-trigger, #year-dropdown-trigger {
+    position: relative;
+    z-index: 10;
+    cursor: pointer;
+}
