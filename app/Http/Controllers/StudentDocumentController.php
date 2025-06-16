@@ -146,12 +146,49 @@ class StudentDocumentController extends Controller
         // Pass standard types to the view
         $standardTypes = $standardTypes;
         
+        // BUILD AVAILABLE FILTER OPTIONS BEFORE APPLYING FILTERS
+        $baseFilterQuery = clone $query;
+
+        // Apply search to base query first if exists
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $baseFilterQuery->where(function($q) use ($search) {
+                $q->where('subject', 'like', "%{$search}%")
+                  ->orWhere('control_tag', 'like', "%{$search}%")
+                  ->orWhere('type', 'like', "%{$search}%");
+            });
+        }
+
+        // Get available types, categorizing non-standard types as "Others"
+        $availableTypesRaw = $baseFilterQuery->pluck('type')->unique()->toArray();
+        $availableTypes = [];
+        $hasOthers = false;
+
+        foreach ($availableTypesRaw as $type) {
+            if (in_array($type, $standardTypes)) {
+                $availableTypes[] = $type;
+            } else {
+                $hasOthers = true;
+            }
+        }
+
+        // Add "Others" if there are non-standard types
+        if ($hasOthers) {
+            $availableTypes[] = 'Others';
+        }
+
+        $availableTypes = array_unique($availableTypes);
+        sort($availableTypes);
+
         // Handle AJAX requests
         if ($request->ajax()) {
-            return view('student.documentHistory', compact('documents', 'standardTypes'))->render();
+            return response()->json([
+                'html' => view('student.documentHistory', compact('documents', 'standardTypes'))->render(),
+                'availableTypes' => $availableTypes
+            ]);
         }
             
-        return view('student.documentHistory', compact('documents', 'standardTypes'));
+        return view('student.documentHistory', compact('documents', 'standardTypes', 'availableTypes'));
     }
 
     public function archivePage(Request $request)
@@ -175,6 +212,41 @@ class StudentDocumentController extends Controller
         $query = DB::table('submitted_documents')
             ->where('user_id', $userId)
             ->whereNotNull('archived_at'); // Only archived documents
+
+        // BUILD AVAILABLE FILTER OPTIONS BEFORE APPLYING FILTERS - ADDED THIS SECTION
+        $baseFilterQuery = clone $query;
+
+        // Apply search to base query first if exists
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $baseFilterQuery->where(function($q) use ($search) {
+                $q->where('subject', 'like', "%{$search}%")
+                  ->orWhere('control_tag', 'like', "%{$search}%")
+                  ->orWhere('type', 'like', "%{$search}%");
+            });
+        }
+
+        // Get available types, categorizing non-standard types as "Others"
+        $availableTypesRaw = $baseFilterQuery->pluck('type')->unique()->toArray();
+        $availableTypes = [];
+        $hasOthers = false;
+
+        foreach ($availableTypesRaw as $type) {
+            if (in_array($type, $standardTypes)) {
+                $availableTypes[] = $type;
+            } else {
+                $hasOthers = true;
+            }
+        }
+
+        // Add "Others" if there are non-standard types
+        if ($hasOthers) {
+            $availableTypes[] = 'Others';
+        }
+
+        $availableTypes = array_unique($availableTypes);
+        sort($availableTypes);
+        // END OF ADDED SECTION
 
         // Apply type filter - handle "Others" category like admin and documentHistory does
         if ($request->has('type') && $request->type !== 'All' && $request->type !== 'Type') {
@@ -218,12 +290,15 @@ class StudentDocumentController extends Controller
             'IT' => 'text-orange-500',
         ];
 
-        // Handle AJAX requests
+        // Handle AJAX requests - UPDATED TO RETURN JSON
         if ($request->ajax()) {
-            return view('student.archivePage', compact('documents', 'orgMap', 'tagColors', 'standardTypes'))->render();
+            return response()->json([
+                'html' => view('student.archivePage', compact('documents', 'orgMap', 'tagColors', 'standardTypes', 'availableTypes'))->render(),
+                'availableTypes' => $availableTypes
+            ]);
         }
 
-        return view('student.archivePage', compact('documents', 'orgMap', 'tagColors', 'standardTypes'));
+        return view('student.archivePage', compact('documents', 'orgMap', 'tagColors', 'standardTypes', 'availableTypes'));
     }
 
     public function documentHistoryPreview($id)
