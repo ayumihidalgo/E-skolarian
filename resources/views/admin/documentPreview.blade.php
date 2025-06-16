@@ -7,7 +7,7 @@
 <!-- Main content area - positioned to the right of sidebar -->
 <div id="main-content" class="transition-all duration-300 ml-[20%]">
     <!-- Full page container with styling -->
-    <div class="w-full min-h-screen bg-[#f2f4f7] px-6 py-8 flex flex-col">
+    <div class="w-full min-h-screen bg-[#24395a] px-6 py-8 flex flex-col">
         <!-- Header section with title and back button -->
         <div class="flex justify-between items-center mb-6 mx-auto w-full max-w-[1055px]">
             <h2 class="text-2xl font-extrabold">Document Preview</h2>

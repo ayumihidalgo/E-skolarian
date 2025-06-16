@@ -36,7 +36,57 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Set up event listeners
     setupEventListeners();
+    // Attachment preview modal for comments
+    document.body.addEventListener("click", function (e) {
+        const target = e.target.closest(".comment-attachment-link");
+        if (target) {
+            e.preventDefault();
+            const fileUrl = target.getAttribute("data-file-url");
+            const fileName = target.getAttribute("data-file-name");
+            const ext = target.getAttribute("data-file-ext");
+
+            // Open the modal and show the file
+            openDocumentViewerModal(fileUrl, fileName, ext);
+        }
+    });
 });
+
+function openDocumentViewerModal(fileUrl, fileName, ext) {
+    // Get modal elements (make sure these IDs match your Blade modal)
+    const modal = document.getElementById("documentViewerModal");
+    const pdfViewer = document.getElementById("pdfViewer");
+    const imageViewer = document.getElementById("imageViewer");
+    const downloadView = document.getElementById("downloadView");
+    const documentTitle = document.getElementById("documentTitle");
+    const downloadFileName = document.getElementById("downloadFileName");
+    const downloadButton = document.getElementById("downloadButton");
+
+    if (!modal) return;
+
+    documentTitle.textContent = fileName;
+    downloadFileName.textContent = fileName;
+    downloadButton.href = fileUrl;
+
+    // Reset viewers
+    pdfViewer.innerHTML = "";
+    imageViewer.innerHTML = "";
+    imageViewer.classList.add("hidden");
+    pdfViewer.classList.remove("hidden");
+    downloadView.classList.add("hidden");
+
+    if (["pdf"].includes(ext)) {
+        pdfViewer.innerHTML = `<iframe src="${fileUrl}#toolbar=0" class="w-full h-full" frameborder="0"></iframe>`;
+    } else if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(ext)) {
+        pdfViewer.classList.add("hidden");
+        imageViewer.classList.remove("hidden");
+        imageViewer.innerHTML = `<img src="${fileUrl}" alt="${fileName}" class="max-h-full max-w-full rounded shadow" />`;
+    } else {
+        pdfViewer.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Preview not available for this file type.</div>`;
+    }
+
+    // Show the modal
+    modal.classList.remove("hidden");
+}
 
 function initializeEcho() {
     // Check if Pusher configuration is available in window object or meta tags
@@ -102,9 +152,13 @@ function setupCommentListener() {
 
 function setupEventListeners() {
     const commentInput = document.getElementById("commentInput");
-    const sendButton = document.getElementById("sendCommentBtn");
+    const sendButton = document.getElementById("submitCommentBtn");
     const commentForm = document.getElementById("commentForm");
     const commentsContainer = document.getElementById("commentCont");
+    const attachmentInput = document.getElementById("commentAttachment");
+    const attachmentPreview = document.getElementById("attachmentPreview");
+    const attachmentName = document.getElementById("attachmentName");
+    const removeAttachment = document.getElementById("removeAttachment");
 
     if (commentsContainer) {
         // Add scroll event listener to detect when user scrolls
@@ -146,6 +200,33 @@ function setupEventListeners() {
         sendButton.addEventListener("click", function (e) {
             e.preventDefault();
             submitComment();
+        });
+    }
+
+    // --- Attachment preview logic ---
+    if (attachmentInput && attachmentPreview && attachmentName) {
+        attachmentInput.addEventListener("change", function () {
+            if (attachmentInput.files && attachmentInput.files.length > 0) {
+                const file = attachmentInput.files[0];
+                attachmentName.textContent = file.name;
+                attachmentPreview.classList.remove("hidden");
+            } else {
+                attachmentPreview.classList.add("hidden");
+                attachmentName.textContent = "";
+            }
+        });
+    }
+
+    if (
+        removeAttachment &&
+        attachmentInput &&
+        attachmentPreview &&
+        attachmentName
+    ) {
+        removeAttachment.addEventListener("click", function () {
+            attachmentInput.value = "";
+            attachmentPreview.classList.add("hidden");
+            attachmentName.textContent = "";
         });
     }
 }
@@ -218,12 +299,56 @@ function createCommentElement(comment) {
           })
         : "";
 
-    const attachment = comment.attachment
-        ? `<div class="mt-2">
-                <a href="/storage/${comment.attachment}" target="_blank"
-                    class="text-blue-300 underline text-xs">View Attachment</a>
-           </div>`
-        : "";
+    let attachment = "";
+    if (comment.attachment_path) {
+        const ext = comment.attachment_path.split(".").pop().toLowerCase();
+        const fileUrl = `/storage/${comment.attachment_path}`;
+        const fileName = comment.attachment_name.split("/").pop();
+
+        // Use a single clickable link for all types, opening the modal
+        const attachmentLink = `
+            <a href="#" 
+                class="comment-attachment-link flex items-center"
+                data-file-url="${fileUrl}"
+                data-file-name="${fileName}"
+                data-file-ext="${ext}">
+        `;
+
+        if (["jpg", "jpeg", "png"].includes(ext)) {
+            attachment = `
+                <div class="mt-2 max-w-full">
+                    ${attachmentLink}
+                        <div class="rounded overflow-hidden max-w-[250px] cursor-pointer">
+                            <img src="${fileUrl}" alt="Attachment Image" class="max-w-full h-auto">
+                            <div class="text-xs text-gray-400 mt-1 truncate">${fileName}</div>
+                        </div>
+                    </a>
+                </div>
+            `;
+        } else if (["pdf", "doc", "docx"].includes(ext)) {
+            // Determine icon based on file type
+            let icon = "";
+            if (ext === "pdf") {
+                icon =
+                    '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
+            } else if (ext === "docx" || ext === "doc") {
+                icon =
+                    '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+            } else {
+                icon =
+                    '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+            }
+
+            attachment = `
+                <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full flex items-center text-blue-600 hover:underline">
+                    ${attachmentLink}
+                        ${icon}
+                        <span class="text-xs truncate max-w-[200px]">${fileName}</span>
+                    </a>
+                </div>
+            `;
+        }
+    }
 
     // Use formatCommentText for comment body if you want links/emoji support
     const commentText =
@@ -232,7 +357,7 @@ function createCommentElement(comment) {
             : "";
 
     return `
-        <div class="border-b border-[#782626] pb-4 mb-4">
+        <div class=" pb-4 mb-4">
             <div class="flex items-start gap-3">
                 <div class="flex-shrink-0">
                     ${profilePic}
@@ -243,7 +368,11 @@ function createCommentElement(comment) {
                             <p class="font-medium truncate">${username}</p>
                             <p class="text-xs text-gray-300">${userRole}</p>
                         </div>
-                        <span class="text-gray-300 text-sm">${time}</span>
+                        <span class="text-gray-300 text-sm">${
+                            comment.created_at
+                                ? getTimeAgo(new Date(comment.created_at))
+                                : ""
+                        }</span>
                     </div>
                     <p class="text-white mt-1">${commentText}</p>
                     ${attachment}
@@ -370,6 +499,12 @@ function submitComment() {
             input.value = "";
             if (attachmentInput) attachmentInput.value = "";
             isUserScrolledUp = false;
+
+            // Hide attachment preview after submit
+            if (attachmentPreview && attachmentName) {
+                attachmentPreview.classList.add("hidden");
+                attachmentName.textContent = "";
+            }
 
             if (data.comment) {
                 appendNewComment(data.comment);
