@@ -19,6 +19,476 @@ window.ASSET_URLS = window.ASSET_URLS || {
 };
 
 // __________________________HELPER FUNCTIONS______________________________________
+// Variables to track comment polling
+let commentPollingInterval;
+let lastCommentTimestamp = '';
+
+/**
+ * Start polling for new comments
+ * @param {string} documentId - The document ID to check comments for
+ */
+function startCommentPolling(documentId) {
+    // Clear any existing polling
+    if (commentPollingInterval) {
+        clearInterval(commentPollingInterval);
+    }
+    
+    console.log('Starting comment polling for document:', documentId);
+    
+    // Check immediately on first load
+    checkForNewComments(documentId);
+    
+    // Then poll every 5 seconds (adjust timing as needed)
+    commentPollingInterval = setInterval(() => {
+        checkForNewComments(documentId);
+    }, 5000);
+}
+
+/**
+ * Stop polling for comments
+ */
+function stopCommentPolling() {
+    if (commentPollingInterval) {
+        clearInterval(commentPollingInterval);
+        commentPollingInterval = null;
+        console.log('Comment polling stopped');
+    }
+}
+
+/**
+ * Generate HTML for a comment
+ * @param {Object} comment - Comment data object
+ * @return {string} HTML string for the comment
+ */
+function generateCommentHTML(comment) {
+    // Determine if there's an attachment
+    const hasAttachment = comment.attachment_path && comment.attachment_name;
+    
+    // Generate attachment HTML if needed
+    let attachmentHTML = '';
+    if (hasAttachment) {
+        const filePath = `/storage/${comment.attachment_path}`;
+        const fileName = comment.attachment_name;
+        const fileType = comment.attachment_type;
+        const fileExt = fileName.split('.').pop().toLowerCase();
+        
+        // Check if it's an image type
+        const isImage = fileType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif'].includes(fileExt);
+        
+        if (isImage) {
+            // Display image directly in the comment
+            attachmentHTML = `
+                <div class="mt-2 max-w-full">
+                    <div class="rounded overflow-hidden max-w-[250px] cursor-pointer" 
+                         onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')">
+                        <img src="${filePath}" alt="${fileName}" class="max-w-full h-auto">
+                        <div class="text-xs text-gray-400 mt-1 truncate">${fileName}</div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // For non-image files, keep the current link format
+            // Determine icon based on file type
+            let icon = '';
+            if (fileType === 'application/pdf' || fileExt === 'pdf') {
+                icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
+            } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                      fileExt === 'docx' || 
+                      fileType === 'application/msword' || 
+                      fileExt === 'doc') {
+                icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+            } else {
+                icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
+            }
+            
+            attachmentHTML = `
+                <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full">
+                    <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
+                        ${icon}
+                        <span class="text-xs truncate max-w-[200px]">${fileName}</span>
+                    </a>
+                </div>
+            `;
+        }
+    }
+
+    // Determine profile image
+    let profileHTML = '';
+    if (comment.sender && comment.sender.profile_pic) {
+        // Use user's profile image
+        profileHTML = `
+            <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border border-gray-600">
+                <img src="/storage/${comment.sender.profile_pic}" alt="Profile" class="w-full h-full object-cover">
+            </div>
+        `;
+    } else {
+        // Use default profile icon
+        profileHTML = `
+            <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0 border border-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-6 h-6 text-gray-600">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
+                </svg>
+            </div>
+        `;
+    }
+    
+    // Format and wrap comment text to prevent overflow
+    const commentText = comment.comment || '';
+    
+    // Use timeAgo for relative timestamps
+    const relativeTime = timeAgo(comment.created_at);
+    
+    return `
+        <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+                ${profileHTML}
+            </div>
+            <div class="flex-1 min-w-0">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-white text-lg break-words">${comment.sender ? comment.sender.role_name : 'Unknown User'}</h3>
+                    <span class="text-white text-sm whitespace-nowrap ml-2" title="${new Date(comment.created_at).toLocaleString()}">${relativeTime}</span>
+                </div>
+                <p class="text-white mt-1 break-words whitespace-pre-wrap">${commentText}</p>
+                ${attachmentHTML}
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Check for new comments since last check
+ * @param {string} documentId - The document ID to check comments for
+ */
+function checkForNewComments(documentId) {
+    if (!documentId) return;
+    
+    fetch(`/comments/${documentId}/check-new?lastUpdate=${lastCommentTimestamp}`)
+        .then(response => response.json())
+        .then(data => {
+            // Update the timestamp for next check
+            lastCommentTimestamp = data.latestTimestamp;
+            
+            // If we have new comments, update the UI
+            if (data.hasNewComments) {
+                updateCommentsDisplay(data.comments);
+            }
+        })
+        .catch(error => {
+            console.error('Error checking for new comments:', error);
+        });
+}
+
+/**
+ * Update the comments display with new comments
+ * @param {Array} newComments - Array of new comment objects
+ */
+function updateCommentsDisplay(newComments) {
+    const container = document.getElementById('commentsContainer');
+    if (!container) return;
+    
+    // If container shows "No comments yet", clear it
+    if (container.textContent.includes('No comments yet')) {
+        container.innerHTML = '';
+    }
+    
+    // Append each new comment
+    newComments.forEach(comment => {
+        // Skip if comment already exists
+        if (document.getElementById(`comment-${comment.id}`)) return;
+        
+        // Create the new comment element
+        const commentElement = document.createElement('div');
+        commentElement.id = `comment-${comment.id}`;
+        commentElement.className = 'pb-4 mb-4 new-comment-highlight';
+        commentElement.innerHTML = generateCommentHTML(comment);
+        
+        // Add to container
+        container.appendChild(commentElement);
+        
+        // Scroll to bottom to show newest comment
+        const commentSection = container.parentElement;
+        commentSection.scrollTop = commentSection.scrollHeight;
+    });
+}
+
+// Real-time document updates with polling
+let lastUpdateTime = new Date().toISOString();
+let pollingInterval;
+let isPollingActive = false;
+
+/**
+ * Start polling for document updates
+ */
+function startDocumentPolling() {
+    if (isPollingActive) return; // Don't start if already polling
+    
+    isPollingActive = true;
+    console.log('Starting document polling...');
+    
+    // Check immediately on first load
+    checkForDocumentUpdates();
+    
+    // Then set up interval (every 30 seconds)
+    pollingInterval = setInterval(checkForDocumentUpdates, 30000);
+    
+    // Add visibility change handling to pause polling when tab is inactive
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+}
+
+/**
+ * Stop polling for document updates
+ */
+function stopDocumentPolling() {
+    if (!isPollingActive) return;
+    
+    console.log('Stopping document polling...');
+    clearInterval(pollingInterval);
+    isPollingActive = false;
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+}
+
+/**
+ * Handle visibility change to pause polling when tab is inactive
+ */
+function handleVisibilityChange() {
+    if (document.hidden) {
+        // Pause polling when tab is not visible
+        clearInterval(pollingInterval);
+    } else {
+        // Resume polling when tab becomes visible again
+        if (isPollingActive) {
+            pollingInterval = setInterval(checkForDocumentUpdates, 5000);
+            // Check immediately when coming back to the tab
+            checkForDocumentUpdates();
+        }
+    }
+}
+
+/**
+ * Check for document updates
+ */
+function checkForDocumentUpdates() {
+    // Only check for updates if we're viewing the table, not a specific document
+    if (document.getElementById('detailsView') && !document.getElementById('detailsView').classList.contains('hidden')) {
+        return; // Don't check when viewing document details
+    }
+    
+    console.log('Checking for document updates since:', lastUpdateTime);
+    
+    fetch('documents/check-updates', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            lastUpdate: lastUpdateTime
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Update our timestamp for the next check
+        lastUpdateTime = data.currentTime;
+        
+        // If we have updates, refresh the document table
+        if (data.hasUpdates && data.documents.length > 0) {
+            console.log('Found updates:', data.documents.length, 'documents');
+            updateDocumentTable(data.documents);
+        }
+    })
+    .catch(error => {
+        console.error('Error checking for document updates:', error);
+    });
+}
+
+/**
+ * Update the document table with new or changed documents
+ */
+function updateDocumentTable(updatedDocuments) {
+    // If we need a complete refresh due to many updates, just reload the table
+    if (updatedDocuments.length > 5) {
+        submitAjaxSearch(); // Reuse existing function to reload table
+        return;
+    }
+    
+    // Otherwise, update individual rows
+    const tableBody = document.querySelector('tbody');
+    if (!tableBody) return;
+    
+    updatedDocuments.forEach(doc => {
+        // Check if this document row already exists
+        const existingRow = document.getElementById(`document-row-${doc.id}`);
+        
+        if (existingRow) {
+            // Update existing row
+            updateDocumentRow(existingRow, doc);
+        } else {
+            // Add new row
+            const newRow = createDocumentRow(doc);
+            tableBody.insertBefore(newRow, tableBody.firstChild);
+            
+            // Flash animation for new documents
+            setTimeout(() => {
+                newRow.classList.add('bg-yellow-100');
+                setTimeout(() => {
+                    newRow.classList.remove('bg-yellow-100');
+                }, 2000);
+            }, 100);
+        }
+    });
+    
+    // Reattach event listeners to rows
+    attachRowEventListeners();
+}
+
+/**
+ * Create a new document row
+ */
+function createDocumentRow(doc) {
+    const row = document.createElement('tr');
+    row.id = `document-row-${doc.id}`;
+    row.setAttribute('data-document-id', doc.id);
+    row.className = `border-2 ${!doc.is_opened ? 'border-[#7A1212] bg-white' : 'border-[#D9D9D9] bg-[#D9ACAC33]'} cursor-pointer transition-all duration-150 hover:bg-[#DAA52080] text-sm`;
+    
+    // Get organization acronym for tag color
+    const tagParts = doc.tag.split(/[-_]/);
+    const acronym = tagParts.length > 0 ? tagParts[0].toUpperCase() : '';
+    
+    // Define color mapping similar to Blade template
+    const tagColors = {
+        'OSC': 'text-blue-500',
+        'ECE': 'text-red-500',
+        'PSY': 'text-purple-500',
+        'IT': 'text-orange-500',
+        'HR': 'text-pink-400',
+        'ACC': 'text-pink-400',
+        'EDU': 'text-blue-500',
+        'MAR': 'text-yellow-500',
+        'IE': 'text-green-500',
+        'TAP': 'text-green-500',
+        'SIGMA': 'text-yellow-900',
+        'AGDS': 'text-yellow-900',
+        'CHO': 'text-blue-500'
+    };
+    
+    // Map acronym to color
+    const colorKey = {
+        'ACAP': 'PSY',
+        'AECES': 'ECE',
+        'ELITE': 'IT',
+        'GIVE': 'EDU',
+        'JEHRA': 'HR',
+        'JMAP': 'MAR',
+        'JPIA': 'ACC',
+        'PIIE': 'IE',
+        'AGDS': 'AGDS',
+        'CHO': 'CHO',
+        'SIGMA': 'SIGMA',
+        'TAP': 'TAP',
+        'OSC': 'OSC',
+        'DOC': 'DOC'
+    }[acronym] || 'text-gray-500';
+    
+    const tagColor = tagColors[colorKey] || 'text-gray-500';
+    
+    // Get doc type display name
+    const predefinedDocTypes = [
+        'Event Proposal', 'General Plan of Activities', 'Calendar of Activities',
+        'Accomplishment Report', 'Constitution and By-Laws', 'Request Letter',
+        'Off-Campus', 'Petition and Concern'
+    ];
+    const displayType = predefinedDocTypes.includes(doc.type) ? doc.type : 'Others';
+    
+    // Create row HTML
+    row.innerHTML = `
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="flex items-center">
+                <span class="font-bold ${tagColor}">
+                    ${doc.tag}
+                </span>
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            <div class="truncate w-48" title="${doc.organization === 'Unknown' ? 'Guest' : doc.organization}">
+                ${doc.organization === 'Unknown' ? 'Guest' : doc.organization}
+            </div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap truncate">
+            <div class="truncate w-64" title="${doc.title}">${doc.title}</div>
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap">
+            ${doc.formatted_date}
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap relative">
+            <div class="flex items-center justify-between w-full">
+                <span title="${doc.type}">${displayType}</span>
+                ${!doc.is_opened ? '<span class="h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>' : ''}
+            </div>
+        </td>
+    `;
+    
+    return row;
+}
+
+/**
+ * Update an existing document row
+ */
+function updateDocumentRow(row, document) {
+    // Update row border and background based on opened status
+    if (document.is_opened) {
+        row.classList.remove('border-[#7A1212]', 'bg-white');
+        row.classList.add('border-[#D9D9D9]', 'bg-[#D9ACAC33]');
+    } else {
+        row.classList.add('border-[#7A1212]', 'bg-white');
+        row.classList.remove('border-[#D9D9D9]', 'bg-[#D9ACAC33]');
+    }
+    
+    // Update the document title if changed
+    const titleCell = row.querySelector('td:nth-child(3) div');
+    if (titleCell) {
+        titleCell.textContent = document.title;
+        titleCell.setAttribute('title', document.title);
+    }
+    
+    // Update the red dot indicator based on opened status
+    const statusCell = row.querySelector('td:last-child div');
+    if (statusCell) {
+        let dotIndicator = statusCell.querySelector('span.h-2.w-2');
+        
+        if (!document.is_opened && !dotIndicator) {
+            // Add dot if document is unopened
+            const span = document.createElement('span');
+            span.className = 'h-2 w-2 bg-[#7A1212] rounded-full inline-block';
+            statusCell.appendChild(span);
+        } else if (document.is_opened && dotIndicator) {
+            // Remove dot if document is opened
+            dotIndicator.remove();
+        }
+    }
+    
+    // Flash effect to highlight updated row
+    row.classList.add('bg-yellow-100');
+    setTimeout(() => {
+        row.classList.remove('bg-yellow-100');
+        if (document.is_opened) {
+            row.classList.add('bg-[#D9ACAC33]');
+        } else {
+            row.classList.add('bg-white');
+        }
+    }, 2000);
+}
+
+// Start polling when the document is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Only start polling if we're on the document review page and not mobile
+    if (document.getElementById('tableView')) {
+        startDocumentPolling();
+    }
+});
+
 function repositionActionButtons() {
     const container = document.getElementById('actionButtonsContainer');
     const statusSection = document.getElementById('statusSection');
@@ -570,6 +1040,9 @@ function handleRowClick(row) {
         // Add this line to load comments for the current document
         loadComments(documentId);
         
+        // Start polling for new comments
+        startCommentPolling(documentId);
+        
         // Show details view, hide table view
         const tableView = document.getElementById('tableView');
         const detailsView = document.getElementById('detailsView');
@@ -1097,7 +1570,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Searching...</span>
+                    <span>Please Wait...</span>
                 </div>
             `;
             // Set position: relative to parent if not already set
@@ -1725,6 +2198,12 @@ window.closeDetailsPanel = function() {
     const tableView = document.getElementById('tableView');
     const detailsView = document.getElementById('detailsView');
 
+    // Stop comment polling when closing panel
+    stopCommentPolling();
+    
+    // Reset lastCommentTimestamp
+    lastCommentTimestamp = '';
+
     // Hide details view and show table view
     detailsView.classList.add('hidden');
     tableView.classList.remove('hidden');
@@ -1756,7 +2235,10 @@ function timeAgo(dateString) {
     }
 }
 
-// Comment rendering
+/**
+ * Load all comments for a document
+ * @param {string} documentId - Document ID to load comments for
+ */
 function loadComments(documentId) {
     fetch(`/comments/${documentId}`)
         .then(response => response.json())
@@ -1773,206 +2255,22 @@ function loadComments(documentId) {
             }
             
             container.innerHTML = comments.map(comment => {
-                // Determine if there's an attachment
-                const hasAttachment = comment.attachment_path && comment.attachment_name;
-                
-                // Generate attachment HTML if needed
-                let attachmentHTML = '';
-                if (hasAttachment) {
-                    const filePath = `/storage/${comment.attachment_path}`;
-                    const fileName = comment.attachment_name;
-                    const fileType = comment.attachment_type;
-                    const fileExt = fileName.split('.').pop().toLowerCase();
-                    
-                    // Check if it's an image type
-                    const isImage = fileType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif'].includes(fileExt);
-                    
-                    if (isImage) {
-                        // Display image directly in the comment
-                        attachmentHTML = `
-                            <div class="mt-2 max-w-full">
-                                <div class="rounded overflow-hidden max-w-[250px] cursor-pointer" 
-                                     onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')">
-                                    <img src="${filePath}" alt="${fileName}" class="max-w-full h-auto">
-                                    <div class="text-xs text-gray-400 mt-1 truncate">${fileName}</div>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        // For non-image files, keep the current link format
-                        // Determine icon based on file type
-                        let icon = '';
-                        if (fileType === 'application/pdf' || fileExt === 'pdf') {
-                            icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>';
-                        } else if (fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-                                  fileExt === 'docx' || 
-                                  fileType === 'application/msword' || 
-                                  fileExt === 'doc') {
-                            icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
-                        } else {
-                            icon = '<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>';
-                        }
-                        
-                        attachmentHTML = `
-                            <div class="mt-2 bg-gray-100 rounded p-2 inline-block max-w-full">
-                                <a href="javascript:void(0);" onclick="openCommentAttachmentPreview('${filePath}', '${fileType}', '${fileName}')" class="flex items-center text-blue-600 hover:underline">
-                                    ${icon}
-                                    <span class="text-xs truncate max-w-[200px]">${fileName}</span>
-                                </a>
-                            </div>
-                        `;
-                    }
-                }
-
-                // Determine profile image
-                let profileHTML = '';
-                if (comment.sender && comment.sender.profile_pic) {
-                    // Use user's profile image
-                    profileHTML = `
-                        <div class="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border border-gray-600">
-                            <img src="/storage/${comment.sender.profile_pic}" alt="Profile" class="w-full h-full object-cover">
-                        </div>
-                    `;
-                } else {
-                    // Use default profile icon
-                    profileHTML = `
-                        <div class="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0 border border-gray-600">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                stroke="currentColor" class="w-6 h-6 text-gray-600">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118h15.998c-.023-3.423-3.454-6.118-6.911-6.118-3.457 0-6.888 2.695-6.911 6.118z" />
-                            </svg>
-                        </div>
-                    `;
-                }
-                
-                // Format and wrap comment text to prevent overflow
-                const commentText = comment.comment || '';
-                
-                // Use timeAgo for relative timestamps
-                const relativeTime = timeAgo(comment.created_at);
-                
-                return `
-                    <div class="pb-4 mb-4">
-                        <div class="flex items-start gap-3">
-                            <div class="flex-shrink-0">
-                                ${profileHTML}
-                            </div>
-                            <div class="flex-1 min-w-0"> <!-- Added min-w-0 to make sure flexbox respects child sizes -->
-                                <div class="flex justify-between items-center">
-                                    <h3 class="font-bold text-white text-lg break-words">${comment.sender ? comment.sender.role_name : 'Unknown User'}</h3>
-                                    <span class="text-white text-sm whitespace-nowrap ml-2" title="${new Date(comment.created_at).toLocaleString()}">${relativeTime}</span>
-                                </div>
-                                <p class="text-white mt-1 break-words whitespace-pre-wrap">${commentText}</p>
-                                ${attachmentHTML}
-                            </div>
-                        </div>
-                    </div>
-                `;
+                return `<div id="comment-${comment.id}" class="pb-4 mb-4">
+                    ${generateCommentHTML(comment)}
+                </div>`;
             }).join('');
+            
+            // Set the latest comment timestamp for polling
+            if (comments.length > 0) {
+                const latestComment = [...comments].sort((a, b) => 
+                    new Date(b.created_at) - new Date(a.created_at))[0];
+                lastCommentTimestamp = latestComment.created_at;
+            }
         })
         .catch(error => {
             console.error('Error loading comments:', error);
         });
 }
-
-// Add the comment attachment preview function
-// function openCommentAttachmentPreview(filePath, fileType, fileName) {
-//     console.log("Opening comment attachment preview for:", filePath);
-//     const modal = document.getElementById('documentViewerModal');
-//     const pdfViewer = document.getElementById('pdfViewer');
-//     const imageViewer = document.getElementById('imageViewer');
-//     const downloadView = document.getElementById('downloadView');
-//     const documentTitle = document.getElementById('documentTitle');
-//     const previewTab = document.getElementById('previewTab');
-//     const downloadTab = document.getElementById('downloadTab');
-//     const downloadButton = document.getElementById('downloadButton');
-//     const downloadFileName = document.getElementById('downloadFileName');
-    
-//     // Set the document title and download filename
-//     documentTitle.textContent = fileName;
-//     downloadFileName.textContent = fileName;
-    
-//     // Set up download link
-//     downloadButton.href = filePath;
-//     downloadButton.setAttribute('download', fileName);
-    
-//     // Show modal first to ensure container is visible
-//     modal.classList.remove('hidden');
-    
-//     // Tab switching event listeners (reuse existing functionality)
-//     previewTab.click(); // Show preview by default
-    
-//     // Determine content type and display appropriately
-//     const isDocx = fileType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
-//                   fileName.toLowerCase().endsWith('.docx') ||
-//                   fileType === 'application/msword' ||
-//                   fileName.toLowerCase().endsWith('.doc');
-                  
-//     const isPdf = fileType === 'application/pdf' || fileName.toLowerCase().endsWith('.pdf');
-    
-//     if (isPdf || isDocx) {
-//         // For PDF and DOCX files
-//         pdfViewer.innerHTML = '';
-//         imageViewer.classList.add('hidden');
-//         pdfViewer.classList.remove('hidden');
-        
-//         const viewerDiv = document.createElement('div');
-//         viewerDiv.id = 'pdf-viewer-container';
-//         viewerDiv.className = 'h-full';
-//         pdfViewer.appendChild(viewerDiv);
-        
-//         // Initialize WebViewer
-//         WebViewer({
-//             path: '/webviewer',
-//             initialDoc: filePath,
-//             extension: isDocx ? 'docx' : 'pdf',
-//             enableFilePicker: false,
-//             enableAnnotations: false,
-//         }, viewerDiv).then(instance => {
-//             // Save instance for later cleanup
-//             window.currentPdfViewerInstance = instance;
-            
-//             // Basic configuration
-//             const { docViewer, UI } = instance;
-            
-//             // Enable download button in WebViewer
-//             UI.enableElements(['downloadButton']);
-//             UI.disableElements(['printButton']);
-            
-//             // For DOCX files, configure specific options
-//             if (isDocx) {
-//                 UI.setToolbarGroup('toolbarGroup-View');
-//             }
-//         }).catch(error => {
-//             console.error("Failed to load WebViewer:", error);
-//             pdfViewer.innerHTML = `
-//                 <div class="p-4 text-red-500">Failed to load document viewer. Error: ${error.message}</div>
-//                 <div class="p-4">
-//                     <a href="${filePath}" download="${fileName}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
-//                         Download Document Instead
-//                     </a>
-//                 </div>
-//             `;
-//         });
-//     } else if (fileType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif'].some(ext => fileName.toLowerCase().endsWith(ext))) {
-//         // For image files
-//         pdfViewer.classList.add('hidden');
-//         imageViewer.classList.remove('hidden');
-//         imageViewer.innerHTML = `<img src="${filePath}" class="max-h-full max-w-full object-contain" alt="Document Preview">`;
-//     } else {
-//         // For other file types, directly show download view
-//         pdfViewer.classList.add('hidden');
-//         imageViewer.classList.add('hidden');
-//         downloadView.classList.remove('hidden');
-        
-//         // Activate download tab
-//         downloadTab.classList.add('bg-blue-500', 'text-white');
-//         downloadTab.classList.remove('text-gray-700');
-//         previewTab.classList.remove('bg-blue-500', 'text-white');
-//         previewTab.classList.add('text-gray-700');
-//     }
-// }   
 
 function openCommentAttachmentPreview(filePath, fileType, fileName) {
     console.log("Opening comment attachment preview for:", filePath);
@@ -2753,6 +3051,33 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
     
+    // Function to reset approval message field and counter
+    function resetApprovalMessageField() {
+        const approvalMessage = document.getElementById('approvalMessage');
+        if (approvalMessage) {
+            // Reset the input value
+            approvalMessage.value = '';
+            
+            // Reset the character counter
+            const counter = document.getElementById('approvalMessageCounter');
+            if (counter) {
+                counter.textContent = `0/${MESSAGE_CHARACTER_LIMITS.approvalMessage}`;
+                counter.classList.remove('text-orange-500', 'text-red-500');
+            }
+            
+            // Reset any error styling
+            approvalMessage.classList.remove('border-red-500');
+            const errorMsg = document.getElementById('approvalMessageError');
+            if (errorMsg) errorMsg.remove();
+            
+            // Reset unsaved changes flag
+            hasUnsavedChanges = false;
+            
+            // Reset original message value
+            originalApprovalMessage = '';
+        }
+    }
+    
     // Finalize approve button handler to use the message from the input
     const confirmFinalizeBtn = document.getElementById('confirmFinalizeBtn');
     if (confirmFinalizeBtn) {
@@ -2801,6 +3126,9 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(data => {
                 if (data.success) {
+                    // Reset the approval message field and counter
+                    resetApprovalMessageField();
+                    
                     // Show success toast
                     showDocumentActionToast('approved');
                     
@@ -2855,6 +3183,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Reset button state
                 setButtonLoading('confirmFinalizeBtn', false, 'finalizeConfirmationModal');
             });
+        });
+    }
+    
+    // Also reset fields when modals are closed directly
+    const closeApprovalMessageModalBtn = document.getElementById('closeApprovalMessageModalBtn');
+    if (closeApprovalMessageModalBtn) {
+        closeApprovalMessageModalBtn.addEventListener('click', function() {
+            resetApprovalMessageField();
         });
     }
 });       
@@ -2994,6 +3330,22 @@ document.getElementById('finalizeReturnBtn').addEventListener('click', function(
     })
     .then(data => {
         if (data.success) {
+            // Reset input field and character counter
+            const messageField = document.getElementById('resubmissionMessage');
+            if (messageField) {
+                messageField.value = '';
+                
+                // Reset the character counter
+                const counter = document.getElementById('resubmissionMessageCounter');
+                if (counter) {
+                    counter.textContent = `0/${MESSAGE_CHARACTER_LIMITS.resubmissionMessage}`;
+                    counter.classList.remove('text-orange-500', 'text-red-500');
+                }
+            }
+            
+            // Reset unsaved changes flag
+            hasUnsavedChanges = false;
+            
             // Show success toast
             showDocumentActionToast('return');
             
@@ -3046,7 +3398,7 @@ document.getElementById('finalizeReturnBtn').addEventListener('click', function(
     })
     .finally(() => {
         // Reset button state
-        setButtonLoading('finalizeReturnBtn', false, 'finalRejectConfirmationModal');
+        setButtonLoading('finalizeReturnBtn', false, 'finalReturnConfirmationModal');
     });
 });
 
