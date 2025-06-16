@@ -33,36 +33,36 @@
 
             <div class="flex-grow p-6 space-y-6">
                 <!-- Stats Section -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-        <div>
-            <p class="text-sm text-gray-500">Pending Documents</p>
-            <div class="text-2xl font-bold">{{ $pendingCount }}</div>
-        </div>
-        <img src="{{ asset('images/pendingicon.svg') }}" class="w-10 h-10" alt="Pending Documents">
-    </div>
-    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-        <div>
-            <p class="text-sm text-gray-500">Under Review</p>
-            <div class="text-2xl font-bold">{{ $reviewCount }}</div>
-        </div>
-        <img src="{{ asset('images/reviewicon.svg') }}" class="w-10 h-10" alt="Under Review">
-    </div>
-    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-        <div>
-            <p class="text-sm text-gray-500">Approved Documents</p>
-            <div class="text-2xl font-bold">{{ $approvedCount }}</div>
-        </div>
-        <img src="{{ asset('images/approvedicon.svg') }}" class="w-10 h-10" alt="Approved Documents">
-    </div>
-    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-        <div>
-            <p class="text-sm text-gray-500">Total Documents</p>
-            <div class="text-2xl font-bold">{{ $totalCount }}</div>
-        </div>
-        <img src="{{ asset('images/totaldocicon.svg') }}" class="w-10 h-10" alt="Total Documents">
-    </div>
-</div>
+           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Pending Documents</p>
+                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $pendingCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/pendingicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Pending Documents">
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Under Review</p>
+                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $reviewCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/reviewicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Under Review">
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Approved Documents</p>
+                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $approvedCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/approvedicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Approved Documents">
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Total Documents</p>
+                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $totalCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/totaldocicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Total Documents">
+                </div>
+            </div>
 
                 <!-- Announcement and Documents Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -71,8 +71,8 @@
                         <!-- Latest Announcements -->
                         <div class="bg-white rounded-xl shadow-md p-4 flex flex-col">
                             <div class="flex items-center justify-between mb-2">
-                                <h2 class="text-lg font-semibold flex items-center gap-2">
-                                    <img src="{{ asset('images/annc.svg') }}" alt="Announcements" class="w-7 h-7 inline-block align-middle max-w-full" />
+                                <h2 class="text-[15px] sm:text-[17px] md:text-[20px] lg:text-[22px] font-semibold flex items-center gap-2">
+                                    <img src="{{ asset('images/annc.svg') }}" alt="Announcements" class="w-6 h-6 sm:w-7 sm:h-7 inline-block align-middle max-w-full" />
                                     Announcements
                                 </h2>
                                 <button onclick="openPostAnnouncementModal()" title="Post New Announcement"
@@ -356,10 +356,15 @@
                     </div>
 
                    <!-- Post New Announcements Modal -->
-                    <div id="postAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-                        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
-                            <div class="flex items-center mb-4 justify-between">
-                                <div class="flex items-center">
+                 <div id="postAnnouncementModal" class="fixed inset-0 z-50 hidden">
+                <!-- Simple black overlay without blur -->
+                <div class="fixed inset-0 bg-black opacity-75"></div>         
+                        <!-- Modal content wrapper -->
+                        <div class="relative flex items-center justify-center min-h-screen p-4">
+                            <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
+                                <!-- ...existing modal header... -->
+                                <div class="flex items-center mb-4 justify-between">
+                                    <div class="flex items-center">
                                     <h2 class="text-lg font-semibold mr-2">Post announcement</h2>
                                     <!-- Info Icon Tooltip -->
                                     <button type="button" id="announcementInfoBtn" class="ml-1 focus:outline-none">
@@ -399,15 +404,23 @@
                                 </div>
                                 <!-- Schedule Section -->
                                 <div>
-                                    <label class="inline-flex items-center">
+                                    <label class="inline-flex items-center mb-2">
                                         <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox">
                                         <span class="ml-2">Set Due Date</span>
                                     </label>
-                                    <div id="scheduleFields" class="mt-2 space-x-2 hidden">
-                                        <input type="date" id="scheduleDate" name="schedule_date"
-    class="border rounded px-2 py-1" min="{{ date('Y-m-d') }}">
-<input type="time" id="scheduleTime" name="schedule_time"
-    class="border rounded px-2 py-1" placeholder="Time (optional)">
+                                    <div id="scheduleFields" class="hidden">
+                                        <div class="flex space-x-4">
+                                            <div class="flex-1">
+                                                <label for="scheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                                <input type="date" id="scheduleDate" name="schedule_date"
+                                                    class="w-full border rounded px-2 py-1" min="{{ date('Y-m-d') }}">
+                                            </div>
+                                            <div class="flex-1">
+                                                <label for="scheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
+                                                <input type="time" id="scheduleTime" name="schedule_time"
+                                                    class="w-full border rounded px-2 py-1">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Audience Section -->
@@ -448,6 +461,7 @@
                 </div>
             </div>
         </div>
+        </div>
         @include('components.footer')
     </div>
    
@@ -475,7 +489,7 @@
 
     {{-- Edit Announcement Modal --}}
     <div id="editAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Edit Announcement</span>
@@ -503,16 +517,26 @@
                         class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" required></textarea>
                 </div>
                 <!-- Schedule Section -->
-                <div class="mb-3">
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
-                        <span class="ml-2">Set Due Date</span>
-                    </label>
-                    <div id="editScheduleFields" class="mt-2 space-x-2 hidden">
-                        <input type="date" id="editScheduleDate" name="schedule_date" class="border rounded px-2 py-1">
-                        <input type="time" id="editScheduleTime" name="schedule_time" class="border rounded px-2 py-1" placeholder="Time (optional)">
+           <div class="mb-3">
+                <label class="inline-flex items-center mb-2">
+                    <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
+                    <span class="ml-2">Set Due Date</span>
+                </label>
+                <div id="editScheduleFields" class="hidden">
+                    <div class="flex space-x-4">
+                        <div class="flex-1">
+                            <label for="editScheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                            <input type="date" id="editScheduleDate" name="schedule_date" 
+                                class="w-full border rounded px-2 py-1">
+                        </div>
+                        <div class="flex-1">
+                            <label for="editScheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
+                            <input type="time" id="editScheduleTime" name="schedule_time" 
+                                class="w-full border rounded px-2 py-1">
+                        </div>
                     </div>
                 </div>
+            </div>
                 <!-- Audience Section -->
                 <div class="mb-3">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
@@ -569,7 +593,7 @@
 
     <!-- Archive Confirmation Modal -->
     <div id="archiveConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Archive Announcement Confirmation</span>
@@ -593,7 +617,7 @@
 
     <!-- Restore Confirmation Modal -->
     <div id="restoreConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Restore Announcement Confirmation</span>
@@ -617,7 +641,7 @@
 
     <!-- Delete Confirmation Modal -->
     <div id="deleteConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Delete Announcement Confirmation</span>
@@ -843,13 +867,24 @@
                 scheduleTimeInput.value = '';
             }
 
-            // Audience
+           // Audience handling
             if (audience === 'all') {
                 document.getElementById('editAudienceAll').checked = true;
                 document.getElementById('editCustomAudienceDropdown').classList.add('hidden');
             } else {
                 document.getElementById('editAudienceCustom').checked = true;
                 document.getElementById('editCustomAudienceDropdown').classList.remove('hidden');
+                
+                // Remove any existing reminder messages first
+                const existingMessages = document.querySelectorAll('.audience-reminder');
+                existingMessages.forEach(msg => msg.remove());
+                
+                // Add new reminder message
+                const customAudienceDropdown = document.getElementById('editCustomAudienceDropdown');
+                const messageElement = document.createElement('div');
+                messageElement.className = 'text-yellow-600 text-sm mb-2 audience-reminder'; // Added audience-reminder class
+                messageElement.textContent = 'Please reselect the audience for confirmation';
+                customAudienceDropdown.insertBefore(messageElement, customAudienceDropdown.firstChild);
             }
             // Uncheck all first
             document.querySelectorAll('.editAudienceStudent').forEach(cb => cb.checked = false);

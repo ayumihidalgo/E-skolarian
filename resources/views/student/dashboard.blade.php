@@ -14,39 +14,40 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
                         <div>
-                            <p class="text-sm text-gray-500">Pending Documents</p>
-                            <div class="text-2xl font-bold">{{ $pendingCount }}</div>
+                            <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Pending Documents</p>
+                            <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $pendingCount }}</div>
                         </div>
-                        <img src="{{ asset('images/pendingicon.svg') }}" class="w-10 h-10" alt="Pending Documents">
+                        <img src="{{ asset('images/pendingicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Pending Documents">
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
                         <div>
-                            <p class="text-sm text-gray-500">Under Review</p>
-                            <div class="text-2xl font-bold">{{ $reviewCount }}</div>
+                            <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Under Review</p>
+                            <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $reviewCount }}</div>
                         </div>
-                        <img src="{{ asset('images/reviewicon.svg') }}" class="w-10 h-10" alt="Under Review">
+                        <img src="{{ asset('images/reviewicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Under Review">
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
                         <div>
-                            <p class="text-sm text-gray-500">Approved Documents</p>
-                            <div class="text-2xl font-bold">{{ $approvedCount }}</div>
+                            <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Approved Documents</p>
+                            <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $approvedCount }}</div>
                         </div>
-                        <img src="{{ asset('images/approvedicon.svg') }}" class="w-10 h-10" alt="Approved Documents">
+                        <img src="{{ asset('images/approvedicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Approved Documents">
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
                         <div>
-                            <p class="text-sm text-gray-500">Total Documents</p>
-                            <div class="text-2xl font-bold">{{ $totalCount }}</div>
+                            <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Total Documents</p>
+                            <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $totalCount }}</div>
                         </div>
-                        <img src="{{ asset('images/totaldocicon.svg') }}" class="w-10 h-10" alt="Total Documents">
+                        <img src="{{ asset('images/totaldocicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Total Documents">
                     </div>
                 </div>
                 <!-- Announcement and Documents Section -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Announcements -->
                     <div class="md:col-span-2 bg-white rounded-xl shadow-md p-4">
-                        <h2 class="text-lg font-semibold mb-2 flex items-center gap-2">
-                            <img src="{{ asset('images/annc.svg') }}" alt="Announcements" class="w-7 h-7 inline-block align-middle" />
+                       <h2 class="text-[16px] sm:text-[18px] md:text-[20px] lg:text-[22px] font-semibold mb-2 flex items-center gap-2">
+                            <img src="{{ asset('images/annc.svg') }}" alt="Announcements"
+                                class="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 inline-block align-middle" />
                             Announcements
                         </h2>
                         @if ($latestAnnouncements->count())
@@ -206,7 +207,7 @@
     </div>
     <!-- Modal for full announcement -->
         <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-            <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
+            <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.75;"></div>
             <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
                 <div class="relative mb-2 border-b pb-2">
                     <button onclick="closeAnnouncementModal()"

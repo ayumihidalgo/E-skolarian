@@ -299,34 +299,34 @@
             </div>
         </div>
         <!-- Post New Announcements Modal -->
-<div id="postAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-    <div class="absolute inset-0 bg-black opacity-20"></div>
-    <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
-        <div class="flex items-center justify-between mb-2">
-            <span class="font-semibold text-lg flex items-center">
-                Post Announcement
-                <!-- Tooltip Icon -->
-                <button type="button" id="announcementInfoBtn" class="ml-2 focus:outline-none">
-                    <img src="{{ asset('images/tooltip.png') }}" alt="Info" class="w-5 h-5 inline-block align-middle" />
-                </button>
-            </span>
-            <button onclick="closePostAnnouncementModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
-        </div>
-        <!-- Tooltip Content (responsive) -->
-        <div id="announcementInfoTooltip" class="hidden absolute top-12 left-1/2 transform -translate-x-1/2 w-80 sm:w-96 max-w-xs sm:max-w-md bg-gray-800 text-white text-sm rounded-lg shadow-lg p-4 z-50 break-words">
-            <div class="mb-2 font-semibold">You can now create and share announcements with your team or organization!</div>
-            <ol class="list-decimal list-inside mb-2">
-                <li>
-                    <span class="font-semibold">Regular Announcements</span> – Ideal for general updates, reminders, or important messages.
-                </li>
-                <li>
-                    <span class="font-semibold">Announcements with Deadlines</span> – Perfect for time-sensitive updates like submission schedules, event registrations, or task deadlines. These announcements allow you to set a due date to help users stay on track.
-                </li>
-            </ol>
-            <span>Start posting announcements to keep everyone informed and organized!</span>
-        </div>
-        <form id="announcementForm" action="{{ auth()->user()->role === 'super admin' ? route('super-admin.announcements.store') : route('announcements.store') }}" method="POST">
-            @csrf
+                <div id="postAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+                    <div class="absolute inset-0 bg-black opacity-75"></div>
+                    <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="font-semibold text-lg flex items-center">
+                                Post Announcement
+                                <!-- Tooltip Icon -->
+                                <button type="button" id="announcementInfoBtn" class="ml-2 focus:outline-none">
+                                    <img src="{{ asset('images/tooltip.png') }}" alt="Info" class="w-5 h-5 inline-block align-middle" />
+                                </button>
+                            </span>
+                            <button onclick="closePostAnnouncementModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                        </div>
+                        <!-- Tooltip Content (responsive) -->
+                        <div id="announcementInfoTooltip" class="hidden absolute top-12 left-1/2 transform -translate-x-1/2 w-80 sm:w-96 max-w-xs sm:max-w-md bg-gray-800 text-white text-sm rounded-lg shadow-lg p-4 z-50 break-words">
+                            <div class="mb-2 font-semibold">You can now create and share announcements with your team or organization!</div>
+                            <ol class="list-decimal list-inside mb-2">
+                                <li>
+                                    <span class="font-semibold">Regular Announcements</span> – Ideal for general updates, reminders, or important messages.
+                                </li>
+                                <li>
+                                    <span class="font-semibold">Announcements with Deadlines</span> – Perfect for time-sensitive updates like submission schedules, event registrations, or task deadlines. These announcements allow you to set a due date to help users stay on track.
+                                </li>
+                            </ol>
+                            <span>Start posting announcements to keep everyone informed and organized!</span>
+                        </div>
+                        <form id="announcementForm" action="{{ auth()->user()->role === 'super admin' ? route('super-admin.announcements.store') : route('announcements.store') }}" method="POST">
+                            @csrf
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
                                     <input type="text" id="titleInput" name="title" maxlength="60"
@@ -343,15 +343,23 @@
                                 </div>
                                 <!-- Schedule Section -->
                                 <div>
-                                    <label class="inline-flex items-center">
+                                    <label class="inline-flex items-center mb-2">
                                         <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox">
                                         <span class="ml-2">Set Due Date</span>
                                     </label>
-                                    <div id="scheduleFields" class="mt-2 space-x-2 hidden">
-                                        <input type="date" id="scheduleDate" name="schedule_date"
-                                            class="border rounded px-2 py-1" min="{{ date('Y-m-d') }}">
-                                        <input type="time" id="scheduleTime" name="schedule_time"
-                                            class="border rounded px-2 py-1" placeholder="Time (optional)">
+                                    <div id="scheduleFields" class="hidden">
+                                        <div class="flex items-end space-x-4">
+                                            <div>
+                                                <label for="scheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                                <input type="date" id="scheduleDate" name="schedule_date"
+                                                    class="border rounded px-2 py-1" min="{{ date('Y-m-d') }}">
+                                            </div>
+                                            <div>
+                                                <label for="scheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
+                                                <input type="time" id="scheduleTime" name="schedule_time"
+                                                    class="border rounded px-2 py-1">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Audience Section -->
@@ -412,7 +420,7 @@
 
     {{-- Edit Announcement Modal --}}
     <div id="editAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Edit Announcement</span>
@@ -441,13 +449,23 @@
                 </div>
                 <!-- Schedule Section -->
                 <div class="mb-3">
-                    <label class="inline-flex items-center">
+                    <label class="inline-flex items-center mb-2">
                         <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
                         <span class="ml-2">Set Due Date</span>
                     </label>
-                    <div id="editScheduleFields" class="mt-2 space-x-2 hidden">
-                        <input type="date" id="editScheduleDate" name="schedule_date" class="border rounded px-2 py-1">
-                        <input type="time" id="editScheduleTime" name="schedule_time" class="border rounded px-2 py-1" placeholder="Time (optional)">
+                    <div id="editScheduleFields" class="hidden">
+                        <div class="flex items-end space-x-4">
+                            <div>
+                                <label for="editScheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                <input type="date" id="editScheduleDate" name="schedule_date" 
+                                    class="border rounded px-2 py-1">
+                            </div>
+                            <div>
+                                <label for="editScheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
+                                <input type="time" id="editScheduleTime" name="schedule_time" 
+                                    class="border rounded px-2 py-1">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <!-- Audience Section -->
@@ -506,7 +524,7 @@
 
     <!-- Archive Confirmation Modal -->
     <div id="archiveConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Archive Announcement Confirmation</span>
@@ -530,7 +548,7 @@
 
     <!-- Restore Confirmation Modal -->
     <div id="restoreConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Restore Announcement Confirmation</span>
@@ -554,7 +572,7 @@
 
     <!-- Delete Confirmation Modal -->
     <div id="deleteConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Delete Announcement Confirmation</span>
@@ -1126,12 +1144,23 @@
             }
 
             // Audience
-            if (audience === 'all') {
+             if (audience === 'all') {
                 document.getElementById('editAudienceAll').checked = true;
                 document.getElementById('editCustomAudienceDropdown').classList.add('hidden');
             } else {
                 document.getElementById('editAudienceCustom').checked = true;
                 document.getElementById('editCustomAudienceDropdown').classList.remove('hidden');
+                
+                // Remove any existing reminder messages first
+                const existingMessages = document.querySelectorAll('.audience-reminder');
+                existingMessages.forEach(msg => msg.remove());
+                
+                // Add new reminder message
+                const customAudienceDropdown = document.getElementById('editCustomAudienceDropdown');
+                const messageElement = document.createElement('div');
+                messageElement.className = 'text-yellow-600 text-sm mb-2 audience-reminder'; // Added audience-reminder class
+                messageElement.textContent = 'Please reselect the audience for confirmation';
+                customAudienceDropdown.insertBefore(messageElement, customAudienceDropdown.firstChild);
             }
             // Uncheck all first
             document.querySelectorAll('.editAudienceStudent').forEach(cb => cb.checked = false);
