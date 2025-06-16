@@ -1548,65 +1548,190 @@ closeEditModal = function() {
     }
 };
 
-// --- Discard Changes Modal Logic ---
-let discardType = null;
-function showDiscardChangesModal(type) {
-    discardType = type;
-    document.getElementById('discardChangesModal').classList.remove('hidden');
+// --- Browser Close/Navigation Confirmation with Auto Logout ---
+let isDashboardDirty = false;
+
+function checkDashboardDirty() {
+    // Check if any modals are open with unsaved changes
+    return (
+        (isPostModalOpen && hasPostChanges && (document.getElementById('titleInput').value.trim() !== '' || document.getElementById('contentInput').value.trim() !== '')) ||
+        (isEditModalOpen && hasEditChanges && (document.getElementById('editTitle').value.trim() !== '' || document.getElementById('editContent').value.trim() !== ''))
+    );
 }
-function closeDiscardChangesModal() {
-    document.getElementById('discardChangesModal').classList.add('hidden');
+
+// Update dirty state when modals open/close or content changes
+function updateDashboardDirtyState() {
+    isDashboardDirty = checkDashboardDirty();
 }
-function confirmDiscardChanges() {
-    closeDiscardChangesModal();
-    if (discardType === 'post') {
+
+// Override existing modal functions to track dirty state
+const originalOpenPostModal = openPostAnnouncementModal;
+openPostAnnouncementModal = function() {
+    originalOpenPostModal();
+    updateDashboardDirtyState();
+};
+
+const originalClosePostModal = closePostAnnouncementModal;
+closePostAnnouncementModal = function() {
+    if (hasPostChanges && (document.getElementById('titleInput').value || document.getElementById('contentInput').value)) {
+        showDiscardChangesModal('post');
+    } else {
         isPostModalOpen = false;
         hasPostChanges = false;
         clearDraft('post');
         originalClosePostAnnouncementModal();
-    } else if (discardType === 'edit') {
+        updateDashboardDirtyState();
+    }
+};
+
+const originalOpenEditModalFunc = openEditModal;
+openEditModal = function(...args) {
+    originalOpenEditModalFunc(...args);
+    updateDashboardDirtyState();
+};
+
+const originalCloseEditModalFunc = closeEditModal;
+closeEditModal = function() {
+    if (hasEditChanges && (document.getElementById('editTitle').value || document.getElementById('editContent').value)) {
+        showDiscardChangesModal('edit');
+    } else {
         isEditModalOpen = false;
         hasEditChanges = false;
         clearDraft('edit');
         originalCloseEditModal();
+        updateDashboardDirtyState();
     }
-    discardType = null;
+};
+
+// Update dirty state when form inputs change
+['input', 'change'].forEach(evt => {
+    document.getElementById('announcementForm').addEventListener(evt, () => {
+        hasPostChanges = true;
+        saveDraft('post');
+        updateDashboardDirtyState();
+    });
+});
+
+['input', 'change'].forEach(evt => {
+    document.getElementById('editAnnouncementForm').addEventListener(evt, () => {
+        hasEditChanges = true;
+        saveDraft('edit');
+        updateDashboardDirtyState();
+    });
+});
+
+// Helper function to create logout form data
+function createLogoutForm() {
+    const form = new FormData();
+    form.append('_token', '{{ csrf_token() }}');
+    form.append('_method', 'POST');
+    return form;
 }
 
-// --- Intercept Refresh/Back/Exit ---
+// --- Intercept Refresh/Back/Exit with Logout ---
 window.addEventListener('beforeunload', function(e) {
-    if ((isPostModalOpen && hasPostChanges) || (isEditModalOpen && hasEditChanges)) {
-        if (isPostModalOpen) saveDraft('post');
-        if (isEditModalOpen) saveDraft('edit');
-        e.preventDefault();
-        e.returnValue = '';
+    // Always show confirmation when leaving the page if there are unsaved changes or just for security
+    const hasUnsavedChanges = checkDashboardDirty();
+    
+    let confirmationMessage;
+    if (hasUnsavedChanges) {
+        // Save drafts if there are unsaved changes
+        if (isPostModalOpen && hasPostChanges) saveDraft('post');
+        if (isEditModalOpen && hasEditChanges) saveDraft('edit');
+        confirmationMessage = 'You have unsaved changes. Are you sure you want to leave? You will be logged out automatically.';
+    } else {
+        confirmationMessage = 'Are you sure you want to leave? You will be logged out automatically.';
+    }
+    
+    // Set the confirmation message
+    e.preventDefault();
+    e.returnValue = confirmationMessage;
+    return confirmationMessage;
+});
+
+// Handle page unload to logout user
+window.addEventListener('unload', function() {
+    // Send logout request when page is actually unloading
+    navigator.sendBeacon('{{ route("logout") }}', new FormData(createLogoutForm()));
+});
+
+// Alternative approach using visibilitychange for better browser support
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+        // Page is being hidden (user might be closing tab/browser)
+        // Send logout beacon as backup
+        navigator.sendBeacon('{{ route("logout") }}', new FormData(createLogoutForm()));
     }
 });
 
-// --- On Modal Submit, Clear Draft ---
-document.getElementById('announcementForm').addEventListener('submit', function() {
-    clearDraft('post');
-    hasPostChanges = false;
-    isPostModalOpen = false;
-});
-document.getElementById('editAnnouncementForm').addEventListener('submit', function() {
-    clearDraft('edit');
-    hasEditChanges = false;
-    isEditModalOpen = false;
-});
+window.addEventListener('pagehide', function(e) {
+        // This event is more reliable on mobile browsers
+        navigator.sendBeacon('{{ route("logout") }}', new FormData(createLogoutForm()));
+    });
 
-// Optional: ESC key closes modal with warning
-document.addEventListener('keydown', function(e) {
-    if (e.key === "Escape" || e.key === "Esc") {
-        if (isPostModalOpen && (document.getElementById('titleInput').value || document.getElementById('contentInput').value)) {
-            closePostAnnouncementModal();
+    // Override the existing beforeunload event from the original script
+    // Remove or modify the existing beforeunload event listener
+    const existingBeforeUnloadEvents = window.onbeforeunload;
+    window.onbeforeunload = null;
+
+    // Enhanced ESC key handling with unsaved changes check
+    document.addEventListener('keydown', function(e) {
+        if (e.key === "Escape" || e.key === "Esc") {
+            if (isPostModalOpen && (document.getElementById('titleInput').value || document.getElementById('contentInput').value)) {
+                closePostAnnouncementModal();
+            }
+            if (isEditModalOpen && (document.getElementById('editTitle').value || document.getElementById('editContent').value)) {
+                closeEditModal();
+            }
         }
-        if (isEditModalOpen && (document.getElementById('editTitle').value || document.getElementById('editContent').value)) {
-            closeEditModal();
+    });
+
+    // Override the existing discard changes confirmation to update dirty state
+    const originalConfirmDiscardChanges = confirmDiscardChanges;
+    confirmDiscardChanges = function() {
+        closeDiscardChangesModal();
+        if (discardType === 'post') {
+            isPostModalOpen = false;
+            hasPostChanges = false;
+            clearDraft('post');
+            originalClosePostAnnouncementModal();
+        } else if (discardType === 'edit') {
+            isEditModalOpen = false;
+            hasEditChanges = false;
+            clearDraft('edit');
+            originalCloseEditModal();
         }
-    }
-});
-// Set min date and min time for scheduling announcements (AnnouncementModal only)
+        discardType = null;
+        updateDashboardDirtyState(); // Update dirty state after discarding changes
+    };
+
+    // Clear dirty state when forms are successfully submitted
+    document.getElementById('announcementForm').addEventListener('submit', function() {
+        clearDraft('post');
+        hasPostChanges = false;
+        isPostModalOpen = false;
+        updateDashboardDirtyState();
+    });
+
+    document.getElementById('editAnnouncementForm').addEventListener('submit', function() {
+        clearDraft('edit');
+        hasEditChanges = false;
+        isEditModalOpen = false;
+        updateDashboardDirtyState();
+    });
+
+    // Navigation link override (optional - for internal navigation)
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a[href]');
+        if (link && !link.href.includes('#') && checkDashboardDirty()) {
+            const confirmed = confirm('You have unsaved changes. Are you sure you want to leave this page?');
+            if (!confirmed) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+    // Set min date and min time for scheduling announcements (AnnouncementModal only)
 const scheduleDate = document.getElementById('scheduleDate');
 const scheduleTime = document.getElementById('scheduleTime');
 
