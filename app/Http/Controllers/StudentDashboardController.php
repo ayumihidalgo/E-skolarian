@@ -15,39 +15,33 @@ class StudentDashboardController extends Controller
     public function showStudentDashboard()
     {
         $userId = (string) Auth::id();
-        //Document status counts
-        // Get IDs of documents that are "Under Review" in the review table
-        $underReviewIds = \App\Models\Review::where('status', 'Under Review')
-            ->whereHas('document', function($q) use ($userId) {
-                $q->where('user_id', $userId);
-            })
-            ->pluck('document_id')
-            ->unique();
 
-        // Pending: documents that are pending and NOT under review
+        // Pending: documents that are Pending for this student, not archived
         $pendingCount = \App\Models\SubmittedDocument::where('user_id', $userId)
-            ->where('status', 'pending')
-            ->whereNotIn('id', $underReviewIds)
+            ->where('status', 'Pending')
+            ->whereNull('archived_at')
             ->count();
 
-        // Under Review: count from review table
-        $reviewCount = $underReviewIds->count();
+        // Under Review: documents that are Under Review for this student, not archived
+        $reviewCount = \App\Models\SubmittedDocument::where('user_id', $userId)
+            ->where('status', 'Under Review')
+            ->whereNull('archived_at')
+            ->count();
 
-        // Approved: from submitted_documents
+        // Approved: documents that are Approved for this student, not archived
         $approvedCount = \App\Models\SubmittedDocument::where('user_id', $userId)
-            ->where('status', 'approved')
+            ->where('status', 'Approved')
+            ->whereNull('archived_at')
             ->count();
 
-        // Total: only pending, under_review, approved
-        $totalCount = \App\Models\SubmittedDocument::where('user_id', $userId)
-            ->whereIn('status', ['pending', 'under_review', 'approved'])
-            ->orWhereIn('id', $underReviewIds)
-            ->count();
+        // Total: sum of the three counts
+        $totalCount = $pendingCount + $reviewCount + $approvedCount;
 
         // Announcements: Only show if for all or for this student
         $sevenDaysAgo = Carbon::now()->subDays(7);
 
         $latestAnnouncements = Announcement::with('user')
+             ->where('archived', 0)
             ->where(function($query) use ($userId, $sevenDaysAgo) {
                 $query->where(function($q) use ($userId, $sevenDaysAgo) {
                     // No deadline: show if within 7 days
@@ -80,6 +74,7 @@ class StudentDashboardController extends Controller
             ->get();
 
         $previousAnnouncements = Announcement::with('user')
+             ->where('archived', 0)
             ->where(function($query) use ($userId, $sevenDaysAgo) {
                 $query->where(function($q) use ($userId, $sevenDaysAgo) {
                     // No deadline: move to previous after 7 days
@@ -109,9 +104,10 @@ class StudentDashboardController extends Controller
             ->latest()
             ->get();
 
-        // Fetch recent documents
+        // Fetch recent documents (only non-archived)
         $recentDocuments = \App\Models\SubmittedDocument::with(['latestVersion', 'receiver'])
             ->where('user_id', auth()->id())
+            ->whereNull('archived_at') // Only non-archived documents
             ->latest()
             ->take(5)
             ->get();

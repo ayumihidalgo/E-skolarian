@@ -41,19 +41,11 @@
                         class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200">
                         <option class="bg-white text-black" value="Organization" disabled selected>Organization</option>
                         <option class="bg-white text-black" value="All">All Organizations</option>
-                        <option class="bg-white text-black" value="ACAP">ACAP</option>
-                        <option class="bg-white text-black" value="AECES">AECES</option>
-                        <option class="bg-white text-black" value="ELITE">ELITE</option>
-                        <option class="bg-white text-black" value="GIVE">GIVE</option>
-                        <option class="bg-white text-black" value="JEHRA">JEHRA</option>
-                        <option class="bg-white text-black" value="JMAP">JMAP</option>
-                        <option class="bg-white text-black" value="JPIA">JPIA</option>
-                        <option class="bg-white text-black" value="PIIE">PIIE</option>
-                        <option class="bg-white text-black" value="AGDS">AGDS</option>
-                        <option class="bg-white text-black" value="Chorale">Chorale</option>
-                        <option class="bg-white text-black" value="SIGMA">SIGMA</option>
-                        <option class="bg-white text-black" value="TAPNOTCH">TAPNOTCH</option>
-                        <option class="bg-white text-black" value="OSC">OSC</option>
+                        @if(isset($availableOrganizations))
+                            @foreach($availableOrganizations as $org)
+                                <option class="bg-white text-black" value="{{ $org }}">{{ $org }}</option>
+                            @endforeach
+                        @endif
                     </select>
                     <!-- Custom dropdown arrow icon -->
                     <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -66,25 +58,11 @@
                         class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 truncate">
                         <option class="bg-white text-black truncate" value="Type" disabled selected>Type</option>
                         <option class="bg-white text-black truncate" value="All">All Types</option>
-                        <!-- Standard document type options -->
-                        <option class="bg-white text-black truncate" value="Event Proposal">Event Proposal</option>
-                        <option class="bg-white text-black truncate" value="General Plan of Activities">General Plan of
-                            Activities</option>
-                        <option class="bg-white text-black truncate" value="Reports of Proceedings">Reports of Proceedings
-                        </option>
-                        <option class="bg-white text-black truncate" value="Constitution and By-Laws">Constitution and
-                            By-Laws</option>
-                        <option class="bg-white text-black truncate" value="Fundraising Activities">Fundraising Activities
-                        </option>
-                        <option class="bg-white text-black truncate" value="Request Letter">Request Letter</option>
-                        <option class="bg-white text-black truncate" value="Petition and Concern">Petition and Concern
-                        </option>
-                        <option class="bg-white text-black truncate" value="Memorandum of Agreement">Memorandum of
-                            Agreement</option>
-                        <option class="bg-white text-black truncate" value="Off Campus Activities">Off Campus Activities
-                        </option>
-                        <!-- Others option for non-standard types -->
-                        <option class="bg-white text-black truncate" value="Others">Others</option>
+                        @if(isset($availableTypes))
+                            @foreach($availableTypes as $type)
+                                <option class="bg-white text-black truncate" value="{{ $type }}">{{ $type }}</option>
+                            @endforeach
+                        @endif
                     </select>
                     <!-- Custom dropdown arrow icon -->
                     <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
@@ -109,17 +87,23 @@
                                             </button>
                                         </div>
                                     </th>
-                                    <!-- Define column headers array -->
-                                    @php $headers = ['Tag', 'Organization', 'Title', 'Date Archived', 'Type', 'Status']; @endphp
+                                    <!-- Change the table header -->
+                                    @php $headers = ['Tag', 'Organization', 'Title', 'Date Archived', 'Type', 'Submitted to']; @endphp
                                     @foreach ($headers as $i => $header)
                                     <th class="px-4 py-2 whitespace-nowrap max-w-[160px] truncate">
-                                        <!-- Sortable column headers with icons -->
+                                        @if ($header === 'Organization' || $header === 'Type' || $header === 'Submitted to')
+                                        <button onclick="sortTable({{ $i + 1 }})" class="group">
+                                            <span>{{ $header }}</span>
+                                        </button>
+                                    @else
+                                        <!-- Other headers have normal sort icon -->
                                         <button onclick="sortTable({{ $i + 1 }})"
                                             class="flex items-center gap-1 group">
                                             <span>{{ $header }}</span>
                                             <img src="{{ asset('images/sortIcon.svg') }}" alt="Sort"
                                                 class="w-3 h-3 text-gray-500 group-hover:text-black transition">
                                         </button>
+                                    @endif
                                     </th>
                                     @endforeach
                                     <!-- Remove the Action buttons column header -->
@@ -174,7 +158,7 @@
                                 <tr class="border-b border-gray-300 hover:bg-gray-100"
                                     data-org-acronym="{{ $acronym }}"
                                     data-type="{{ $document->type }}"
-                                    data-status="{{ $document->status }}"
+                                    data-role="{{ $document->role_name }}"
                                     data-id="{{ $document->id }}">
                                     <!-- Checkbox for row selection -->
                                     <td class="px-4 py-2">
@@ -208,14 +192,10 @@
                                         title="{{ $displayType }}">
                                         {{ $displayType }}
                                     </td>
-                                    <!-- Status with color-coded badge -->
+                                    <!-- Role column -->
                                     <td class="px-4 py-2 cursor-pointer"
                                         onclick="viewDocument({{ $document->id }})">
-                                        <span class="px-4 py-1 rounded-full text-white inline-block min-w-[100px] text-center 
-                                              {{ $document->status === 'Approved' ? 'bg-[#10B981]' : 
-                                               ($document->status === 'Rejected' ? 'bg-[#EF4444]' : 'bg-[#F59E0B]') }}">
-                                            {{ $document->status }}
-                                        </span>
+                                        {{ $document->role_name ?? 'N/A' }}
                                     </td>
                                 </tr>
                                 @empty
@@ -353,225 +333,676 @@
 <script>
     // Configuration constants
     let selectedItems = new Set();
-    let isSelectAllActive = false; // Track if server-side select all is active
-    let allFilteredDocumentIds = []; // Store all document IDs from server-side select all
+    let isSelectAllActive = false;
+    let allFilteredDocumentIds = [];
 
     // Remember sort direction for each column
     let sortDirection = [true, true, true, true, true, true];
 
-    // Update the counter showing how many documents are selected
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Archive page loaded');
+        updateSelectedCount();
+        
+        // Initialize filter state from URL parameters if they exist
+        initializeFiltersFromURL();
+
+        // Handle regular checkbox select all (only current page)
+        const selectAllCheckbox = document.getElementById('selectAll');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    selectCurrentPageDocuments();
+                } else {
+                    deselectAllDocuments();
+                }
+            });
+        }
+
+        // Handle "Select All" link
+        const selectAllLink = document.getElementById('selectAllLink');
+        if (selectAllLink) {
+            selectAllLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (isSelectAllActive) {
+                    deselectAllDocuments();
+                } else {
+                    selectAllDocumentsServerSide();
+                }
+            });
+        }
+
+        // Handle individual checkbox changes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('row-checkbox')) {
+                handleIndividualCheckboxChange(e.target);
+            }
+        });
+
+        // Filter form elements
+        const organizationFilter = document.getElementById("organizationFilter");
+        const typeFilter = document.getElementById("typeFilter");
+        const searchInput = document.querySelector('input[placeholder="Search..."]');
+
+        // Handle filter changes with debugging
+        function handleFilterChange() {
+            const orgValue = organizationFilter ? organizationFilter.value : '';
+            const typeValue = typeFilter ? typeFilter.value : '';
+            const searchValue = searchInput ? searchInput.value : '';
+            
+            console.log('Archive filter change detected:', {
+                organization: orgValue,
+                type: typeValue,
+                search: searchValue
+            });
+            
+            applyServerSideFilters();
+        }
+
+        // Add event listeners to filters
+        if (organizationFilter) {
+            organizationFilter.addEventListener("change", function() {
+                console.log('Organization filter changed to:', this.value);
+                handleFilterChange();
+            });
+        }
+
+        if (typeFilter) {
+            typeFilter.addEventListener("change", function() {
+                console.log('Type filter changed to:', this.value);
+                handleFilterChange();
+            });
+        }
+
+        // For search, use debouncing
+        let searchTimeout;
+        if (searchInput) {
+            searchInput.addEventListener("input", function() {
+                console.log('Search input changed to:', this.value);
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(handleFilterChange, 500);
+            });
+        }
+
+        // Handle pagination links with AJAX
+        document.addEventListener('click', function(e) {
+            const paginationLink = e.target.closest('a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
+
+            if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
+                e.preventDefault();
+                const url = paginationLink.getAttribute('href');
+
+                const tableContainer = document.querySelector('#tableContainer');
+                if (tableContainer) {
+                    tableContainer.classList.add('opacity-50');
+                }
+
+                fetch(url, {
+                        headers:
+                        {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(data.html, 'text/html');
+
+                        const newTableBody = doc.querySelector('#documentTable tbody');
+                        const currentTableBody = document.querySelector('#documentTable tbody');
+                        
+                        if (newTableBody && currentTableBody) {
+                            currentTableBody.innerHTML = newTableBody.innerHTML;
+                        }
+
+                        const newPagination = doc.querySelector('#paginationContainer');
+                        if (newPagination) {
+                            const currentPagination = document.querySelector('#paginationContainer');
+                            if (currentPagination) {
+                                currentPagination.outerHTML = newPagination.outerHTML;
+                            }
+                        }
+
+                        restoreSelectionStateOnPage();
+                        window.history.pushState({}, '', url);
+                        updateSelectedCount();
+                        
+                        if (tableContainer) {
+                            tableContainer.classList.remove('opacity-50');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading page:', error);
+                        if (tableContainer) {
+                            tableContainer.classList.remove('opacity-50');
+                        }
+                    });
+            }
+        });
+
+        // Add this to your DOMContentLoaded event listener
+        document.getElementById('restoreSelectedBtn').addEventListener('click', function() {
+            if (selectedItems.size === 0) return;
+            
+            // Show confirmation modal
+            document.getElementById('restoreConfirmationModal').classList.remove('hidden');
+        });
+
+        document.getElementById('confirmRestoreBtn').addEventListener('click', function() {
+            const documentIds = isSelectAllActive ? allFilteredDocumentIds : Array.from(selectedItems);
+            const count = documentIds.length;
+            
+            fetch('{{ route("admin.restoreDocuments") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    document_ids: documentIds
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showActionToast('Restore Successful', `Successfully restored ${count} document${count > 1 ? 's' : ''}.`, true);
+                    
+                    // Add smooth fade-out animation for restored rows (same as archive animation)
+                    documentIds.forEach(id => {
+                        const row = document.querySelector(`tr[data-id="${id}"]`);
+                        if (row) {
+                            // Add fade-out animation
+                            row.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateX(-20px)';
+
+                            // Remove the row after animation completes
+                            setTimeout(() => {
+                                row.remove();
+                            }, 500);
+                        }
+                    });
+
+                    // Wait for animations to complete, then reset selections and reload data
+                    setTimeout(() => {
+                        deselectAllDocuments();
+                        // Instead of full page reload, refresh the table data
+                        resetFiltersAndReloadData();
+                    }, 600);
+                    
+                } else {
+                    showActionToast('Restore Failed', data.message || 'Failed to restore documents.', false);
+                }
+            })
+            .catch(error => {
+                console.error('Error restoring documents:', error);
+                showActionToast('Restore Error', 'An error occurred while restoring documents.', false);
+            });
+            
+            // Hide modal
+            document.getElementById('restoreConfirmationModal').classList.add('hidden');
+        });
+
+        // Add the resetFiltersAndReloadData function (similar to documentHistory.blade.php)
+        function resetFiltersAndReloadData() {
+            // Reset all filter dropdowns to their default values
+            const organizationFilter = document.getElementById("organizationFilter");
+            const typeFilter = document.getElementById("typeFilter");
+            const searchInput = document.querySelector('input[placeholder="Search..."]');
+
+            // Reset filter values
+            if (organizationFilter) organizationFilter.value = "Organization";
+            if (typeFilter) typeFilter.value = "Type";
+            if (searchInput) searchInput.value = "";
+
+            // Show loading state
+            const tableContainer = document.querySelector('#tableContainer');
+            if (tableContainer) {
+                tableContainer.classList.add('opacity-50');
+            }
+
+            // Clear selections
+            selectedItems.clear();
+            updateSelectedCount();
+
+            // Fetch all documents (no filters)
+            const baseUrl = window.location.pathname;
+
+            fetch(baseUrl, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Parse the HTML response
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data.html, 'text/html');
+
+                // Update the table body
+                const newTableBody = doc.querySelector('#documentTable tbody');
+                const currentTableBody = document.querySelector('#documentTable tbody');
+                
+                if (newTableBody && currentTableBody) {
+                    currentTableBody.innerHTML = newTableBody.innerHTML;
+                }
+
+                // Update pagination
+                const newPagination = doc.querySelector('#paginationContainer');
+                const currentPagination = document.querySelector('#paginationContainer');
+
+                if (newPagination) {
+                    if (currentPagination) {
+                        currentPagination.outerHTML = newPagination.outerHTML;
+                        currentPagination.style.display = 'block';
+                    }
+                } else if (currentPagination) {
+                    currentPagination.style.display = 'none';
+                }
+
+                // Update filter dropdowns with new available options
+                updateFilterDropdowns(data.availableOrganizations, data.availableTypes);
+
+                // Update URL to base path (remove all query parameters)
+                window.history.pushState({}, '', baseUrl);
+
+                // Update select all checkbox state
+                const selectAllCheckbox = document.getElementById('selectAll');
+                if (selectAllCheckbox) {
+                    const visibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
+                    selectAllCheckbox.disabled = visibleRows === 0;
+                    selectAllCheckbox.checked = false;
+                }
+
+                // Remove loading state
+                if (tableContainer) {
+                    tableContainer.classList.remove('opacity-50');
+                }
+            })
+            .catch(error => {
+                console.error('Error resetting filters:', error);
+                if (tableContainer) {
+                    tableContainer.classList.remove('opacity-50');
+                }
+
+                // Fallback: if AJAX fails, do a page reload to base URL
+                window.location.href = window.location.pathname;
+            });
+        }
+    });
+
+    // New function to initialize filters from URL parameters
+    function initializeFiltersFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        const orgFilter = document.getElementById("organizationFilter");
+        const typeFilter = document.getElementById("typeFilter");
+        const searchInput = document.querySelector('input[placeholder="Search..."]');
+        
+        if (urlParams.has('organization') && orgFilter) {
+            orgFilter.value = urlParams.get('organization');
+        }
+        
+        if (urlParams.has('type') && typeFilter) {
+            typeFilter.value = urlParams.get('type');
+        }
+        
+        if (urlParams.has('search') && searchInput) {
+            searchInput.value = urlParams.get('search');
+        }
+    }
+
+    // Updated applyServerSideFilters function
+    function applyServerSideFilters() {
+        const tableContainer = document.querySelector('#tableContainer');
+        if (tableContainer) {
+            tableContainer.classList.add('opacity-50');
+        }
+        
+        if (isSelectAllActive) {
+            deselectAllDocuments();
+        }
+        
+        selectedItems.clear();
+        updateSelectedCount();
+        
+        const params = new URLSearchParams();
+        
+        const searchTerm = document.querySelector('input[placeholder="Search..."]');
+        const organizationFilter = document.getElementById("organizationFilter");
+        const typeFilter = document.getElementById("typeFilter");
+        
+        const searchValue = searchTerm ? searchTerm.value.trim() : '';
+        const orgValue = organizationFilter ? organizationFilter.value : '';
+        const typeValue = typeFilter ? typeFilter.value : '';
+        
+        console.log('Building archive request with filters:', {
+            search: searchValue,
+            organization: orgValue,
+            type: typeValue
+        });
+        
+        // Only add parameters if they have actual filter values
+        if (orgValue && orgValue !== 'Organization' && orgValue !== 'All') {
+            params.append('organization', orgValue);
+            console.log('Added organization filter:', orgValue);
+        }
+        
+        if (typeValue && typeValue !== 'Type' && typeValue !== 'All') {
+            params.append('type', typeValue);
+            console.log('Added type filter:', typeValue);
+        }
+        
+        if (searchValue) {
+            params.append('search', searchValue);
+            console.log('Added search filter:', searchValue);
+        }
+        
+        const url = `${window.location.pathname}?${params.toString()}`;
+        console.log('Making archive request to URL:', url);
+        
+        fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            console.log('Archive response status:', response.status);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Archive filter response received:', {
+                hasHtml: !!data.html,
+                availableOrgs: data.availableOrganizations,
+                availableTypes: data.availableTypes,
+                debug: data.debug
+            });
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data.html, 'text/html');
+            
+            const newTableBody = doc.querySelector('#documentTable tbody');
+            const currentTableBody = document.querySelector('#documentTable tbody');
+            
+            if (newTableBody && currentTableBody) {
+                currentTableBody.innerHTML = newTableBody.innerHTML;
+                console.log('Archive table updated successfully');
+            } else {
+                console.error('No table body found in archive response');
+            }
+            
+            const newPagination = doc.querySelector('#paginationContainer');
+            const currentPagination = document.querySelector('#paginationContainer');
+            
+            if (newPagination) {
+                if (currentPagination) {
+                    currentPagination.outerHTML = newPagination.outerHTML;
+                }
+            } else {
+                if (currentPagination) {
+                    currentPagination.style.display = 'none';
+                }
+            }
+
+            // Update filter dropdowns with available options
+            updateFilterDropdowns(data.availableOrganizations, data.availableTypes);
+            
+            window.history.pushState({}, '', url);
+            
+            const hasDocuments = document.querySelectorAll("#documentTable tbody tr[data-id]").length > 0;
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.disabled = !hasDocuments;
+                if (!hasDocuments) {
+                    selectAllCheckbox.checked = false;
+                }
+            }
+            
+            updateSelectAllLinkText();
+            
+            if (tableContainer) {
+                tableContainer.classList.remove('opacity-50');
+            }
+        })
+        .catch(error => {
+            console.error('Error applying archive filters:', error);
+            if (tableContainer) {
+                tableContainer.classList.remove('opacity-50');
+            }
+            
+            // Show error message to user
+            showActionToast('Filter Error', 'An error occurred while applying filters.', false);
+        });
+    }
+
+    // Improved updateFilterDropdowns function
+    function updateFilterDropdowns(availableOrganizations, availableTypes) {
+        console.log('Updating archive filter dropdowns:', {
+            orgs: availableOrganizations,
+            types: availableTypes
+        });
+        
+        const orgSelect = document.getElementById('organizationFilter');
+        const typeSelect = document.getElementById('typeFilter');
+        
+        if (!orgSelect || !typeSelect) {
+            console.error('Archive filter dropdowns not found');
+            return;
+        }
+        
+        const currentOrgValue = orgSelect.value;
+        const currentTypeValue = typeSelect.value;
+        
+        // Update organization dropdown
+        const orgOptions = orgSelect.querySelectorAll('option');
+        orgOptions.forEach(option => {
+            const value = option.value;
+            if (value === 'Organization' || value === 'All') {
+                option.style.display = 'block';
+            } else {
+                const shouldShow = availableOrganizations && availableOrganizations.includes(value);
+                option.style.display = shouldShow ? 'block' : 'none';
+            }
+        });
+        
+        // Update type dropdown
+        const typeOptions = typeSelect.querySelectorAll('option');
+        typeOptions.forEach(option => {
+            const value = option.value;
+            if (value === 'Type' || value === 'All') {
+                option.style.display = 'block';
+            } else {
+                const shouldShow = availableTypes && availableTypes.includes(value);
+                option.style.display = shouldShow ? 'block' : 'none';
+            }
+        });
+        
+        // Reset to default if current selection is no longer available
+        if (currentOrgValue !== 'Organization' && currentOrgValue !== 'All') {
+            if (!availableOrganizations || !availableOrganizations.includes(currentOrgValue)) {
+                orgSelect.value = 'Organization';
+            }
+        }
+        
+        if (currentTypeValue !== 'Type' && currentTypeValue !== 'All') {
+            if (!availableTypes || !availableTypes.includes(currentTypeValue)) {
+                typeSelect.value = 'Type';
+            }
+        }
+    }
+
+    // Rest of your existing functions (keep them unchanged)...
     function updateSelectedCount() {
         const count = selectedItems.size;
-        document.getElementById('selectedCount').textContent = count;
-        document.getElementById('restoreSelectedBtn').disabled = count === 0;
+        const selectedCountElement = document.getElementById('selectedCount');
+        const restoreBtn = document.getElementById('restoreSelectedBtn');
+        
+        if (selectedCountElement) {
+            selectedCountElement.textContent = count;
+        }
+        
+        if (restoreBtn) {
+            restoreBtn.disabled = count === 0;
+        }
         
         // Update the regular checkbox state based on visible selections
         const selectAllCheckbox = document.getElementById('selectAll');
         if (selectAllCheckbox && !isSelectAllActive) {
             const visibleCheckboxes = document.querySelectorAll('.row-checkbox');
-            const checkedVisibleCheckboxes = document.querySelectorAll('.row-checkbox:checked');
+            const checkedVisibleCount = Array.from(visibleCheckboxes).filter(cb => cb.checked).length;
             
-            if (visibleCheckboxes.length > 0 && checkedVisibleCheckboxes.length === visibleCheckboxes.length) {
-                selectAllCheckbox.checked = true;
-            } else {
-                selectAllCheckbox.checked = false;
-            }
+            selectAllCheckbox.checked = visibleCheckboxes.length > 0 && checkedVisibleCount === visibleCheckboxes.length;
+            selectAllCheckbox.indeterminate = checkedVisibleCount > 0 && checkedVisibleCount < visibleCheckboxes.length;
         }
     }
 
-    // Select only documents visible on current page
+    // Add the other functions that are referenced but missing...
     function selectCurrentPageDocuments() {
-        const checkboxes = document.querySelectorAll('.row-checkbox:not(:disabled)');
-        
+        const checkboxes = document.querySelectorAll('.row-checkbox');
         checkboxes.forEach(checkbox => {
-            if (checkbox.closest('tr').style.display !== 'none') {
-                checkbox.checked = true;
-                const id = checkbox.getAttribute('data-id');
-                selectedItems.add(id);
-            }
+            checkbox.checked = true;
+            selectedItems.add(checkbox.getAttribute('data-id'));
         });
-
         updateSelectedCount();
-        updateSelectAllLinkText();
     }
 
-    // Server-side select all function - selects ALL archived documents across ALL pages
     function selectAllDocumentsServerSide() {
-        // Show loading indicator
-        const selectAllLink = document.getElementById('selectAllLink');
-        const originalText = selectAllLink.textContent;
-        selectAllLink.textContent = 'Loading...';
-        selectAllLink.disabled = true;
-
-        // Get current filter values
-        const organizationFilter = document.getElementById("organizationFilter").value;
-        const typeFilter = document.getElementById("typeFilter").value;
-        const searchTerm = document.querySelector('input[placeholder="Search..."]').value.trim();
-
-        // Build filter parameters
+        console.log('Starting server-side select all for archived documents');
+        
+        // Build the current filter parameters
         const params = new URLSearchParams();
         
-        if (organizationFilter !== 'Organization' && organizationFilter !== 'All') {
-            params.append('organization', organizationFilter);
+        const searchTerm = document.querySelector('input[placeholder="Search..."]');
+        const organizationFilter = document.getElementById("organizationFilter");
+        const typeFilter = document.getElementById("typeFilter");
+        
+        const searchValue = searchTerm ? searchTerm.value.trim() : '';
+        const orgValue = organizationFilter ? organizationFilter.value : '';
+        const typeValue = typeFilter ? typeFilter.value : '';
+        
+        if (orgValue && orgValue !== 'Organization' && orgValue !== 'All') {
+            params.append('organization', orgValue);
         }
         
-        if (typeFilter !== 'Type' && typeFilter !== 'All') {
-            params.append('type', typeFilter);
+        if (typeValue && typeValue !== 'Type' && typeValue !== 'All') {
+            params.append('type', typeValue);
         }
         
-        if (searchTerm) {
-            params.append('search', searchTerm);
+        if (searchValue) {
+            params.append('search', searchValue);
         }
-
-        // Make AJAX request to get all archived document IDs
-        fetch("{{ route('admin.selectAllArchivedDocuments') }}", {
+        
+        // Make request to get all filtered document IDs
+        fetch(`{{ route('admin.selectAllArchivedDocuments') }}?${params.toString()}`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: params.toString()
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                // Store all document IDs from server
-                allFilteredDocumentIds = data.document_ids;
-                isSelectAllActive = true;
-
-                // Add all IDs to selectedItems
+                console.log(`Selected ${data.total_count} documents across all pages`);
+                
+                // Clear existing selections
+                selectedItems.clear();
+                
+                // Add all document IDs to selection
                 data.document_ids.forEach(id => {
                     selectedItems.add(id.toString());
                 });
-
-                // Check all visible checkboxes on current page
-                document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+                
+                // Mark as server-side select all active
+                isSelectAllActive = true;
+                allFilteredDocumentIds = data.document_ids.map(id => id.toString());
+                
+                // Update UI
+                const checkboxes = document.querySelectorAll('.row-checkbox');
+                checkboxes.forEach(checkbox => {
                     checkbox.checked = true;
                 });
-
-                // Check the main checkbox too
+                
                 const selectAllCheckbox = document.getElementById('selectAll');
                 if (selectAllCheckbox) {
                     selectAllCheckbox.checked = true;
+                    selectAllCheckbox.indeterminate = false;
                 }
-
-                // Update UI
+                
                 updateSelectedCount();
                 updateSelectAllLinkText();
                 
-                // Show success message
-                showActionToast(
-                    'Selection Complete',
-                    `Selected ${data.total_count} archived documents across all pages.`,
-                    true
-                );
-
-                console.log(`Server-side select all: ${data.total_count} archived documents selected`);
+                // Show confirmation
+                showActionToast('Selection Complete', `Selected ${data.total_count} documents across all pages`, true);
             } else {
-                showActionToast(
-                    'Selection Failed',
-                    'Failed to select all archived documents.',
-                    false
-                );
+                console.error('Failed to select all documents:', data.message);
+                showActionToast('Selection Failed', 'Failed to select all documents', false);
             }
         })
         .catch(error => {
-            console.error('Error selecting all archived documents:', error);
-            showActionToast(
-                'Selection Error',
-                'An error occurred while selecting archived documents.',
-                false
-            );
-        })
-        .finally(() => {
-            // Restore link state
-            selectAllLink.disabled = false;
-            updateSelectAllLinkText();
+            console.error('Error selecting all documents:', error);
+            showActionToast('Selection Error', 'An error occurred while selecting documents', false);
         });
     }
 
-    // Deselect all documents
     function deselectAllDocuments() {
-        isSelectAllActive = false;
-        allFilteredDocumentIds = [];
         selectedItems.clear();
-
-        // Uncheck all visible checkboxes
-        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+        isSelectAllActive = false;
+        
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(checkbox => {
             checkbox.checked = false;
         });
-
-        // Uncheck select all checkbox
+        
         const selectAllCheckbox = document.getElementById('selectAll');
         if (selectAllCheckbox) {
             selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
         }
-
+        
         updateSelectedCount();
         updateSelectAllLinkText();
-        console.log('All archived documents deselected');
     }
 
-    // Update the "Select All" link text based on current state
     function updateSelectAllLinkText() {
         const selectAllLink = document.getElementById('selectAllLink');
-        if (selectAllLink && !selectAllLink.disabled) {
+        if (selectAllLink) {
             if (isSelectAllActive) {
                 selectAllLink.textContent = 'Deselect All';
-                selectAllLink.classList.remove('text-[#7A1212]');
-                selectAllLink.classList.add('text-red-600');
             } else {
                 selectAllLink.textContent = 'Select All';
-                selectAllLink.classList.remove('text-red-600');
-                selectAllLink.classList.add('text-[#7A1212]');
             }
         }
     }
 
-    // Handle individual checkbox changes
     function handleIndividualCheckboxChange(checkbox) {
         const documentId = checkbox.getAttribute('data-id');
-        
         if (checkbox.checked) {
             selectedItems.add(documentId);
         } else {
             selectedItems.delete(documentId);
-            
-            // If user unchecks any item, disable server-side select all
             if (isSelectAllActive) {
                 isSelectAllActive = false;
-                const selectAllCheckbox = document.getElementById('selectAll');
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = false;
-                }
                 updateSelectAllLinkText();
             }
         }
-        
         updateSelectedCount();
     }
 
-    // Restore selection state when navigating between pages
     function restoreSelectionStateOnPage() {
-        // Check select all checkbox if server-side select all is active
-        const selectAllCheckbox = document.getElementById('selectAll');
-        if (selectAllCheckbox && isSelectAllActive) {
-            selectAllCheckbox.checked = true;
-        }
-
-        // Check individual checkboxes based on selectedItems
-        document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+        const checkboxes = document.querySelectorAll('.row-checkbox');
+        checkboxes.forEach(checkbox => {
             const documentId = checkbox.getAttribute('data-id');
-            if (selectedItems.has(documentId)) {
-                checkbox.checked = true;
-            }
+            checkbox.checked = selectedItems.has(documentId) || isSelectAllActive;
         });
-
-        updateSelectedCount();
-        updateSelectAllLinkText();
     }
 
-    // Toast functionality
     function showActionToast(title, message, isSuccess = true) {
         const toast = document.getElementById('documentActionToast');
         const actionIcon = document.getElementById('actionIcon');
@@ -586,7 +1017,7 @@
                 toast.className = toast.className.replace('border-gray-400', 'border-green-400');
             }
         } else {
-            actionIcon.src = "{{ asset('images/error.svg') }}";
+            actionIcon.src = "{{ asset('images/error.svg') }}"; // Assuming you have an error icon
             toast.className = toast.className.replace('border-green-400', 'border-red-400');
             if (!toast.className.includes('border-red-400')) {
                 toast.className = toast.className.replace('border-gray-400', 'border-red-400');
@@ -609,417 +1040,18 @@
         const toast = document.getElementById('documentActionToast');
         toast.classList.add('hidden');
     }
-
-    // Actually restore the selected documents - UPDATED WITH DYNAMIC PAGINATION FIX
-    function processRestore() {
-        if (selectedItems.size === 0) return;
-
-        const documentIds = Array.from(selectedItems);
-        const count = documentIds.length;
-
-        fetch("{{ route('admin.restoreDocuments') }}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                },
-                body: JSON.stringify({
-                    document_ids: documentIds
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Show success toast
-                    showActionToast(
-                        'Restore Successful',
-                        `Successfully restored ${count} document${count > 1 ? 's' : ''}.`,
-                        true
-                    );
-
-                    // Remove restored rows with smooth animation
-                    documentIds.forEach(id => {
-                        const row = document.querySelector(`tr[data-id="${id}"]`);
-                        if (row) {
-                            // Add fade-out animation
-                            row.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-                            row.style.opacity = '0';
-                            row.style.transform = 'translateX(-20px)';
-
-                            // Remove the row after animation completes
-                            setTimeout(() => {
-                                row.remove();
-                            }, 500);
-                        }
-                    });
-
-                    // Reset selection state
-                    deselectAllDocuments();
-
-                    // Wait for animations to complete, then refresh pagination
-                    setTimeout(() => {
-                        // Check if there are any remaining documents on current page
-                        const remainingRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
-                        
-                        if (remainingRows === 0) {
-                            // If no documents left on current page, refresh to update pagination
-                            refreshCurrentPage();
-                        } else {
-                            // If documents still exist, just update pagination numbers
-                            updatePaginationAfterRestore();
-                        }
-                    }, 600);
-
-                } else {
-                    // Show error toast
-                    showActionToast(
-                        'Restore Failed',
-                        data.message || 'Failed to restore documents.',
-                        false
-                    );
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                // Show error toast
-                showActionToast(
-                    'Restore Error',
-                    'An error occurred while restoring documents.',
-                    false
-                );
-            });
-    }
-
-    // NEW FUNCTION: Refresh current page to update pagination
-    function refreshCurrentPage() {
-        const currentUrl = window.location.href;
-        const tableContainer = document.querySelector('#tableContainer');
-        
-        // Show loading indicator
-        tableContainer.classList.add('opacity-50');
-        
-        fetch(currentUrl, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Update table content
-            const newTableBody = doc.querySelector('#documentTable tbody');
-            if (newTableBody) {
-                document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
-            }
-            
-            // Update pagination - this will remove empty pages
-            const newPagination = doc.querySelector('#paginationContainer');
-            const currentPagination = document.querySelector('#paginationContainer');
-            
-            if (newPagination) {
-                if (currentPagination) {
-                    currentPagination.outerHTML = newPagination.outerHTML;
-                }
-            } else {
-                // If no pagination returned, hide the pagination container
-                if (currentPagination) {
-                    currentPagination.style.display = 'none';
-                }
-            }
-            
-            // Remove loading state
-            tableContainer.classList.remove('opacity-50');
-            
-            // Reset checkbox states
-            const selectAllCheckbox = document.getElementById('selectAll');
-            const hasDocuments = document.querySelectorAll("#documentTable tbody tr[data-id]").length > 0;
-            
-            if (selectAllCheckbox) {
-                selectAllCheckbox.disabled = !hasDocuments;
-                selectAllCheckbox.checked = false;
-            }
-            
-            // Update select all link
-            updateSelectAllLinkText();
-            
-        })
-        .catch(error => {
-            console.error('Error refreshing page:', error);
-            tableContainer.classList.remove('opacity-50');
-            // Fallback to full page reload if AJAX fails
-            window.location.reload();
-        });
-    }
-
-    // NEW FUNCTION: Update pagination without full refresh
-    function updatePaginationAfterRestore() {
-        const currentUrl = window.location.href;
-        
-        // Just fetch pagination info
-        fetch(currentUrl, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Only update pagination, keep existing table content
-            const newPagination = doc.querySelector('#paginationContainer');
-            const currentPagination = document.querySelector('#paginationContainer');
-            
-            if (newPagination && currentPagination) {
-                currentPagination.outerHTML = newPagination.outerHTML;
-            } else if (!newPagination && currentPagination) {
-                // Hide pagination if no longer needed
-                currentPagination.style.display = 'none';
-            }
-        })
-        .catch(error => {
-            console.error('Error updating pagination:', error);
-        });
-    }
-
-    // Open document details page
     function viewDocument(id) {
-        window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
-    }
+    window.location.href = "{{ route('admin.documentPreview', ['id' => ':id']) }}".replace(':id', id);
+}
 
-    // Display the confirmation dialog before restoring
-    function showRestoreConfirmation() {
-        if (selectedItems.size > 0) {
-            document.getElementById("restoreConfirmationModal").classList.remove("hidden");
-        }
-    }
+    // Handle close button ("X")
+    document.getElementById('closeRestoreModalBtn').addEventListener('click', function() {
+        document.getElementById('restoreConfirmationModal').classList.add('hidden');
+    });
 
-    // Updated applyServerSideFilters function
-    function applyServerSideFilters() {
-        // Show loading effect
-        const tableContainer = document.querySelector('#tableContainer');
-        tableContainer.classList.add('opacity-50');
-        
-        // Reset server-side selection when filters change
-        if (isSelectAllActive) {
-            deselectAllDocuments();
-        }
-        
-        // Clear any previous selections
-        selectedItems.clear();
-        updateSelectedCount();
-        
-        // Build the filter query
-        const params = new URLSearchParams();
-        
-        // Get what the user has entered in the filters
-        const searchTerm = document.querySelector('input[placeholder="Search..."]').value.trim();
-        const organizationFilter = document.getElementById("organizationFilter").value;
-        const typeFilter = document.getElementById("typeFilter").value;
-        
-        // Only include filters that are actually set
-        if (organizationFilter !== 'Organization' && organizationFilter !== 'All') {
-            params.append('organization', organizationFilter);
-        }
-        
-        if (typeFilter !== 'Type' && typeFilter !== 'All') {
-            params.append('type', typeFilter);
-        }
-        
-        if (searchTerm) {
-            params.append('search', searchTerm);
-        }
-        
-        // Always start from page 1 when applying filters
-        const url = `${window.location.pathname}?${params.toString()}`;
-        
-        // Ask the server for filtered results
-        fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            // Process the server's response
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            
-            // Update the table with new data
-            const newTableBody = doc.querySelector('#documentTable tbody');
-            if (newTableBody) {
-                document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
-            }
-            
-            // Update the page numbers - CRITICAL FOR PAGINATION FIX
-            const newPagination = doc.querySelector('#paginationContainer');
-            const currentPagination = document.querySelector('#paginationContainer');
-            
-            if (newPagination) {
-                if (currentPagination) {
-                    currentPagination.outerHTML = newPagination.outerHTML;
-                }
-            } else {
-                // Hide pagination if no results need pagination
-                if (currentPagination) {
-                    currentPagination.style.display = 'none';
-                }
-            }
-            
-            // Update the URL so bookmarks work
-            window.history.pushState({}, '', url);
-            
-            // Handle the "select all" checkbox state
-            const hasDocuments = document.querySelectorAll("#documentTable tbody tr[data-id]").length > 0;
-            const selectAllCheckbox = document.getElementById('selectAll');
-            if (selectAllCheckbox) {
-                selectAllCheckbox.disabled = !hasDocuments;
-                if (!hasDocuments) {
-                    selectAllCheckbox.checked = false;
-                }
-            }
-            
-            // Update select all link text
-            updateSelectAllLinkText();
-            
-            // Remove the loading effect
-            tableContainer.classList.remove('opacity-50');
-        })
-        .catch(error => {
-            console.error('Error applying filters:', error);
-            tableContainer.classList.remove('opacity-50');
-        });
-    }
-
-    // Setup when page loads
-    document.addEventListener('DOMContentLoaded', function() {
-        // Handle regular checkbox select all (only current page)
-        const selectAllCheckbox = document.getElementById('selectAll');
-        if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', function() {
-                if (this.checked) {
-                    // Only select visible documents on current page
-                    selectCurrentPageDocuments();
-                } else {
-                    // Deselect all
-                    deselectAllDocuments();
-                }
-            });
-        }
-
-        // Handle "Select All" link (server-side select all across all pages)
-        const selectAllLink = document.getElementById('selectAllLink');
-        if (selectAllLink) {
-            selectAllLink.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (isSelectAllActive) {
-                    // If already active, deselect all
-                    deselectAllDocuments();
-                } else {
-                    // Server-side select all across all pages
-                    selectAllDocumentsServerSide();
-                }
-            });
-        }
-
-        // Handle individual checkbox changes
-        document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('row-checkbox')) {
-                handleIndividualCheckboxChange(e.target);
-            }
-        });
-
-        // Setup restore button
-        document.getElementById('restoreSelectedBtn').addEventListener('click', showRestoreConfirmation);
-
-        // Setup filter dropdowns
-        document.getElementById("organizationFilter").addEventListener("change", applyServerSideFilters);
-        document.getElementById("typeFilter").addEventListener("change", applyServerSideFilters);
-
-        // Setup search with typing delay
-        const searchInput = document.querySelector('input[placeholder="Search..."]');
-        let searchTimeout;
-        searchInput.addEventListener("input", function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(applyServerSideFilters, 500);
-        });
-
-        // Setup modal buttons
-        document.getElementById("closeRestoreModalBtn").addEventListener("click", function() {
-            document.getElementById("restoreConfirmationModal").classList.add("hidden");
-        });
-
-        document.getElementById("cancelRestoreBtn").addEventListener("click", function() {
-            document.getElementById("restoreConfirmationModal").classList.add("hidden");
-        });
-
-        // ONLY THIS BUTTON SHOULD TRIGGER THE ACTUAL RESTORATION
-        document.getElementById("confirmRestoreBtn").addEventListener("click", function() {
-            processRestore(); // Call the function that actually does the restoring
-            document.getElementById("restoreConfirmationModal").classList.add("hidden");
-        });
-
-        // Add event delegation for pagination links
-        document.addEventListener('click', function(e) {
-            // Find closest anchor that has pagination-btn class or variations
-            const paginationLink = e.target.closest('a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
-
-            if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
-                e.preventDefault();
-                const url = paginationLink.getAttribute('href');
-
-                // Show loading indicator
-                const tableContainer = document.querySelector('#tableContainer');
-                tableContainer.classList.add('opacity-50');
-
-                // Fetch the new page content
-                fetch(url, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        // Create a temporary element to parse the HTML
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-
-                        // Extract the table body content
-                        const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
-                        document.querySelector('#documentTable tbody').innerHTML = newTableBody;
-
-                        // Update pagination
-                        const newPagination = doc.querySelector('#paginationContainer');
-                        if (newPagination) {
-                            document.querySelector('#paginationContainer').outerHTML = newPagination.outerHTML;
-                        }
-
-                        // Restore selection state for visible documents
-                        restoreSelectionStateOnPage();
-
-                        // Update URL without reload
-                        window.history.pushState({}, '', url);
-
-                        // Remove loading state
-                        tableContainer.classList.remove('opacity-50');
-                    })
-                    .catch(error => {
-                        console.error('Error loading page:', error);
-                        tableContainer.classList.remove('opacity-50');
-                    });
-            }
-        });
-
-        // Add this at the beginning to check initial state
-        const hasDocuments = document.querySelectorAll("#documentTable tbody tr[data-id]").length > 0;
-        if (selectAllCheckbox) {
-            selectAllCheckbox.disabled = !hasDocuments;
-        }
-
-        // Initialize selected count
-        updateSelectedCount();
+    // Handle cancel button
+    document.getElementById('cancelRestoreBtn').addEventListener('click', function() {
+        document.getElementById('restoreConfirmationModal').classList.add('hidden');
     });
 </script>
 @endsection

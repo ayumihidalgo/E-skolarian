@@ -16,10 +16,12 @@ use App\Events\DocumentStatusUpdated;
 use App\Models\DocumentTimeline;
 use App\LogsActivity;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class DocumentReviewController extends Controller
 {
     use LogsActivity;
+
     /**
      * Display the document review page with documents that need admin approval
      *
@@ -132,12 +134,13 @@ class DocumentReviewController extends Controller
                 $docTypeMap = [
                     'Event Proposal' => 'Event Proposal',
                     'General Plan' => 'General Plan of Activities',
-                    'Calendar' => 'Calendar of Activities',
-                    'Accomplishment Report' => 'Accomplishment Report',
+                    'Reports' => 'Reports of Proceedings',
                     'Constitution' => 'Constitution and By-Laws',
+                    'Fundraising' => 'Fundraising Activities',
                     'Request Letter' => 'Request Letter',
-                    'Off-Campus' => 'Off Campus',
-                    'Petition' => 'Petition and Concern'
+                    'Petition' => 'Petition and Concern',
+                    'Memorandum' => 'Memorandum of Agreement',
+                    'Off-Campus' => 'Off Campus Activities'
                 ];
                 
                 // Get full document type name
@@ -151,7 +154,7 @@ class DocumentReviewController extends Controller
         $documentsQuery->orderBy('submitted_documents.updated_at', 'desc');
             
         // Paginate the results - this returns a LengthAwarePaginator
-        $documents = $documentsQuery->paginate(6)->withQueryString();
+        $documents = $documentsQuery->paginate(7)->withQueryString();
         
         // Transform each document in the paginated collection
         $documents->getCollection()->transform(function($document) use ($user) {
@@ -548,6 +551,102 @@ class DocumentReviewController extends Controller
                 'success' => false,
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Check for document updates and return any new or modified documents
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkForUpdates(Request $request)
+    {
+        try {
+            // Get the currently logged in user
+            $user = Auth::user();
+            
+            // Get the timestamp of the last update from the request
+            $lastUpdate = $request->input('lastUpdate');
+            $lastUpdateTime = $lastUpdate ? Carbon::parse($lastUpdate) : null;
+            
+            // Base query - Get documents updated since last check
+            $documentsQuery = SubmittedDocument::with(['user'])
+                ->select('submitted_documents.*')
+                ->where('received_by', $user->id)
+                ->whereNotIn('submitted_documents.status', ['Approved', 'Returned']);
+                
+            // Add is_opened field through join (potential source of error)
+            try {
+                $documentsQuery->addSelect(DB::raw("
+                    CASE 
+                        WHEN reviews.id IS NULL THEN false
+                        ELSE true
+                    END as is_opened
+                "))
+                ->addSelect(DB::raw("
+                    CASE 
+                        WHEN submitted_documents.received_by = " . $user->id . " THEN true
+                        ELSE false
+                    END as is_current_receiver
+                "))
+                ->leftJoin('reviews', function($join) {
+                    $join->on('submitted_documents.id', '=', 'reviews.document_id')
+                        ->where('reviews.reviewed_by', '=', Auth::id());
+                });
+            } catch (\Exception $e) {
+                // Fallback if the complex query fails
+                $documentsQuery = SubmittedDocument::with(['user'])
+                    ->where('received_by', $user->id)
+                    ->whereNotIn('status', ['Approved', 'Returned'])
+                    ->orderBy('updated_at', 'desc');
+            }
+            
+            // Only get documents updated after the last check
+            if ($lastUpdateTime) {
+                $documentsQuery->where('submitted_documents.updated_at', '>', $lastUpdateTime);
+            }
+            
+            // Order by updated date (latest first)
+            $documentsQuery->orderBy('submitted_documents.updated_at', 'desc');
+            
+            // Get the documents
+            $documents = $documentsQuery->get();
+            
+            // Transform the documents for the response
+            $updatedDocuments = $documents->map(function($document) {
+                try {
+                    $document->tag = $document->control_tag;
+                    $document->organization = $document->user ? $document->user->username : 'Unknown';
+                    $document->title = $document->subject;
+                    $document->date = Carbon::parse($document->created_at);
+                    $document->formatted_date = $document->date->format('n/j/Y');
+                    $document->is_opened = $document->is_opened ?? false;
+                    
+                    return $document;
+                } catch (\Exception $e) {
+                    Log::error("Error transforming document {$document->id}: " . $e->getMessage());
+                    return null;
+                }
+            })->filter();
+            
+            // Return the documents and current server time for next update check
+            return response()->json([
+                'documents' => $updatedDocuments,
+                'currentTime' => now()->toIso8601String(),
+                'hasUpdates' => $documents->count() > 0
+            ]);
+        } catch (\Exception $e) {
+            Log::error("Document update check failed: " . $e->getMessage());
+            
+            // Return a friendly error response
+            return response()->json([
+                'error' => 'Could not check for updates',
+                'details' => $e->getMessage(),
+                'currentTime' => now()->toIso8601String(),
+                'hasUpdates' => false,
+                'documents' => []
+            ], 200); // Return 200 to prevent frontend errors
         }
     }
 }

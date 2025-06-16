@@ -14,6 +14,7 @@ use App\Http\Controllers\AdminDocumentController;
 use App\Http\Controllers\StudentDocumentController;
 use App\Http\Controllers\Auth\StudentPasswordResetLinkController;
 use App\Http\Controllers\Auth\AdminPasswordResetLinkController;
+use App\Http\Controllers\Auth\SuperAdminPasswordResetLinkController;
 use App\Http\Controllers\StudentTrackerController;
 use App\Http\Controllers\DocumentReviewController;
 use App\Http\Middleware\NoBackHistory;
@@ -98,6 +99,12 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
     Route::get('/admin/reset-password/{token}', [AdminPasswordResetLinkController::class, 'edit'])->name('admin.password.reset');
     Route::post('/admin/reset-password', [AdminPasswordResetLinkController::class, 'update'])->name('admin.password.update');
 
+    // --- Super Admin Password Reset ---
+    Route::get('/superadmin/forgot-password', [SuperAdminPasswordResetLinkController::class, 'create'])->name('superadmin.password.request');
+    Route::post('/superadmin/forgot-password', [SuperAdminPasswordResetLinkController::class, 'store'])->name('superadmin.password.email');
+    Route::get('/superadmin/reset-password/{token}', [SuperAdminPasswordResetLinkController::class, 'edit'])->name('super admin.password.reset');
+    Route::post('/superadmin/reset-password', [SuperAdminPasswordResetLinkController::class, 'update'])->name('superadmin.password.update');
+
 
     Route::get('student-password-reset-confirmation', function () {
         return view('auth.student-password-reset-confirmation');
@@ -107,6 +114,10 @@ Route::middleware(['guest', NoBackHistory::class])->group(function () {
     Route::get('admin-password-reset-confirmation', function () {
         return view('auth.admin-password-reset-confirmation');
     })->name('admin.password.reset.confirmation');
+
+    Route::get('superadmin-password-reset-confirmation', function () {
+        return view('auth.superadmin-password-reset-confirmation');
+    })->name('superadmin.password.reset.confirmation');
 });
 
 
@@ -227,6 +238,7 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
     Route::post('/admin/archive-documents', [AdminDocumentController::class, 'archiveDocuments'])->name('admin.archiveDocuments');
     Route::post('/admin/select-all-documents', [AdminDocumentController::class, 'selectAllDocuments'])->name('admin.selectAllDocuments');
     Route::post('/admin/select-all-archived-documents', [AdminDocumentController::class, 'selectAllArchivedDocuments'])->name('admin.selectAllArchivedDocuments');
+    Route::post('admin/documents/check-updates', [DocumentReviewController::class, 'checkForUpdates'])->name('documents.check-updates');
 });
 // ---------------- Student ----------------
 Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
@@ -325,9 +337,10 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiv
 // ----------------------------------------
 // Comments (Shared)
 // ----------------------------------------
-Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+Route::post('/admin-comments', [CommentController::class, 'store'])->name('comments.store');
 Route::post('/comments', [CommentController::class, 'studentstore'])->name('comments.studentstore');
 Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
+Route::get('/comments/{document_id}/check-new', [CommentController::class, 'checkNewComments'])->name('comments.check-new');
 
 
 // ----------------------------------------
@@ -612,6 +625,29 @@ Route::get('/student/document-history/preview/{id}', [StudentDocumentController:
 
 Route::get('/admin/documents/export/pdf', [App\Http\Controllers\DocumentExportController::class, 'exportPdf'])->name('admin.document.export.pdf')->middleware('auth');
 
+// Add this route for real-time activity log fetching
+Route::get('/super-admin/activity-logs/new-since', [SuperAdminController::class, 'getNewActivitiesSince'])
+    ->name('super-admin.activity-logs.new-since');
 
-
-
+Route::get('/test-profanity/{text}', function($text, \App\Services\ProfanityFilter $filter) {
+try {
+    $result = [
+        'text' => $text,
+        'has_profanity' => $filter->hasProfanity($text),
+    ];
+    
+    if (method_exists($filter, 'getDictionary')) {
+        $result['dictionary_size'] = count($filter->getDictionary());
+        $result['first_few_words'] = array_slice($filter->getDictionary(), 0, 5);
+    } else {
+        $result['dictionary_error'] = 'getDictionary method not found';
+    }
+    
+    return response()->json($result);
+} catch (\Exception $e) {
+    return response()->json([
+        'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString()
+    ], 500);
+}
+});

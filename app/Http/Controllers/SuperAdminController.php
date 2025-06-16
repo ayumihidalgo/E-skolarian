@@ -97,7 +97,8 @@ class SuperAdminController extends Controller
             'role_name', 
             'organization_acronym', 
             'active',
-            'created_at'
+            'created_at',
+            'profile_pic'
         ])
         ->where('active', true)
         ->where('id', '>', 1) // Exclude super admin
@@ -155,6 +156,12 @@ class SuperAdminController extends Controller
             // Store email before deactivation for notification purposes
             $userEmail = $user->email;
 
+            // Archive all documents submitted by this user
+            $archivedDocumentsCount = \DB::table('submitted_documents')
+                ->where('user_id', $user->id)
+                ->whereNull('archived_at') // Only archive documents that aren't already archived
+                ->update(['archived_at' => now()]);
+
             // Perform deactivation logic
             $user->active = false;
             $user->save();
@@ -172,15 +179,15 @@ class SuperAdminController extends Controller
                 'Deactivated',
                 'User',
                 ($user->role === 'admin' ? 
-                "{$user->role_name} has been deactivated." : 
-                "{$user->organization_acronym} has been deactivated."
+                "{$user->role_name} has been deactivated. {$archivedDocumentsCount} document(s) automatically archived." : 
+                "{$user->organization_acronym} has been deactivated. {$archivedDocumentsCount} document(s) automatically archived."
                 )
             );
 
             // Return success response
             return response()->json([
                 'success' => true,
-                'message' => 'User has been deactivated successfully'
+                'message' => "User has been deactivated successfully. {$archivedDocumentsCount} document(s) automatically archived."
             ]);
         } catch (\Exception $e) {
             // Log the error
@@ -229,9 +236,11 @@ class SuperAdminController extends Controller
             // Store email before reactivation for notification purposes
             $userEmail = $user->email;
 
-            // Reactivate the user
-            $user->active = true;
-            $user->save();
+            // Restore all documents submitted by this user (unarchive them)
+            $restoredDocumentsCount = \DB::table('submitted_documents')
+                ->where('user_id', $user->id)
+                ->whereNotNull('archived_at') // Only restore documents that are currently archived
+                ->update(['archived_at' => null]);
 
             // Generate new random password
             $newPassword = Str::random(10);
@@ -246,9 +255,9 @@ class SuperAdminController extends Controller
                 'Reactivated',
                 'User',
                 ($user->role === 'admin' ? 
-                "{$user->role_name} has been reactivated." : 
-                "{$user->organization_acronym} has been reactivated."
-            )
+                "{$user->role_name} has been reactivated. {$restoredDocumentsCount} document(s) automatically restored." : 
+                "{$user->organization_acronym} has been reactivated. {$restoredDocumentsCount} document(s) automatically restored."
+                )
             );
 
             // Send reactivation notification email
@@ -261,12 +270,13 @@ class SuperAdminController extends Controller
 
             \Log::info('User reactivated successfully:', [
                 'user_id' => $user->id,
-                'email' => $user->email
+                'email' => $user->email,
+                'restored_documents' => $restoredDocumentsCount
             ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'User successfully reactivated and notification sent'
+                'message' => "User successfully reactivated and notification sent. {$restoredDocumentsCount} document(s) automatically restored."
             ]);
 
         } catch (\Exception $e) {
@@ -397,6 +407,29 @@ class SuperAdminController extends Controller
                 'success' => false,
                 'message' => 'Failed to get unviewed reports count'
             ], 500);
+        }
+    }
+
+    public function getNewActivitiesSince(Request $request)
+    {
+        try {
+            $timestamp = $request->query('timestamp');
+            
+            if (!$timestamp) {
+                return response()->json([]);
+            }
+            
+            $activities = ActivityLog::with(['user' => function($query) {
+                $query->select('id', 'username', 'role_name', 'role');
+            }])
+            ->where('created_at', '>', $timestamp)
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+            return response()->json($activities);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching new activities: ' . $e->getMessage());
+            return response()->json([]);
         }
     }
 }

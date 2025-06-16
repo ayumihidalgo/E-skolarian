@@ -7,6 +7,9 @@
     <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
         @include('components.adminNavBarComponent')
         <div class="flex-grow p-6 space-y-6">
+           <h5 class="font-['Manrope'] font-extrabold text-[23px] md:text-[20px] lg:text-[30px] mb-1">
+                Dashboard
+            </h5>
             @if (session('success'))
                 <div id="Toast"
                     class="fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-green-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
@@ -30,36 +33,36 @@
 
             <div class="flex-grow p-6 space-y-6">
                 <!-- Stats Section -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-        <div>
-            <p class="text-sm text-gray-500">Pending Documents</p>
-            <div class="text-2xl font-bold">{{ $pendingCount }}</div>
-        </div>
-        <img src="{{ asset('images/pendingicon.svg') }}" class="w-10 h-10" alt="Pending Documents">
-    </div>
-    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-        <div>
-            <p class="text-sm text-gray-500">Under Review</p>
-            <div class="text-2xl font-bold">{{ $reviewCount }}</div>
-        </div>
-        <img src="{{ asset('images/reviewicon.svg') }}" class="w-10 h-10" alt="Under Review">
-    </div>
-    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-        <div>
-            <p class="text-sm text-gray-500">Approved Documents</p>
-            <div class="text-2xl font-bold">{{ $approvedCount }}</div>
-        </div>
-        <img src="{{ asset('images/approvedicon.svg') }}" class="w-10 h-10" alt="Approved Documents">
-    </div>
-    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-        <div>
-            <p class="text-sm text-gray-500">Total Documents</p>
-            <div class="text-2xl font-bold">{{ $totalCount }}</div>
-        </div>
-        <img src="{{ asset('images/totaldocicon.svg') }}" class="w-10 h-10" alt="Total Documents">
-    </div>
-</div>
+           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Pending Documents</p>
+                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $pendingCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/pendingicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Pending Documents">
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Under Review</p>
+                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $reviewCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/reviewicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Under Review">
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Approved Documents</p>
+                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $approvedCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/approvedicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Approved Documents">
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                    <div>
+                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Total Documents</p>
+                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $totalCount }}</div>
+                    </div>
+                    <img src="{{ asset('images/totaldocicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Total Documents">
+                </div>
+            </div>
 
                 <!-- Announcement and Documents Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -68,7 +71,10 @@
                         <!-- Latest Announcements -->
                         <div class="bg-white rounded-xl shadow-md p-4 flex flex-col">
                             <div class="flex items-center justify-between mb-2">
-                                <h2 class="text-lg font-semibold">📢 Announcements</h2>
+                                <h2 class="text-[15px] sm:text-[17px] md:text-[20px] lg:text-[22px] font-semibold flex items-center gap-2">
+                                    <img src="{{ asset('images/annc.svg') }}" alt="Announcements" class="w-6 h-6 sm:w-7 sm:h-7 inline-block align-middle max-w-full" />
+                                    Announcements
+                                </h2>
                                 <button onclick="openPostAnnouncementModal()" title="Post New Announcement"
                                     class="p-2 rounded-full hover:bg-indigo-50 transition">
                                     <img src="{{ asset('images/add_annc.svg') }}" alt="Add Announcement" class="w-7 h-7">
@@ -79,8 +85,25 @@
                                     @foreach ($latestAnnouncements as $announcement)
                                         <div class="mb-4 pb-4 border-b border-gray-300 relative">
                                             <div class="flex items-center justify-between">
-                                                <h3 class="text-xl font-bold text-gray-800 mb-1">{{ $announcement->title }}
-                                                </h3>
+                                                <h3 class="text-md md:text-xl font-bold text-gray-800 mb-1">
+                                                                    @if (strlen($announcement->title) > 40)
+                                                                        <!-- For desktop -->
+                                                                        <span class="hidden md:inline cursor-help group relative">
+                                                                            {{ Str::limit($announcement->title, 40) }}
+                                                                            <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                                                bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                                                {{ $announcement->title }}
+                                                                            </span>
+                                                                        </span>
+                                                                        
+                                                                        <!-- For mobile -->
+                                                                        <span class="md:hidden">
+                                                                            {{ $announcement->title }}
+                                                                        </span>
+                                                                    @else
+                                                                        {{ $announcement->title }}
+                                                                    @endif
+                                                                </h3>
                                                 <!-- Ellipsis Button -->
                                                 <div class="relative">
                                                     <button
@@ -152,7 +175,7 @@
                                                 @endphp
                                                 <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                                 @if ($isLong)
-                                                    <button class="text-[#7B2323] hover:underline ml-2 text-sm"
+                                                    <button class="text-[#7A1212] hover:underline ml-2 text-sm"
                                                         onclick="showAnnouncementModal(
                                                     `{{ addslashes($announcement->title) }}`,
                                                     `{{ addslashes(e($announcement->content)) }}`,
@@ -241,8 +264,24 @@
                                 @foreach ($announcements as $announcement)
                                     <div class="mb-4 pb-4 border-b border-gray-300 relative">
                                         <div class="flex items-center justify-between">
-                                            <h3 class="text-md font-bold text-gray-800 mb-1">{{ $announcement->title }}
-                                            </h3>
+                                            <h3 class="text-sm md:text-md font-bold text-gray-800 mb-1">
+                                            @if (strlen($announcement->title) > 40)
+                                                <!-- For desktop -->
+                                                <span class="hidden md:inline cursor-help group relative">
+                                                    {{ Str::limit($announcement->title, 40) }}
+                                                    <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                        bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                        {{ $announcement->title }}
+                                                    </span>
+                                                </span>
+                                                <!-- For mobile -->
+                                                <span class="md:hidden">
+                                                    {{ $announcement->title }}
+                                                </span>
+                                            @else
+                                                {{ $announcement->title }}
+                                            @endif
+                                        </h3>
                                             @if ($showArchive)
                                                 <!-- Ellipsis for archived (Restore/Delete) -->
                                                 <div class="relative">
@@ -349,13 +388,36 @@
                         </div>
                     </div>
 
-                    <!-- Post New Announcements Modal -->
-                    <div id="postAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-                        <div class="absolute inset-0 bg-black opacity-20"></div>
-                        <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="font-semibold text-lg">Post New Announcement</span>
-                                <button onclick="closePostAnnouncementModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                   <!-- Post New Announcements Modal -->
+                 <div id="postAnnouncementModal" class="fixed inset-0 z-50 hidden">
+                <!-- Simple black overlay without blur -->
+                <div class="fixed inset-0 bg-black opacity-75"></div>         
+                        <!-- Modal content wrapper -->
+                        <div class="relative flex items-center justify-center min-h-screen p-4">
+                            <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
+                                <!-- ...existing modal header... -->
+                                <div class="flex items-center mb-4 justify-between">
+                                    <div class="flex items-center">
+                                    <h2 class="text-lg font-semibold mr-2">Post announcement</h2>
+                                    <!-- Info Icon Tooltip -->
+                                    <button type="button" id="announcementInfoBtn" class="ml-1 focus:outline-none">
+                                        <img src="{{ asset('images/tooltip.png') }}" alt="Info" class="w-6 h-6 inline-block align-middle" />
+                                    </button>
+                                </div>
+                                <button onclick="closePostAnnouncementModal()" type="button" class="text-2xl text-gray-500 hover:text-gray-700 ml-2">&times;</button>
+                            </div>
+                            <!-- Tooltip Content -->
+                            <div id="announcementInfoTooltip" class="hidden absolute top-12 left-1/2 transform -translate-x-1/2 w-80 sm:w-96 max-w-xs sm:max-w-md bg-gray-800 text-white text-sm rounded-lg shadow-lg p-4 z-50 break-words">
+                                <div class="mb-2 font-semibold">You can now create and share announcements with your team or organization!</div>
+                                <ol class="list-decimal list-inside mb-2">
+                                    <li>
+                                        <span class="font-semibold">Regular Announcements</span> – Ideal for general updates, reminders, or important messages.
+                                    </li>
+                                    <li>
+                                        <span class="font-semibold">Announcements with Deadlines</span> – Perfect for time-sensitive updates like submission schedules, event registrations, or task deadlines. These announcements allow you to set a due date to help users stay on track.
+                                    </li>
+                                </ol>
+                                <span>Start posting announcements to keep everyone informed and organized!</span>
                             </div>
                             <form id="announcementForm" action="{{ route('announcements.store') }}" method="POST" class="show-loader-on-submit space-y-4">
                                 @csrf
@@ -375,15 +437,23 @@
                                 </div>
                                 <!-- Schedule Section -->
                                 <div>
-                                    <label class="inline-flex items-center">
+                                    <label class="inline-flex items-center mb-2">
                                         <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox">
                                         <span class="ml-2">Set Due Date</span>
                                     </label>
-                                    <div id="scheduleFields" class="mt-2 space-x-2 hidden">
-                                        <input type="date" id="scheduleDate" name="schedule_date"
-    class="border rounded px-2 py-1" min="{{ date('Y-m-d') }}">
-<input type="time" id="scheduleTime" name="schedule_time"
-    class="border rounded px-2 py-1" placeholder="Time (optional)">
+                                    <div id="scheduleFields" class="hidden">
+                                        <div class="flex space-x-4">
+                                            <div class="flex-1">
+                                                <label for="scheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                                <input type="date" id="scheduleDate" name="schedule_date"
+                                                    class="w-full border rounded px-2 py-1" min="{{ date('Y-m-d') }}">
+                                            </div>
+                                            <div class="flex-1">
+                                                <label for="scheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
+                                                <input type="time" id="scheduleTime" name="schedule_time"
+                                                    class="w-full border rounded px-2 py-1">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Audience Section -->
@@ -413,7 +483,8 @@
                                 </div>
                                 <div class="text-right">
                                     <button type="submit" id="submitBtn"
-                                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+                                        class="px-6 py-2 text-white rounded-lg transition hover:opacity-90"
+                                        style="background-color: #7A1212;">
                                         Post Announcement
                                     </button>
                                 </div>
@@ -423,30 +494,35 @@
                 </div>
             </div>
         </div>
+        </div>
         @include('components.footer')
     </div>
    
     {{-- Modal for full announcement --}}
-    <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
-        <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl text-red-500">📢</span>
-                    <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
-                </div>
-                <button onclick="closeAnnouncementModal()"
-                    class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+<div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
+    <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-2">
+                <img src="{{ asset('images/annc.svg') }}" alt="Announcement" class="w-8 h-8 inline-block align-middle" />
+                <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
             </div>
-            <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
-            <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
-            <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words"></div>
+            <button onclick="closeAnnouncementModal()"
+                class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
         </div>
+        <!-- Modal Title -->
+        <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
+        <!-- Modal Meta -->
+        <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
+        <!-- Modal Content -->
+        <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words"></div>
     </div>
+</div>
 
     {{-- Edit Announcement Modal --}}
     <div id="editAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Edit Announcement</span>
@@ -474,16 +550,26 @@
                         class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" required></textarea>
                 </div>
                 <!-- Schedule Section -->
-                <div class="mb-3">
-                    <label class="inline-flex items-center">
-                        <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
-                        <span class="ml-2">Set Due Date</span>
-                    </label>
-                    <div id="editScheduleFields" class="mt-2 space-x-2 hidden">
-                        <input type="date" id="editScheduleDate" name="schedule_date" class="border rounded px-2 py-1">
-                        <input type="time" id="editScheduleTime" name="schedule_time" class="border rounded px-2 py-1" placeholder="Time (optional)">
+           <div class="mb-3">
+                <label class="inline-flex items-center mb-2">
+                    <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
+                    <span class="ml-2">Set Due Date</span>
+                </label>
+                <div id="editScheduleFields" class="hidden">
+                    <div class="flex space-x-4">
+                        <div class="flex-1">
+                            <label for="editScheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                            <input type="date" id="editScheduleDate" name="schedule_date" 
+                                class="w-full border rounded px-2 py-1">
+                        </div>
+                        <div class="flex-1">
+                            <label for="editScheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
+                            <input type="time" id="editScheduleTime" name="schedule_time" 
+                                class="w-full border rounded px-2 py-1">
+                        </div>
                     </div>
                 </div>
+            </div>
                 <!-- Audience Section -->
                 <div class="mb-3">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
@@ -511,8 +597,9 @@
                 </div>
                 <div class="text-right">
                     <button type="submit" id="saveChangesBtn"
-                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
-                        Save Changes
+                        class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c]"
+                        style="background-color: #7A1212;">
+                        Save
                     </button>
                 </div>
             </form>
@@ -539,7 +626,7 @@
 
     <!-- Archive Confirmation Modal -->
     <div id="archiveConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Archive Announcement Confirmation</span>
@@ -563,7 +650,7 @@
 
     <!-- Restore Confirmation Modal -->
     <div id="restoreConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Restore Announcement Confirmation</span>
@@ -587,7 +674,7 @@
 
     <!-- Delete Confirmation Modal -->
     <div id="deleteConfirmModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="absolute inset-0 bg-black opacity-75"></div>
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Delete Announcement Confirmation</span>
@@ -610,9 +697,15 @@
     </div>
     
     <script>
+        function decodeHtmlEntities(str) {
+            var txt = document.createElement('textarea');
+            txt.innerHTML = str;
+            return txt.value;
+        }
+
         function showAnnouncementModal(title, content, meta = '', type = 'announcement') {
             document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalContent').textContent = content;
+            document.getElementById('modalContent').textContent = decodeHtmlEntities(content);
             document.getElementById('modalMeta').innerHTML = meta;
             document.getElementById('modalLabel').textContent =
                 type === 'previous' ? 'Previous Announcement' : 'Announcement';
@@ -662,7 +755,7 @@
                     const selectedDate = new Date(scheduleDate.value);
                     selectedDate.setHours(0,0,0,0);
 
-                    // If selected date is today, require time and it must be in the future
+                    // If selected date is today, require time and it must be at least 1 hour from now
                     if (
                         selectedDate.getFullYear() === now.getFullYear() &&
                         selectedDate.getMonth() === now.getMonth() &&
@@ -674,8 +767,9 @@
                         } else {
                             // Combine date and time for accurate comparison
                             const selectedDateTime = new Date(scheduleDate.value + 'T' + scheduleTime.value);
-                            if (selectedDateTime <= now) {
-                                alert('Please select a future time for today\'s schedule.');
+                            const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+                            if (selectedDateTime < oneHourLater) {
+                                alert('Please select a time at least 1 hour from now.');
                                 valid = false;
                             }
                         }
@@ -750,16 +844,21 @@
         const currentUserRole = {!! json_encode(session('currentUserRole', auth()->user()->role)) !!};
 
         function tryOpenEditModal(id, title, content, scheduleDate = '', scheduleTime = '', audience = 'all', audienceStudents = '[]', announcementUserId = null) {
-            // Only allow if current user is super admin or is the owner
-            if (currentUserRole !== 'super admin' && currentUserId != announcementUserId) {
-                // Show warning toast
-                const toast = document.getElementById('EditNotAllowedToast');
-                toast.style.display = 'flex';
-                setTimeout(() => {
-                    toast.style.display = 'none';
-                }, 3000);
-                return;
-            }
+    // Only allow if current user is super admin or is the owner
+    if (currentUserRole !== 'super admin' && currentUserId != announcementUserId) {
+        // Show warning toast
+        const toast = document.getElementById('EditNotAllowedToast');
+        if (toast) {
+            toast.style.display = 'flex';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        } else {
+            alert('You are not authorized to edit this announcement.');
+        }
+        return;
+    }
+
             // Otherwise, open the edit modal
             openEditModal(id, title, content, scheduleDate, scheduleTime, audience, audienceStudents);
         }
@@ -774,7 +873,7 @@
 
             document.getElementById('editAnnouncementId').value = id;
             document.getElementById('editTitle').value = title;
-            document.getElementById('editContent').value = content;
+            document.getElementById('editContent').value  = decodeHtmlEntities(content);
             document.getElementById('originalTitle').value = title;
             document.getElementById('originalContent').value = content;
 
@@ -801,13 +900,24 @@
                 scheduleTimeInput.value = '';
             }
 
-            // Audience
+           // Audience handling
             if (audience === 'all') {
                 document.getElementById('editAudienceAll').checked = true;
                 document.getElementById('editCustomAudienceDropdown').classList.add('hidden');
             } else {
                 document.getElementById('editAudienceCustom').checked = true;
                 document.getElementById('editCustomAudienceDropdown').classList.remove('hidden');
+                
+                // Remove any existing reminder messages first
+                const existingMessages = document.querySelectorAll('.audience-reminder');
+                existingMessages.forEach(msg => msg.remove());
+                
+                // Add new reminder message
+                const customAudienceDropdown = document.getElementById('editCustomAudienceDropdown');
+                const messageElement = document.createElement('div');
+                messageElement.className = 'text-yellow-600 text-sm mb-2 audience-reminder'; // Added audience-reminder class
+                messageElement.textContent = 'Please reselect the audience for confirmation';
+                customAudienceDropdown.insertBefore(messageElement, customAudienceDropdown.firstChild);
             }
             // Uncheck all first
             document.querySelectorAll('.editAudienceStudent').forEach(cb => cb.checked = false);
@@ -1249,6 +1359,50 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
+// Set min date and min time for scheduling announcements (AnnouncementModal only)
+const scheduleDate = document.getElementById('scheduleDate');
+const scheduleTime = document.getElementById('scheduleTime');
+
+function setMinScheduleTime() {
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+
+    if (scheduleDate.value === todayStr) {
+        // Set min time to 1 hour from now if today is selected
+        const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+        const minTime = oneHourLater.toTimeString().slice(0, 5);
+        scheduleTime.min = minTime;
+    } else {
+        // Allow any time for future dates
+        scheduleTime.min = '';
+    }
+}
+
+// Set min date to today
+scheduleDate.min = new Date().toISOString().slice(0, 10);
+
+// Listen for changes on scheduleDate
+scheduleDate.addEventListener('change', setMinScheduleTime);
+
+// Also call on page load in case today is pre-selected
+setMinScheduleTime();
+
+        // Tooltip toggle logic
+const infoBtn = document.getElementById('announcementInfoBtn');
+const infoTooltip = document.getElementById('announcementInfoTooltip');
+
+infoBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    infoTooltip.classList.toggle('hidden');
+});
+
+// Hide tooltip when clicking outside
+document.addEventListener('click', function(e) {
+    if (!infoTooltip.classList.contains('hidden')) {
+        infoTooltip.classList.add('hidden');
+    }
+});
+
     </script>
     
 <!-- Discard Changes Modal -->
@@ -1265,6 +1419,9 @@ document.addEventListener('keydown', function(e) {
         <div class="flex justify-end gap-2">
             <button onclick="confirmDiscardChanges()" class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Close without saving</button>
             <button onclick="closeDiscardChangesModal()" class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Keep editing</button>
+        </div> 
+    </div>
+</div>       
     <div id="EditNotAllowedToast"
         class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
         role="alert">

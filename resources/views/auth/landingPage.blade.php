@@ -69,8 +69,8 @@
                             </div>
                             <div class="self-start">
                                 <a href="{{ route('guestLogin') }}"
-                                    class="inline-block max-w-[200px] p-4 rounded-full bg-[#525866] border border-white py-2 text-center w-full hover:bg-[#404550] transition-bg duration-75">
-                                    Continue as Guest
+                                    class="inline-block max-w-[420px] p-4 rounded-full bg-[#525866] border border-white py-2 text-center w-full hover:bg-[#404550] transition-bg duration-75">
+                                    Continue as Class Representative
                                 </a>
                             </div>
                         </div>

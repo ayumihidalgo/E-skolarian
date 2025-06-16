@@ -441,12 +441,18 @@
 /* Calendar day cell hover effects - matching non-current month days */
 .fc .fc-daygrid-day {
     transition: background-color 0.2s ease;
+    cursor: default !important;
+}
+.fc .fc-col-header-cell {
+    cursor: default !important;
 }
 
 .fc .fc-daygrid-day:hover {
     background-color: #f5f5f5 !important; /* Light gray like non-current month days */
-    cursor: pointer;
+    cursor: default;
 }
+
+
 
 /* Keep day number readable against light background */
 .fc .fc-daygrid-day:hover .fc-daygrid-day-number {
@@ -1022,11 +1028,17 @@ div.fc-header-toolbar,
         min-height: 100vh;
     }
     
-    /* Push footer to bottom */
+    /* Push footer to bottom - Updated for both old and new structure */
+    .calendar-content-wrapper,
     .py-8.px-10 {
         flex-grow: 1;
     }
-
+    
+    /* Add specific footer styling */
+    .footer-container {
+        margin-top: auto;
+        flex-shrink: 0;
+    }
 
 
  
@@ -1068,89 +1080,185 @@ div.fc-header-toolbar,
         transition: transform 0.3s ease;
     }
 
+    .fc .fc-daygrid-day, 
+    .fc .fc-daygrid-day-frame,
+    .fc .fc-col-header-cell,
+    .fc-theme-standard td, 
+    .fc-theme-standard th {
+        cursor: default !important;
+    }
+    
+    /* Only announcement and proposal events should have pointer cursor */
+    .fc-event[data-source="announcement"],
+    .fc-event[data-source="proposal"] {
+        cursor: pointer !important;
+    }
 
-    /* Force single day display for events with specific times */
-.fc-event.fc-daygrid-dot-event,
-.fc-event.fc-daygrid-block-event {
-    display: flex !important;
-    max-width: 100% !important;
-    margin-right: 0 !important;
-    right: 0 !important;
+     /* Make month and year text bold */
+     #selected-month,
+     #selected-year,
+     #mobile-selected-month,
+     #mobile-selected-year {
+         font-weight: 700 !important; /* Bold */
+     }
+     
+     /* Add pointer cursor to navigation arrows */
+     #prev-month,
+     #next-month {
+         cursor: pointer !important;
+     }
+     
+     /* Add pointer cursor to month and year dropdown triggers */
+     #month-dropdown-trigger,
+     #year-dropdown-trigger,
+     #mobile-month-trigger,
+     #mobile-year-trigger {
+         cursor: pointer !important;
+     }
+     
+     /* Add pointer to the dropdown options */
+     #month-dropdown-menu .cursor-pointer,
+     #year-dropdown-menu #year-options-container .cursor-pointer,
+     #year-options-container [data-value] {
+         cursor: pointer !important;
+     }
+
+
+            /* Make dropdown arrows darker */
+            #month-dropdown-trigger::after,
+            #year-dropdown-trigger::after {
+                border-color: #000 transparent transparent transparent !important;
+                border-width: 6px 5px 0 5px !important;
+            }
+            
+            /* Make dropdown icon containers darker */
+            .arrow-icon svg path,
+            .arrow-icon-down svg path {
+                stroke: #000 !important;
+                stroke-width: 2.5 !important;
+            }
+            
+            /* Enhance the mobile trigger arrows too */
+            #mobile-month-trigger svg path,
+            #mobile-year-trigger svg path {
+                stroke: #000 !important;
+                stroke-width: 2.5 !important;
+            }
+    
+
+            html, body {
+                background-color: #F2F4F7 !important;
+            }
+            
+            #main-content {
+                background-color: #F2F4F7 !important;
+            }
+
+
+            /* Target and remove extra space in calendar */
+        .fc .fc-scrollgrid-section-body > td,
+        .fc .fc-scrollgrid-section-footer > td {
+            border-bottom: 0 !important;
+        }
+        
+        /* Ensure the calendar only takes the space it needs */
+        .fc .fc-daygrid-body {
+            border-bottom: 0 !important;
+        }
+        
+        /* Remove the extra space below the grid */
+        .fc-view-harness.fc-view-harness-passive {
+            min-height: 0 !important;
+            height: auto !important;
+        }
+
+             /* Remove grid lines from day headers */
+                .fc .fc-col-header-cell {
+                    border: none !important;
+                }
+                
+                .fc .fc-scrollgrid-section-header th {
+                    border: none !important;
+                }
+                
+                /* Remove horizontal line below header */
+                .fc .fc-scrollgrid-section-header {
+                    border-bottom: none !important;
+                }
+                
+                /* Only keep a light bottom border for the entire header section */
+                .fc .fc-scrollgrid-section.fc-scrollgrid-section-header > td {
+                    border-bottom: 1px solid #f0f0f0 !important;
+                }
+                
+                /* Make sure this applies to all views */
+                .fc-theme-standard .fc-scrollgrid {
+                    border: 1px solid #f0f0f0;
+                }
+
+
+
+                @media (max-width: 640px) {
+                    .mobile-month-year-nav {
+                      position: absolute;
+                      top: 300px; /* Adjust this value to position higher or lower */
+                      left: 0;
+                      right: 0;
+                      z-index: 10;
+                    }
+                  }
+
+
+                  #next-month {
+                    position: relative;
+                    z-index: 10; /* Ensure button is above other elements */
+                }
+
+
+
+                .fc-header-toolbar .fc-button-group,
+.fc-header-toolbar .fc-today-button,
+.fc-header-toolbar .fc-button {
+    position: sticky !important;
+    top: 0;
+    z-index: 15;
 }
 
-/* Prevent events from visually spanning across day boundaries */
-.fc-event {
-    max-width: 100% !important;
-    right: 0 !important;
-    left: 0 !important;
-    margin-right: 4px !important;
-    margin-left: 4px !important;
+/* Add a background to make buttons more visible */
+.fc-header-toolbar {
+    position: sticky !important;
+    top: 0;
+    background-color: white;
+    z-index: 15;
+    padding: 8px 0;
 }
 
-/* Ensure events with specific times don't span visually */
-.fc-daygrid-event-harness {
-    right: 0 !important;
-    left: 0 !important; 
-    width: auto !important;
-    max-width: 100% !important;
+/* Make sure the toolbar doesn't collapse in height */
+.fc .fc-toolbar {
+    min-height: 50px;
 }
 
-/* Fix for events with specific time to stay within their day cell */
-.fc-daygrid-block-event .fc-event-time,
-.fc-daygrid-block-event .fc-event-title {
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+#month-dropdown-trigger, #year-dropdown-trigger {
+    position: relative;
+    z-index: 10;
+    cursor: pointer;
 }
 
+/* Fix for dropdown menus */
+#month-dropdown-trigger, #year-dropdown-trigger {
+    position: relative;
+    z-index: 20; /* Higher than surrounding elements */
+    cursor: pointer;
+}
 
+#month-dropdown-menu, #year-dropdown-menu {
+    position: absolute;
+    z-index: 30; /* Higher than the triggers */
+}
 
-@media (max-width: 768px) {
-    /* Improved toggle appearance */
-    input:checked ~ .relative .dot {
-        transform: translateX(calc(100% + 2px));
-        background-color: #DAA520;
-    }
-    
-    .dot {
-        transition: all 0.3s ease;
-    }
-    
-    /* Mobile-friendly touch targets */
-    #month-dropdown-trigger, #year-dropdown-trigger {
-        position: relative;
-        padding: 4px 8px;
-    }
-    
-    /* Add tap indication */
-    #month-dropdown-trigger:active, #year-dropdown-trigger:active {
-        background-color: rgba(0,0,0,0.05);
-        border-radius: 4px;
-    }
-    
-    /* Larger touch targets */
-    #prev-month, #next-month, #today-btn {
-        min-height: 44px;
-        min-width: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    /* Small screen month/year popup improvements */
-    .month-popup, .year-popup {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        max-height: 60vh;
-        border-radius: 12px 12px 0 0;
-        z-index: 1000;
-        transform: translateY(100%);
-        transition: transform 0.3s ease;
-    }
-    
-    .month-popup.active, .year-popup.active {
-        transform: translateY(0);
-    }
+/* Make checkmarks properly aligned */
+.checkmark-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

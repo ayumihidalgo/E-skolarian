@@ -81,7 +81,7 @@ class AnnouncementController extends Controller
                 : "{$user->organization_acronym} posted an announcement: {$announcement->title}"
             )
         );
-        return redirect()->route($this->getRedirectRoute())->with('success', 'Announcement posted!');
+        return redirect()->route($this->getRedirectRoute())->with('success', 'Post Created Successfully!');
     }
 
     public function update(Request $request, $id)
@@ -134,7 +134,7 @@ class AnnouncementController extends Controller
                 : "{$user->organization_acronym} updated an announcement: {$announcement->title}"
             )
         );
-        return redirect()->route($this->getRedirectRoute())->with('success', 'Announcement changed successfully!');
+        return redirect()->route($this->getRedirectRoute())->with('success', 'Post Updated Successfully!');
     }
 
     public function archive(Request $request)
@@ -167,7 +167,7 @@ class AnnouncementController extends Controller
             )
         );
         return redirect()->route($this->getRedirectRoute(), ['archive' => 1])
-            ->with('success', 'Announcement moved to archive!');
+            ->with('success', 'Announcement archived');
     }
 
     public function restore($id)
@@ -195,7 +195,7 @@ class AnnouncementController extends Controller
             )
         );
         return redirect()->route($this->getRedirectRoute(), ['archive' => 1])
-            ->with('success', 'Announcement restored successfully!');
+            ->with('success', 'Announcement Restored');
     }
 
     public function destroy($id)
@@ -222,6 +222,6 @@ class AnnouncementController extends Controller
             )
         );
         return redirect()->route($this->getRedirectRoute(), ['archive' => 1])
-            ->with('success', 'Announcement permanently deleted!');
+            ->with('success', 'Announcement Deleted');
     }
 }

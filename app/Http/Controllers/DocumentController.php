@@ -15,6 +15,7 @@ use App\Events\DocumentSubmitted;
 use App\Models\DocumentVersion;
 use App\LogsActivity;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Mail;
 
 class DocumentController extends Controller
 {
@@ -110,6 +111,12 @@ class DocumentController extends Controller
             );
 
             if ($isGuest) {
+                if ($guestWebmail) {
+                    // Sends a document submission confirmation mail to the guest webmail
+                    $receiver = \App\Models\User::find($document->received_by);
+                    Mail::to($guestWebmail)->send(new \App\Mail\GuestSubmissionConfirmation($document, $receiver));
+                }
+
                 Session::put('guest_submitted', true);
                 return redirect()->route('guest.submissionSuccess');
             }
