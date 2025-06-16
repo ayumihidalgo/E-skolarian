@@ -1006,38 +1006,114 @@ function truncateOrgName(name, acronym, maxLength = 55) {
 
     // Custom role validation
     async function validateCustomRole() {
+        // Reset all error states
         customRoleNameError.classList.add('hidden');
         customRoleName.classList.remove('border-red-500');
+        roleTypeError.classList.add('hidden');
         
         const customRole = customRoleName.value.trim();
         const MAX_ROLE_LENGTH = 50;
+        const MIN_ROLE_LENGTH = 3;
+        let isValid = true;
 
+        // Check if field is empty (required field validation)
         if (customRole === '') {
-            showCustomRoleNameError('Role name cannot be empty');
-            return false;
+            showCustomRoleNameError('Role name is required');
+            isValid = false;
+        } 
+        // Check for leading invalid characters
+        else if (customRoleName.value.startsWith(' ')) {
+            showCustomRoleNameError('Role name cannot start with a space');
+            isValid = false;
         }
-
-        if (customRole.startsWith(' ') || customRole.startsWith('-')) {
-            showCustomRoleNameError('Role name cannot start with a space or hyphen');
-            return false;
+        else if (customRoleName.value.startsWith('-')) {
+            showCustomRoleNameError('Role name cannot start with a hyphen');
+            isValid = false;
         }
-
-        if (customRole.length < 3) {
-            showCustomRoleNameError('Role name must be at least 3 characters');
-            return false;
+        else if (customRoleName.value.startsWith("'")) {
+            showCustomRoleNameError('Role name cannot start with an apostrophe');
+            isValid = false;
         }
-
-        if (customRole.length > MAX_ROLE_LENGTH) {
+        // Check for ending invalid characters
+        else if (customRoleName.value.endsWith(' ')) {
+            showCustomRoleNameError('Role name cannot end with a space');
+            isValid = false;
+        }
+        else if (customRoleName.value.endsWith('-')) {
+            showCustomRoleNameError('Role name cannot end with a hyphen');
+            isValid = false;
+        }
+        // Check minimum length
+        else if (customRole.length < MIN_ROLE_LENGTH) {
+            showCustomRoleNameError(`Role name must be at least ${MIN_ROLE_LENGTH} characters long`);
+            isValid = false;
+        }
+        // Check maximum length
+        else if (customRole.length > MAX_ROLE_LENGTH) {
             showCustomRoleNameError(`Role name must be less than ${MAX_ROLE_LENGTH} characters`);
-            return false;
+            isValid = false;
+        }
+        // Check allowed characters (only letters, spaces, hyphens, and apostrophes)
+        else if (!/^[a-zA-Z\s'-]+$/.test(customRole)) {
+            showCustomRoleNameError('Role name can only contain letters, spaces, hyphens, and apostrophes');
+            isValid = false;
+        }
+        // Check for multiple consecutive spaces
+        else if (/\s{2,}/.test(customRole)) {
+            showCustomRoleNameError('Role name cannot contain multiple consecutive spaces');
+            isValid = false;
+        }
+        // Check for multiple consecutive hyphens or apostrophes
+        else if (/[-']{2,}/.test(customRole)) {
+            showCustomRoleNameError('Role name cannot contain multiple consecutive hyphens or apostrophes');
+            isValid = false;
+        }
+        else {
+            // Check against existing admin role names (case-insensitive)
+            const existingAdminRoles = [
+                'Office of the Student Services',
+                'Office of the Academic Services', 
+                'Office of the Administrative Services',
+                'Office of the Campus Director'
+            ];
+            
+            const roleExists = existingAdminRoles.some(role => 
+                role.toLowerCase() === customRole.toLowerCase()
+            );
+            
+            if (roleExists) {
+                showCustomRoleNameError('This role name already exists as an administrative role');
+                isValid = false;
+            }
+            else {
+                // Check against other existing roles from the database
+                try {
+                    const existingRoles = await fetchExistingRoles();
+                    const isDuplicate = existingRoles.some(role => 
+                        role.toLowerCase().trim() === customRole.toLowerCase().trim()
+                    );
+                    
+                    if (isDuplicate) {
+                        showCustomRoleNameError('This role name already exists in the system');
+                        isValid = false;
+                    }
+                } catch (error) {
+                    console.error('Error checking role availability:', error);
+                    showCustomRoleNameError('Error checking role availability. Please try again.');
+                    isValid = false;
+                }
+            }
         }
 
-        if (!/^[a-zA-Z\s-]+$/.test(customRole)) { // Updated regex to allow hyphens
-            showCustomRoleNameError('Role name can only contain letters, spaces, and hyphens');
-            return false;
+        // Validate role type selection
+        const roleTypeRadio = document.querySelector('input[name="custom_role_type"]:checked');
+        if (!roleTypeRadio) {
+            roleTypeError.textContent = 'Please select whether this is a Student Organization or Campus Administration role';
+            roleTypeError.classList.remove('hidden');
+            isValid = false;
         }
 
-        return true;
+        return isValid;
     }
 
     function showCustomRoleNameError(message) {
