@@ -1243,3 +1243,22 @@ div.fc-header-toolbar,
     z-index: 10;
     cursor: pointer;
 }
+
+/* Fix for dropdown menus */
+#month-dropdown-trigger, #year-dropdown-trigger {
+    position: relative;
+    z-index: 20; /* Higher than surrounding elements */
+    cursor: pointer;
+}
+
+#month-dropdown-menu, #year-dropdown-menu {
+    position: absolute;
+    z-index: 30; /* Higher than the triggers */
+}
+
+/* Make checkmarks properly aligned */
+.checkmark-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
