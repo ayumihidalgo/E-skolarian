@@ -30,30 +30,45 @@
         <!-- Calendar header with title -->
 <!-- Calendar header with title and navigation in one line -->
 <div class="mb-8 lg:mb-8 md:mb-4 sm:mb-2 grid lg:grid-cols-3 md:grid-cols-1 sm:grid-cols-1">
-    <!-- Left: Calendar Title -->
-    <h1 class="text-black font-manrope text-xl lg:text-3xl md:text-2xl sm:text-xl font-extrabold leading-normal mb-4 md:mb-4 sm:mb-3 text-center lg:text-left">
-        Calendar
-    </h1>
+    <!-- Left: Calendar Title and Show Past Toggle -->
+    <div>
+        <h1 class="text-black font-manrope text-xl lg:text-3xl md:text-2xl sm:text-xl font-extrabold leading-normal mb-2 lg:mb-2 md:mb-1 sm:mb-0 text-center lg:text-left">
+            Calendar
+        </h1>
+        <!-- Show Past Deadlines Toggle - With mobile optimization -->
+        <div class="flex items-center lg:justify-start justify-center mb-3 lg:mb-3 md:-mt-1 sm:-mt-2">
+            <label class="flex items-center cursor-pointer">
+                <input type="checkbox" id="show-past-toggle" class="sr-only">
+                <div class="relative">
+                    <div class="block bg-gray-600 w-12 h-6 rounded-full"></div>
+                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
+                </div>
+                <div class="ml-2 text-gray-700 font-medium text-sm">
+                    Show Past Deadlines
+                </div>
+            </label>
+        </div>
+    </div>
    
     <!-- Middle: Month & Year Dropdowns with Navigation Arrows (centered) -->
-     <div class="flex items-center justify-center mb-4 md:mb-3 sm:mb-2">
+     <div class="flex items-center justify-center mb-4 md:mb-3 sm:mb-2 -mt-8">
         <div class="flex items-center gap-2 md:gap-3 lg:gap-6">
 
 
-            <!-- Left Arrow (Previous Month) -->
+            <!-- Left Arrow - Make stroke thicker and darker -->
             <button id="prev-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 30 30" fill="none">
-                    <path d="M18.75 7.5L11.25 15L18.75 22.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M18.75 7.5L11.25 15L18.75 22.5" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </button>
 
                         <!-- MOBILE VERSION: Month & Year (simplified on mobile) -->
             <div class="flex items-center md:hidden">
                 <div id="mobile-month-trigger" class="text-black text-center font-lexend text-lg lg:text-2xl font-medium mr-1 min-h-[44px] flex items-center">
-                    <span id="mobile-selected-month">January</span>
+                    <span id="mobile-selected-month"class="font-bold">January</span>
                 </div>
                 <div id="mobile-year-trigger" class="text-black text-center font-lexend text-lg lg:text-2xl font-medium min-h-[44px] flex items-center">
-                    <span id="mobile-selected-year">2023</span>
+                    <span id="mobile-selected-year"class="font-bold">2023</span>
                 </div>
             </div>
            
@@ -61,7 +76,7 @@
             <div class="relative mx-2 hidden md:block">
                 <!-- Custom dropdown trigger -->
                 <div id="month-dropdown-trigger" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-2xl font-medium leading-normal hover:border-blue-500 focus:border-blue-500 transition-colors flex items-center">
-                    <span id="selected-month">January</span>
+                    <span id="selected-month"class="font-bold">January</span>
                     <div class="absolute inset-y-0 right-0 flex items-center px-1 text-gray-700 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" class="flex-shrink-0">
                             <path d="M1 1.5L6 6.5L11 1.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -192,7 +207,7 @@
             <div class="relative mx-2 hidden md:block">
                 <!-- Custom dropdown trigger -->
                 <div id="year-dropdown-trigger" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-2xl font-medium leading-normal hover:border-blue-500 focus:border-blue-500 transition-colors flex items-center">
-                    <span id="selected-year">2023</span>
+                    <span id="selected-year"class="font-bold">2023</span>
                     <div class="absolute inset-y-0 right-0 flex items-center px-1 text-gray-700 pointer-events-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8" fill="none" class="flex-shrink-0">
                             <path d="M1 1.5L6 6.5L11 1.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -214,41 +229,27 @@
             </div>
 
 
-            <!-- Right Arrow -->
             <button id="next-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity p-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 30 30" fill="none">
-                    <path d="M11.25 22.5L18.75 15L11.25 7.5" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M11.25 22.5L18.75 15L11.25 7.5" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </button>
         </div>
     </div>
    
     <!-- Today Button -->
-    <div class="flex justify-center lg:justify-end items-center">
+    <div class="hidden md:flex justify-center lg:justify-end items-center lg:pr-8 -mt-8">
         <button id="today-btn" class="flex justify-center items-center w-[85px] h-[40px] p-[10px] gap-[10px] rounded-[22px] bg-[#DAA520] transition-colors invisible hover:bg-[#c99418]">
             <span class="text-white font-manrope text-[14px] lg:text-[16px] font-extrabold leading-normal underline decoration-solid">Today</span>
         </button>
     </div>
 </div>
-<div class="mb-4 lg:mb-4 md:mb-2 sm:mb-2 flex justify-center lg:justify-end">
-    <div class="flex items-center">
-        <label class="flex items-center cursor-pointer">
-            <input type="checkbox" id="show-past-toggle" class="sr-only">
-            <div class="relative">
-                <div class="block bg-gray-600 w-12 h-6 rounded-full"></div>
-                <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
-            </div>
-            <div class="ml-2 text-gray-700 font-medium text-sm">
-                Show Past
-            </div>
-        </label>
-    </div>
-</div>
+
 
 
         <!-- Calendar container with responsive dimensions -->
-        <div id="calendar-container" class="bg-white rounded-lg overflow-hidden shadow-md relative z-[5] min-h-[600px] lg:min-h-[600px] md:min-h-[500px] sm:min-h-[400px]">
-            <div id="calendar" class="min-h-[600px] lg:min-h-[600px] md:min-h-[500px] sm:min-h-[400px] w-full"></div>
+        <div id="calendar-container" class="bg-white rounded-lg overflow-hidden shadow-md relative z-[5] lg:min-h-[600px] md:min-h-[500px]">
+            <div id="calendar" class="w-full"></div>
         </div>
     </div>
 
@@ -548,6 +549,9 @@ function addMobileViewToggle() {
             currentView === 'dayGridMonth' ? 'listMonth' : 'dayGridMonth'
         );
         
+        // Add this line to resize the calendar container
+        setTimeout(resizeMobileCalendarContainer, 100);
+        
         // Save preference
         localStorage.setItem('calendarViewMode', 
             currentView === 'dayGridMonth' ? 'listMonth' : 'dayGridMonth');
@@ -559,6 +563,8 @@ function addMobileViewToggle() {
     const savedView = localStorage.getItem('calendarViewMode');
     if (savedView && calendarObj) {
         calendarObj.changeView(savedView);
+        // Also resize on initial load if using saved view
+        setTimeout(resizeMobileCalendarContainer, 100);
     }
 }
 
@@ -797,6 +803,7 @@ function initCalendar() {
                 checkIfCurrentMonth();
                 adjustCalendarHeight();
                 updateMobileSelectors();
+                resizeMobileCalendarContainer();
             },
            
             // Handle event clicks (read-only)
@@ -818,11 +825,24 @@ function initCalendar() {
            
             // Handle event styling and force single day display
             eventDidMount: function(info) {
+                info.el.style.overflow = 'hidden';
+                info.el.style.textOverflow = 'ellipsis';
+                info.el.style.whiteSpace = 'nowrap';
+                
                 // Add announcement styling
                 if (info.event.extendedProps.source === 'announcement') {
-                    info.el.style.borderLeft = '4px solid #FF6347';
-                    info.el.style.backgroundColor = '#FF6347';
-                    info.el.setAttribute('title', 'Announcement: ' + info.event.title);
+                    // Check if announcement is expired/past deadline
+                    if (info.event.extendedProps.is_expired) {
+                        // Gray styling for past deadlines
+                        info.el.style.borderLeft = '4px solid #9CA3AF'; // Gray border
+                        info.el.style.backgroundColor = '#9CA3AF'; // Gray background
+                        info.el.setAttribute('title', '[Past] Announcement: ' + info.event.title);
+                    } else {
+                        // Red styling for active deadlines
+                        info.el.style.borderLeft = '4px solid #FF6347';  
+                        info.el.style.backgroundColor = '#FF6347';
+                        info.el.setAttribute('title', 'Announcement: ' + info.event.title);
+                    }
                     
                     // Force single day display for announcements
                     info.el.style.position = 'relative';
@@ -830,11 +850,28 @@ function initCalendar() {
                     info.el.style.width = 'auto';
                     info.el.style.maxWidth = '100%';
                     info.el.classList.add('fc-event-single-day');
+                    
+                    // Add pointer cursor only to announcement events
+                    info.el.style.cursor = 'pointer';
+                    
+                    // Add data attribute for CSS targeting
+                    info.el.setAttribute('data-source', 'announcement');
+                    
+                    // Add expired data attribute if applicable
+                    if (info.event.extendedProps.is_expired) {
+                        info.el.setAttribute('data-expired', 'true');
+                    }
                 } else if (info.event.extendedProps.source === 'proposal') {
                     info.el.style.borderLeft = '4px solid #0085FF';
                     info.el.setAttribute('title', 'Approved Proposal: ' + info.event.title);
+                    
+                    // Add pointer cursor to proposal events too
+                    info.el.style.cursor = 'pointer';
+                    
+                    // Add data attribute for CSS targeting
+                    info.el.setAttribute('data-source', 'proposal');
                 }
-               
+                
                 // Handle long titles
                 const titleEl = info.el.querySelector('.fc-event-title');
                 if (titleEl) {
@@ -1567,6 +1604,35 @@ function updateCustomControls() {
             }
         }, 150);
     });
+
+
+// Add this function to resize the calendar container to fit content
+function resizeMobileCalendarContainer() {
+    if (!isMobileDevice() || !calendarObj) return;
+    
+    const calendarContainer = document.getElementById('calendar-container');
+    const calendar = document.getElementById('calendar');
+    
+    if (!calendarContainer || !calendar) return;
+    
+    // For mobile list view, let it size naturally
+    if (calendarObj.view.type === 'listMonth') {
+        calendarContainer.style.minHeight = '';
+        calendar.style.minHeight = '';
+        
+        // Give it a small delay then adjust height based on content
+        setTimeout(() => {
+            const calendarContent = calendar.querySelector('.fc-list-table') || 
+                                   calendar.querySelector('.fc-list-empty');
+            
+            if (calendarContent) {
+                const contentHeight = calendarContent.offsetHeight + 50; // add some padding
+                calendarContainer.style.height = contentHeight + 'px';
+                calendar.style.height = contentHeight + 'px';
+            }
+        }, 100);
+    }
+}
 </script>
 @endpush
 

@@ -441,12 +441,18 @@
 /* Calendar day cell hover effects - matching non-current month days */
 .fc .fc-daygrid-day {
     transition: background-color 0.2s ease;
+    cursor: default !important;
+}
+.fc .fc-col-header-cell {
+    cursor: default !important;
 }
 
 .fc .fc-daygrid-day:hover {
     background-color: #f5f5f5 !important; /* Light gray like non-current month days */
-    cursor: pointer;
+    cursor: default;
 }
+
+
 
 /* Keep day number readable against light background */
 .fc .fc-daygrid-day:hover .fc-daygrid-day-number {
@@ -1022,11 +1028,17 @@ div.fc-header-toolbar,
         min-height: 100vh;
     }
     
-    /* Push footer to bottom */
+    /* Push footer to bottom - Updated for both old and new structure */
+    .calendar-content-wrapper,
     .py-8.px-10 {
         flex-grow: 1;
     }
-
+    
+    /* Add specific footer styling */
+    .footer-container {
+        margin-top: auto;
+        flex-shrink: 0;
+    }
 
 
  
@@ -1068,89 +1080,94 @@ div.fc-header-toolbar,
         transition: transform 0.3s ease;
     }
 
-
-    /* Force single day display for events with specific times */
-.fc-event.fc-daygrid-dot-event,
-.fc-event.fc-daygrid-block-event {
-    display: flex !important;
-    max-width: 100% !important;
-    margin-right: 0 !important;
-    right: 0 !important;
-}
-
-/* Prevent events from visually spanning across day boundaries */
-.fc-event {
-    max-width: 100% !important;
-    right: 0 !important;
-    left: 0 !important;
-    margin-right: 4px !important;
-    margin-left: 4px !important;
-}
-
-/* Ensure events with specific times don't span visually */
-.fc-daygrid-event-harness {
-    right: 0 !important;
-    left: 0 !important; 
-    width: auto !important;
-    max-width: 100% !important;
-}
-
-/* Fix for events with specific time to stay within their day cell */
-.fc-daygrid-block-event .fc-event-time,
-.fc-daygrid-block-event .fc-event-title {
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-}
-
-
-
-@media (max-width: 768px) {
-    /* Improved toggle appearance */
-    input:checked ~ .relative .dot {
-        transform: translateX(calc(100% + 2px));
-        background-color: #DAA520;
+    .fc .fc-daygrid-day, 
+    .fc .fc-daygrid-day-frame,
+    .fc .fc-col-header-cell,
+    .fc-theme-standard td, 
+    .fc-theme-standard th {
+        cursor: default !important;
     }
     
-    .dot {
-        transition: all 0.3s ease;
+    /* Only announcement and proposal events should have pointer cursor */
+    .fc-event[data-source="announcement"],
+    .fc-event[data-source="proposal"] {
+        cursor: pointer !important;
     }
+
+     /* Make month and year text bold */
+     #selected-month,
+     #selected-year,
+     #mobile-selected-month,
+     #mobile-selected-year {
+         font-weight: 700 !important; /* Bold */
+     }
+     
+     /* Add pointer cursor to navigation arrows */
+     #prev-month,
+     #next-month {
+         cursor: pointer !important;
+     }
+     
+     /* Add pointer cursor to month and year dropdown triggers */
+     #month-dropdown-trigger,
+     #year-dropdown-trigger,
+     #mobile-month-trigger,
+     #mobile-year-trigger {
+         cursor: pointer !important;
+     }
+     
+     /* Add pointer to the dropdown options */
+     #month-dropdown-menu .cursor-pointer,
+     #year-dropdown-menu #year-options-container .cursor-pointer,
+     #year-options-container [data-value] {
+         cursor: pointer !important;
+     }
+
+
+            /* Make dropdown arrows darker */
+            #month-dropdown-trigger::after,
+            #year-dropdown-trigger::after {
+                border-color: #000 transparent transparent transparent !important;
+                border-width: 6px 5px 0 5px !important;
+            }
+            
+            /* Make dropdown icon containers darker */
+            .arrow-icon svg path,
+            .arrow-icon-down svg path {
+                stroke: #000 !important;
+                stroke-width: 2.5 !important;
+            }
+            
+            /* Enhance the mobile trigger arrows too */
+            #mobile-month-trigger svg path,
+            #mobile-year-trigger svg path {
+                stroke: #000 !important;
+                stroke-width: 2.5 !important;
+            }
     
-    /* Mobile-friendly touch targets */
-    #month-dropdown-trigger, #year-dropdown-trigger {
-        position: relative;
-        padding: 4px 8px;
-    }
-    
-    /* Add tap indication */
-    #month-dropdown-trigger:active, #year-dropdown-trigger:active {
-        background-color: rgba(0,0,0,0.05);
-        border-radius: 4px;
-    }
-    
-    /* Larger touch targets */
-    #prev-month, #next-month, #today-btn {
-        min-height: 44px;
-        min-width: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    /* Small screen month/year popup improvements */
-    .month-popup, .year-popup {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        max-height: 60vh;
-        border-radius: 12px 12px 0 0;
-        z-index: 1000;
-        transform: translateY(100%);
-        transition: transform 0.3s ease;
-    }
-    
-    .month-popup.active, .year-popup.active {
-        transform: translateY(0);
-    }
-}
+
+            html, body {
+                background-color: #F2F4F7 !important;
+            }
+            
+            #main-content {
+                background-color: #F2F4F7 !important;
+            }
+
+
+            /* Target and remove extra space in calendar */
+        .fc .fc-scrollgrid-section-body > td,
+        .fc .fc-scrollgrid-section-footer > td {
+            border-bottom: 0 !important;
+        }
+        
+        /* Ensure the calendar only takes the space it needs */
+        .fc .fc-daygrid-body {
+            border-bottom: 0 !important;
+        }
+        
+        /* Remove the extra space below the grid */
+        .fc-view-harness.fc-view-harness-passive {
+            min-height: 0 !important;
+            height: auto !important;
+        }
