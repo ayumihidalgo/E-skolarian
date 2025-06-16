@@ -54,7 +54,7 @@
                       <strong>© E-skolarian - Document Management System</strong> <br>
                       To help keep your account secure, please do not forward this email. <br>
                       <strong>Contact No:</strong> 0961 802 3780<br>
-                      <strong>Email:</strong> starosa@pup.edu.ph
+                      <strong>Email:</strong> eskolarian@gmail.com
                     </p>
                   </td>
                 </tr>
