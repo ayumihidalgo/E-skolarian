@@ -56,51 +56,35 @@ class AdminDashboardController extends Controller
             ->get();
 
         // Document status counts
-
         $adminId = auth()->id();
 
-        // Get IDs of documents that are "Returned" in the review table (for this admin)
-        $returnedIds = Review::where('status', 'Returned')
-            ->whereHas('document', function ($q) use ($adminId) {
-                $q->where('received_by', $adminId);
-            })
-            ->pluck('document_id')
-            ->unique();
-
-        // Get IDs of documents that are "Under Review" in the review table, but only for this admin
-        $underReviewIds = Review::where('status', 'Under Review')
-            ->whereHas('document', function ($q) use ($adminId) {
-                $q->where('received_by', $adminId);
-            })
-            ->pluck('document_id')
-            ->unique();
-
-        // Pending: documents that are pending and NOT under review or returned, and received by this admin
-        $pendingCount = SubmittedDocument::where('status', 'pending')
+        // Pending: documents that are Pending and received by this admin, not Returned, not archived
+        $pendingCount = SubmittedDocument::where('status', 'Pending')
             ->where('received_by', $adminId)
-            ->whereNotIn('id', $underReviewIds)
-            ->whereNotIn('id', $returnedIds)
+            ->whereNull('archived_at')
             ->count();
 
-        // Under Review: count from review table, only for this admin, and not returned
-        $reviewCount = $underReviewIds->diff($returnedIds)->count();
-
-        // Approved: only those received by this admin and not returned
-        $approvedCount = SubmittedDocument::where('status', 'approved')
+        // Under Review: documents that are Under Review and received by this admin, not Returned, not archived
+        $reviewCount = SubmittedDocument::where('status', 'Under Review')
             ->where('received_by', $adminId)
-            ->whereNotIn('id', $returnedIds)
+            ->whereNull('archived_at')
             ->count();
 
-        // Total: only those received by this admin and not returned
-        $totalCount = SubmittedDocument::where('received_by', $adminId)
-            ->whereNotIn('id', $returnedIds)
+        // Approved: documents that are Approved and received by this admin, not Returned, not archived
+        $approvedCount = SubmittedDocument::where('status', 'Approved')
+            ->where('received_by', $adminId)
+            ->whereNull('archived_at')
             ->count();
+
+        // Total: sum of the three counts
+        $totalCount = $pendingCount + $reviewCount + $approvedCount;
 
         // Determine which tab to show
         $showArchive = $request->query('archive', false);
 
         $recentDocuments = \App\Models\SubmittedDocument::with('user')
-            ->where('received_by', Auth::id()) 
+            ->where('received_by', Auth::id())
+            ->whereNull('archived_at') // Only non-archived documents
             ->latest()
             ->take(5)
             ->get();

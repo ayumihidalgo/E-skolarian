@@ -7,6 +7,9 @@
         @include('components.studentNavBarComponent')
         <div class="flex-grow mb-10">
             <div class="flex-grow p-6 space-y-6">
+                 <h5 class="font-['Manrope'] font-extrabold text-[23px] md:text-[20px] lg:text-[30px] mb-1">
+                    Dashboard
+                </h5>
                 <!-- Stats -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
@@ -42,7 +45,10 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Announcements -->
                     <div class="md:col-span-2 bg-white rounded-xl shadow-md p-4">
-                        <h2 class="text-lg font-semibold mb-2">📢 Announcements</h2>
+                        <h2 class="text-lg font-semibold mb-2 flex items-center gap-2">
+                            <img src="{{ asset('images/annc.svg') }}" alt="Announcements" class="w-7 h-7 inline-block align-middle" />
+                            Announcements
+                        </h2>
                         @if ($latestAnnouncements->count())
                             <div class="space-y-4 h-64 overflow-y-auto pr-2">
                                 @foreach ($latestAnnouncements as $announcement)
@@ -144,6 +150,9 @@
                                         </thead>
                                         <tbody>
                                             @foreach ($recentDocuments as $doc)
+                                                @if ($doc->archived_at !== null)
+                                                    @continue
+                                                @endif
                                                 @php
                                                     $isUnderReview = $doc->reviews->contains(fn($review) => strtolower($review->status) === 'under review');
                                                     $displayStatus = $isUnderReview ? 'Under Review' : ucfirst($doc->status);
@@ -156,28 +165,28 @@
                                                     $badgeClass = $statusColors[$displayStatus] ?? 'bg-gray-200 text-gray-600';
                                                 @endphp
                                                 <tr class="border-b"
-                                                    onclick="showDocumentModal(
-                                                        '{{ $doc->id }}',
-                                                        '{{ \Carbon\Carbon::parse($doc->created_at)->format('F j, Y, g:i A') }}',
-                                                        '{{ addslashes($doc->subject) }}',
-                                                        '{{ addslashes($doc->type) }}',
-                                                        '{{ addslashes($doc->summary) }}',
-                                                        '{{ $doc->latestVersion ? addslashes($doc->latestVersion->file_path) : '' }}',
-                                                        '{{ addslashes(optional($doc->receiver)->role_name ?? '') }}',
-                                                        '{{ $displayStatus }}',
-                                                        '{{ $doc->control_tag }}'
-                                                    )">
-                                                    <td class="px-3 py-2 font-extrabold text-black">{{ $doc->control_tag }}</td>
-                                                    <td class="px-3 py-2 max-w-[200px] truncate" title="{{ $doc->subject }}">{{ $doc->subject }}</td>
-                                                    <td class="px-3 py-2">{{ \Carbon\Carbon::parse($doc->created_at)->format('n/j/Y') }}</td>
-                                                    <td class="px-3 py-2">{{ $doc->type }}</td>
-                                                    <td class="px-3 py-2">
-                                                        <span class="inline-block px-3 py-1 rounded-full text-xs font-medium {{ $badgeClass }}">
-                                                            {{ $displayStatus }}
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
+                                                        onclick="showDocumentModal(
+                                                            '{{ $doc->id }}',
+                                                            '{{ \Carbon\Carbon::parse($doc->created_at)->format('F j, Y, g:i A') }}',
+                                                            '{{ addslashes($doc->subject) }}',
+                                                            '{{ addslashes($doc->type) }}',
+                                                            '{{ addslashes($doc->summary) }}',
+                                                            '{{ $doc->latestVersion ? addslashes($doc->latestVersion->file_path) : '' }}',
+                                                            '{{ addslashes(optional($doc->receiver)->role_name ?? '') }}',
+                                                            '{{ $displayStatus }}',
+                                                            '{{ $doc->control_tag }}'
+                                                        )">
+                                                        <td class="px-3 py-2 font-extrabold text-black">{{ $doc->control_tag }}</td>
+                                                        <td class="px-3 py-2 max-w-[200px] truncate" title="{{ $doc->subject }}">{{ $doc->subject }}</td>
+                                                        <td class="px-3 py-2">{{ \Carbon\Carbon::parse($doc->created_at)->format('n/j/Y') }}</td>
+                                                        <td class="px-3 py-2">{{ $doc->type }}</td>
+                                                        <td class="px-3 py-2">
+                                                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium {{ $badgeClass }}">
+                                                                {{ $displayStatus }}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
                                         </tbody>
                                     </table>
                                 </div>
@@ -196,48 +205,46 @@
         @include('components.footer')
     </div>
     <!-- Modal for full announcement -->
-    <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-        <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
-        <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
-            <div class="relative mb-2 border-b pb-2">
-    <!-- Close button absolutely positioned -->
-    <button onclick="closeAnnouncementModal()"
-        class="absolute top-3 right-4 text-2xl text-gray-500 hover:text-gray-700 z-10" style="line-height: 1;">&times;</button>
-    <!-- Modal header -->
-                <div class="flex items-center gap-2">
-                    <span class="text-2xl text-red-500">📢</span>
-                    <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
+        <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+            <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
+            <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
+                <div class="relative mb-2 border-b pb-2">
+                    <button onclick="closeAnnouncementModal()"
+                        class="absolute top-3 right-4 text-2xl text-gray-500 hover:text-gray-700 z-10" style="line-height: 1;">&times;</button>
+                    <!-- Modal header -->
+                    <div class="flex items-center gap-2">
+                        <img src="{{ asset('images/annc.svg') }}" alt="Announcement" class="w-8 h-8 inline-block align-middle" />
+                        <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
+                    </div>
+                    <div class="flex items-center justify-between mt-2">
+                        <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
+                        <span id="modalDeadline" class="text-sm text-red-600 font-semibold"></span>
+                    </div>
                 </div>
-                <!-- Title and Due Date flex row -->
-                <div class="flex items-center justify-between mt-2">
-                    <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
-                    <span id="modalDeadline" class="text-sm text-red-600 font-semibold"></span>
+                <h3 id="modalTitle" class="text-lg font-bold mt-3 mb-1"></h3>
+                <div class="flex items-center gap-2 mb-3">
+                    <span id="modalPoster" class="flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
+                        <svg class="w-4 h-4 mr-1 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 10a4 4 0 100-8 4 4 0 000 8zm0 2c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z"/></svg>
+                        <span id="modalPosterName"></span>
+                    </span>
+                    <span class="flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
+                        <!-- Clock Icon SVG -->
+                        <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+                            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" fill="none"/>
+                        </svg>
+                        <span id="modalPostDate"></span>
+                    </span>
                 </div>
-            </div>
-            <h3 id="modalTitle" class="text-lg font-bold mt-3 mb-1"></h3>
-            <div class="flex items-center gap-2 mb-3">
-                <span id="modalPoster" class="flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
-                    <svg class="w-4 h-4 mr-1 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path d="M10 10a4 4 0 100-8 4 4 0 000 8zm0 2c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z"/></svg>
-                    <span id="modalPosterName"></span>
-                </span>
-                <span class="flex items-center bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">
-                    <!-- Clock Icon SVG -->
-                    <svg class="w-4 h-4 mr-1 text-gray-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-                        <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" fill="none"/>
-                    </svg>
-                    <span id="modalPostDate"></span>
-                </span>
-            </div>
-            <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words mb-6"></div>
-            <div class="flex justify-end">
-                <a href="{{ route('student.submit-documents') }}" id="openPortalBtn"
-                    class="bg-[#7B2323] hover:bg-[#5a1818] text-white px-5 py-2 rounded-lg font-semibold transition">
-                    Open Submission Portal
-                </a>
+                <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words mb-6"></div>
+                <div class="flex justify-end">
+                    <a href="{{ route('student.submit-documents') }}" id="openPortalBtn"
+                        class="bg-[#7B2323] hover:bg-[#5a1818] text-white px-5 py-2 rounded-lg font-semibold transition">
+                        Open Submission Portal
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
 
     <!-- Document Details Modal -->
     <div id="documentModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
@@ -289,9 +296,15 @@
     </div>
 
     <script>
+        function decodeHtmlEntities(str) {
+            var txt = document.createElement('textarea');
+            txt.innerHTML = str;
+            return txt.value;
+        }
+
         function showAnnouncementModal(title, content, poster, postDate, deadlineText) {
             document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalContent').textContent = content;
+            document.getElementById('modalContent').textContent = decodeHtmlEntities(content);
             document.getElementById('modalPosterName').textContent = poster;
             document.getElementById('modalPostDate').textContent = postDate;
             document.getElementById('modalDeadline').textContent = deadlineText || '';
