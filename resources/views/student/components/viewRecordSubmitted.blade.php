@@ -161,7 +161,7 @@
                                                     <div class="flex items-center gap-3">
                                                         <span
                                                             class="ml-[1.2px] mt-[0.8px]  w-3 h-3 rounded-full transition-all duration-300
-           {{ $record->status === 'under_review' || $record->status === 'Under Review' ? 'bg-blue-400 ' : 'bg-[#D4B2B2] ' }}
+            {{ $record->status === 'under_review' || $record->status === 'Under Review' ? 'bg-blue-400 ' : 'bg-[#D4B2B2] ' }}
             border-2 border-[#D4B2B2]  bg-[#D4B2B2] shadow-lg z-10">
                                                         </span>
                                                         <span>
@@ -172,179 +172,185 @@
                                             </div>
                                         </div>
                                     @endif
-                                    <div class="flex items-start mb-6 relative pl-0.2">
-                                        <div class="gap-3">
-                                            <div class="flex flex-col gap-0.5 relative pl-0.5">
-                                                <div class="flex items-center gap-3">
-                                                    <span
-                                                        class="w-4 h-4 rounded-full bg-[#D4B2B2] transition-all duration-300 border-2 border-[#D4B2B2] shadow-lg z-10">
+                                    <!-- approved/returned -->
+                                    @if (in_array($record->status, ['Approved', 'rejected', 'Returned', 'returned']))
+                                        <div class="flex items-start mb-6 relative pl-0.2">
+                                            <div class="gap-3">
+                                                <div class="flex flex-col gap-0.5 relative pl-0.5">
+                                                    <div class="flex items-center gap-3">
+                                                        <span
+                                                            class="w-4 h-4 rounded-full bg-[#D4B2B2] transition-all duration-300 border-2 border-[#D4B2B2] shadow-lg z-10">
+                                                        </span>
+                                                        <span class="font-semibold text-white">
+                                                            {{ $record->reviewer->name ?? 'Office of the Student Services' }}
+                                                        </span>
+                                                    </div>
+                                                    @if (in_array($record->status, ['Approved', 'under_review', 'approved', 'rejected', 'returned', 'Returned']))
+                                                        <span
+                                                            class="absolute left-[9px] -top-[14px] w-0.5 h-[32px] bg-white z-0"
+                                                            style="border-left: 0.2px dashed #fff; background: none;">
+                                                        </span>
+                                                    @endif
+                                                    <span class="absolute left-[9px] top-[18px] w-0.5 h-[14px] bg-white z-0"
+                                                        style="border-left: 0.2px dashed #fff; background: none;">
                                                     </span>
-                                                    <span class="font-semibold text-white">
-                                                        {{ $record->reviewer->name ?? 'Office of the Student Services' }}
-                                                    </span>
-                                                </div>
-                                                <!-- Connect the circle to the first circle if under review or beyond -->
-                                                <span class="absolute left-[9px] -top-[14px] w-0.5 h-[32px] bg-white z-0"
-                                                    style="border-left: 0.2px dashed #fff; background: none;">
-                                                </span>
-                                                <span class="absolute left-[9px] top-[18px] w-0.5 h-[14px] bg-white z-0"
-                                                    style="border-left: 0.2px dashed #fff; background: none;">
-                                                </span>
-                                                <div class="flex items-center gap-3">
-                                                    <span
-                                                        class="ml-[1.2px] mt-[0.8px] w-3 h-3 rounded-full transition-all duration-300
+                                                    <div class="flex items-center gap-3">
+                                                        <span
+                                                            class="ml-[1.2px] mt-[0.8px] w-3 h-3 rounded-full transition-all duration-300
                                                             @if ($record->status === 'under_review' || $record->status === 'Approved') bg-green-400
                                                             @elseif ($record->status === 'Returned' || $record->status === 'returned')
                                                                 bg-red-400
                                                             @else
                                                                 bg-[#D4B2B2] @endif
                                                             border-2 border-[#D4B2B2] shadow-lg z-10">
-                                                    </span>
-                                                    @if ($record->status === 'Approved')
-                                                        <span>
-                                                            Approved,
-                                                            {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'April 15 2025, 1:45PM' }}
                                                         </span>
-                                                    @elseif ($record->status === 'Returned' || $record->status === 'returned')
-                                                        <span>
-                                                            Returned, Submitted on
-                                                            {{ $record->returned_at ? $record->returned_at->format('F j Y, g:iA') : ($record->updated_at ? $record->updated_at->format('F j Y, g:iA') : 'N/A') }}
-                                                        </span>
-                                                        <div class="block text-red-400 text-l font-semibold mt-2">
-                                                            <span class="">
-                                                                This document was returned on
-                                                                {{ $record->returned_at ? $record->returned_at->format('F j Y, g:iA') : ($record->updated_at ? $record->updated_at->format('F j Y, g:iA') : 'N/A') }}.
+                                                        @if ($record->status === 'Approved')
+                                                            <span>
+                                                                Approved,
+                                                                {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'April 15 2025, 1:45PM' }}
                                                             </span>
-                                                        </div>
-                                                        <div class="div">
-                                                            @php
-                                                                $timelineMessage = \App\Models\DocumentTimeline::where(
-                                                                    'document_id',
-                                                                    $record->id,
-                                                                )
-                                                                    ->where('status', 'Returned')
-                                                                    ->orderByDesc('created_at')
-                                                                    ->value('message');
-                                                            @endphp
-                                                            @if ($timelineMessage)
-                                                                <div class="text-red-300 text-sm mt-2">
-                                                                    <strong>Return Reason:</strong>
-                                                                    {{ $timelineMessage }}
-                                                                </div>
-                                                            @endif
-                                                        </div>
-                                                        <div class="div">
-                                                            <button type="button" onclick="openReturnedImageModal()"
-                                                                class="mt-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition">
-                                                                Return Document
-                                                            </button>
-                                                        </div>
-                                                    @elseif ($record->status === 'rejected')
-                                                        <span>
-                                                            Rejected,
-                                                            {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'April 15 2025, 1:45PM' }}
-                                                        </span>
-                                                    @endif
+                                                        @elseif ($record->status === 'Returned' || $record->status === 'returned')
+                                                            <span>
+                                                                Returned, Submitted on
+                                                                {{ $record->returned_at ? $record->returned_at->format('F j Y, g:iA') : ($record->updated_at ? $record->updated_at->format('F j Y, g:iA') : 'N/A') }}
+                                                            </span>
+                                                            <div class="block text-red-400 text-l font-semibold mt-2">
+                                                                <span class="">
+                                                                    This document was returned on
+                                                                    {{ $record->returned_at ? $record->returned_at->format('F j Y, g:iA') : ($record->updated_at ? $record->updated_at->format('F j Y, g:iA') : 'N/A') }}.
+                                                                </span>
+                                                            </div>
+                                                            <div class="div">
+                                                                @php
+                                                                    $timelineMessage = \App\Models\DocumentTimeline::where(
+                                                                        'document_id',
+                                                                        $record->id,
+                                                                    )
+                                                                        ->where('status', 'Returned')
+                                                                        ->orderByDesc('created_at')
+                                                                        ->value('message');
+                                                                @endphp
+                                                                @if ($timelineMessage)
+                                                                    <div class="text-red-300 text-sm mt-2">
+                                                                        <strong>Return Reason:</strong>
+                                                                        {{ $timelineMessage }}
+                                                                    </div>
+                                                                @endif
+                                                            </div>
+                                                            <div class="div">
+                                                                <button type="button" onclick="openReturnedImageModal()"
+                                                                    class="mt-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition">
+                                                                    Return Document
+                                                                </button>
+                                                            </div>
+                                                        @elseif ($record->status === 'rejected')
+                                                            <span>
+                                                                Rejected,
+                                                                {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'April 15 2025, 1:45PM' }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {{-- Returned Reason Image Modal --}}
-                                    @if ($record->status === 'Returned' || $record->status === 'returned')
-                                        <div id="returnedImageModal"
-                                            class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                                            <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full relative">
-                                                <button onclick="closeReturnedImageModal()"
-                                                    class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
-                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor"
-                                                        viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                                <h3 class="text-lg font-semibold mb-4 text-black">Return Document</h3>
-                                                <div class="mb-2">
-                                                    <span class="font-semibold text-black">Title:</span>
-                                                    <span class="text-gray-800">{{ $record->subject }}</span>
-                                                </div>
-                                                <div class="mb-4">
-                                                    <span class="font-semibold text-black">Summary:</span>
-                                                    <textarea name="returned_summary" class="w-full p-2 border rounded text-black" rows="3"
-                                                        placeholder="Enter your summary here...">{{ old('returned_summary', $record->overview) }}</textarea>
-                                                </div>
-                                                <div class="mb-4">
-                                                    <label for="returned_attachment"
-                                                        class="block font-semibold text-black mb-1">Upload
-                                                        Document:</label>
-                                                    <input type="file" name="returned_attachment"
-                                                        id="returned_attachment"
-                                                        class="w-full p-2 border rounded text-black"
-                                                        accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" />
-                                                </div>
-                                                <div class="flex justify-end gap-2 mt-6">
+                                        {{-- Returned Reason Image Modal --}}
+                                        @if ($record->status === 'Returned' || $record->status === 'returned')
+                                            <div id="returnedImageModal"
+                                                class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                                                <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full relative">
                                                     <button onclick="closeReturnedImageModal()"
-                                                        class="bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded">
-                                                        Close
+                                                        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
                                                     </button>
-                                                    <button
-                                                        class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
-                                                        type="button" onclick="openFinalizeModal()">
-                                                        Return
-                                                    </button>
+                                                    <h3 class="text-lg font-semibold mb-4 text-black">Return Document</h3>
+                                                    <div class="mb-2">
+                                                        <span class="font-semibold text-black">Title:</span>
+                                                        <span class="text-gray-800">{{ $record->subject }}</span>
+                                                    </div>
+                                                    <div class="mb-4">
+                                                        <span class="font-semibold text-black">Summary:</span>
+                                                        <textarea name="returned_summary" class="w-full p-2 border rounded text-black" rows="3"
+                                                            placeholder="Enter your summary here...">{{ old('returned_summary', $record->overview) }}</textarea>
+                                                    </div>
+                                                    <div class="mb-4">
+                                                        <label for="returned_attachment"
+                                                            class="block font-semibold text-black mb-1">Upload
+                                                            Document:</label>
+                                                        <input type="file" name="returned_attachment"
+                                                            id="returned_attachment"
+                                                            class="w-full p-2 border rounded text-black"
+                                                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" />
+                                                    </div>
+                                                    <div class="flex justify-end gap-2 mt-6">
+                                                        <button onclick="closeReturnedImageModal()"
+                                                            class="bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded">
+                                                            Close
+                                                        </button>
+                                                        <button
+                                                            class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
+                                                            type="button" onclick="openFinalizeModal()">
+                                                            Return
+                                                        </button>
 
-                                                    <!-- Finalize Document Modal -->
-                                                    <div id="finalizeModal"
-                                                        class="hidden fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-                                                        <div
-                                                            class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full relative">
-                                                            <button onclick="closeFinalizeModal()"
-                                                                class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
-                                                                <svg class="w-6 h-6" fill="none" stroke="currentColor"
-                                                                    viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                                        stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                                                </svg>
-                                                            </button>
-                                                            <h3 class="text-lg font-semibold mb-4 text-black">Finalize
-                                                                Document</h3>
-                                                            <p class="mb-6 text-gray-700">Are you sure you want to
-                                                                finalize the return of this document?</p>
-                                                            <div class="flex justify-end gap-2">
+                                                        <!-- Finalize Document Modal -->
+                                                        <div id="finalizeModal"
+                                                            class="hidden fixed inset-0 z-60 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                                                            <div
+                                                                class="bg-white rounded-lg shadow-lg p-6 max-w-md w-full relative">
                                                                 <button onclick="closeFinalizeModal()"
-                                                                    class="bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded">
-                                                                    Cancel
+                                                                    class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+                                                                    <svg class="w-6 h-6" fill="none"
+                                                                        stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round"
+                                                                            stroke-linejoin="round" stroke-width="2"
+                                                                            d="M6 18L18 6M6 6l12 12" />
+                                                                    </svg>
                                                                 </button>
-                                                                <button
-                                                                    class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
-                                                                    type="submit">
-                                                                    Finalize
-                                                                </button>
-                                                                </form>
+                                                                <h3 class="text-lg font-semibold mb-4 text-black">Finalize
+                                                                    Document</h3>
+                                                                <p class="mb-6 text-gray-700">Are you sure you want to
+                                                                    finalize the return of this document?</p>
+                                                                <div class="flex justify-end gap-2">
+                                                                    <button onclick="closeFinalizeModal()"
+                                                                        class="bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded">
+                                                                        Cancel
+                                                                    </button>
+                                                                    <button
+                                                                        class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
+                                                                        type="submit">
+                                                                        Finalize
+                                                                    </button>
+                                                                    </form>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                    <script>
-                                                        function openFinalizeModal() {
-                                                            document.getElementById('finalizeModal').classList.remove('hidden');
-                                                        }
+                                                        <script>
+                                                            function openFinalizeModal() {
+                                                                document.getElementById('finalizeModal').classList.remove('hidden');
+                                                            }
 
-                                                        function closeFinalizeModal() {
-                                                            document.getElementById('finalizeModal').classList.add('hidden');
-                                                        }
-                                                    </script>
+                                                            function closeFinalizeModal() {
+                                                                document.getElementById('finalizeModal').classList.add('hidden');
+                                                            }
+                                                        </script>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <script>
-                                            function openReturnedImageModal() {
-                                                document.getElementById('returnedImageModal').classList.remove('hidden');
-                                            }
+                                            <script>
+                                                function openReturnedImageModal() {
+                                                    document.getElementById('returnedImageModal').classList.remove('hidden');
+                                                }
 
-                                            function closeReturnedImageModal() {
-                                                document.getElementById('returnedImageModal').classList.add('hidden');
-                                            }
-                                        </script>
+                                                function closeReturnedImageModal() {
+                                                    document.getElementById('returnedImageModal').classList.add('hidden');
+                                                }
+                                            </script>
+                                        @endif
                                     @endif
                                 </div>
                             </div>
@@ -384,42 +390,7 @@
                     <div id="commentCont" class="overflow-y-auto max-h-80 pr-2 flex flex-col-reverse scroll-smooth"
                         style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;">
                         @foreach ($comments->reverse() as $comment)
-                            <div class="border-b border-[#782626] pb-4 mb-4">
-                                <div class="flex items-start gap-3">
-                                    <div class="flex-shrink-0">
-                                        @if ($comment->sender && $comment->sender->profile_pic)
-                                            <!-- Show uploaded profile image -->
-                                            <div
-                                                class="border-1 border-gray-300 rounded-full w-10 h-10 bg-white flex items-center justify-center">
-                                                <img src="{{ asset('storage/' . $comment->sender->profile_pic) }}"
-                                                    alt="Profile" class="w-10 h-10 rounded-full object-cover">
-                                            </div>
-                                        @else
-                                            <div
-                                                class="w-10 h-10 bg-white rounded-full bg-maroon-700 flex items-center border-1 justify-center text-white text-3xl font-bold">
-                                                <img src="{{ asset('images/dprofile.svg') }}" class="w-10 h-10"
-                                                    alt="camera icon">
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="flex-1">
-                                        <div class="flex justify-between items-center">
-                                            <div>
-                                                <p class="font-medium truncate">
-                                                    <span
-                                                        class="text-gray-300 text-sm">{{ $comment->created_at->format('h:i A') }}</span>
-                                            </div>
-                                            <p class="text-white mt-1">{{ $comment->comment }}</p>
-                                            @if ($comment->attachment)
-                                                <div class="mt-2">
-                                                    <a href="{{ asset("storage/{$comment->attachment}") }}"
-                                                        target="_blank" class="text-blue-300 underline text-xs">View
-                                                        Attachment</a>
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
+                            <!-- Modal for comment attachment preview -->
                         @endforeach
                         @if ($comments->isEmpty())
                             <div class="text-gray-300 text-center">No comments yet.</div>
@@ -456,6 +427,17 @@
                                     </svg>
                                 </button>
                             </div>
+                        </div>
+                        <!-- Attachment preview -->
+                        <div id="attachmentPreview" class="hidden flex items-center bg-gray-100 rounded-md p-2 mt-2">
+                            <span id="attachmentName" class="text-xs text-gray-700 truncate flex-1"></span>
+                            <button type="button" id="removeAttachment" class="text-gray-500 hover:text-red-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
                     </form>
                 </div>
