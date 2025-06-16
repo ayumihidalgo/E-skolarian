@@ -591,6 +591,48 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // Specific Enter key handler for admin email (most important for your case)
+    if (adminEmailInput) {
+        adminEmailInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !isProcessing) {
+                e.preventDefault();
+                
+                // Only submit if the form is valid and we're on admin step
+                if (currentStep === 'admin' && submitAdminBtn && !submitAdminBtn.disabled) {
+                    submitAdminBtn.click();
+                }
+            }
+        });
+    }
+
+    // Also add for student email
+    if (studentEmailInput) {
+        studentEmailInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !isProcessing) {
+                e.preventDefault();
+                
+                // Only submit if the form is valid and we're on student step
+                if (currentStep === 'student' && submitStudentBtn && !submitStudentBtn.disabled) {
+                    submitStudentBtn.click();
+                }
+            }
+        });
+    }
+
+    // Add for custom role name
+    if (customRoleName) {
+        customRoleName.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !isProcessing) {
+                e.preventDefault();
+                
+                // Continue to next step if form is valid
+                if (currentStep === 'role' && continueToNextBtn && !continueToNextBtn.disabled) {
+                    continueToNextBtn.click();
+                }
+            }
+        });
+    }
+
     // Helper functions for processing state and validation reset
     function resetProcessingState() {
         isProcessing = false;
