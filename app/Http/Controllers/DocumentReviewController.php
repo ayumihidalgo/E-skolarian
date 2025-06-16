@@ -21,6 +21,7 @@ use Carbon\Carbon;
 class DocumentReviewController extends Controller
 {
     use LogsActivity;
+
     /**
      * Display the document review page with documents that need admin approval
      *

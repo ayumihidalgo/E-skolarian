@@ -357,42 +357,7 @@ function createDocumentRow(doc) {
     const tagParts = doc.tag.split(/[-_]/);
     const acronym = tagParts.length > 0 ? tagParts[0].toUpperCase() : '';
     
-    // Define color mapping similar to Blade template
-    const tagColors = {
-        'OSC': 'text-blue-500',
-        'ECE': 'text-red-500',
-        'PSY': 'text-purple-500',
-        'IT': 'text-orange-500',
-        'HR': 'text-pink-400',
-        'ACC': 'text-pink-400',
-        'EDU': 'text-blue-500',
-        'MAR': 'text-yellow-500',
-        'IE': 'text-green-500',
-        'TAP': 'text-green-500',
-        'SIGMA': 'text-yellow-900',
-        'AGDS': 'text-yellow-900',
-        'CHO': 'text-blue-500'
-    };
-    
-    // Map acronym to color
-    const colorKey = {
-        'ACAP': 'PSY',
-        'AECES': 'ECE',
-        'ELITE': 'IT',
-        'GIVE': 'EDU',
-        'JEHRA': 'HR',
-        'JMAP': 'MAR',
-        'JPIA': 'ACC',
-        'PIIE': 'IE',
-        'AGDS': 'AGDS',
-        'CHO': 'CHO',
-        'SIGMA': 'SIGMA',
-        'TAP': 'TAP',
-        'OSC': 'OSC',
-        'DOC': 'DOC'
-    }[acronym] || 'text-gray-500';
-    
-    const tagColor = tagColors[colorKey] || 'text-gray-500';
+    const tagColor = 'text-black';
     
     // Get doc type display name
     const predefinedDocTypes = [
@@ -423,9 +388,9 @@ function createDocumentRow(doc) {
             ${doc.formatted_date}
         </td>
         <td class="px-6 py-4 whitespace-nowrap relative">
-            <div class="flex items-center justify-between w-full">
-                <span title="${doc.type}">${displayType}</span>
-                ${!doc.is_opened ? '<span class="h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>' : ''}
+            <div class="flex justify-between items-center space-x-2 max-w-[150px]">
+                <span class="truncate" title="${doc.type}">${displayType}</span>
+                ${!doc.is_opened ? '<span class="flex-shrink-0 h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>' : ''}
             </div>
         </td>
     `;
@@ -461,7 +426,7 @@ function updateDocumentRow(row, document) {
         if (!document.is_opened && !dotIndicator) {
             // Add dot if document is unopened
             const span = document.createElement('span');
-            span.className = 'h-2 w-2 bg-[#7A1212] rounded-full inline-block';
+            span.className = 'flex-shrink-0 h-2 w-2 bg-[#7A1212] rounded-full inline-block';
             statusCell.appendChild(span);
         } else if (document.is_opened && dotIndicator) {
             // Remove dot if document is opened
@@ -470,15 +435,15 @@ function updateDocumentRow(row, document) {
     }
     
     // Flash effect to highlight updated row
-    row.classList.add('bg-yellow-100');
-    setTimeout(() => {
-        row.classList.remove('bg-yellow-100');
-        if (document.is_opened) {
-            row.classList.add('bg-[#D9ACAC33]');
-        } else {
-            row.classList.add('bg-white');
-        }
-    }, 2000);
+    // row.classList.add('bg-yellow-100');
+    // setTimeout(() => {
+    //     row.classList.remove('bg-yellow-100');
+    //     if (document.is_opened) {
+    //         row.classList.add('bg-[#D9ACAC33]');
+    //     } else {
+    //         row.classList.add('bg-white');
+    //     }
+    // }, 2000);
 }
 
 // Start polling when the document is loaded
@@ -2465,6 +2430,41 @@ function openCommentAttachmentPreview(filePath, fileType, fileName) {
     }
 }
 
+/**
+ * Simple client-side profanity check - basic implementation
+ * This only catches obvious cases, server-side validation is still essential
+ * @param {string} text The text to check
+ * @return {boolean} True if profanity detected
+ */
+function containsProfanity(text) {
+    if (!text) return false;
+    
+    // Full list of profanity words from config
+    const profanityList = [
+        // English profanity
+        'ass', 'asshole', 'bastard', 'bitch', 'cunt', 'damn', 
+        'fuck', 'fucking', 'shit', 'bullshit', 'piss', 'dick', 
+        'cock', 'pussy', 'whore', 'slut', 'motherfucker', 
+        'tits', 'crap', 'hell', 'idiot', 'stupid', 'dumb',
+        
+        // Tagalog profanity
+        'putangina', 'puta', 'punyeta', 'gago', 'tangina', 
+        'lintik', 'ulol', 'tarantado', 'hinayupak', 'inutil',
+        'buwisit', 'kupal', 'tanga', 'bobo', 'pakyu', 'leche',
+        'hayop', 'siraulo', 'ungas', 'tae', 'burat', 'pekpek',
+        'pakshet', 'anak ng puta', 'iniyot', 'yawa', 'bilat'
+    ];
+    
+    // Convert to lowercase for case-insensitive matching
+    const lowerText = text.toLowerCase();
+    
+    // Check for each word with word boundaries
+    return profanityList.some(word => {
+        const regex = new RegExp('\\b' + word + '\\b', 'i');
+        return regex.test(lowerText);
+    });
+}
+
 // Comment submitting
 function submitComment() {
     const input = document.getElementById('commentInput');
@@ -2483,6 +2483,20 @@ function submitComment() {
     // Validate - need at least a comment or a file
     if (!comment && !file) {
         showDocumentActionToast('comment', 'Please enter a comment or attach a file', false);
+        return;
+    }
+
+    // Check for profanity in comment
+    if (comment && containsProfanity(comment)) {
+        showDocumentActionToast('comment', 'Your comment contains inappropriate language. Please revise and try again.', false);
+        // Add visual indication
+        input.classList.add('border', 'border-red-500');
+        input.focus();
+        
+        // Remove highlight after a short delay
+        setTimeout(() => {
+            input.classList.remove('border', 'border-red-500');
+        }, 3000);
         return;
     }
     
@@ -2514,7 +2528,7 @@ function submitComment() {
     `;
     submitBtn.disabled = true;
 
-    fetch('/comments', {
+    fetch('/admin-comments', {
         method: 'POST',
         headers: {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -2523,10 +2537,24 @@ function submitComment() {
         body: formData
     })
     .then(response => {
-        // Check if the response is ok (status in the range 200-299)
+        // First get the content type
+        const contentType = response.headers.get('content-type');
+        
+        // Special handling for validation errors (422)
+        if (response.status === 422) {
+            // Parse the validation error response which should contain our profanity message
+            return response.json().then(errorData => {
+                // Return the data with success: false - don't throw an error yet
+                return {
+                    success: false,
+                    message: errorData.message || 'Your comment contains inappropriate language. Please revise and try again.'
+                };
+            });
+        }
+        
+        // For other non-2xx status codes
         if (!response.ok) {
             // Check if the response is HTML instead of JSON
-            const contentType = response.headers.get('content-type');
             if (contentType && contentType.includes('text/html')) {
                 // Return a custom error object that won't break JSON parsing
                 return { 

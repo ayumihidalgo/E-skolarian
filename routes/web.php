@@ -238,6 +238,7 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
     Route::post('/admin/archive-documents', [AdminDocumentController::class, 'archiveDocuments'])->name('admin.archiveDocuments');
     Route::post('/admin/select-all-documents', [AdminDocumentController::class, 'selectAllDocuments'])->name('admin.selectAllDocuments');
     Route::post('/admin/select-all-archived-documents', [AdminDocumentController::class, 'selectAllArchivedDocuments'])->name('admin.selectAllArchivedDocuments');
+    Route::post('admin/documents/check-updates', [DocumentReviewController::class, 'checkForUpdates'])->name('documents.check-updates');
 });
 // ---------------- Student ----------------
 Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
@@ -336,9 +337,10 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiv
 // ----------------------------------------
 // Comments (Shared)
 // ----------------------------------------
-Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+Route::post('/admin-comments', [CommentController::class, 'store'])->name('comments.store');
 Route::post('/comments', [CommentController::class, 'studentstore'])->name('comments.studentstore');
 Route::get('/comments/{documentId}', [CommentController::class, 'getComments'])->name('comments.get');
+Route::get('/comments/{document_id}/check-new', [CommentController::class, 'checkNewComments'])->name('comments.check-new');
 
 
 // ----------------------------------------
@@ -626,3 +628,26 @@ Route::get('/admin/documents/export/pdf', [App\Http\Controllers\DocumentExportCo
 // Add this route for real-time activity log fetching
 Route::get('/super-admin/activity-logs/new-since', [SuperAdminController::class, 'getNewActivitiesSince'])
     ->name('super-admin.activity-logs.new-since');
+
+Route::get('/test-profanity/{text}', function($text, \App\Services\ProfanityFilter $filter) {
+try {
+    $result = [
+        'text' => $text,
+        'has_profanity' => $filter->hasProfanity($text),
+    ];
+    
+    if (method_exists($filter, 'getDictionary')) {
+        $result['dictionary_size'] = count($filter->getDictionary());
+        $result['first_few_words'] = array_slice($filter->getDictionary(), 0, 5);
+    } else {
+        $result['dictionary_error'] = 'getDictionary method not found';
+    }
+    
+    return response()->json($result);
+} catch (\Exception $e) {
+    return response()->json([
+        'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString()
+    ], 500);
+}
+});
