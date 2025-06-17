@@ -5,6 +5,7 @@ window.hideActionToast = hideActionToast;
 window.openCommentAttachmentPreview = openCommentAttachmentPreview;
 // Added this line to make sortTable accessible globally
 window.sortTable = sortTable;
+window.reviewDecisionMade = false;
 
 const MESSAGE_CHARACTER_LIMITS = {
     'resubmissionMessage': 1000,   // For resubmission feedback (needs more detail)
@@ -949,6 +950,8 @@ function handleRowClick(row) {
     // Show the loader immediately when row is clicked
     showDocumentLoader();
     
+    window.reviewDecisionMade = false;
+
     // Store the real document ID in the global variable
     currentDocumentId = documentId;
     console.log("Set currentDocumentId to:", currentDocumentId);
@@ -1027,531 +1030,573 @@ function handleRowClick(row) {
     });
 }
 
+// Helper function to toggle between search icon and clear button
+function toggleSearchClearButton(showClear) {
+    const searchIcon = document.getElementById('searchIcon');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    
+    if (!searchIcon || !clearSearchBtn) return;
+    
+    if (showClear) {
+        searchIcon.classList.add('hidden');
+        clearSearchBtn.classList.remove('hidden');
+    } else {
+        searchIcon.classList.remove('hidden');
+        clearSearchBtn.classList.add('hidden');
+    }
+}
+
+// Function to initialize search and filters
+function initSearchAndFilters() {
+    // Get form elements
+    const searchInput = document.getElementById('searchInput');
+    const organizationFilter = document.getElementById('organizationFilter');
+    const documentTypeFilter = document.getElementById('documentTypeFilter');
+    const searchButton = document.getElementById('searchButton');
+    const clearButton = document.getElementById('clearButton');
+    
+    // Initialize from URL parameters on page load
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Set search input from URL
+    if (searchInput && urlParams.has('search')) {
+        searchInput.value = urlParams.get('search');
+    }
+    
+    // Set organization filter from URL
+    if (organizationFilter && urlParams.has('organization')) {
+        const orgValue = urlParams.get('organization');
+        // Check if the option exists before setting it
+        const optionExists = Array.from(organizationFilter.options).some(option => option.value === orgValue);
+        if (optionExists) {
+            organizationFilter.value = orgValue;
+        }
+    }
+    
+    // Set document type filter from URL
+    if (documentTypeFilter && urlParams.has('documentType')) {
+        const docTypeValue = urlParams.get('documentType');
+        
+        // Define the predefined document types
+        const predefinedDocTypes = [
+            "", "All", "Event Proposal", "General Plan", "Calendar", 
+            "Accomplishment Report", "Constitution", "Request Letter", 
+            "Off-Campus", "Petition"
+        ];
+        
+        // First check if the value exists in the options
+        const optionExists = Array.from(documentTypeFilter.options).some(option => option.value === docTypeValue);
+        
+        if (optionExists) {
+            // If the option exists, set it directly
+            documentTypeFilter.value = docTypeValue;
+        } else {
+            // If it doesn't exist in options, reset to default
+            documentTypeFilter.selectedIndex = 0;
+        }
+    }
+
+    // Clear search functionality
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            toggleSearchClearButton(false);
+            
+            // Trigger search with empty value
+            submitAjaxSearch();
+        });
+    }
+    
+    if (searchInput && organizationFilter && documentTypeFilter) {
+        // Remove existing event listeners first (to prevent duplicates)
+        searchInput.removeEventListener('input', handleSearchInput);
+        searchInput.removeEventListener('keydown', handleSearchKeydown);
+        organizationFilter.removeEventListener('change', handleFilterChange);
+        documentTypeFilter.removeEventListener('change', handleFilterChange);
+        
+        // Add debounced search input handler
+        let searchTimeout;
+        function handleSearchInput() {
+            clearTimeout(searchTimeout);
+            
+            // Show clear button as soon as user starts typing
+            if (searchInput.value.trim()) {
+                toggleSearchClearButton(true);
+            } else {
+                toggleSearchClearButton(false);
+            }
+            
+            searchTimeout = setTimeout(() => {
+                submitAjaxSearch();
+            }, 500); // 500ms debounce
+        }
+        searchInput.addEventListener('input', handleSearchInput);
+        
+        // Handle Enter key
+        function handleSearchKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                clearTimeout(searchTimeout);
+                submitAjaxSearch();
+            }
+        }
+        searchInput.addEventListener('keydown', handleSearchKeydown);
+        
+        // Add filter change listeners - apply filters immediately
+        function handleFilterChange() {
+            // Clear any pending search timeout
+            clearTimeout(searchTimeout);
+            
+            // Special handling for "Others" document type filter
+            if (documentTypeFilter && documentTypeFilter.value === "Others") {
+                // Show loader first (this line is missing)
+                showLoader();
+                
+                // Create a custom search parameter that indicates we want documents 
+                // with types not in the predefined list
+                const searchParams = new URLSearchParams(window.location.search);
+                
+                // Define the predefined document types (same list as above)
+                const predefinedDocTypes = [
+                    "", "All", "Event Proposal", "General Plan", "Calendar", 
+                    "Accomplishment Report", "Constitution", "Request Letter", 
+                    "Off-Campus", "Petition"
+                ];
+                
+                // Set a special parameter to indicate we want "other" document types
+                searchParams.set('documentType', 'Others');
+                searchParams.set('excludeTypes', predefinedDocTypes.filter(t => t !== "" && t !== "All").join(','));
+                
+                // Update URL
+                const newUrl = window.location.pathname + '?' + searchParams.toString();
+                history.pushState(null, '', newUrl);
+                
+                // Make the AJAX request with these parameters
+                fetch(newUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    updateTableContent(html);
+                    hideLoader(); // Add this to hide loader when done
+                })
+                .catch(error => {
+                    console.error('Error fetching results:', error);
+                    hideLoader(); // Add this to hide loader on error
+                });
+            } else {
+                // For normal filters, apply the combined search and filters
+                submitAjaxSearch();
+            }
+        }
+        organizationFilter.addEventListener('change', handleFilterChange);
+        documentTypeFilter.addEventListener('change', handleFilterChange);
+        
+        // Add search button handler if it exists
+        if (searchButton) {
+            searchButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                clearTimeout(searchTimeout);
+                submitAjaxSearch();
+            });
+        }
+        
+        // Add clear button handler if it exists
+        if (clearButton) {
+            clearButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Reset all filters and search
+                searchInput.value = '';
+                organizationFilter.selectedIndex = 0; // Use selectedIndex to reset to first option
+                documentTypeFilter.selectedIndex = 0; // Use selectedIndex to reset to first option
+                
+                // Reset URL and refresh content
+                history.pushState(null, '', window.location.pathname);
+                
+                // Refresh the page content with no filters
+                fetch(window.location.pathname, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    updateTableContent(html);
+                });
+            });
+        }
+        
+        // Initialize event listeners for the table
+        attachRowEventListeners();
+    }
+}
+
+// Function to submit search via AJAX
+function submitAjaxSearch() {
+    const searchInput = document.getElementById('searchInput');
+    const organizationFilter = document.getElementById('organizationFilter');
+    const documentTypeFilter = document.getElementById('documentTypeFilter');
+    const searchTerm = searchInput.value.trim();
+
+    // Toggle clear button based on search input
+    toggleSearchClearButton(!!searchTerm);
+    
+    // Show loading indicator
+    showLoader();
+    
+    // Initialize search parameters with current values
+    let searchParams = new URLSearchParams();
+    
+    // Always include the search term if it exists (even when empty)
+    if (searchTerm) {
+        // Check for full date format (MM/DD/YYYY)
+        const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+        const fullDateMatch = searchTerm.match(fullDatePattern);
+        
+        if (fullDateMatch) {
+            // Extract values for validation
+            const month = parseInt(fullDateMatch[1], 10);
+            const day = parseInt(fullDateMatch[2], 10);
+            const year = parseInt(fullDateMatch[3], 10);
+            
+            // Validate date values
+            if (isValidDate(month, day, year)) {
+                // Format as MM/DD/YYYY for consistency
+                searchParams.append('fullDate', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`);
+            } else {
+                // If invalid date, just use as regular search term
+                searchParams.append('search', searchTerm);
+            }
+        } else {
+            // Check for month/day pattern (M/D or MM/DD)
+            const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
+            const monthDayMatch = searchTerm.match(monthDayPattern);
+            
+            if (monthDayMatch && searchTerm.length <= 5) {
+                // Extract values for validation
+                const month = parseInt(monthDayMatch[1], 10);
+                const day = parseInt(monthDayMatch[2], 10);
+                
+                // Validate month and day values
+                if (isValidDate(month, day, new Date().getFullYear())) {
+                    // Format as MM/DD for consistency
+                    searchParams.append('monthDayPattern', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`);
+                } else {
+                    // If invalid month/day, just use as regular search term
+                    searchParams.append('search', searchTerm);
+                }
+            } else {
+                // Not a date pattern, use as direct search term
+                searchParams.append('search', searchTerm);
+            }
+        }
+    } else {
+        // If search is empty but we're coming from a search action, 
+        // explicitly include empty search to clear previous search
+        searchParams.append('search', '');
+    }
+    
+    // Always add filter values, regardless of search term
+    // This is key for maintaining both filters and search simultaneously
+    if (organizationFilter.value && organizationFilter.value !== '' && organizationFilter.value !== 'All') {
+        searchParams.append('organization', organizationFilter.value);
+    }
+    
+    if (documentTypeFilter.value && documentTypeFilter.value !== '' && documentTypeFilter.value !== 'All') {
+        searchParams.append('documentType', documentTypeFilter.value);
+    }
+    
+    // Update URL with all parameters
+    const newUrl = window.location.pathname + '?' + searchParams.toString();
+    history.pushState(null, '', newUrl);
+    
+    // Make AJAX request
+    fetch(newUrl, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Preserve current filter and search values before updating content
+        const currentSearchValue = searchInput.value;
+        const currentOrgValue = organizationFilter.value;
+        const currentDocTypeValue = documentTypeFilter.value;
+        
+        // Update table content
+        updateTableContent(html);
+        
+        // Restore filter and search values
+        if (searchInput) searchInput.value = currentSearchValue;
+        if (organizationFilter) organizationFilter.value = currentOrgValue || '';
+        if (documentTypeFilter) documentTypeFilter.value = currentDocTypeValue || '';
+        
+        hideLoader();
+    })
+    .catch(error => {
+        console.error('Error fetching results:', error);
+        hideLoader();
+        
+        // Show error message to user
+        const tableView = document.getElementById('tableView');
+        if (tableView) {
+            tableView.innerHTML = `
+                <div class="p-4 text-center">
+                    <div class="text-red-500 mb-2">Error loading results</div>
+                    <button id="retryButton" class="bg-[#7A1212] text-white px-4 py-2 rounded">
+                        Retry
+                    </button>
+                </div>
+            `;
+            
+            // Add retry button functionality
+            document.getElementById('retryButton').addEventListener('click', function() {
+                submitAjaxSearch();
+            });
+        }
+    });
+}
+
+// Function to attach event listeners to table rows
+function attachRowEventListeners() {
+    const rows = document.querySelectorAll('tr[data-document-id]');
+    rows.forEach(row => {
+        row.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleRowClick(this);
+        });
+    });
+    
+    // Also reattach pagination listeners if needed
+    attachPaginationEventListeners();
+}
+
+ // Helper function to update table content and reinitialize event listeners
+function updateTableContent(html) {
+    // Parse the HTML response
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Extract and update the table content
+    const newTable = doc.querySelector('#tableView');
+    if (newTable) {
+        const tableView = document.querySelector('#tableView');
+        
+        // Get current values BEFORE replacing content
+        const searchInput = document.getElementById('searchInput');
+        const orgFilter = document.getElementById('organizationFilter');
+        const docTypeFilter = document.getElementById('documentTypeFilter');
+        
+        const searchValue = searchInput ? searchInput.value : '';
+        const orgValue = orgFilter ? orgFilter.value : '';
+        const docTypeValue = docTypeFilter ? docTypeFilter.value : '';
+        
+        // Update the table content
+        tableView.innerHTML = newTable.innerHTML;
+        
+        // Restore input values AFTER replacing content
+        const newSearchInput = document.getElementById('searchInput');
+        const newOrgFilter = document.getElementById('organizationFilter');
+        const newDocTypeFilter = document.getElementById('documentTypeFilter');
+        
+        if (newSearchInput) {
+            newSearchInput.value = searchValue;
+            // Also restore the clear button state if there's a search value
+            toggleSearchClearButton(!!searchValue.trim());
+        }
+        
+        // Carefully restore dropdown values, checking if options exist
+        if (newOrgFilter && orgValue) {
+            const optionExists = Array.from(newOrgFilter.options).some(option => option.value === orgValue);
+            if (optionExists) {
+                newOrgFilter.value = orgValue;
+            }
+        }
+        
+        if (newDocTypeFilter && docTypeValue) {
+            const optionExists = Array.from(newDocTypeFilter.options).some(option => option.value === docTypeValue);
+            if (optionExists) {
+                newDocTypeFilter.value = docTypeValue;
+            }
+        }
+        
+        // Reattach all event listeners
+        attachRowEventListeners();
+    }
+    
+    // Display "no results" message if needed
+    const tableBody = document.querySelector('tbody');
+    if (tableBody && !tableBody.querySelector('tr')) {
+        const colSpan = document.querySelectorAll('thead th').length || 6;
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="${colSpan}" class="text-center py-4 text-gray-500">
+                    <div class="py-8">
+                        <p class="mb-4">No documents found matching your search criteria</p>
+                        <button id="clearFiltersBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">
+                            Clear All Filters
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+        
+        // Add event listener to the clear filters button
+        const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', function() {
+                // Reset search and filters
+                const searchInput = document.getElementById('searchInput');
+                const orgFilter = document.getElementById('organizationFilter');
+                const docTypeFilter = document.getElementById('documentTypeFilter');
+                
+                if (searchInput) searchInput.value = '';
+                if (orgFilter) orgFilter.selectedIndex = 0;
+                if (docTypeFilter) docTypeFilter.selectedIndex = 0;
+                
+                // Reset URL and reload
+                history.pushState(null, '', window.location.pathname);
+                location.reload();
+            });
+        }
+    }
+    
+    // Make sure search and filter event listeners are reattached
+    initSearchAndFilters();
+}
+
+// Function to attach pagination event listeners
+function attachPaginationEventListeners() {
+    const paginationLinks = document.querySelectorAll('.pagination-btn, .pagination-btn-prev, .pagination-btn-next');
+    paginationLinks.forEach(link => {
+        if (link.getAttribute('onclick') === 'return false;') return;
+        
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const url = this.getAttribute('href');
+            if (url && url !== '#') {
+                // Show loader
+                showLoader();
+                
+                // We need to preserve search and filter params when paginating
+                const currentUrl = new URL(url, window.location.origin);
+                const currentParams = new URLSearchParams(currentUrl.search);
+                
+                // Get current search and filter values from the form
+                const searchInput = document.getElementById('searchInput');
+                const orgFilter = document.getElementById('organizationFilter');
+                const docTypeFilter = document.getElementById('documentTypeFilter');
+                
+                // Add search parameter if it exists
+                if (searchInput && searchInput.value.trim()) {
+                    currentParams.set('search', searchInput.value.trim());
+                }
+                
+                // Add organization filter if set
+                if (orgFilter && orgFilter.value && orgFilter.value !== 'All') {
+                    currentParams.set('organization', orgFilter.value);
+                }
+                
+                // Add document type filter if set
+                if (docTypeFilter && docTypeFilter.value && docTypeFilter.value !== 'All') {
+                    currentParams.set('documentType', docTypeFilter.value);
+                }
+                
+                // Build the new URL with all parameters
+                const newPaginationUrl = currentUrl.pathname + '?' + currentParams.toString();
+                
+                // Update URL without page reload
+                history.pushState(null, '', newPaginationUrl);
+                
+                // Make AJAX request for pagination
+                fetch(newPaginationUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    updateTableContent(html);
+                    hideLoader();
+                })
+                .catch(error => {
+                    console.error('Error fetching paginated results:', error);
+                    hideLoader();
+                });
+            }
+        });
+    });
+}
+
+// Helper function for date validation
+function isValidDate(month, day, year) {
+    // Basic range checks
+    if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
+        return false;
+    }
+    
+    // Days in month validation
+    const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    
+    // Adjust February for leap years
+    if (month === 2) {
+        const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+        if (isLeapYear) {
+            if (day > 29) return false;
+        } else {
+            if (day > 28) return false;
+        }
+    } else if (day > daysInMonth[month]) {
+        return false;
+    }
+    
+    return true;
+}
+
+// Simple loader functions
+function showLoader() {
+    // Remove any existing loader
+    const oldLoader = document.getElementById('search-loader');
+    if (oldLoader) oldLoader.remove();
+
+    // Find the table container
+    const tableView = document.getElementById('tableView');
+    if (tableView) {
+        // Create loader overlay
+        const loader = document.createElement('div');
+        loader.id = 'search-loader';
+        loader.className = 'absolute inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-10';
+        loader.style.minHeight = '200px';
+        loader.innerHTML = `
+            <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
+                <svg class="animate-spin h-5 w-5 mr-3 text-[#7A1212]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Please Wait...</span>
+            </div>
+        `;
+        // Set position: relative to parent if not already set
+        if (getComputedStyle(tableView).position === 'static') {
+            tableView.style.position = 'relative';
+        }
+        tableView.appendChild(loader);
+    }
+}
+
+function hideLoader() {
+    const loader = document.getElementById('search-loader');
+    if (loader) {
+        loader.remove();
+    }
+}
+
 // Filter and Search Functions
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize the search functionality
     initSearchAndFilters();
-    
-    // Function to initialize search and filters
-    function initSearchAndFilters() {
-        // Get form elements
-        const searchInput = document.getElementById('searchInput');
-        const organizationFilter = document.getElementById('organizationFilter');
-        const documentTypeFilter = document.getElementById('documentTypeFilter');
-        const searchButton = document.getElementById('searchButton');
-        const clearButton = document.getElementById('clearButton');
-        
-        // Initialize from URL parameters on page load
-        const urlParams = new URLSearchParams(window.location.search);
-        
-        // Set search input from URL
-        if (searchInput && urlParams.has('search')) {
-            searchInput.value = urlParams.get('search');
-        }
-        
-        // Set organization filter from URL
-        if (organizationFilter && urlParams.has('organization')) {
-            const orgValue = urlParams.get('organization');
-            // Check if the option exists before setting it
-            const optionExists = Array.from(organizationFilter.options).some(option => option.value === orgValue);
-            if (optionExists) {
-                organizationFilter.value = orgValue;
-            }
-        }
-        
-        // Set document type filter from URL
-        if (documentTypeFilter && urlParams.has('documentType')) {
-            const docTypeValue = urlParams.get('documentType');
-            
-            // Define the predefined document types
-            const predefinedDocTypes = [
-                "", "All", "Event Proposal", "General Plan", "Calendar", 
-                "Accomplishment Report", "Constitution", "Request Letter", 
-                "Off-Campus", "Petition"
-            ];
-            
-            // First check if the value exists in the options
-            const optionExists = Array.from(documentTypeFilter.options).some(option => option.value === docTypeValue);
-            
-            if (optionExists) {
-                // If the option exists, set it directly
-                documentTypeFilter.value = docTypeValue;
-            } else {
-                // If it doesn't exist in options, reset to default
-                documentTypeFilter.selectedIndex = 0;
-            }
-        }
-        
-        if (searchInput && organizationFilter && documentTypeFilter) {
-            // Remove existing event listeners first (to prevent duplicates)
-            searchInput.removeEventListener('input', handleSearchInput);
-            searchInput.removeEventListener('keydown', handleSearchKeydown);
-            organizationFilter.removeEventListener('change', handleFilterChange);
-            documentTypeFilter.removeEventListener('change', handleFilterChange);
-            
-            // Add debounced search input handler
-            let searchTimeout;
-            function handleSearchInput() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(() => {
-                    submitAjaxSearch();
-                }, 3000); // 500ms debounce
-            }
-            searchInput.addEventListener('input', handleSearchInput);
-            
-            // Handle Enter key
-            function handleSearchKeydown(event) {
-                if (event.key === 'Enter') {
-                    event.preventDefault();
-                    clearTimeout(searchTimeout);
-                    submitAjaxSearch();
-                }
-            }
-            searchInput.addEventListener('keydown', handleSearchKeydown);
-            
-            // Add filter change listeners - apply filters immediately
-            function handleFilterChange() {
-                // Clear any pending search timeout
-                clearTimeout(searchTimeout);
-                
-                // Special handling for "Others" document type filter
-                if (documentTypeFilter && documentTypeFilter.value === "Others") {
-                    // Show loader first (this line is missing)
-                    showLoader();
-                    
-                    // Create a custom search parameter that indicates we want documents 
-                    // with types not in the predefined list
-                    const searchParams = new URLSearchParams(window.location.search);
-                    
-                    // Define the predefined document types (same list as above)
-                    const predefinedDocTypes = [
-                        "", "All", "Event Proposal", "General Plan", "Calendar", 
-                        "Accomplishment Report", "Constitution", "Request Letter", 
-                        "Off-Campus", "Petition"
-                    ];
-                    
-                    // Set a special parameter to indicate we want "other" document types
-                    searchParams.set('documentType', 'Others');
-                    searchParams.set('excludeTypes', predefinedDocTypes.filter(t => t !== "" && t !== "All").join(','));
-                    
-                    // Update URL
-                    const newUrl = window.location.pathname + '?' + searchParams.toString();
-                    history.pushState(null, '', newUrl);
-                    
-                    // Make the AJAX request with these parameters
-                    fetch(newUrl, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        updateTableContent(html);
-                        hideLoader(); // Add this to hide loader when done
-                    })
-                    .catch(error => {
-                        console.error('Error fetching results:', error);
-                        hideLoader(); // Add this to hide loader on error
-                    });
-                } else {
-                    // For normal filters, apply the combined search and filters
-                    submitAjaxSearch();
-                }
-            }
-            organizationFilter.addEventListener('change', handleFilterChange);
-            documentTypeFilter.addEventListener('change', handleFilterChange);
-            
-            // Add search button handler if it exists
-            if (searchButton) {
-                searchButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    clearTimeout(searchTimeout);
-                    submitAjaxSearch();
-                });
-            }
-            
-            // Add clear button handler if it exists
-            if (clearButton) {
-                clearButton.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    // Reset all filters and search
-                    searchInput.value = '';
-                    organizationFilter.selectedIndex = 0; // Use selectedIndex to reset to first option
-                    documentTypeFilter.selectedIndex = 0; // Use selectedIndex to reset to first option
-                    
-                    // Reset URL and refresh content
-                    history.pushState(null, '', window.location.pathname);
-                    
-                    // Refresh the page content with no filters
-                    fetch(window.location.pathname, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        updateTableContent(html);
-                    });
-                });
-            }
-            
-            // Initialize event listeners for the table
-            attachRowEventListeners();
-        }
-    }
-    
-    // Function to submit search via AJAX
-    function submitAjaxSearch() {
-        const searchInput = document.getElementById('searchInput');
-        const organizationFilter = document.getElementById('organizationFilter');
-        const documentTypeFilter = document.getElementById('documentTypeFilter');
-        const searchTerm = searchInput.value.trim();
-        
-        // Show loading indicator
-        showLoader();
-        
-        // Initialize search parameters with current values
-        let searchParams = new URLSearchParams();
-        
-        // Always include the search term if it exists (even when empty)
-        if (searchTerm) {
-            // Check for full date format (MM/DD/YYYY)
-            const fullDatePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-            const fullDateMatch = searchTerm.match(fullDatePattern);
-            
-            if (fullDateMatch) {
-                // Extract values for validation
-                const month = parseInt(fullDateMatch[1], 10);
-                const day = parseInt(fullDateMatch[2], 10);
-                const year = parseInt(fullDateMatch[3], 10);
-                
-                // Validate date values
-                if (isValidDate(month, day, year)) {
-                    // Format as MM/DD/YYYY for consistency
-                    searchParams.append('fullDate', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}/${year}`);
-                } else {
-                    // If invalid date, just use as regular search term
-                    searchParams.append('search', searchTerm);
-                }
-            } else {
-                // Check for month/day pattern (M/D or MM/DD)
-                const monthDayPattern = /^(\d{1,2})\/(\d{1,2})$/;
-                const monthDayMatch = searchTerm.match(monthDayPattern);
-                
-                if (monthDayMatch && searchTerm.length <= 5) {
-                    // Extract values for validation
-                    const month = parseInt(monthDayMatch[1], 10);
-                    const day = parseInt(monthDayMatch[2], 10);
-                    
-                    // Validate month and day values
-                    if (isValidDate(month, day, new Date().getFullYear())) {
-                        // Format as MM/DD for consistency
-                        searchParams.append('monthDayPattern', `${month.toString().padStart(2, '0')}/${day.toString().padStart(2, '0')}`);
-                    } else {
-                        // If invalid month/day, just use as regular search term
-                        searchParams.append('search', searchTerm);
-                    }
-                } else {
-                    // Not a date pattern, use as direct search term
-                    searchParams.append('search', searchTerm);
-                }
-            }
-        } else {
-            // If search is empty but we're coming from a search action, 
-            // explicitly include empty search to clear previous search
-            searchParams.append('search', '');
-        }
-        
-        // Always add filter values, regardless of search term
-        // This is key for maintaining both filters and search simultaneously
-        if (organizationFilter.value && organizationFilter.value !== '' && organizationFilter.value !== 'All') {
-            searchParams.append('organization', organizationFilter.value);
-        }
-        
-        if (documentTypeFilter.value && documentTypeFilter.value !== '' && documentTypeFilter.value !== 'All') {
-            searchParams.append('documentType', documentTypeFilter.value);
-        }
-        
-        // Update URL with all parameters
-        const newUrl = window.location.pathname + '?' + searchParams.toString();
-        history.pushState(null, '', newUrl);
-        
-        // Make AJAX request
-        fetch(newUrl, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.text())
-        .then(html => {
-            // Preserve current filter and search values before updating content
-            const currentSearchValue = searchInput.value;
-            const currentOrgValue = organizationFilter.value;
-            const currentDocTypeValue = documentTypeFilter.value;
-            
-            // Update table content
-            updateTableContent(html);
-            
-            // Restore filter and search values
-            if (searchInput) searchInput.value = currentSearchValue;
-            if (organizationFilter) organizationFilter.value = currentOrgValue || '';
-            if (documentTypeFilter) documentTypeFilter.value = currentDocTypeValue || '';
-            
-            hideLoader();
-        })
-        .catch(error => {
-            console.error('Error fetching results:', error);
-            hideLoader();
-            
-            // Show error message to user
-            const tableView = document.getElementById('tableView');
-            if (tableView) {
-                tableView.innerHTML = `
-                    <div class="p-4 text-center">
-                        <div class="text-red-500 mb-2">Error loading results</div>
-                        <button id="retryButton" class="bg-[#7A1212] text-white px-4 py-2 rounded">
-                            Retry
-                        </button>
-                    </div>
-                `;
-                
-                // Add retry button functionality
-                document.getElementById('retryButton').addEventListener('click', function() {
-                    submitAjaxSearch();
-                });
-            }
-        });
-    }
-    
-    // Helper function to update table content and reinitialize event listeners
-    function updateTableContent(html) {
-        // Parse the HTML response
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-        
-        // Extract and update the table content
-        const newTable = doc.querySelector('#tableView');
-        if (newTable) {
-            const tableView = document.querySelector('#tableView');
-            
-            // Get current values BEFORE replacing content
-            const searchInput = document.getElementById('searchInput');
-            const orgFilter = document.getElementById('organizationFilter');
-            const docTypeFilter = document.getElementById('documentTypeFilter');
-            
-            const searchValue = searchInput ? searchInput.value : '';
-            const orgValue = orgFilter ? orgFilter.value : '';
-            const docTypeValue = docTypeFilter ? docTypeFilter.value : '';
-            
-            // Update the table content
-            tableView.innerHTML = newTable.innerHTML;
-            
-            // Restore input values AFTER replacing content
-            const newSearchInput = document.getElementById('searchInput');
-            const newOrgFilter = document.getElementById('organizationFilter');
-            const newDocTypeFilter = document.getElementById('documentTypeFilter');
-            
-            if (newSearchInput) newSearchInput.value = searchValue;
-            
-            // Carefully restore dropdown values, checking if options exist
-            if (newOrgFilter && orgValue) {
-                const optionExists = Array.from(newOrgFilter.options).some(option => option.value === orgValue);
-                if (optionExists) {
-                    newOrgFilter.value = orgValue;
-                }
-            }
-            
-            if (newDocTypeFilter && docTypeValue) {
-                const optionExists = Array.from(newDocTypeFilter.options).some(option => option.value === docTypeValue);
-                if (optionExists) {
-                    newDocTypeFilter.value = docTypeValue;
-                }
-            }
-            
-            // Reattach all event listeners
-            attachRowEventListeners();
-        }
-        
-        // Display "no results" message if needed
-        const tableBody = document.querySelector('tbody');
-        if (tableBody && !tableBody.querySelector('tr')) {
-            const colSpan = document.querySelectorAll('thead th').length || 6;
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="${colSpan}" class="text-center py-4 text-gray-500">
-                        <div class="py-8">
-                            <p class="mb-4">No documents found matching your search criteria</p>
-                            <button id="clearFiltersBtn" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded">
-                                Clear All Filters
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            
-            // Add event listener to the clear filters button
-            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
-            if (clearFiltersBtn) {
-                clearFiltersBtn.addEventListener('click', function() {
-                    // Reset search and filters
-                    const searchInput = document.getElementById('searchInput');
-                    const orgFilter = document.getElementById('organizationFilter');
-                    const docTypeFilter = document.getElementById('documentTypeFilter');
-                    
-                    if (searchInput) searchInput.value = '';
-                    if (orgFilter) orgFilter.selectedIndex = 0;
-                    if (docTypeFilter) docTypeFilter.selectedIndex = 0;
-                    
-                    // Reset URL and reload
-                    history.pushState(null, '', window.location.pathname);
-                    location.reload();
-                });
-            }
-        }
-        
-        // Make sure search and filter event listeners are reattached
-        initSearchAndFilters();
-    }
-    
-    // Function to attach event listeners to table rows
-    function attachRowEventListeners() {
-        const rows = document.querySelectorAll('tr[data-document-id]');
-        rows.forEach(row => {
-            row.addEventListener('click', function(e) {
-                e.preventDefault();
-                handleRowClick(this);
-            });
-        });
-        
-        // Also reattach pagination listeners if needed
-        attachPaginationEventListeners();
-    }
-    
-    // Function to attach pagination event listeners
-    function attachPaginationEventListeners() {
-        const paginationLinks = document.querySelectorAll('.pagination-btn, .pagination-btn-prev, .pagination-btn-next');
-        paginationLinks.forEach(link => {
-            if (link.getAttribute('onclick') === 'return false;') return;
-            
-            link.addEventListener('click', function(e) {
-                e.preventDefault();
-                const url = this.getAttribute('href');
-                if (url && url !== '#') {
-                    // Show loader
-                    showLoader();
-                    
-                    // We need to preserve search and filter params when paginating
-                    const currentUrl = new URL(url, window.location.origin);
-                    const currentParams = new URLSearchParams(currentUrl.search);
-                    
-                    // Get current search and filter values from the form
-                    const searchInput = document.getElementById('searchInput');
-                    const orgFilter = document.getElementById('organizationFilter');
-                    const docTypeFilter = document.getElementById('documentTypeFilter');
-                    
-                    // Add search parameter if it exists
-                    if (searchInput && searchInput.value.trim()) {
-                        currentParams.set('search', searchInput.value.trim());
-                    }
-                    
-                    // Add organization filter if set
-                    if (orgFilter && orgFilter.value && orgFilter.value !== 'All') {
-                        currentParams.set('organization', orgFilter.value);
-                    }
-                    
-                    // Add document type filter if set
-                    if (docTypeFilter && docTypeFilter.value && docTypeFilter.value !== 'All') {
-                        currentParams.set('documentType', docTypeFilter.value);
-                    }
-                    
-                    // Build the new URL with all parameters
-                    const newPaginationUrl = currentUrl.pathname + '?' + currentParams.toString();
-                    
-                    // Update URL without page reload
-                    history.pushState(null, '', newPaginationUrl);
-                    
-                    // Make AJAX request for pagination
-                    fetch(newPaginationUrl, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => response.text())
-                    .then(html => {
-                        updateTableContent(html);
-                        hideLoader();
-                    })
-                    .catch(error => {
-                        console.error('Error fetching paginated results:', error);
-                        hideLoader();
-                    });
-                }
-            });
-        });
-    }
-    
-    // Helper function for date validation
-    function isValidDate(month, day, year) {
-        // Basic range checks
-        if (month < 1 || month > 12 || day < 1 || day > 31 || year < 1900 || year > 2100) {
-            return false;
-        }
-        
-        // Days in month validation
-        const daysInMonth = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-        
-        // Adjust February for leap years
-        if (month === 2) {
-            const isLeapYear = (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
-            if (isLeapYear) {
-                if (day > 29) return false;
-            } else {
-                if (day > 28) return false;
-            }
-        } else if (day > daysInMonth[month]) {
-            return false;
-        }
-        
-        return true;
-    }
-    
-    // Simple loader functions
-    function showLoader() {
-        // Remove any existing loader
-        const oldLoader = document.getElementById('search-loader');
-        if (oldLoader) oldLoader.remove();
-
-        // Find the table container
-        const tableView = document.getElementById('tableView');
-        if (tableView) {
-            // Create loader overlay
-            const loader = document.createElement('div');
-            loader.id = 'search-loader';
-            loader.className = 'absolute inset-0 flex items-center justify-center bg-transparent backdrop-blur-sm z-10';
-            loader.style.minHeight = '200px';
-            loader.innerHTML = `
-                <div class="bg-white p-5 rounded-lg shadow-lg flex items-center">
-                    <svg class="animate-spin h-5 w-5 mr-3 text-[#7A1212]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Please Wait...</span>
-                </div>
-            `;
-            // Set position: relative to parent if not already set
-            if (getComputedStyle(tableView).position === 'static') {
-                tableView.style.position = 'relative';
-            }
-            tableView.appendChild(loader);
-        }
-    }
-    
-    function hideLoader() {
-        const loader = document.getElementById('search-loader');
-        if (loader) {
-            loader.remove();
-        }
-    }
     
     // Handle browser back/forward buttons
     window.addEventListener('popstate', function() {
@@ -1618,7 +1663,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const orgFilter = document.getElementById('organizationFilter');
         const docTypeFilter = document.getElementById('documentTypeFilter');
         
-        if (searchInput) searchInput.value = '';
+        if (searchInput) {
+            searchInput.value = '';
+            toggleSearchClearButton(false);
+        }
         if (orgFilter) orgFilter.selectedIndex = 0;
         if (docTypeFilter) docTypeFilter.selectedIndex = 0;
         
@@ -2160,18 +2208,126 @@ function updateDocumentDetailsView(docData) {
 
 // Close button handler
 window.closeDetailsPanel = function() {
-    const tableView = document.getElementById('tableView');
-    const detailsView = document.getElementById('detailsView');
-
-    // Stop comment polling when closing panel
+    // Hide details view and show table view
+    document.getElementById('detailsView').classList.add('hidden');
+    document.getElementById('tableView').classList.remove('hidden');
+    
+    // Stop any active polling for comments
     stopCommentPolling();
+    
+    // Reset document ID
+    const previousDocumentId = currentDocumentId;
+    currentDocumentId = null;
     
     // Reset lastCommentTimestamp
     lastCommentTimestamp = '';
+    
+    // Check if a review decision was made
+    if (window.reviewDecisionMade) {
+        console.log('Reloading table after review decision...');
+        
+        // Reset the flag
+        window.reviewDecisionMade = false;
+        
+        // Force table reload with fresh data
+        reloadTableData();
+        
+        // Optional: remove the row if you want to immediately hide it
+        // This is useful if your backend is removing it from the list anyway
+        if (previousDocumentId) {
+            const documentRow = document.getElementById(`document-row-${previousDocumentId}`);
+            if (documentRow) {
+                // Either hide or remove the row
+                // documentRow.remove(); // Remove completely
+                documentRow.style.display = 'none'; // Or just hide it visually
+            }
+        }
+    }
+}
 
-    // Hide details view and show table view
-    detailsView.classList.add('hidden');
-    tableView.classList.remove('hidden');
+/**
+ * Reloads the table data via AJAX
+ */
+function reloadTableData() {
+    // Show a loading indicator if needed
+    const tableSection = document.getElementById('tableSection');
+    if (tableSection) {
+        tableSection.classList.add('opacity-50');
+    }
+    
+    // Get current search/filter parameters
+    const searchInput = document.getElementById('searchInput');
+    const organizationFilter = document.getElementById('organizationFilter');
+    const documentTypeFilter = document.getElementById('documentTypeFilter');
+    
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (searchInput && searchInput.value.trim()) {
+        params.append('search', searchInput.value.trim());
+    }
+    if (organizationFilter && organizationFilter.value) {
+        params.append('organization', organizationFilter.value);
+    }
+    if (documentTypeFilter && documentTypeFilter.value) {
+        params.append('documentType', documentTypeFilter.value);
+    }
+    
+    // Add a timestamp parameter to prevent browser caching
+    params.append('_t', new Date().getTime());
+    
+    // Construct URL with current filters
+    let url = window.location.pathname;
+    if (params.toString()) {
+        url += '?' + params.toString();
+    }
+    
+    // Fetch updated table data with cache-control header
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        }
+    })
+    .then(response => response.text())
+    .then(html => {
+        // Here's the important part - completely replace the table view content
+        const tableView = document.getElementById('tableView');
+        if (tableView) {
+            // Parse the incoming HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newTableView = doc.getElementById('tableView');
+            
+            if (newTableView) {
+                // Replace the entire table view contents
+                tableView.innerHTML = newTableView.innerHTML;
+                
+                // Re-attach event listeners to the new table rows
+                attachRowEventListeners();
+                
+                // Re-initialize search and filters
+                initSearchAndFilters();
+            }
+        }
+        
+        // Remove loading indicator
+        if (tableSection) {
+            tableSection.classList.remove('opacity-50');
+        }
+    })
+    .catch(error => {
+        console.error('Error reloading table data:', error);
+        
+        // Remove loading indicator on error
+        if (tableSection) {
+            tableSection.classList.remove('opacity-50');
+        }
+        
+        // Show error message to user
+        showDocumentActionToast('error', 'Failed to refresh document list. Please reload the page.', false);
+    });
 }
 
 // Function to format relative time (e.g., "2 hours ago", "1 day ago")
@@ -3162,6 +3318,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     // Close the modal
                     document.getElementById('finalizeConfirmationModal').classList.add('hidden');
+
+                    window.reviewDecisionMade = true;
                     
                     // Update the UI to reflect the approval
                     fetch(`/admin/documents/${currentDocumentId}/details`, {
@@ -3373,6 +3531,8 @@ document.getElementById('finalizeReturnBtn').addEventListener('click', function(
             
             // Reset unsaved changes flag
             hasUnsavedChanges = false;
+
+            window.reviewDecisionMade = true;
             
             // Show success toast
             showDocumentActionToast('return');
