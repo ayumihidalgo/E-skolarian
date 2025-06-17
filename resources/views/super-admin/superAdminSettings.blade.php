@@ -4,7 +4,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <!-- Content section -->
     <!-- This is the main content area for the super admin dashboard -->
-    @include('components.superadminNavigation')
+    @include('components.superAdminNavigation')
     <div id="main-content" class="flex flex-col w-full ml-0 transition-all duration-300 bg-[#F2F4F7]">
         <div class="flex-grow">
             @if (session('success'))
@@ -73,7 +73,7 @@
                                 {{ strtoupper($user->role_name) }}
                             </h3>
                             <!-- <p class="uppercase text-sm md:text-sm lg:text-lg tracking-wider font-semibold font-['Lexend']">
-                                                                                                                                                                                                                        {{ $user->role }}</p> -->
+                                                                                                                                                                                                                                        {{ $user->role }}</p> -->
                             <div class="hidden sm:block">
                                 <div id="" class="mt-2 text-sm relative flex items-center gap-3">
                                     <div
