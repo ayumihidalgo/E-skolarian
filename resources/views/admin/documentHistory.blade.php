@@ -72,6 +72,24 @@
                             class="absolute top-1/2 right-3 -translate-y-1/2 w-4 h-4 pointer-events-none" />
                     </div>
 
+                    <!-- Submitted to filter dropdown -->
+                    <div class="relative w-40">
+                        <select id="submittedToFilter"
+                            class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 truncate">
+                            <option class="bg-white text-black truncate" value="Submitted" disabled selected>Submitted to
+                            </option>
+                            <option class="bg-white text-black truncate" value="All">All Recipients</option>
+                            @if(isset($availableRoles))
+                                @foreach($availableRoles as $role)
+                                    <option class="bg-white text-black truncate" value="{{ $role }}">{{ $role }}</option>
+                                @endforeach
+                            @endif
+                        </select>
+                        <!-- Custom dropdown arrow -->
+                        <img src="{{ asset('images/dropdownIcon.svg') }}" alt="Dropdown Icon"
+                            class="absolute top-1/2 right-3 -translate-y-1/2 w-4 h-4 pointer-events-none" />
+                    </div>
+
                     <!-- Date filter button (replacing status dropdown) -->
                     <button id="dateFilterBtn"
                         class="px-4 py-2 rounded-full bg-[#7A1212] text-white w-40 hover:bg-[#DAA520] hover:text-white transition-colors duration-200 flex items-center justify-between">
@@ -554,18 +572,21 @@
                 // Fetch the new page content
                 fetch(url, {
                         headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'  // Request JSON response
                         }
                     })
-                    .then(response => response.text())
-                    .then(html => {
-                        // Create a temporary element to parse the HTML
+                    .then(response => response.json())  // Parse as JSON instead of text
+                    .then(data => {
+                        // Parse the HTML response
                         const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
+                        const doc = parser.parseFromString(data.html, 'text/html');
 
                         // Extract the table body content
-                        const newTableBody = doc.querySelector('#documentTable tbody').innerHTML;
-                        document.querySelector('#documentTable tbody').innerHTML = newTableBody;
+                        const newTableBody = doc.querySelector('#documentTable tbody');
+                        if (newTableBody) {
+                            document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+                        }
 
                         // Update pagination
                         const newPagination = doc.querySelector('#paginationContainer');
@@ -597,6 +618,10 @@
 
         // Initialize date filter display
         updateDateFilterDisplay(); // This will set it to "Date Range"
+
+        // Handle filter changes
+        const submittedToFilter = document.getElementById("submittedToFilter");
+        submittedToFilter.addEventListener("change", handleFilterChange);
     });
 
     // Select only documents visible on current page
@@ -650,6 +675,11 @@
         
         if (currentDateFilter.end) {
             params.append('end_date', currentDateFilter.end);
+        }
+
+        if (document.getElementById("submittedToFilter").value !== 'Submitted' && 
+            document.getElementById("submittedToFilter").value !== 'All') {
+            params.append('submitted_to', document.getElementById("submittedToFilter").value);
         }
 
         // Make AJAX request to get all document IDs
@@ -757,6 +787,14 @@
         }
     }
 
+    // Handle filter changes
+    function handleFilterChange() {
+        applyServerSideFilters();
+    }
+
+    // Add this function globally
+    window.handleFilterChange = handleFilterChange;
+
     // Handle individual checkbox changes
     function handleIndividualCheckboxChange(checkbox) {
         const documentId = checkbox.getAttribute('data-id');
@@ -823,6 +861,7 @@
         const organizationFilter = document.getElementById("organizationFilter");
         const typeFilter = document.getElementById("typeFilter");
         const searchInput = document.querySelector('input[placeholder="Search..."]');
+        const submittedToFilter = document.getElementById("submittedToFilter");
 
         // Log current filter values
         console.log('Current filter values:', {
@@ -858,6 +897,12 @@
             console.log('Added end date filter:', currentDateFilter.end);
         }
 
+        // Add submitted_to parameter if not default or All
+        if (submittedToFilter && submittedToFilter.value !== 'Submitted' && submittedToFilter.value !== 'All') {
+            params.append('submitted_to', submittedToFilter.value);
+            console.log('Added submitted_to filter:', submittedToFilter.value);
+        }
+        
         // Create the URL
         const url = `${window.location.pathname}?${params.toString()}`;
         console.log('Making request to:', url);
@@ -906,14 +951,22 @@
                 const newPagination = doc.querySelector('#paginationContainer');
                 const currentPagination = document.querySelector('#paginationContainer');
 
-                if (newPagination) {
+                // Get document count to determine if pagination should be visible
+                const documentRows = doc.querySelectorAll('#documentTable tbody tr[data-id]');
+                const hasDocuments = documentRows.length > 0;
+
+                if (newPagination && hasDocuments) {
+                    // Show and update pagination if we have documents and pagination HTML
                     if (currentPagination) {
                         currentPagination.outerHTML = newPagination.outerHTML;
                         console.log('Pagination updated');
                     }
-                } else if (currentPagination) {
-                    currentPagination.style.display = 'none';
-                    console.log('No pagination in response, hiding current pagination');
+                } else {
+                    // Hide pagination when no documents or no pagination HTML
+                    if (currentPagination) {
+                        currentPagination.classList.add('hidden');
+                        console.log('No documents or pagination in response, hiding pagination');
+                    }
                 }
 
                 // Update URL without reload for bookmarking
@@ -936,7 +989,6 @@
 
                 // Remove loading state
                 tableContainer.classList.remove('opacity-50');
-                console.log('Filter application completed');
             })
             .catch(error => {
                 console.error('Error applying filters:', error);
@@ -1101,11 +1153,13 @@
         // Reset all filter dropdowns to their default values
         const organizationFilter = document.getElementById("organizationFilter");
         const typeFilter = document.getElementById("typeFilter");
+        const submittedToFilter = document.getElementById("submittedToFilter");
         const searchInput = document.querySelector('input[placeholder="Search..."]');
 
         // Reset filter values
         organizationFilter.value = "Organization";
         typeFilter.value = "Type";
+        submittedToFilter.value = "Submitted";
         searchInput.value = "";
 
         // Reset date filter
@@ -1113,7 +1167,7 @@
             start: '',
             end: ''
         };
-        updateDateFilterDisplay(); // This will set it back to "Date Range"
+        updateDateFilterDisplay();
 
         // Show loading state
         const tableContainer = document.querySelector('#tableContainer');
@@ -1126,60 +1180,83 @@
         // Fetch all documents (no filters)
         const baseUrl = window.location.pathname;
 
+        // Improved fetch with better error handling
         fetch(baseUrl, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+            
+            // Check content type to handle both JSON and HTML appropriately
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json().then(data => {
+                    // If JSON contains HTML property, use that
+                    return { html: data.html, data };
+                });
+            } else {
+                // If HTML response, wrap it in an object
+                return response.text().then(text => ({ html: text }));
+            }
+        })
+        .then(result => {
+            // Parse the HTML response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(result.html, 'text/html');
+
+            // Update the table body
+            const newTableBody = doc.querySelector('#documentTable tbody');
+            if (newTableBody) {
+                document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+            }
+
+            // Update pagination
+            const newPagination = doc.querySelector('#paginationContainer');
+            const currentPagination = document.querySelector('#paginationContainer');
+            
+            if (newPagination && currentPagination) {
+                currentPagination.innerHTML = newPagination.innerHTML;
+            }
+
+            // Update URL without query parameters
+            window.history.pushState({}, '', baseUrl);
+
+            // Update export button state
+            updateExportButtonState();
+            
+            // Remove loading state
+            tableContainer.classList.remove('opacity-50');
+            
+            // If we have additional data from JSON response, update filters
+            if (result.data) {
+                if (result.data.availableOrganizations) {
+                    updateOrganizationFilterOptions(result.data.availableOrganizations);
                 }
-            })
-            .then(response => response.text())
-            .then(html => {
-                // Parse the HTML response
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-
-                // Update the table body
-                const newTableBody = doc.querySelector('#documentTable tbody');
-                if (newTableBody) {
-                    document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+                if (result.data.availableTypes) {
+                    updateTypeFilterOptions(result.data.availableTypes);
                 }
-
-                // Update pagination
-                const newPagination = doc.querySelector('#paginationContainer');
-                const currentPagination = document.querySelector('#paginationContainer');
-
-                if (newPagination) {
-                    if (currentPagination) {
-                        currentPagination.outerHTML = newPagination.outerHTML;
-                        currentPagination.style.display = 'block'; // Make sure it's visible
-                    }
-                } else if (currentPagination) {
-                    currentPagination.style.display = 'none';
-                }
-
-                // Update URL to base path (remove all query parameters)
-                window.history.pushState({}, '', baseUrl);
-
-                // Update select all checkbox state
-                const selectAllCheckbox = document.getElementById('selectAll');
-                if (selectAllCheckbox) {
-                    const visibleRows = document.querySelectorAll("#documentTable tbody tr[data-id]").length;
-                    selectAllCheckbox.disabled = visibleRows === 0;
-                    selectAllCheckbox.checked = false;
-                }
-
-                // Update export button state
-                updateExportButtonState();
-
-                // Remove loading state
-                tableContainer.classList.remove('opacity-50');
-            })
-            .catch(error => {
-                console.error('Error resetting filters:', error);
-                tableContainer.classList.remove('opacity-50');
-
-                // Fallback: if AJAX fails, do a page reload to base URL
-                window.location.href = window.location.pathname;
-            });
+            }
+            
+            // Show success toast for archive operation
+            showActionToast('Success', 'Documents archived successfully!', true);
+        })
+        .catch(error => {
+            console.error('Error refreshing document list:', error);
+            tableContainer.classList.remove('opacity-50');
+            
+            // Don't show error toast - instead show a refresh button
+            const refreshButton = document.createElement('button');
+            refreshButton.className = 'px-4 py-2 bg-[#7A1212] text-white rounded hover:bg-[#DAA520] mt-4';
+            refreshButton.textContent = 'Refresh List';
+            refreshButton.onclick = () => window.location.reload();
+            
+            const tableContainer = document.querySelector('#tableContainer');
+            tableContainer.appendChild(refreshButton);
+        });
     }
 
     // Sorting functionality
@@ -1192,90 +1269,99 @@
             'type' // Type - index 5
         ];
 
-        const columnName = columnMap[columnIndex - 1];
+       // Get the database column name based on index (adjust for checkbox column)
+    const columnName = columnMap[columnIndex - 1]; 
+    if (!columnName) return;
 
-        if (!columnName) return;
+    // Toggle sort direction for this column
+    sortDirection[columnIndex] = !sortDirection[columnIndex];
+    const direction = sortDirection[columnIndex] ? 'asc' : 'desc';
+    
+    // Show loading indicator
+    const tableContainer = document.querySelector('#tableContainer');
+    tableContainer.classList.add('opacity-50');
 
-        sortDirection[columnIndex] = !sortDirection[columnIndex];
-        const direction = sortDirection[columnIndex] ? 'asc' : 'desc';
+    // Build the query parameters - preserve ALL existing filters
+    const params = new URLSearchParams(window.location.search);
+    
+    // Update/add sort parameters
+    params.set('sort_by', columnName);
+    params.set('sort_dir', direction);
+    
+    // Create the URL with all parameters
+    const url = `${window.location.pathname}?${params.toString()}`;
 
-        const tableContainer = document.querySelector('#tableContainer');
-        tableContainer.classList.add('opacity-50');
+    // Fetch the sorted data
+    fetch(url, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Parse the HTML response
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data.html, 'text/html');
 
-        const orgFilter = document.getElementById("organizationFilter").value;
-        const typeFilter = document.getElementById("typeFilter").value;
-        const searchInput = document.querySelector('input[placeholder="Search..."]').value;
-
-        const params = new URLSearchParams(window.location.search);
-
-        params.set('sort_by', columnName);
-        params.set('sort_dir', direction);
-
-        if (orgFilter !== 'Organization') {
-            params.set('organization', orgFilter);
-        }
-
-        if (typeFilter !== 'Type') {
-            params.set('type', typeFilter);
-        }
-
-        if (searchInput.trim() !== '') {
-            params.set('search', searchInput);
-        }
-
-        // Include date filter if set
-        if (currentDateFilter.start) {
-            params.set('start_date', currentDateFilter.start);
-        }
-        if (currentDateFilter.end) {
-            params.set('end_date', currentDateFilter.end);
-        }
-
-        const url = `${window.location.pathname}?${params.toString()}`;
-
-        fetch(url, {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+            // Update the table body
+            const newTableBody = doc.querySelector('#documentTable tbody');
+            if (newTableBody) {
+                const currentTableBody = document.querySelector('#documentTable tbody');
+                if (currentTableBody) {
+                    currentTableBody.innerHTML = newTableBody.innerHTML;
                 }
-            })
-            .then(response => response.text())
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
+            }
 
-                const newTableBody = doc.querySelector('#documentTable tbody');
-                if (newTableBody) {
-                    document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
-                }
-
+            // Check if there are any document rows to determine if pagination should be shown
+            const documentRows = document.querySelectorAll('#documentTable tbody tr[data-id]');
+            const documentCount = documentRows.length;
+            const paginationContainer = document.querySelector('#paginationContainer');
+            
+            // Update pagination visibility based on document count
+            if (documentCount > 0) {
+                // If we have documents, show and update pagination
                 const newPagination = doc.querySelector('#paginationContainer');
-                const currentPagination = document.querySelector('#paginationContainer');
-
-                if (newPagination && currentPagination) {
-                    currentPagination.outerHTML = newPagination.outerHTML;
+                if (newPagination && paginationContainer) {
+                    paginationContainer.innerHTML = newPagination.innerHTML;
+                    paginationContainer.classList.remove('hidden');
                 }
-
-                window.history.pushState({}, '', url);
-
-                updateSortIndicator(columnIndex);
-
-                tableContainer.classList.remove('opacity-50');
-
-                // Reset selections after sort
-                selectedItems.clear();
-                updateSelectedCount();
-
-                // Uncheck "select all" checkbox
-                const selectAllCheckbox = document.getElementById('selectAll');
-                if (selectAllCheckbox) {
-                    selectAllCheckbox.checked = false;
+            } else {
+                // If no documents, hide pagination
+                if (paginationContainer) {
+                    paginationContainer.classList.add('hidden');
                 }
-            })
-            .catch(error => {
-                console.error('Error sorting table:', error);
-                tableContainer.classList.remove('opacity-50');
-            });
-    }
+            }
+
+            // Update URL without reload
+            window.history.pushState({}, '', url);
+
+            // Update sort indicator visually
+            updateSortIndicator(columnIndex);
+
+            // Reset selected items since we got new data
+            if (isSelectAllActive) {
+                deselectAllDocuments();
+            }
+            selectedItems.clear();
+            updateSelectedCount();
+
+            // Update export button state
+            updateExportButtonState();
+
+            // Remove loading state
+            tableContainer.classList.remove('opacity-50');
+        })
+        .catch(error => {
+            console.error('Error sorting table:', error);
+            tableContainer.classList.remove('opacity-50');
+        });
+}
 
     function updateSortIndicator(columnIndex) {
         const sortIcons = document.querySelectorAll('thead button img');
@@ -1534,6 +1620,64 @@
         
         if (!button.contains(e.target) && !dropdown.contains(e.target)) {
             dropdown.classList.add('hidden');
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        const paginationLink = e.target.closest('a.pagination-btn, a.pagination-btn-prev, a.pagination-btn-next');
+
+        if (paginationLink && !paginationLink.classList.contains('cursor-not-allowed')) {
+            e.preventDefault();
+            const url = paginationLink.getAttribute('href');
+
+            // Show loading indicator
+            const tableContainer = document.querySelector('#tableContainer');
+            tableContainer.classList.add('opacity-50');
+
+            // Fetch the new page content
+            fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'  // Request JSON response
+                    }
+                })
+                .then(response => response.json())  // Parse as JSON instead of text
+                .then(data => {
+                    // Parse the HTML response
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(data.html, 'text/html');
+
+                    // Extract the table body content
+                    const newTableBody = doc.querySelector('#documentTable tbody');
+                    if (newTableBody) {
+                        document.querySelector('#documentTable tbody').innerHTML = newTableBody.innerHTML;
+                    }
+
+                    // Update pagination
+                    const newPagination = doc.querySelector('#paginationContainer');
+                    if (newPagination) {
+                        const currentPagination = document.querySelector('#paginationContainer');
+                        if (currentPagination) {
+                            currentPagination.outerHTML = newPagination.outerHTML;
+                        }
+                    }
+
+                    // Restore selection state for visible documents
+                    restoreSelectionStateOnPage();
+
+                    // Update URL without reload
+                    window.history.pushState({}, '', url);
+
+                    // Update export button state
+                    updateExportButtonState();
+
+                    // Remove loading state
+                    tableContainer.classList.remove('opacity-50');
+                })
+                .catch(error => {
+                    console.error('Error loading page:', error);
+                    tableContainer.classList.remove('opacity-50');
+                });
         }
     });
 </script>
