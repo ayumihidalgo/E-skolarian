@@ -258,7 +258,47 @@
     </div>
 </div>
 
+<!-- Document Viewer Modal (PDF/Image Preview) -->
+<div id="documentViewerModal" class="hidden fixed inset-0 bg-black z-50 flex items-center justify-center backdrop-blur-sm">
+    <div class="bg-white w-11/12 h-5/6 rounded-lg flex flex-col">
+        <div class="flex justify-between items-center p-4 border-b">
+            <h3 id="documentTitle" class="font-semibold text-lg truncate">Document Preview</h3>
+            <div class="flex items-center space-x-4">
+                <!-- Tabs for Preview and Download -->
+                <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                    <button id="previewTab" class="py-1 px-4 rounded-lg bg-blue-500 text-white cursor-pointer">Preview</button>
+                    <button id="downloadTab" class="py-1 px-4 rounded-lg text-gray-700 cursor-pointer">Download</button>
+                </div>
+                <!-- Close Button -->
+                <button onclick="closeDocumentViewer()" class="text-gray-500 hover:text-gray-700 cursor-pointer">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="flex-1 overflow-hidden">
+            <!-- PDF Viewer -->
+            <div id="pdfViewer" class="w-full h-full overflow-auto"></div>
+            <!-- Image Viewer -->
+            <div id="imageViewer" class="hidden h-full flex items-center justify-center bg-gray-100"></div>
+            <!-- Download View -->
+            <div id="downloadView" class="hidden h-full flex items-center justify-center bg-gray-100 flex-col p-8">
+                <h3 id="downloadFileName" class="text-xl font-semibold mb-4">filename.pdf</h3>
+                <p class="text-gray-600 mb-8 text-center">Click the button below to download this document</p>
+                <a id="downloadButton" href="#" download class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Download Document
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Get all required elements
@@ -1145,8 +1185,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const attachmentDiv = document.getElementById('modalAttachment');
         if (report.attachment) {
             attachmentDiv.innerHTML = `
-            <a href="${report.attachment}" 
-               target="_blank" 
+            <a href="#" 
+               onclick="openDocumentViewer('${report.attachment}', '${report.attachment.split('/').pop()}'); return false;" 
                class="inline-flex items-center bg-yellow-500 px-4 py-2 rounded text-black font-bold hover:bg-yellow-600 transition-colors">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -1190,6 +1230,122 @@ document.addEventListener('DOMContentLoaded', function() {
             window.closeReportModal();
         }
     });
+
+    // PDF.js worker setup
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
+
+    window.openDocumentViewer = function(filePath, fileName) {
+        const modal = document.getElementById('documentViewerModal');
+        const pdfViewer = document.getElementById('pdfViewer');
+        const imageViewer = document.getElementById('imageViewer');
+        const downloadView = document.getElementById('downloadView');
+        const titleElement = document.getElementById('documentTitle');
+        const downloadFileName = document.getElementById('downloadFileName');
+        const downloadButton = document.getElementById('downloadButton');
+
+        // Set document title and download info
+        titleElement.textContent = fileName;
+        downloadFileName.textContent = fileName;
+        downloadButton.setAttribute('href', filePath);
+
+        // Clear previous content
+        pdfViewer.innerHTML = '';
+        imageViewer.innerHTML = '';
+
+        // Determine file type
+        const fileExtension = fileName.split('.').pop().toLowerCase();
+
+        // Initially show PDF viewer and hide others
+        pdfViewer.classList.remove('hidden');
+        imageViewer.classList.add('hidden');
+        downloadView.classList.add('hidden');
+
+        // Reset tab styling
+        document.getElementById('previewTab').classList.add('bg-blue-500', 'text-white');
+        document.getElementById('previewTab').classList.remove('text-gray-700');
+        document.getElementById('downloadTab').classList.remove('bg-blue-500', 'text-white');
+        document.getElementById('downloadTab').classList.add('text-gray-700');
+
+        // Handle different file types
+        if (['pdf'].includes(fileExtension)) {
+            // PDF file - use PDF.js
+            const loadingTask = pdfjsLib.getDocument(filePath);
+            loadingTask.promise.then(function(pdf) {
+                pdf.getPage(1).then(function(page) {
+                    const viewport = page.getViewport({scale: 1.5});
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    pdfViewer.appendChild(canvas);
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    page.render(renderContext);
+                });
+            }).catch(function(error) {
+                console.error('Error loading PDF:', error);
+                pdfViewer.innerHTML = '<div class="p-4 bg-red-100 text-red-700">Failed to load PDF. Please try downloading the file instead.</div>';
+            });
+        } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+            pdfViewer.classList.add('hidden');
+            imageViewer.classList.remove('hidden');
+            const img = document.createElement('img');
+            img.src = filePath;
+            img.className = 'max-h-full max-w-full';
+            imageViewer.appendChild(img);
+        } else {
+            pdfViewer.classList.add('hidden');
+            downloadView.classList.remove('hidden');
+        }
+
+        // Show the modal
+        modal.classList.remove('hidden');
+
+        // Set up tab switching (remove previous event listeners first)
+        const previewTab = document.getElementById('previewTab');
+        const downloadTab = document.getElementById('downloadTab');
+        const newPreviewTab = previewTab.cloneNode(true);
+        const newDownloadTab = downloadTab.cloneNode(true);
+        previewTab.parentNode.replaceChild(newPreviewTab, previewTab);
+        downloadTab.parentNode.replaceChild(newDownloadTab, downloadTab);
+
+        document.getElementById('previewTab').addEventListener('click', function() {
+            if (['pdf'].includes(fileExtension)) {
+                pdfViewer.classList.remove('hidden');
+                imageViewer.classList.add('hidden');
+            } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+                imageViewer.classList.remove('hidden');
+                pdfViewer.classList.add('hidden');
+            }
+            downloadView.classList.add('hidden');
+            this.classList.add('bg-blue-500', 'text-white');
+            this.classList.remove('text-gray-700');
+            document.getElementById('downloadTab').classList.remove('bg-blue-500', 'text-white');
+            document.getElementById('downloadTab').classList.add('text-gray-700');
+        });
+
+        document.getElementById('downloadTab').addEventListener('click', function() {
+            pdfViewer.classList.add('hidden');
+            imageViewer.classList.add('hidden');
+            downloadView.classList.remove('hidden');
+            this.classList.add('bg-blue-500', 'text-white');
+            this.classList.remove('text-gray-700');
+            document.getElementById('previewTab').classList.remove('bg-blue-500', 'text-white');
+            document.getElementById('previewTab').classList.add('text-gray-700');
+        });
+    }
+
+    function closeDocumentViewer() {
+        const modal = document.getElementById('documentViewerModal');
+        const pdfViewer = document.getElementById('pdfViewer');
+        const imageViewer = document.getElementById('imageViewer');
+        pdfViewer.innerHTML = '';
+        imageViewer.innerHTML = '';
+        modal.classList.add('hidden');
+    }
+    window.closeDocumentViewer = closeDocumentViewer;
 });
 </script>
 @endsection

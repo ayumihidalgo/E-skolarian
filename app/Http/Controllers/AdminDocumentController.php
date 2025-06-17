@@ -173,6 +173,14 @@ class AdminDocumentController extends Controller
         $availableTypes = array_unique($availableTypes);
         sort($availableTypes);
 
+        // Get available admin roles (submitted_to values)
+        $availableRoles = $baseFilterQuery->pluck('admin.role_name')
+            ->filter()
+            ->unique()
+            ->sort()
+            ->values()
+            ->toArray();
+
         // NOW APPLY THE ACTUAL FILTERS
         // Apply organization filter - CHANGED TO USE USERNAME like archivePage
         if ($request->has('organization') && $request->organization !== 'All' && $request->organization !== 'Organization') {
@@ -188,6 +196,11 @@ class AdminDocumentController extends Controller
                 // Filter for specific standard type
                 $query->where('submitted_documents.type', $request->type);
             }
+        }
+
+        // Apply submitted_to filter if present
+        if ($request->has('submitted_to') && $request->submitted_to !== 'All' && $request->submitted_to !== 'Submitted') {
+            $query->where('admin.role_name', $request->submitted_to);
         }
         
         // ADD DATE FILTERING 
@@ -271,12 +284,14 @@ class AdminDocumentController extends Controller
                 'html' => view('admin.documentHistory', compact('documents', 'orgMap', 'tagColors', 'standardTypes'))->render(),
                 'availableOrganizations' => $availableOrganizations,
                 'availableTypes' => $availableTypes,
+                'availableRoles' => $availableRoles,  // Add this
                 'debug' => [
                     'total_documents' => $documents->total(),
                     'available_orgs' => $availableOrganizations,
                     'filters_applied' => [
                         'organization' => $request->organization,
                         'type' => $request->type,
+                        'submitted_to' => $request->submitted_to, // Add this
                         'search' => $request->search,
                         'start_date' => $request->start_date,
                         'end_date' => $request->end_date
@@ -285,7 +300,15 @@ class AdminDocumentController extends Controller
             ]);
         }
         
-        return view('admin.documentHistory', compact('documents', 'orgMap', 'tagColors', 'standardTypes', 'availableOrganizations', 'availableTypes'));
+        return view('admin.documentHistory', compact(
+            'documents', 
+            'orgMap', 
+            'tagColors', 
+            'standardTypes', 
+            'availableOrganizations', 
+            'availableTypes',
+            'availableRoles'  // Add this
+        ));
     }
 
     public function archiveDocuments(Request $request)
@@ -634,6 +657,11 @@ class AdminDocumentController extends Controller
                 // Filter for specific standard type
                 $query->where('submitted_documents.type', $request->type);
             }
+        }
+
+        // Apply submitted_to filter
+        if ($request->has('submitted_to') && $request->submitted_to != 'All' && $request->submitted_to != 'Submitted') {
+            $query->where('admin.role_name', $request->submitted_to);
         }
 
         if ($request->has('search') && !empty($request->search)) {

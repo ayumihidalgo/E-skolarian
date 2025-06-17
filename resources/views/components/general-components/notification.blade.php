@@ -123,36 +123,40 @@
                         $link = $notification->url ?? '#';
                     @endphp
                     <a href="{{ $link }}" class="block">
-              <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
-    <div class="flex items-start justify-between gap-3">
-        <a href="{{ $link }}" class="flex items-start space-x-2 flex-1 min-w-0">
-            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
-            </svg>
-            <div class="flex flex-col min-w-0 flex-1">
-                <p class="font-bold text-black text-sm sm:text-base truncate">{{ Str::limit($notification->title, 50) }}</p>
-                <p class="text-xs sm:text-sm text-gray-500 break-words">{{ Str::limit($notification->message, 100) }}</p>
-                <p class="text-xs text-gray-400 mt-2">
-                    @if($notification->created_at->isToday())
-                        Today at {{ $notification->created_at->format('h:i A') }}
-                    @elseif($notification->created_at->isYesterday())
-                        Yesterday at {{ $notification->created_at->format('h:i A') }}
-                    @elseif($notification->created_at->isCurrentYear())
-                        {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
-                    @else
-                        {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
-                    @endif
-                </p>
+              <div class="p-4 pl-6  hover:bg-gray-100 transition-colors duration-200 relative" data-notification-id="{{ $notification->id }}" data-is-read="{{ $notification->is_read ? 'true' : 'false' }}">
+                <!-- Unread indicator on left side -->
+                @if(!$notification->is_read)
+                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full unread-indicator"></span>
+                @endif
+                <div class="flex items-start justify-between gap-3">
+                    <a href="{{ $link }}" class="flex items-start space-x-2 flex-1 min-w-0">
+                        <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
+                        </svg>
+                        <div class="flex flex-col min-w-0 flex-1">
+                            <p class="font-bold text-black text-sm sm:text-base truncate">{{ Str::limit($notification->title, 50) }}</p>
+                            <p class="text-xs sm:text-sm text-gray-500 break-words">{{ Str::limit($notification->message, 100) }}</p>
+                            <p class="text-xs text-gray-400 mt-2">
+                                @if($notification->created_at->isToday())
+                                    Today at {{ $notification->created_at->format('h:i A') }}
+                                @elseif($notification->created_at->isYesterday())
+                                    Yesterday at {{ $notification->created_at->format('h:i A') }}
+                                @elseif($notification->created_at->isCurrentYear())
+                                    {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
+                                @else
+                                    {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
+                                @endif
+                            </p>
+                        </div>
+                    </a>
+                    <div class="flex items-start pt-1 flex-shrink-0">
+                        <input type="checkbox" 
+                            class="notification-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+                            data-notification-id="{{ $notification->id }}"
+                        >
+                    </div>
+                </div>
             </div>
-        </a>
-        <div class="flex items-start pt-1 flex-shrink-0">
-            <input type="checkbox" 
-                class="notification-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
-                data-notification-id="{{ $notification->id }}"
-            >
-        </div>
-    </div>
-</div>
                 @endforeach
             </div>
           
@@ -173,36 +177,38 @@
                         $link = $notification->url ?? '#';
                     @endphp
                     <a href="{{ $link }}" class="block">
-     <div class="p-4 border-b hover:bg-gray-100 transition-colors duration-200" data-notification-id="{{ $notification->id }}">
-    <div class="flex items-start justify-between gap-3">
-        <a href="{{ $link }}" class="flex items-start space-x-2 flex-1 min-w-0">
-            <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
-            </svg>
-            <div class="flex flex-col min-w-0 flex-1">
-                <p class="font-bold text-black text-sm sm:text-base truncate">{{ Str::limit($notification->title, 50) }}</p>
-                <p class="text-xs sm:text-sm text-gray-500 break-words">{{ Str::limit($notification->message, 100) }}</p>
-                <p class="text-xs text-gray-400 mt-2">
-                    @if($notification->created_at->isToday())
-                        Today at {{ $notification->created_at->format('h:i A') }}
-                    @elseif($notification->created_at->isYesterday())
-                        Yesterday at {{ $notification->created_at->format('h:i A') }}
-                    @elseif($notification->created_at->isCurrentYear())
-                        {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
-                    @else
-                        {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
-                    @endif
-                </p>
+         <div class="p-4 pl-6  hover:bg-gray-100 transition-colors duration-200 relative" data-notification-id="{{ $notification->id }}">
+            <!-- Unread indicator on left side -->
+              <span class="absolute left-3 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-red-500 rounded-full unread-indicator"></span>
+            <div class="flex items-start justify-between gap-3">
+                <a href="{{ $link }}" class="flex items-start space-x-2 flex-1 min-w-0">
+                    <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path d="M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22ZM18 16V11C18 7.68629 16.2091 4.74121 13.5 3.51472V3C13.5 2.17157 12.8284 1.5 12 1.5C11.1716 1.5 10.5 2.17157 10.5 3V3.51472C7.79086 4.74121 6 7.68629 6 11V16L4 18V19H20V18L18 16Z" fill="currentColor"/>
+                    </svg>
+                    <div class="flex flex-col min-w-0 flex-1">
+                        <p class="font-bold text-black text-sm sm:text-base truncate">{{ Str::limit($notification->title, 50) }}</p>
+                        <p class="text-xs sm:text-sm text-gray-500 break-words">{{ Str::limit($notification->message, 100) }}</p>
+                        <p class="text-xs text-gray-400 mt-2">
+                            @if($notification->created_at->isToday())
+                                Today at {{ $notification->created_at->format('h:i A') }}
+                            @elseif($notification->created_at->isYesterday())
+                                Yesterday at {{ $notification->created_at->format('h:i A') }}
+                            @elseif($notification->created_at->isCurrentYear())
+                                {{ $notification->created_at->format('M d') }} at {{ $notification->created_at->format('h:i A') }}
+                            @else
+                                {{ $notification->created_at->format('M d, Y') }} at {{ $notification->created_at->format('h:i A') }}
+                            @endif
+                        </p>
+                    </div>
+                </a>
+                <div class="flex items-start pt-1 flex-shrink-0">
+                    <input type="checkbox" 
+                        class="notification-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
+                        data-notification-id="{{ $notification->id }}"
+                    >
+                </div>
             </div>
-        </a>
-        <div class="flex items-start pt-1 flex-shrink-0">
-            <input type="checkbox" 
-                class="notification-checkbox w-4 h-4 text-purple-600 rounded border-gray-300 focus:ring-purple-500"
-                data-notification-id="{{ $notification->id }}"
-            >
         </div>
-    </div>
-</div>
                    
                     @endforeach
                 @endif
@@ -540,61 +546,68 @@
    
        
 
-        // Handle "mark as read" on click for notifications in the "All" tab
-       document.querySelectorAll('#allNotifications a, #unreadNotifications a').forEach(link => {
-    link.addEventListener('click', async (e) => {
-        e.preventDefault();
-        const notificationElement = link.closest('[data-notification-id]');
-        if (!notificationElement) return;
-        const notificationId = notificationElement.dataset.notificationId;
+        // Handle "mark as read" on click for notifications
+        document.querySelectorAll('#allNotifications a, #unreadNotifications a').forEach(link => {
+            link.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const notificationElement = link.closest('[data-notification-id]');
+                if (!notificationElement) return;
+                const notificationId = notificationElement.dataset.notificationId;
 
-        // Your existing mark-as-read logic here...
-        try {
-            const response = await fetch(`/notifications/${notificationId}/mark-as-read`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                }
-            });
-            
-            if (response.ok) {
-                // Update the notification element to show it as read
-                notificationElement.classList.add('opacity-75');
+                try {
+                    const response = await fetch(`/notifications/${notificationId}/mark-as-read`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        // Update the notification element to show it as read
+                        notificationElement.classList.add('opacity-75');
+                        
+                        // Remove unread indicator
+                        const unreadIndicator = notificationElement.querySelector('.unread-indicator');
+                        if (unreadIndicator) {
+                            unreadIndicator.remove();
+                        }
+                        
+                        // Mark this notification as read in the data attribute
+                        notificationElement.dataset.isRead = 'true';
+                        
+                        document.querySelectorAll(`[data-notification-id="${notificationId}"]`).forEach(el => {
+                            if (el.closest('#unreadNotifications')) {
+                                el.remove();
+                            }
+                        });
                 
-             
-                document.querySelectorAll(`[data-notification-id="${notificationId}"]`).forEach(el => {
-                    if (el.closest('#unreadNotifications')) {
-                        el.remove();
+                        const checkbox = notificationElement.querySelector('.notification-checkbox');
+                        if (checkbox) {
+                            checkbox.checked = false; // Uncheck the box
+                            checkbox.disabled = true; // Disable the checkbox
+                        }
+                        
+                        // Update options menu state
+                        updateOptionsMenu();
+                        
+                        // Update badge count AFTER removing the notification
+                        updateNotificationBadge();
+                    } else {
+                        console.error('Failed to mark notification as read:', response.statusText);
                     }
-                });
-                
-          
-                const checkbox = notificationElement.querySelector('.notification-checkbox');
-                if (checkbox) {
-                    checkbox.checked = false; // Uncheck the box
-                    checkbox.disabled = true; // Disable the checkbox
+                } catch (error) {
+                    console.error('Error marking notification as read:', error);
                 }
                 
-                // Update options menu state
-                updateOptionsMenu();
+                // Close the notification panel
+                togglePanel();
                 
-                // Update badge count AFTER removing the notification
-                updateNotificationBadge();
-            } else {
-                console.error('Failed to mark notification as read:', response.statusText);
-            }
-        } catch (error) {
-            console.error('Error marking notification as read:', error);
-        }
-        
-        // Close the notification panel
-        togglePanel();
-        
-        // Navigate to the notification link
-        window.location.href = link.href;
-    });
-});
+                // Navigate to the notification link
+                window.location.href = link.href;
+            });
+        });
+
         // Handle options menu actions (mark as read, unread, delete, delete all)
         function getSelectedNotificationIds() {
             return Array.from(document.querySelectorAll('.notification-checkbox:checked'))
@@ -657,11 +670,26 @@
                         // Update visual state for read/unread
                         if (action === 'markAsRead') {
                             el.classList.add('opacity-75');
+                            // Remove unread indicator
+                            const unreadIndicator = el.querySelector('.unread-indicator');
+                            if (unreadIndicator) {
+                                unreadIndicator.remove();
+                            }
+                            el.dataset.isRead = 'true';
                             // Remove from unread notifications tab
                             const unreadEl = document.querySelector('#unreadNotifications [data-notification-id="' + id + '"]');
                             if (unreadEl) unreadEl.remove();
                         } else {
                             el.classList.remove('opacity-75');
+                            // Add unread indicator if not present
+                            const hasIndicator = el.querySelector('.unread-indicator');
+                            if (!hasIndicator) {
+                                // Add indicator to the left side of the notification
+                                const indicator = document.createElement('span');
+                                indicator.className = 'absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 bg-red-500 rounded-full unread-indicator';
+                                el.prepend(indicator);
+                            }
+                            el.dataset.isRead = 'false';
                             // Add back to unread notifications tab if not already there
                             const unreadEl = document.querySelector('#unreadNotifications [data-notification-id="' + id + '"]');
                             if (!unreadEl) {

@@ -14,11 +14,13 @@
         </a>
 </div>
         <div>
-        <h1 class="text-[35px] font-bold font-[Lexend] text-[#332B2B] mb-6">DEACTIVATED ACCOUNTS</h1>
+        <h1 class="font-bold font-[Lexend] text-[#332B2B] mb-6 text-[22px] sm:text-[26px] md:text-[30px] lg:text-[35px]">
+            DEACTIVATED ACCOUNTS
+        </h1>
         </div>
 
     <!-- Table Header and Container -->
-    <div class="overflow-x-auto overflow-y-hidden rounded-[25px] shadow bg-[#FFFFFFA6] mt-4" style="width: 100%; height: 540px; flex-shrink:0;">
+    <div class="overflow-x-auto overflow-y-auto rounded-[25px] shadow bg-[#FFFFFFA6] mt-4" style="width: 100%; height: 543px; flex-shrink:0;">
         <table class="min-w-full bg-[#625B5B] text-white rounded-t-[24px] table-fixed">
             <thead>
                 <tr>
@@ -26,7 +28,7 @@
                     <th class="w-[10%] px-6 py-3">
                         <!-- Empty header for profile picture -->
                     </th>
-                    <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] text-[25px] font-bold">
+                    <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] text-[25px] font-bold text-[18px] sm:text-[20px] md:text-[22px] lg:text-[25px]">
                         <div class="flex items-center">
                             <span class="whitespace-nowrap">Name</span>
                             <div class="flex flex-col ml-2">
@@ -45,7 +47,7 @@
                             </div>
                         </div>
                     </th>
-                    <th class="w-[30%] px-6 py-3 text-center font-['Manrope'] text-[25px] font-bold">
+                    <th class="w-[30%] px-6 py-3 text-center font-['Manrope'] text-[25px] font-bold text-[18px] sm:text-[20px] md:text-[22px] lg:text-[25px]">
                         <div class="flex items-center justify-center">
                             <span class="whitespace-nowrap">Role</span>
                             <div class="flex flex-col ml-2">
@@ -64,7 +66,7 @@
                             </div>
                         </div>
                     </th>
-                    <th class="w-[20%] px-6 py-3 text-right pr-4 font-['Manrope'] text-[25px] font-bold">
+                    <th class="w-[20%] px-6 py-3 text-right pr-4 font-['Manrope'] text-[25px] font-bold text-[18px] sm:text-[20px] md:text-[22px] lg:text-[25px]">
                         <div class="flex items-center justify-end">
                             <span class="whitespace-nowrap">Deactivation Date</span>
                             <div class="flex flex-col ml-2">
@@ -117,19 +119,19 @@
                 
                 <!-- Username Cell -->
                 <td class="w-[30%] px-6 py-4 text-left pl-4">
-                    <div class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[20px] text-black text-semibold">
+                    <div class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[20px] text-black text-semibold text-[15px] sm:text-[17px] md:text-[19px] lg:text-[20px]">
                         {{ $user->role === 'admin' ? $user->role_name : $user->username }}
                     </div>
                 </td>
                 </td>
-                <td class="w-[30%] px-6 py-4 text-center text-[Lexend] text-[20px] text-black text-semibold">
+                <td class="w-[30%] px-6 py-4 text-center text-[Lexend] text-[20px] text-black text-semibold text-[15px] sm:text-[17px] md:text-[19px] lg:text-[20px]">
                     @if($user->role === "admin")
                         {{ ucfirst($user->role) }}
                     @else
                         {{ $user->role_name }}
                     @endif
                 </td>
-                <td class="w-[20%] px-6 py-4 text-right pr-13 text-[Lexend] text-[20px] text-black text-semibold">
+                <td class="w-[20%] px-6 py-4 text-right pr-13 text-[Lexend] text-[20px] text-black text-semibold text-[15px] sm:text-[17px] md:text-[19px] lg:text-[20px]">
                     {{ $user->updated_at->format('F j, Y') }}
                 </td>
                 <!-- Reactivation Button Cell -->
@@ -161,7 +163,7 @@
         </table>
         @if($users->isEmpty())
             <div class="bg-[#D9D9D9] h-[480px] flex-grow flex items-center justify-center text-gray-600 rounded-b-[25px] px-6" style="height: 100%;">
-                <span class="font-['Manrope'] text-[25px] text-[#625B5BB2]">No deactivated users found.</span>
+                <span class="font-['Manrope'] text-[25px] text-[#625B5BB2] sm:text-[18px] md:text-[20px] lg:text-[20px]">No deactivated users found.</span>
             </div>
         @endif
     </div>

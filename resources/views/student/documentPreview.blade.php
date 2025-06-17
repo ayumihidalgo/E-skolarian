@@ -1,8 +1,8 @@
 @extends('base')
 
 @section('content')
-    @include('components.adminNavBarComponent')
-    @include('components.adminSidebarComponent')
+    @include('components.studentNavBarComponent')
+    @include('components.studentSidebarComponent')
 
 <!-- Main content area - positioned to the right of sidebar -->
 <div id="main-content" class="transition-all duration-300 ml-[20%]">
@@ -39,7 +39,7 @@
 
                 <!-- Submitting organization name -->
                 <p><strong class="text-white/60">From:</strong> <strong>{{ $document['organization'] }}</strong></p>
-                
+
                 <!-- Document title/subject -->
                 <p><strong class="text-white/60">Title:</strong> <strong>{{ $document['title'] }}</strong></p>
                 <!-- Document type/category -->
@@ -58,7 +58,7 @@
                     <div class="mt-2">
                         @if(isset($document['attachments']) && count($document['attachments']) > 0)
                             @foreach($document['attachments'] as $attachment)
-                                <a href="{{ asset('storage/' . $attachment['document_url']) }}" target="_blank" 
+                                <a href="{{ asset('storage/' . $attachment['document_url']) }}" target="_blank"
                                    class="flex items-center gap-2 p-3 bg-white/10 rounded-lg hover:bg-white/20 transition w-fit mb-2">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -70,7 +70,7 @@
                                 </a>
                             @endforeach
                         @elseif(isset($document['document_url']) && $document['document_url'])
-                            <a href="{{ asset('storage/' . $document['document_url']) }}" target="_blank" 
+                            <a href="{{ asset('storage/' . $document['document_url']) }}" target="_blank"
                                class="flex items-center gap-2 p-3 bg-white/10 rounded-lg hover:bg-white/20 transition w-fit">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -93,9 +93,9 @@
                         {{ $document['status'] }}
                     </span>
                 </p>
-                
+
                 <input type="hidden" id="isArchivedDocument" value="{{ isset($document['is_archived']) && $document['is_archived'] ? 'true' : 'false' }}">
-                
+
                 <!-- REMARKS SECTION IF STATUS IS REJECTED -->
                 @if($document['status'] === 'Rejected' && isset($document['remarks']))
                     <div class="mt-4">
@@ -132,10 +132,10 @@
         <div class="flex-1 overflow-hidden">
             <!-- PDF Viewer -->
             <div id="pdfViewer" class="w-full h-full overflow-auto"></div>
-            
+
             <!-- Image Viewer -->
             <div id="imageViewer" class="hidden h-full flex items-center justify-center bg-gray-100"></div>
-            
+
             <!-- Download View -->
             <div id="downloadView" class="hidden h-full flex items-center justify-center bg-gray-100 flex-col p-8">
                 <h3 id="downloadFileName" class="text-xl font-semibold mb-4">filename.pdf</h3>
@@ -156,14 +156,14 @@
 <script>
     // Set up PDF.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
-    
+
     // Get archived status once on page load
     const isArchived = document.getElementById('isArchivedDocument').value === 'true';
-    
+
     // Global variables to store event listeners
     let previewTabListener = null;
     let downloadTabListener = null;
-    
+
     // Hide download tab if document is archived
     document.addEventListener('DOMContentLoaded', function() {
         // Hide download tab if archived
@@ -173,10 +173,10 @@
                 downloadTab.style.display = 'none';
             }
         }
-        
+
         // Continue with existing code
         const attachmentLinks = document.querySelectorAll('a[href*="/storage/"]');
-        
+
         attachmentLinks.forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -195,79 +195,79 @@
         const titleElement = document.getElementById('documentTitle');
         const downloadFileName = document.getElementById('downloadFileName');
         const downloadButton = document.getElementById('downloadButton');
-        
+
         // Set document title and download info
         titleElement.textContent = fileName;
         downloadFileName.textContent = fileName;
         downloadButton.setAttribute('href', filePath);
-        
+
         // Clear previous content
         pdfViewer.innerHTML = '';
         imageViewer.innerHTML = '';
-        
+
         // Remove existing event listeners
         const previewTab = document.getElementById('previewTab');
         const downloadTab = document.getElementById('downloadTab');
-        
+
         if (previewTabListener) {
             previewTab.removeEventListener('click', previewTabListener);
         }
         if (downloadTabListener) {
             downloadTab.removeEventListener('click', downloadTabListener);
         }
-        
+
         // Determine file type
         const fileExtension = fileName.split('.').pop().toLowerCase();
-        
+
         // Initially show PDF viewer and hide others
         pdfViewer.classList.remove('hidden');
         imageViewer.classList.add('hidden');
         downloadView.classList.add('hidden');
-        
+
         // Reset tab styling
         previewTab.classList.add('bg-blue-500', 'text-white');
         previewTab.classList.remove('text-gray-700');
         downloadTab.classList.remove('bg-blue-500', 'text-white');
         downloadTab.classList.add('text-gray-700');
-        
+
         // Handle different file types
         if (['pdf'].includes(fileExtension)) {
             // PDF file - use PDF.js - RENDER ALL PAGES
             pdfViewer.innerHTML = '<div class="p-4 text-center">Loading PDF...</div>';
-            
+
             const loadingTask = pdfjsLib.getDocument(filePath);
             loadingTask.promise.then(function(pdf) {
                 // Clear loading message
                 pdfViewer.innerHTML = '';
-                
+
                 // Render all pages
                 const numPages = pdf.numPages;
-                
+
                 for (let pageNum = 1; pageNum <= numPages; pageNum++) {
                     pdf.getPage(pageNum).then(function(page) {
                         const viewport = page.getViewport({scale: 1.2});
-                        
+
                         // Create page container
                         const pageContainer = document.createElement('div');
                         pageContainer.className = 'mb-4 border border-gray-300 shadow-sm';
-                        
+
                         // Add page number label
                         const pageLabel = document.createElement('div');
                         pageLabel.className = 'bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700';
                         pageLabel.textContent = `Page ${pageNum} of ${numPages}`;
                         pageContainer.appendChild(pageLabel);
-                        
+
                         // Prepare canvas
                         const canvas = document.createElement('canvas');
                         const context = canvas.getContext('2d');
                         canvas.height = viewport.height;
                         canvas.width = viewport.width;
                         canvas.className = 'w-full h-auto';
-                        
+
                         // Add canvas to page container
                         pageContainer.appendChild(canvas);
                         pdfViewer.appendChild(pageContainer);
-                        
+
                         // Render PDF page
                         const renderContext = {
                             canvasContext: context,
@@ -284,7 +284,7 @@
             // Image file
             pdfViewer.classList.add('hidden');
             imageViewer.classList.remove('hidden');
-            
+
             const img = document.createElement('img');
             img.src = filePath;
             img.className = 'max-h-full max-w-full object-contain';
@@ -296,28 +296,28 @@
             // Other file types - show download view directly
             pdfViewer.classList.add('hidden');
             downloadView.classList.remove('hidden');
-            
+
             // Update tab styling for download view
             previewTab.classList.remove('bg-blue-500', 'text-white');
             previewTab.classList.add('text-gray-700');
             downloadTab.classList.add('bg-blue-500', 'text-white');
             downloadTab.classList.remove('text-gray-700');
         }
-        
+
         // Show the modal
         modal.classList.remove('hidden');
-        
+
         // Handle archived documents - prevent download view from showing
         if (isArchived) {
             const downloadTabElement = document.getElementById('downloadTab');
             if (downloadTabElement) {
                 downloadTabElement.style.display = 'none';
             }
-            
+
             // Add indicator that document is archived
             titleElement.textContent = fileName + ' (Archived - Preview Only)';
         }
-        
+
         // Set up tab switching - Create new event listeners
         previewTabListener = function() {
             if (['pdf'].includes(fileExtension)) {
@@ -328,35 +328,35 @@
                 pdfViewer.classList.add('hidden');
             }
             downloadView.classList.add('hidden');
-            
+
             // Update active tab styling
             this.classList.add('bg-blue-500', 'text-white');
             this.classList.remove('text-gray-700');
             downloadTab.classList.remove('bg-blue-500', 'text-white');
             downloadTab.classList.add('text-gray-700');
         };
-        
+
         downloadTabListener = function() {
             if (isArchived) {
                 alert('This document is archived and cannot be downloaded.');
                 return;
             }
-            
+
             // Show download view
             pdfViewer.classList.add('hidden');
             imageViewer.classList.add('hidden');
             downloadView.classList.remove('hidden');
-            
+
             // Update active tab styling
             this.classList.add('bg-blue-500', 'text-white');
             this.classList.remove('text-gray-700');
             previewTab.classList.remove('bg-blue-500', 'text-white');
             previewTab.classList.add('text-gray-700');
         };
-        
+
         // Add event listeners
         previewTab.addEventListener('click', previewTabListener);
-        
+
         // Only add event listener if download tab exists
         if (downloadTab) {
             downloadTab.addEventListener('click', downloadTabListener);
@@ -367,15 +367,15 @@
         const modal = document.getElementById('documentViewerModal');
         const pdfViewer = document.getElementById('pdfViewer');
         const imageViewer = document.getElementById('imageViewer');
-        
+
         // Clear viewers
         pdfViewer.innerHTML = '';
         imageViewer.innerHTML = '';
-        
+
         // Remove event listeners
         const previewTab = document.getElementById('previewTab');
         const downloadTab = document.getElementById('downloadTab');
-        
+
         if (previewTabListener) {
             previewTab.removeEventListener('click', previewTabListener);
             previewTabListener = null;
@@ -384,7 +384,7 @@
             downloadTab.removeEventListener('click', downloadTabListener);
             downloadTabListener = null;
         }
-        
+
         // Hide modal
         modal.classList.add('hidden');
     }

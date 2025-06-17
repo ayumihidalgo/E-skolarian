@@ -198,7 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
         usernameInput.addEventListener("input", function (e) {
             this.value = this.value
                 .replace(/^\s+/, "")
-                .replace(/[^a-zA-Z\s]/g, "")
+                .replace(/[^a-zA-Z\s'-]/g, "") // allow letters, spaces, hyphens, apostrophes
                 .replace(/\s+/g, " ");
 
             clearTimeout(usernameCheckTimeout);
@@ -619,8 +619,8 @@ document.addEventListener("DOMContentLoaded", function () {
             return false;
         }
 
-        if (!/^[a-zA-Z\s]+$/.test(username)) {
-            showUsernameError("Name can only contain letters and spaces");
+        if (!/^[a-zA-Z\s'-]+$/.test(username)) {
+            showUsernameError("Name can only contain letters, spaces, hyphens, and apostrophes");
             return false;
         }
 

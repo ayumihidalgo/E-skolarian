@@ -6,7 +6,7 @@
     <!-- Super admin word under the nav var -->
     <div class="min-h-screen bg-[#F2F4F7] bg-opacity-30 px-15 py-8">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-[35px] font-bold font-[Lexend] text-[#332B2B] ">SUPER ADMIN</h1>
+            <h1 class="text-[35px] font-bold font-[Lexend] text-[#332B2B]">SUPER ADMIN</h1>
             @if (session('success'))
                 <div id="Toast"
                     class="fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-green-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
@@ -166,9 +166,7 @@
                                             $preview = $isLong
                                                 ? mb_substr($announcement->content, 0, $maxLength) . '...'
                                                 : $announcement->content;
-                                            $meta = "Posted by {$announcement->user->role_name} on {$announcement->created_at->format(
-    'F j, Y',
-)}";
+                                            $meta = "Posted by {$announcement->user->role_name} on {$announcement->created_at->format('F j, Y',)}";
                                         @endphp
                                         <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                         @if ($isLong)
@@ -342,8 +340,8 @@
             </div>
 
             <!-- Table Header and Container -->
-            <div class="overflow-x-auto overflow-y-hidden rounded-[25px] shadow bg-[#D9D9D9]"
-                style="width: 100%; height: 540px; flex-shrink:0;">
+            <div class="overflow-x-auto overflow-y-auto rounded-[25px] shadow bg-[#D9D9D9]"
+                style="width: 100%; height: 543px; flex-shrink:0;">
                 <table class="min-w-full bg-[#DAA520] text-white rounded-t-[24px] table-fixed">
                     <thead>
                         <tr>
@@ -351,7 +349,8 @@
                             <th class="w-[10%] px-6 py-3">
                                 <!-- Empty header for profile picture -->
                             </th>
-                            <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] text-[25px] font-bold">
+                            <th class="w-[30%] px-6 py-3 text-left font-['Manrope'] font-bold
+                                text-[18px] sm:text-[20px] md:text-[22px] lg:text-[25px]">
                                 <div class="flex items-center">
                                     <span class="whitespace-nowrap">Name</span>
                                     <div class="flex flex-col ml-2">
@@ -372,7 +371,8 @@
                                     </div>
                                 </div>
                             </th>
-                            <th class="w-[30%] px-6 py-3 text-center font-['Manrope'] text-[25px] font-bold">
+                            <th class="w-[30%] px-6 py-3 text-center font-['Manrope'] font-bold
+                                text-[18px] sm:text-[20px] md:text-[22px] lg:text-[25px]">
                                 <div class="flex items-center justify-center">
                                     <span class="whitespace-nowrap">Role</span>
                                     <div class="flex flex-col ml-2">
@@ -393,7 +393,8 @@
                                     </div>
                                 </div>
                             </th>
-                            <th class="w-[30%] px-6 py-3 text-right pr-40 font-['Manrope'] text-[25px] font-bold">
+                            <th class="w-[30%] px-6 py-3 text-right pr-40 font-['Manrope'] font-bold
+                                text-[18px] sm:text-[20px] md:text-[22px] lg:text-[25px]">
                                 <div class="flex items-center justify-end">
                                     <span class="whitespace-nowrap">Creation Date</span>
                                     <div class="flex flex-col ml-2">
@@ -439,18 +440,21 @@
                                 <!-- Username Cell -->
                                 <td class="w-[30%] px-6 py-4 text-left pl-4">
                                     <div
-                                        class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-[20px] text-black text-semibold">
+                                        class="max-w-[400px] overflow-hidden text-ellipsis whitespace-nowrap text-[Lexend] text-black text-semibold
+                                            text-[15px] sm:text-[17px] md:text-[19px] lg:text-[20px]">
                                         {{ $user->role === 'admin' ? $user->role_name : $user->username }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 text-center text-[Lexend] text-[20px] text-black text-semibold">
+                                <td class="px-6 py-4 text-center text-[Lexend] text-black text-semibold
+                                    text-[15px] sm:text-[17px] md:text-[19px] lg:text-[20px]">
                                     @if ($user->role === 'admin')
                                         {{ ucfirst($user->role) }}
                                     @else
                                         {{ $user->role_name }}
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-right pr-45 text-[Lexend] text-[20px] text-black text-semibold">
+                                <td class="px-6 py-4 text-right pr-45 text-[Lexend] text-black text-semibold
+                                    text-[15px] sm:text-[17px] md:text-[19px] lg:text-[20px]">
                                     {{ $user->created_at->format('F j, Y') }}
                                 </td>
 
@@ -463,7 +467,8 @@
                 @if ($users->isEmpty())
                     <div class="bg-[#D9D9D9] h-[340px] flex-grow flex items-center justify-center text-gray-600 rounded-b-[25px] px-6"
                         style="height: 100%;">
-                        <span class="font-['Manrope'] text-[20px] text-[#625B5BB2]">No added user.</span>
+                        <span class="font-['Manrope'] text-[#625B5BB2]
+                            text-[16px] sm:text-[18px] md:text-[20px] lg:text-[20px]">No added user.</span>
                     </div>
                 @endif
             </div> <!-- This closes the table container div -->
@@ -1402,8 +1407,30 @@
         }
 
         function closePostAnnouncementModal() {
-            document.getElementById('postAnnouncementModal').classList.add('hidden');
-        }
+                // Get the form element
+        const announcementForm = document.getElementById('announcementForm');
+        
+        // Reset all form fields
+        announcementForm.reset();
+        
+        // Clear any displayed error messages
+        document.getElementById('titleError').style.display = 'none';
+        document.getElementById('contentError').style.display = 'none';
+        
+        // Reset specific UI elements
+        
+        // Hide schedule fields if they were showing
+        document.getElementById('scheduleFields').classList.add('hidden');
+        
+        // Hide custom audience dropdown if it was showing
+        document.getElementById('customAudienceDropdown').classList.add('hidden');
+        
+        // Set audience radio back to 'all' (default)
+        document.getElementById('audienceAll').checked = true;
+        
+        // Hide the modal
+        document.getElementById('postAnnouncementModal').classList.add('hidden');
+    }
 
         // Schedule toggle
         document.getElementById('scheduleCheckbox').addEventListener('change', function() {

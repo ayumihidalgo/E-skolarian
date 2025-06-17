@@ -78,6 +78,11 @@
         30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
         40%, 60% { transform: translate3d(4px, 0, 0); }
     }
+
+    .search-icon-transition {
+        transition: opacity 0.2s ease-in-out;
+    }
+    
 </style>
 
 @section('content')
@@ -99,8 +104,17 @@
                             <!-- Search Bar - Full width on mobile -->
                             <div class="relative w-full md:w-1/2 md:mr-2">
                                 <input id="searchInput" type="text" class="w-full rounded-full border-1 border-[#9099A5] bg-white h-10 p-4" placeholder="Search...">
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                    <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                    <!-- Search icon - visible by default -->
+                                    <svg id="searchIcon" class="h-5 w-5 text-gray-400 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                    <!-- Clear search button - hidden by default -->
+                                    <button id="clearSearchBtn" class="hidden h-5 w-5 text-gray-500 hover:text-gray-700 cursor-pointer" type="button">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
                             
@@ -261,7 +275,7 @@
                                                 <!-- Organization -->
                                                 <td class="px-6 py-4 whitespace-nowrap">
                                                     <div class="truncate w-48" title="{{ $document->organization == 'Unknown' ? 'Guest' : $document->organization }}">
-                                                        {{ $document->organization == 'Unknown' ? 'Guest' : $document->organization }}
+                                                        {{ $document->organization == 'Unknown' ? 'Class Representative' : $document->organization }}
                                                     </div>
                                                 </td>
 
@@ -295,7 +309,7 @@
                                                             // Display "Others" if the document type is not in the predefined list
                                                             $displayType = in_array($document->type, $predefinedDocTypes) ? $document->type : 'Others';
                                                         @endphp
-                                                        <div class="flex justify-between items-center space-x-2 max-w-[150px]">
+                                                        <div class="flex justify-between items-center space-x-2 w-full">
                                                             <span class="truncate" title="{{ $document->type }}">{{ $displayType }}</span>
                                                             @if(!$document->is_opened)
                                                                 <span class="flex-shrink-0 h-2 w-2 bg-[#7A1212] rounded-full inline-block"></span>
@@ -317,32 +331,73 @@
                         @endif
 
 
+                        <!-- Pagination Section -->
                         <div class="flex justify-center mt-4">
-                            <!-- Pagination Section -->
                             @if ($documents->isNotEmpty())
                                 <div class="flex justify-center">
                                     <nav>
-                                        <ul class="inline-flex items-center space-x-2">
+                                        <ul class="inline-flex items-center">
+                                            <!-- Previous Page Button -->
                                             <li>
                                                 <a href="{{ $documents->onFirstPage() ? '#' : $documents->previousPageUrl() }}"
-                                                class="pagination-btn-prev px-3 py-1 rounded-lg {{ $documents->onFirstPage() ? 'text-gray-600 cursor-not-allowed bg-gray-200' : 'text-black hover:bg-gray-300' }}"
+                                                class="pagination-btn-prev flex items-center justify-center w-10 h-10 rounded-md {{ $documents->onFirstPage() ? 'text-gray-400 cursor-not-allowed bg-gray-100' : 'text-black hover:bg-gray-200' }}"
                                                 @if($documents->onFirstPage()) onclick="return false;" @endif>
                                                     &lt;
                                                 </a>
                                             </li>
 
-                                            @foreach ($documents->getUrlRange(1, $documents->lastPage()) as $page => $url)
+                                            <!-- First Page -->
+                                            <li>
+                                                <a href="{{ $documents->url(1) }}"
+                                                class="pagination-btn flex items-center justify-center w-10 h-10 mx-1 rounded-md {{ $documents->currentPage() == 1 ? 'bg-[#7A1212] text-white' : 'bg-gray-100 text-black hover:bg-gray-200' }}">
+                                                    1
+                                                </a>
+                                            </li>
+
+                                            <!-- Left Ellipsis (if needed) -->
+                                            @if($documents->currentPage() > 3)
                                                 <li>
-                                                    <a href="{{ $url }}"
-                                                    class="pagination-btn px-3 py-1 rounded-lg {{ $documents->currentPage() == $page ? 'bg-[#4D0F0F] text-white' : 'bg-gray-200 hover:bg-gray-300' }}">
-                                                        {{ $page }}
+                                                    <span class="flex items-center justify-center w-10 h-10 mx-1 text-gray-700">
+                                                        ...
+                                                    </span>
+                                                </li>
+                                            @endif
+
+                                            <!-- Pages around current page -->
+                                            @for($i = max(2, $documents->currentPage() - 1); $i <= min($documents->lastPage() - 1, $documents->currentPage() + 1); $i++)
+                                                @if($i > 1 && $i < $documents->lastPage())
+                                                    <li>
+                                                        <a href="{{ $documents->url($i) }}"
+                                                        class="pagination-btn flex items-center justify-center w-10 h-10 mx-1 rounded-md {{ $documents->currentPage() == $i ? 'bg-[#7A1212] text-white' : 'bg-gray-100 text-black hover:bg-gray-200' }}">
+                                                            {{ $i }}
+                                                        </a>
+                                                    </li>
+                                                @endif
+                                            @endfor
+
+                                            <!-- Right Ellipsis (if needed) -->
+                                            @if($documents->currentPage() < $documents->lastPage() - 2)
+                                                <li>
+                                                    <span class="flex items-center justify-center w-10 h-10 mx-1 text-gray-700">
+                                                        ...
+                                                    </span>
+                                                </li>
+                                            @endif
+
+                                            <!-- Last Page (if not page 1) -->
+                                            @if($documents->lastPage() > 1)
+                                                <li>
+                                                    <a href="{{ $documents->url($documents->lastPage()) }}"
+                                                    class="pagination-btn flex items-center justify-center w-10 h-10 mx-1 rounded-md {{ $documents->currentPage() == $documents->lastPage() ? 'bg-[#7A1212] text-white' : 'bg-gray-100 text-black hover:bg-gray-200' }}">
+                                                        {{ $documents->lastPage() }}
                                                     </a>
                                                 </li>
-                                            @endforeach
+                                            @endif
 
+                                            <!-- Next Page Button -->
                                             <li>
                                                 <a href="{{ $documents->hasMorePages() ? $documents->nextPageUrl() : '#' }}"
-                                                class="pagination-btn-next px-3 py-1 rounded-lg {{ $documents->hasMorePages() ? 'text-black hover:bg-gray-300' : 'text-gray-600 cursor-not-allowed bg-gray-200' }}"
+                                                class="pagination-btn-next flex items-center justify-center w-10 h-10 ml-1 rounded-md {{ $documents->hasMorePages() ? 'text-black hover:bg-gray-200' : 'text-gray-400 cursor-not-allowed bg-gray-100' }}"
                                                 @if(!$documents->hasMorePages()) onclick="return false;" @endif>
                                                     &gt;
                                                 </a>
@@ -371,7 +426,7 @@
                     </div>
 
                     <!-- Mobile view - stacks vertically -->
-                    <div id="detailsComment" class="p-3 md:p-6 flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0 w-full max-w-7xl">
+                    <div id="detailsComment" class="p-3 md:p-6 flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0 w-full">
                         <!-- Document Details - Full width on mobile -->
                         <div id="documentDetails" class="w-full md:w-2/3 bg-[#4D0F0F] rounded-2xl p-4 md:p-6 space-y-4 md:space-y-6">
                             <!-- Header -->
