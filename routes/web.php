@@ -255,6 +255,7 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveSt
     Route::post('student/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('student.settings.verifyRecoveryCode');
     Route::post('student/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('student.settings.removeRecoveryEmail');
     Route::get('/student/archivePage', [StudentDocumentController::class, 'archivePage'])->name('student.archivePage');
+    Route::post('/student/document/{id}/return-attachment', [StudentTrackerController::class, 'saveReturnedAttachment'])->name('student.document.return-attachment');
 });
 
 Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
@@ -629,25 +630,25 @@ Route::get('/admin/documents/export/pdf', [App\Http\Controllers\DocumentExportCo
 Route::get('/super-admin/activity-logs/new-since', [SuperAdminController::class, 'getNewActivitiesSince'])
     ->name('super-admin.activity-logs.new-since');
 
-Route::get('/test-profanity/{text}', function($text, \App\Services\ProfanityFilter $filter) {
-try {
-    $result = [
-        'text' => $text,
-        'has_profanity' => $filter->hasProfanity($text),
-    ];
-    
-    if (method_exists($filter, 'getDictionary')) {
-        $result['dictionary_size'] = count($filter->getDictionary());
-        $result['first_few_words'] = array_slice($filter->getDictionary(), 0, 5);
-    } else {
-        $result['dictionary_error'] = 'getDictionary method not found';
+Route::get('/test-profanity/{text}', function ($text, \App\Services\ProfanityFilter $filter) {
+    try {
+        $result = [
+            'text' => $text,
+            'has_profanity' => $filter->hasProfanity($text),
+        ];
+
+        if (method_exists($filter, 'getDictionary')) {
+            $result['dictionary_size'] = count($filter->getDictionary());
+            $result['first_few_words'] = array_slice($filter->getDictionary(), 0, 5);
+        } else {
+            $result['dictionary_error'] = 'getDictionary method not found';
+        }
+
+        return response()->json($result);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
     }
-    
-    return response()->json($result);
-} catch (\Exception $e) {
-    return response()->json([
-        'error' => $e->getMessage(),
-        'trace' => $e->getTraceAsString()
-    ], 500);
-}
 });
