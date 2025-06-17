@@ -143,7 +143,7 @@
             <p>This is an automated message, please do not reply to this email.</p>
             <p class="contact-info">
                 <strong>Contact No:</strong> 0961 802 3780<br>
-                <strong>Email:</strong> starosa@pup.edu.ph
+                <strong>Email:</strong> eskolarian@gmail.com
             </p>
         </div>
     </div>
