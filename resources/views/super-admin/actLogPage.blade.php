@@ -20,7 +20,7 @@
         </div>
 
         <!-- Activity Table -->
-        <div class="bg-white rounded-[25px] shadow-lg overflow-hidden mb-12 relative" style="width: 100%; height: 725px; flex-shrink:0;">
+        <div class="bg-white rounded-[25px] shadow-lg overflow-hidden mb-12 relative w-full responsive-activity-log-container" style="min-height: 420px;">
             <!-- Table Header -->
             <div class="px-4 md:px-8 py-4 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
                 <h2 class="text-[22px] md:text-[30px] font-bold text-[#161616] font-[Lexend]">ACTIVITY LOG</h2>
@@ -62,25 +62,19 @@
             </div>
 
             <!-- Table Content -->
-            <div class="overflow-x-auto" style="height: calc(100% - 110px);">
+            <div 
+                class="overflow-x-auto"
+                style="max-height: 60vh; min-height: 200px;"
+                id="activityTableWrapper"
+            >
                 <table class="w-full">
                     <thead class="bg-white">
                         <tr>
-                            <th
-                                class="w-[10%] px-12 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">
-                                Timestamp</th>
-                            <th
-                                class="w-[25%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">
-                                Name</th>
-                            <th
-                                class="w-[10%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">
-                                Action</th>
-                            <th
-                                class="w-[10%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">
-                                Target</th>
-                            <th
-                                class="w-[25%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">
-                                Description</th>
+                            <th class="w-[10%] px-12 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">Timestamp</th>
+                            <th class="w-[25%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">Name</th>
+                            <th class="w-[10%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">Action</th>
+                            <th class="w-[10%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">Target</th>
+                            <th class="w-[25%] px-6 py-4 text-left text-xl font-semibold text-[#000000] font-[Lexend]">Description</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200" id="activityTableBody">
@@ -143,26 +137,43 @@
                                 </td>
                             </tr>
                         @endforeach
-                        <tr id="noResultsRow" class="hidden">
-                            <td colspan="5" class="text-center py-12 text-gray-500 font-[Lexend]">
-                                <div class="flex flex-col items-center justify-center">
-                                    <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
-                                    <span class="text-lg font-semibold mb-2">No activities found</span>
-                                    <span class="text-l text-gray-400">Try adjusting your search or filter to find what
-                                        you're looking for.</span>
-                                    <button id="clearSearchBtn"
-                                        class="mt-6 px-4 py-2 bg-[#7A1212] text-white rounded-lg font-[Lexend] hover:bg-red-800 transition cursor-pointer focus:outline-none focus:ring-0">
-                                        Clear Search
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
                     </tbody>
                 </table>
+                
+                <!-- Move no results outside of tbody -->
+                <div id="noResultsRow" class="hidden bg-white h-[600px]">
+                    <div class="text-center py-12 text-gray-500 font-[Lexend]">
+                        <div class="flex flex-col items-center justify-center">
+                            <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
+                            <span class="text-lg font-semibold mb-2">No activities found</span>
+                            <span class="text-l text-gray-400">Try adjusting your search or filter to find what you're looking for.</span>
+                            <button id="clearSearchBtn"
+                                class="mt-6 px-4 py-2 bg-[#7A1212] text-white rounded-lg font-[Lexend] hover:bg-red-800 transition cursor-pointer focus:outline-none focus:ring-0">
+                                Clear Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
+            <script>
+                // Responsive scroll for table: only scrollable on small screens
+                function updateTableScroll() {
+                    const wrapper = document.getElementById('activityTableWrapper');
+                    if (!wrapper) return;
+                    if (window.innerWidth < 1280) {
+                        wrapper.style.overflowY = 'auto';
+                        wrapper.style.maxHeight = '60vh';
+                    } else {
+                        wrapper.style.overflowY = 'visible';
+                        wrapper.style.maxHeight = 'none';
+                    }
+                }
+                window.addEventListener('resize', updateTableScroll);
+                document.addEventListener('DOMContentLoaded', updateTableScroll);
+            </script>
 
             <!-- Pagination - Fixed at bottom with proper positioning -->
-            <div class="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 rounded-b-[25px]">
+            <div class="bg-white border-t border-gray-200 px-4 py-3 rounded-b-[25px]">
                 <div class="flex justify-center">
                     <nav>
                         <ul class="inline-flex items-center space-x-2">
@@ -280,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentEndDate = null;
     let currentSearchTerm = '';
 
-    // Add these variables after the existing ones
+    
     let lastUpdateTimestamp = null;
     let realTimeInterval = null;
     const REAL_TIME_INTERVAL = 5000; // 5 seconds
@@ -328,14 +339,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const newActivities = await fetchNewActivities();
             
             if (newActivities.length > 0) {
-                // Add new activities to the beginning of the array
-                allActivities = [...newActivities, ...allActivities];
+                // Filter out activities that already exist in allActivities by id
+                const existingIds = new Set(allActivities.map(a => a.id));
+                const uniqueNewActivities = newActivities.filter(a => !existingIds.has(a.id));
+                // Add only unique new activities to the beginning of the array
+                allActivities = [...uniqueNewActivities, ...allActivities];
                 
-                // Update last timestamp
-                lastUpdateTimestamp = new Date(newActivities[0].created_at);
-                
-                // Reapply current filters and search
-                applyCurrentFiltersAndSearch();
+                // Update last timestamp if there are unique new activities
+                if (uniqueNewActivities.length > 0) {
+                    lastUpdateTimestamp = new Date(uniqueNewActivities[0].created_at);
+                    // Reapply current filters and search
+                    applyCurrentFiltersAndSearch();
+                }
             }
         }, REAL_TIME_INTERVAL);
     }
@@ -366,12 +381,23 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Render activities in table with pagination
     function renderActivities(activities, searchTerm = '') {
+        const tableBody = document.getElementById('activityTableBody');
+        const noResultsDiv = document.getElementById('noResultsRow');
+        
         tableBody.innerHTML = ''; // Clear current content
 
         if (activities.length === 0) {
-            noResultsRow.classList.remove('hidden');
+            // Show no results div
+            if (noResultsDiv) {
+                noResultsDiv.classList.remove('hidden');
+            }
             updatePagination(0);
             return;
+        }
+
+        // Hide no results div when there are activities
+        if (noResultsDiv) {
+            noResultsDiv.classList.add('hidden');
         }
 
         // Calculate pagination
@@ -391,10 +417,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             tableBody.appendChild(row);
         });
-
-        // Add no results row to DOM
-        tableBody.appendChild(noResultsRow);
-        noResultsRow.classList.add('hidden');
 
         // Update pagination controls
         updatePagination(totalPages);
