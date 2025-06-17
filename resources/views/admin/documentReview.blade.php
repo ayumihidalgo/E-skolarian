@@ -426,7 +426,7 @@
                     </div>
 
                     <!-- Mobile view - stacks vertically -->
-                    <div id="detailsComment" class="p-3 md:p-6 flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0 w-full max-w-7xl">
+                    <div id="detailsComment" class="p-3 md:p-6 flex flex-col md:flex-row md:space-x-6 space-y-4 md:space-y-0 w-full">
                         <!-- Document Details - Full width on mobile -->
                         <div id="documentDetails" class="w-full md:w-2/3 bg-[#4D0F0F] rounded-2xl p-4 md:p-6 space-y-4 md:space-y-6">
                             <!-- Header -->

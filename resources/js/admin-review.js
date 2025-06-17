@@ -1801,7 +1801,6 @@ function updateDocumentDetailsView(docData) {
                 orgInfoComments.classList.add('hidden');
                 
                 // Remove max-width and make document details take full width
-                detailsComment.classList.remove('max-w-7xl');
                 documentDetails.classList.remove('md:w-2/3');
                 documentDetails.classList.add('w-full');
             } else {
@@ -1809,7 +1808,6 @@ function updateDocumentDetailsView(docData) {
                 orgInfoComments.classList.remove('hidden');
                 
                 // Restore original classes
-                detailsComment.classList.add('max-w-7xl');
                 documentDetails.classList.add('md:w-2/3');
                 documentDetails.classList.remove('w-full');
             }
