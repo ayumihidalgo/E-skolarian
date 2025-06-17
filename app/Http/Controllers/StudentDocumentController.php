@@ -286,9 +286,7 @@ class StudentDocumentController extends Controller
             'ELITE' => 'Eligible League of Information Technology Enthusiasts',
         ];
 
-        $tagColors = [
-            'IT' => 'text-orange-500',
-        ];
+        $tagColors = [];
 
         // Handle AJAX requests - UPDATED TO RETURN JSON
         if ($request->ajax()) {
