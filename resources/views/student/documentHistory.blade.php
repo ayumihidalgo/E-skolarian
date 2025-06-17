@@ -8,7 +8,7 @@
         <div class="w-full px-6 py-8 flex flex-col">
             <!-- Header section with title and archive page link -->
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-extrabold">Document History Table</h2>
+                <h2 class="text-2xl font-extrabold">Document Repository</h2>
 
                 <!-- Link to archive page for viewing archived documents -->
                 <a href="{{ route('student.archivePage') }}"
@@ -70,10 +70,6 @@
                 'ELITE' => 'Eligible League of Information Technology Enthusiasts',
             ];
 
-            // Color coding for different organization tags
-            $tagColors = [
-                'IT' => 'text-orange-500',
-            ];
             @endphp
 
             <!-- Main table container -->
@@ -108,7 +104,6 @@
                                 // Extract organization acronym from control tag (e.g., "ELITE_001")
                                 $parts = explode('_', $document->control_tag);
                                 $acronym = count($parts) > 0 ? $parts[0] : '';
-                                $tagColor = isset($tagColors['IT']) ? $tagColors['IT'] : 'text-gray-500';
 
                                 // Format date for consistent display
                                 $createdDate = \Carbon\Carbon::parse($document->created_at)->format('m/d/Y');
@@ -121,8 +116,8 @@
                                     onclick="viewDocument({{ $document->id }})"
                                     data-type="{{ $document->type }}">
                                     <!-- Document tag with color coding -->
-                                    <td class="px-4 py-2 font-semibold truncate max-w-[120px]">
-                                        <span class="{{ $tagColor }}">{{ $document->control_tag }}</span>
+                                     <td class="px-4 py-2 font-semibold truncate max-w-[120px]">
+                                        {{ $document->control_tag }}
                                     </td>
                                     <!-- Document title with tooltip for full text -->
                                     <td class="px-4 py-2 truncate max-w-[160px]" title="{{ $document->subject }}">
@@ -241,8 +236,12 @@
     
     <!-- Keep the existing JavaScript exactly the same -->
     <script>
-        // Track sort direction for each column
+        // Track sort direction for each column and current sort column
         let sortDirection = [true, true, true, true, true];
+        let currentSortColumn = null;
+
+        // Column mapping: index to database column name
+        const columnMap = ['control_tag', 'subject', 'created_at', 'type', 'status'];
 
         document.addEventListener('DOMContentLoaded', function() {
             // Filter form elements
@@ -309,6 +308,43 @@
         });
 
         /**
+         * Sort the table by the given column index
+         * @param {number} columnIndex - The index of the column to sort by
+         */
+        function sortTable(columnIndex) {
+            // Toggle sort direction for this column
+            sortDirection[columnIndex] = !sortDirection[columnIndex];
+            currentSortColumn = columnIndex;
+            
+            // Update sort indicators visually
+            updateSortIndicator(columnIndex);
+            
+            // Apply filters with sorting
+            applyServerSideFilters();
+        }
+
+        /**
+         * Update the sort indicator visuals
+         * @param {number} columnIndex - The column index being sorted
+         */
+        function updateSortIndicator(columnIndex) {
+            // Get all sort icons in table headers
+            const sortIcons = document.querySelectorAll('#documentTable thead button img');
+            
+            sortIcons.forEach((icon, i) => {
+                if (i === columnIndex) {
+                    // Update active sort icon
+                    icon.style.transform = sortDirection[i] ? 'rotate(0deg)' : 'rotate(180deg)';
+                    icon.style.opacity = '1';
+                } else {
+                    // Reset other icons
+                    icon.style.transform = 'rotate(0deg)';
+                    icon.style.opacity = '0.5';
+                }
+            });
+        }
+
+        /**
          * Apply server-side filters via AJAX
          */
         function applyServerSideFilters() {
@@ -325,6 +361,12 @@
 
             if (searchInput.trim() !== '') {
                 params.append('search', searchInput);
+            }
+
+            // Add sorting parameters if a column is selected for sorting
+            if (currentSortColumn !== null && columnMap[currentSortColumn]) {
+                params.append('sort_by', columnMap[currentSortColumn]);
+                params.append('sort_dir', sortDirection[currentSortColumn] ? 'asc' : 'desc');
             }
 
             const url = `${window.location.pathname}?${params.toString()}`;
@@ -378,7 +420,7 @@
             window.location.href = "{{ route('student.documentPreview', ['id' => ':id']) }}".replace(':id', id);
         }
 
-        // Add this new function to update type filter options
+        // Function to update type filter options
         function updateTypeFilterOptions(availableTypes) {
             const typeSelect = document.getElementById('typeFilter');
             if (!typeSelect) return;

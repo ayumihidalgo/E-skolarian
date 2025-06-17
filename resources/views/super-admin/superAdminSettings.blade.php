@@ -4,7 +4,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <!-- Content section -->
     <!-- This is the main content area for the super admin dashboard -->
-    @include('components.superadminNavigation')
+    @include('components.superAdminNavigation')
     <div id="main-content" class="flex flex-col w-full ml-0 transition-all duration-300 bg-[#F2F4F7]">
         <div class="flex-grow">
             @if (session('success'))
@@ -73,7 +73,7 @@
                                 {{ strtoupper($user->role_name) }}
                             </h3>
                             <!-- <p class="uppercase text-sm md:text-sm lg:text-lg tracking-wider font-semibold font-['Lexend']">
-                                                                                                                                                                                                    {{ $user->role }}</p> -->
+                                                                                                                                                                                                                                        {{ $user->role }}</p> -->
                             <div class="hidden sm:block">
                                 <div id="" class="mt-2 text-sm relative flex items-center gap-3">
                                     <div
@@ -856,13 +856,12 @@
                 Successfully</h2>
             <p class="text-xs sm:text-xs md:text-sm text-gray-600 mb-6">Your password has been updated. Please log in again
                 to continue.</p>
-            <form method="POST" action="{{ route('superadmin.logout') }}" class="mt-4 flex justify-end">
-                @csrf
-                <button type="submit"
+            <div class="mt-4 flex justify-end">
+                <a href="/login"
                     class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[11px] md:text-[12px] lg:text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">
                     Okay
-                </button>
-            </form>
+                </a>
+            </div>
         </div>
     </div>
     <style>

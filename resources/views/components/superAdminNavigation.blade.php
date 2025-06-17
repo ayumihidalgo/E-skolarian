@@ -6,7 +6,8 @@
     <div class="flex items-center space-x-3">
         <img src="{{ asset('images/superAdminIcon.svg') }}" alt="Logo" class="h-12 w-12 sm:h-15 sm:w-15">
         <div class="text-white">
-            <h1 class="font-[Marcellus_SC] text-lg sm:text-xl leading-none">E-SKOLARI<span class="text-yellow-400">★</span>N</h1>
+            <h1 class="font-[Marcellus_SC] text-lg sm:text-xl leading-none">E-SKOLARI<span
+                    class="text-yellow-400">★</span>N</h1>
             <p class="text-xs tracking-wide font-[Marcellus_SC]">DOCUMENT MANAGEMENT</p>
         </div>
     </div>
@@ -73,7 +74,8 @@
 
         <!-- Super Admin Dropdown -->
         <div class="relative" id="adminDropdownContainer">
-            <button id="adminDropdownBtn" type="button" class="flex items-center space-x-1 sm:space-x-2 cursor-pointer text-base sm:text-xl">
+            <button id="adminDropdownBtn" type="button"
+                class="flex items-center space-x-1 sm:space-x-2 cursor-pointer text-base sm:text-xl">
                 <span class="xs:inline">Super Admin</span>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="6" viewBox="0 0 16 6" fill="none">
                     <path d="M8 6L0.205772 0.75H15.7942L8 6Z" fill="white" />

@@ -49,7 +49,7 @@
     <div class="mt-3 space-y-2">
         <label class="block text-sm font-medium mb-2 text-gray-700">Role Type</label>
         <div class="space-y-2">
-            <label class="inline-flex items-center">
+            <label class="inline-flex items-center px-5">
                 <input type="radio" 
                        name="custom_role_type" 
                        value="student" 

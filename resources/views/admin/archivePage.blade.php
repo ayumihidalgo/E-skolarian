@@ -14,7 +14,7 @@
                 <!-- Link back to document history page -->
                 <a href="{{ route('admin.documentHistory') }}"
                     class="text-[#7A1212] underline font-medium hover:text-[#DAA520] transition-colors duration-200">
-                    Return to History
+                    Return to Repors
                 </a>
             </div>
 

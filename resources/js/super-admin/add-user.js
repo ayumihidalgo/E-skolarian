@@ -498,22 +498,26 @@ document.addEventListener("DOMContentLoaded", function () {
                 .replace(/[^a-zA-Z\s-]/g, "") // Changed regex to allow hyphens
                 .replace(/\s+/g, " ");
 
+            // Reset validation state while typing
+            this.dataset.isValid = 'false';
+            updateContinueButton();
+
             // Clear previous timeout
             clearTimeout(customRoleTimeout);
 
             // Set new timeout to avoid too many requests
-            customRoleTimeout = setTimeout(() => {
-                validateCustomRole().then(() => {
-                    updateContinueButton();
-                });
+            customRoleTimeout = setTimeout(async () => {
+                const isValid = await validateCustomRole();
+                this.dataset.isValid = isValid.toString();
+                updateContinueButton();
             }, 300);
         });
 
-        customRoleName.addEventListener("blur", function () {
+        customRoleName.addEventListener("blur", async function () {
             this.value = this.value.trim();
-            validateCustomRole().then(() => {
-                updateContinueButton();
-            });
+            const isValid = await validateCustomRole();
+            this.dataset.isValid = isValid.toString();
+            updateContinueButton();
         });
     }
 
@@ -808,16 +812,19 @@ document.addEventListener("DOMContentLoaded", function () {
         // Check if we can proceed to the next step
         if (roleSelect.value === "custom_role") {
             // Custom role - need to check custom role fields
-            const roleNameValid = customRoleName.value.trim() !== "";
+            const roleNameValue = customRoleName.value.trim();
+            const roleNameValid = roleNameValue !== "" && customRoleName.dataset.isValid === 'true';
             const roleTypeRadio = document.querySelector(
                 'input[name="custom_role_type"]:checked'
             );
             const roleTypeValid = roleTypeRadio !== null;
 
             // Debug logs
+            console.log("Role name value:", roleNameValue);
             console.log("Role name valid:", roleNameValid);
             console.log("Role type valid:", roleTypeValid);
             console.log("Selected role type:", roleTypeRadio?.value);
+            console.log("Dataset isValid:", customRoleName.dataset.isValid);
 
             const allValid = roleNameValid && roleTypeValid;
 
@@ -1002,6 +1009,50 @@ document.addEventListener("DOMContentLoaded", function () {
             return data.exists;
         } catch (error) {
             console.error("Error checking organization:", error);
+            return false;
+        }
+    }
+
+    // Check if organization name exists (case-insensitive) - NEW
+    async function checkOrganizationNameExists(organizationName) {
+        try {
+            const response = await fetch("/check-organization-name", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document
+                        .querySelector('meta[name="csrf-token"]')
+                        .getAttribute("content"),
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                body: JSON.stringify({ name: organizationName.toLowerCase().trim() }),
+            });
+            const data = await response.json();
+            return data.exists;
+        } catch (error) {
+            console.error("Error checking organization name:", error);
+            return false;
+        }
+    }
+
+    // Check if organization acronym exists (case-insensitive) - NEW
+    async function checkOrganizationAcronymExists(acronym) {
+        try {
+            const response = await fetch("/check-organization-acronym", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document
+                        .querySelector('meta[name="csrf-token"]')
+                        .getAttribute("content"),
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+                body: JSON.stringify({ acronym: acronym.toLowerCase().trim() }),
+            });
+            const data = await response.json();
+            return data.exists;
+        } catch (error) {
+            console.error("Error checking organization acronym:", error);
             return false;
         }
     }
@@ -1280,7 +1331,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
                 isValid = false;
             } else {
-                // Check against other existing roles from the database
+                // Check against other existing roles from the database - CASE INSENSITIVE
                 try {
                     const existingRoles = await fetchExistingRoles();
                     const isDuplicate = existingRoles.some(
@@ -1316,6 +1367,8 @@ document.addEventListener("DOMContentLoaded", function () {
             isValid = false;
         }
 
+        // IMPORTANT: Store the validation result and update continue button
+        customRoleName.dataset.isValid = isValid;
         return isValid;
     }
 
@@ -1719,7 +1772,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Admin form submission
+    // Admin form submission - UPDATED
     if (submitAdminBtn) {
         submitAdminBtn.addEventListener("click", async function (e) {
             e.preventDefault();
@@ -1728,8 +1781,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
             try {
                 isProcessing = true;
-                submitAdminBtn.disabled = true;
-                submitAdminBtn.innerHTML = "Adding...";
+                document.body.style.cursor = "not-allowed"; // Add this line
+                disableFormButtons(); // This will now also disable the close button
 
                 const email = adminEmailInput.value.trim().toLowerCase();
                 // Extract username from email (remove @gmail.com and capitalize first letter)
@@ -1781,8 +1834,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             } finally {
                 isProcessing = false;
-                submitAdminBtn.disabled = false;
-                submitAdminBtn.innerHTML = "Add User";
+                document.body.style.cursor = "default"; // Add this line
+                enableFormButtons(); // This will re-enable the close button
             }
         });
     }

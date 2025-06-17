@@ -46,47 +46,45 @@ document.addEventListener("DOMContentLoaded", function () {
             const ext = target.getAttribute("data-file-ext");
 
             // Open the modal and show the file
-            openDocumentViewerModal(fileUrl, fileName, ext);
+            const modal = document.getElementById("documentViewerModal");
+            document.getElementById("pdfViewer").innerHTML = "";
+            document.getElementById("imageViewer").innerHTML = "";
+            const downloadView = document.getElementById("downloadView");
+            const documentTitle = document.getElementById("documentTitle");
+            const downloadFileName =
+                document.getElementById("downloadFileName");
+            const downloadButton = document.getElementById("downloadButton");
+
+            if (!modal) return;
+
+            document.getElementById("documentTitle").textContent = fileName;
+            document.getElementById("downloadButton").href = fileUrl;
+            // Reset viewers
+            pdfViewer.innerHTML = "";
+            imageViewer.innerHTML = "";
+            imageViewer.classList.add("hidden");
+            pdfViewer.classList.remove("hidden");
+            downloadView.classList.add("hidden");
+
+            if (["pdf", "docx"].includes(ext)) {
+                document.getElementById(
+                    "pdfViewer"
+                ).innerHTML = `<iframe src="${fileUrl}#toolbar=0" class="w-full h-full" frameborder="0"></iframe>`;
+            } else if (["jpg", "jpeg", "png"].includes(ext)) {
+                pdfViewer.classList.add("hidden");
+                imageViewer.classList.remove("hidden");
+                imageViewer.innerHTML = `<img src="${fileUrl}" alt="${fileName}" class="max-h-full max-w-full rounded shadow" />`;
+            } else {
+                pdfViewer.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Preview not available for this file type.</div>`;
+            }
+
+            // Show the modal
+            modal.classList.remove("hidden");
         }
     });
 });
 
-function openDocumentViewerModal(fileUrl, fileName, ext) {
-    // Get modal elements (make sure these IDs match your Blade modal)
-    const modal = document.getElementById("documentViewerModal");
-    const pdfViewer = document.getElementById("pdfViewer");
-    const imageViewer = document.getElementById("imageViewer");
-    const downloadView = document.getElementById("downloadView");
-    const documentTitle = document.getElementById("documentTitle");
-    const downloadFileName = document.getElementById("downloadFileName");
-    const downloadButton = document.getElementById("downloadButton");
-
-    if (!modal) return;
-
-    documentTitle.textContent = fileName;
-    downloadFileName.textContent = fileName;
-    downloadButton.href = fileUrl;
-
-    // Reset viewers
-    pdfViewer.innerHTML = "";
-    imageViewer.innerHTML = "";
-    imageViewer.classList.add("hidden");
-    pdfViewer.classList.remove("hidden");
-    downloadView.classList.add("hidden");
-
-    if (["pdf"].includes(ext)) {
-        pdfViewer.innerHTML = `<iframe src="${fileUrl}#toolbar=0" class="w-full h-full" frameborder="0"></iframe>`;
-    } else if (["jpg", "jpeg", "png", "gif", "bmp", "webp"].includes(ext)) {
-        pdfViewer.classList.add("hidden");
-        imageViewer.classList.remove("hidden");
-        imageViewer.innerHTML = `<img src="${fileUrl}" alt="${fileName}" class="max-h-full max-w-full rounded shadow" />`;
-    } else {
-        pdfViewer.innerHTML = `<div class="flex items-center justify-center h-full text-gray-500">Preview not available for this file type.</div>`;
-    }
-
-    // Show the modal
-    modal.classList.remove("hidden");
-}
+// Get modal elements (make sure these IDs match your Blade modal)
 
 function initializeEcho() {
     // Check if Pusher configuration is available in window object or meta tags

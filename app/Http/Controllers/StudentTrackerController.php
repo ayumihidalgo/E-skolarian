@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Models\SubmittedDocument;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Models\DocumentVersion;
+use Illuminate\Support\Facades\Storage;
 
 class StudentTrackerController extends Controller
 {
@@ -24,13 +26,13 @@ class StudentTrackerController extends Controller
         // Apply search filter
         if ($request->filled('search')) {
             $searchTerm = $request->search;
-            $query->where(function($q) use ($searchTerm) {
+            $query->where(function ($q) use ($searchTerm) {
                 // Updated to search in user's DOC_organization_acronym instead of control_tag
-                $q->whereHas('user', function($userQuery) use ($searchTerm) {
+                $q->whereHas('user', function ($userQuery) use ($searchTerm) {
                     $userQuery->where('organization_acronym', 'LIKE', "%{$searchTerm}%");
                 })
-                ->orWhere('subject', 'LIKE', "%{$searchTerm}%")
-                ->orWhere('type', 'LIKE', "%{$searchTerm}%");
+                    ->orWhere('subject', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('type', 'LIKE', "%{$searchTerm}%");
             });
             Log::info('After search filter count: ' . $query->count());
         }
@@ -81,5 +83,37 @@ class StudentTrackerController extends Controller
             ->findOrFail($id);
 
         return view('student.components.viewRecordSubmitted', compact('record'));
+    }
+
+    public function saveReturnedAttachment(Request $request, $id)
+    {
+        $request->validate([
+            'returned_attachment' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:20480',
+            'comments' => 'nullable|string',
+        ]);
+
+        // Find the original document
+        $submittedDocument = \App\Models\SubmittedDocument::where('user_id', Auth::id())->findOrFail($id);
+
+        // Determine next version number
+        $latestVersion = DocumentVersion::where('document_id', $id)->max('version');
+        $nextVersion = $latestVersion ? $latestVersion + 1 : 2;
+
+        // Store the file
+        $file = $request->file('returned_attachment');
+        $originalName = $file->getClientOriginalName();
+        $filePath = $file->storeAs('documents', $originalName, 'public');
+
+        // Save as new DocumentVersion
+        $docVersion = DocumentVersion::create([
+            'document_id' => $id,
+            'uploaded_by' => Auth::id(),
+            'version' => $nextVersion,
+            'document_url' => $filePath,
+            'comments' => $request->comments,
+            'submitted_at' => now(),
+        ]);
+
+        return redirect()->back()->with('success', 'Returned document uploaded as version ' . $nextVersion);
     }
 }

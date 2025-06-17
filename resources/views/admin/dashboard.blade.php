@@ -1107,8 +1107,30 @@
             document.getElementById('postAnnouncementModal').classList.remove('hidden');
         }
         function closePostAnnouncementModal() {
-            document.getElementById('postAnnouncementModal').classList.add('hidden');
-        }
+            // Get the form element
+        const announcementForm = document.getElementById('announcementForm');
+        
+        // Reset all form fields
+        announcementForm.reset();
+        
+        // Clear any displayed error messages
+        document.getElementById('titleError').style.display = 'none';
+        document.getElementById('contentError').style.display = 'none';
+        
+        // Reset specific UI elements
+        
+        // Hide schedule fields if they were showing
+        document.getElementById('scheduleFields').classList.add('hidden');
+        
+        // Hide custom audience dropdown if it was showing
+        document.getElementById('customAudienceDropdown').classList.add('hidden');
+        
+        // Set audience radio back to 'all' (default)
+        document.getElementById('audienceAll').checked = true;
+        
+        // Hide the modal
+        document.getElementById('postAnnouncementModal').classList.add('hidden');
+    }
 
         // Schedule toggle
         document.getElementById('scheduleCheckbox').addEventListener('change', function() {
