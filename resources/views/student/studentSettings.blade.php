@@ -704,13 +704,12 @@
                 Successfully</h2>
             <p class="text-xs sm:text-xs md:text-sm text-gray-600 mb-6">Your password has been updated. Please log in again
                 to continue.</p>
-            <form method="POST" action="{{ route('student.logout') }}" class="mt-4 flex justify-end">
-                @csrf
-                <button type="submit"
+            <div class="mt-4 flex justify-end">
+                <a href="/login"
                     class="rounded-lg bg-red-900 text-white font-medium px-4 py-2 text-[11px] md:text-[12px] lg:text-[14px] font-[Lexend] hover:bg-red-900 transition cursor-pointer">
                     Okay
-                </button>
-            </form>
+                </a>
+            </div>
         </div>
     </div>
     <style>
