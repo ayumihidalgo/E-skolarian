@@ -29,48 +29,36 @@
     <div class="py-8 px-10 lg:py-8 lg:px-10 md:py-4 md:px-4 sm:py-2 sm:px-2">
         <!-- Calendar header with title -->
 <!-- Calendar header with title and navigation in one line -->
-<div class="mb-8 lg:mb-8 md:mb-4 sm:mb-2 grid lg:grid-cols-3 md:grid-cols-1 sm:grid-cols-1">
+<div class="mb-8 lg:mb-4 md:mb-4 sm:mb-2 grid lg:grid-cols-3 md:grid-cols-1 sm:grid-cols-1">
     <!-- Left: Calendar Title and Show Past Toggle -->
-    <div>
-        <h1 class="text-black font-manrope text-xl lg:text-3xl md:text-2xl sm:text-xl font-extrabold leading-normal mb-2 lg:mb-2 md:mb-1 sm:mb-0 text-center lg:text-left">
+
+    <div class="sm:text-left">
+    <h1 class="text-black font-manrope text-xl lg:text-3xl md:text-2xl sm:text-xl font-extrabold leading-normal mb-2 lg:mb-2 md:mb-1 sm:mb-0 sm:text-left text-left lg:text-left">
             Calendar
         </h1>
-        <!-- Show Past Deadlines Toggle - With mobile optimization -->
-        <div class="flex items-center lg:justify-start justify-center mb-3 lg:mb-3 md:-mt-1 sm:-mt-2">
-            <label class="flex items-center cursor-pointer">
-                <input type="checkbox" id="show-past-toggle" class="sr-only">
-                <div class="relative">
-                    <div class="block bg-gray-600 w-12 h-6 rounded-full"></div>
-                    <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition"></div>
-                </div>
-                <div class="ml-2 text-gray-700 font-medium text-sm">
-                    Show Past Deadlines
-                </div>
-            </label>
-        </div>
     </div>
 
     
    
     <!-- Middle: Month & Year Dropdowns with Navigation Arrows (centered) -->
-    <div class="flex items-center justify-center mb-4 md:mb-2 sm:mb-1 lg:-mt-8 md:-mt-4 sm:mt-4">
-        <div class="flex items-center gap-10 md:gap-16 lg:gap-20">
+    <div class="flex items-center justify-center mb-4 md:mb-2 sm:mb-1 lg:mt-0 md:-mt-4 sm:mt-4">
+        <div class="flex justify-between items-center w-full max-w-md px-2">
 
 
             <!-- Left Arrow - Make stroke thicker and darker -->
-            <button id="prev-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity p-1 mr-4 sm:mr-16 md:mr-6 lg:mr-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 30 30" fill="none">
+            <button id="prev-month" class="flex-shrink-0 p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 md:w-6 md:h-6">
                     <path d="M18.75 7.5L11.25 15L18.75 22.5" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </button>
 
-<!-- MOBILE VERSION: Month & Year (exactly like desktop) -->
-<div class="flex items-center md:hidden">
+<!-- MOBILE VERSION: Month & Year -->
+<div class="flex items-center justify-center md:hidden">
     <!-- Mobile Month Dropdown -->
     <div class="relative mx-1">
         <!-- Custom dropdown trigger -->
         <div id="mobile-month-dropdown-trigger" class="appearance-none bg-transparent border-b border-transparent pr-6 py-1 cursor-pointer text-black text-center font-lexend text-lg font-medium leading-normal hover:border-blue-500 focus:border-blue-500 transition-colors flex items-center">
-            <span id="mobile-selected-month" class="font-bold">January</span>
+            <span id="mobile-selected-month" class="font-bold truncate">January</span>
             <div class="absolute inset-y-0 right-0 flex items-center px-1 text-gray-700 pointer-events-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" viewBox="0 0 12 8" fill="none" class="flex-shrink-0">
                     <path d="M1 1L6 6L11 1" stroke="#161616" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -79,7 +67,7 @@
         </div>
         
         <!-- Custom dropdown menu -->
-        <div id="mobile-month-dropdown-menu" class="absolute mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 w-40 hidden">
+        <div id="mobile-month-dropdown-menu" class="absolute mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 w-32 hidden">
             <div class="py-1 max-h-60 overflow-y-auto">
                 <div class="flex px-2 py-2 items-center gap-2 hover:bg-gray-100 cursor-pointer" data-value="0">
                     <div class="w-4 h-4 mobile-checkmark-icon">
@@ -358,9 +346,9 @@
                 </select>
             </div>
 
-
-            <button id="next-month" class="flex-shrink-0 focus:outline-none hover:opacity-80 transition-opacity p-1 ml-4 sm:ml-16 md:ml-8 lg:ml-4">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 30 30" fill="none">
+            <!-- Right Arrow -->
+            <button id="next-month" class="flex-shrink-0 p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 md:w-6 md:h-6">
                     <path d="M11.25 22.5L18.75 15L11.25 7.5" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </button>
@@ -368,7 +356,7 @@
     </div>
    
     <!-- Today Button -->
-    <div class="hidden sm:hidden md:flex justify-center lg:justify-end items-center lg:pr-8 -mt-8 md:-mt-6">
+    <div class="hidden sm:hidden md:flex justify-center lg:justify-end items-center lg:pr-8 lg:mt-0 md:-mt-6">
         <button id="today-btn-desktop" class="flex justify-center items-center w-[85px] h-[40px] p-[10px] gap-[10px] rounded-[22px] bg-[#DAA520] transition-colors hover:bg-[#c99418] cursor-pointer">
             <span class="text-white font-manrope text-[14px] lg:text-[16px] font-extrabold leading-normal underline decoration-solid">Today</span>
         </button>
@@ -378,13 +366,13 @@
 
 
         <!-- Calendar container with responsive dimensions -->
-        <div id="calendar-container" class="bg-white rounded-lg overflow-hidden shadow-md relative z-[5] lg:min-h-[600px] md:min-h-[500px] lg:mt-0 md:mt-0 sm:mt-1">
+        <div id="calendar-container" class="bg-white rounded-lg overflow-hidden shadow-md relative z-[5] lg:min-h-[600px] md:min-h-[500px] lg:mt-2 md:mt-0 mt-4 mb-16 md:mb-0">
             <div id="calendar" class="w-full"></div>
         </div>
     </div>
         <!-- Today Button for Mobile (fixed at bottom) -->
-<div class="flex md:hidden justify-end w-full pr-4 mt-0 mb-0 -translate-y-20">
-    <button id="today-btn-mobile" class="flex justify-center items-center w-[85px] h-[40px] p-[10px] gap-[10px] rounded-[22px] bg-[#DAA520] transition-colors hover:bg-[#c99418] cursor-pointer">
+<div class="flex md:hidden justify-end w-full pr-4 mt-4 mb-4 relative z-10">
+    <button id="today-btn-mobile" class="flex justify-center items-center w-[85px] h-[40px] p-[10px] gap-[10px] rounded-[22px] bg-[#DAA520] transition-colors hover:bg-[#c99418] cursor-pointer shadow-lg">
         <span class="text-white font-manrope text-[14px] font-extrabold leading-normal underline decoration-solid">Today</span>
     </button>
 </div>
@@ -394,7 +382,7 @@
         <div class="bg-white rounded-lg shadow-lg w-full max-w-md lg:max-w-md md:max-w-sm sm:max-w-[95vw] modal-container modal-hidden">
             <div class="p-6 lg:p-6 md:p-4 sm:p-4">
                 <div class="flex justify-between items-start mb-4">
-                    <h3 class="text-lg lg:text-lg md:text-base sm:text-base font-semibold flex-1 mr-4" id="event-details-title">Event Details</h3>
+                    <h3 class="text-lg lg:text-lg md:text-base sm:text-base font-semibold flex-1 mr-4" id="event-details-title">Announcement Details</h3>
                     <button onclick="closeEventDetailsModal()" class="text-gray-500 hover:text-gray-700 flex-shrink-0 p-1">
                         <svg class="w-5 h-5 lg:w-5 lg:h-5 md:w-4 md:h-4 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
@@ -721,157 +709,166 @@ function initializeCalendarWhenReady() {
 }
    
     // Initialize the calendar
-    function initCalendar() {
-        const calendarEl = document.getElementById('calendar');
-       
-        if (!calendarEl) {
-            console.error('Calendar element not found');
-            return;
-        }
-       
-        try {
-            const config = getCalendarConfig();
-            calendarObj = new FullCalendar.Calendar(calendarEl, {
-                ...config,
-               
-                // Complete events function
-                events: function(fetchInfo, successCallback, failureCallback) {
-                    console.log('=== Fetching announcements only ===');
-                    
-                    // Check if show past toggle is enabled
-                    const showPast = document.getElementById('show-past-toggle')?.checked || false;
-                    console.log('Show past toggle is:', showPast);
-                    
-                    // Build the URL with the correct parameter
-                    const url = showPast ? '/calendar/announcements?show_past=true' : '/calendar/announcements';
-                    console.log('Fetching from URL:', url);
-                    
-                    fetch(url)
-                        .then(response => {
-                            console.log('Announcements response:', response.status);
-                            if (!response.ok) {
-                                console.warn('Announcements failed with status', response.status);
-                                return [];
-                            }
-                            return response.json();
-                        })
-                        .then(announcements => {
-                            console.log('Received announcements:', announcements);
-                            console.log('Number of announcements:', announcements.length);
-                            
-                            // Log each announcement for debugging
-                            announcements.forEach((ann, index) => {
-                                console.log(`Announcement ${index + 1}:`, {
-                                    title: ann.title,
-                                    start: ann.start,
-                                    is_expired: ann.is_expired,
-                                    backgroundColor: ann.backgroundColor
-                                });
-                            });
-                            
-                            successCallback(announcements || []);
-                        })
-                        .catch(error => {
-                            console.error('Error fetching announcements:', error);
-                            successCallback([]);
-                        });
-                },
-               
-                // Handle date changes
-                datesSet: function() {
-                    updateCustomControls();
-                    checkIfCurrentMonth();
-                    adjustCalendarHeight();
-                    updateMobileSelectors();
-                    resizeMobileCalendarContainer();
-                },
-               
-                // Handle event clicks (read-only)
-                eventClick: function(info) {
-                    console.log('Event clicked:', info.event);
-                    info.jsEvent.preventDefault();
-                    openAnnouncementDetailsModal(info.event);
-                },
-               
-                // Display settings
-                eventDisplay: 'block',
-                eventMaxStack: config.eventMaxStack,
-               
-                // Handle event styling
-                eventDidMount: function(info) {
-                    info.el.style.overflow = 'hidden';
-                    info.el.style.textOverflow = 'ellipsis';
-                    info.el.style.whiteSpace = 'nowrap';
-                    
-                    // Add announcement styling
-                    if (info.event.extendedProps.source === 'announcement') {
-                        // Check if announcement is expired/past deadline
-                        if (info.event.extendedProps.is_expired) {
-                            // Gray styling for past deadlines
-                            info.el.style.borderLeft = '4px solid #9CA3AF'; // Gray border
-                            info.el.style.backgroundColor = '#9CA3AF'; // Gray background
-                            info.el.setAttribute('title', '[Past] Announcement: ' + info.event.title);
-                        } else {
-                            // Red styling for active deadlines
-                            info.el.style.borderLeft = '4px solid #FF6347';  
-                            info.el.style.backgroundColor = '#FF6347';
-                            info.el.setAttribute('title', 'Announcement: ' + info.event.title);
-                        }
-                        
-                        // Force single day display for announcements
-                        info.el.style.position = 'relative';
-                        info.el.style.zIndex = '1';
-                        info.el.style.width = 'auto';
-                        info.el.style.maxWidth = '100%';
-                        info.el.classList.add('fc-event-single-day');
-                        
-                        // Add pointer cursor only to announcement events
-                        info.el.style.cursor = 'pointer';
-                        
-                        // Add data attribute for CSS targeting
-                        info.el.setAttribute('data-source', 'announcement');
-                        
-                        // Add expired data attribute if applicable
-                        if (info.event.extendedProps.is_expired) {
-                            info.el.setAttribute('data-expired', 'true');
-                        }
-                    } else if (info.event.extendedProps.source === 'proposal') {
-                        info.el.style.borderLeft = '4px solid #0085FF';
-                        info.el.setAttribute('title', 'Approved Proposal: ' + info.event.title);
-                        
-                        // Add pointer cursor to proposal events too
-                        info.el.style.cursor = 'pointer';
-                        
-                        // Add data attribute for CSS targeting
-                        info.el.setAttribute('data-source', 'proposal');
-                    }
-                    
-                    // Handle long titles
-                    const titleEl = info.el.querySelector('.fc-event-title');
-                    if (titleEl) {
-                        const fullTitle = info.event.title;
-                        titleEl.setAttribute('data-full-title', fullTitle);
-                        info.el.setAttribute('title', fullTitle);
-                    }
-                }
-            });
-           
-            // Render calendar immediately
-            calendarObj.render();
-            setupCustomNavigation();
-           
-            // Setup year dropdown functionality
-            setupYearDropdown();
-        } catch (error) {
-            console.error('Error initializing calendar:', error);
-            document.getElementById('calendar').innerHTML =
-                '<div class="flex items-center justify-center h-full p-8">' +
-                '<div class="text-red-600 text-center">' +
-                '<p class="text-xl font-bold">Calendar could not be loaded</p>' +
-                '<p class="mt-2">Please try refreshing the page</p>' +
-                '</div></div>';
-        }
+function initCalendar() {
+    const calendarEl = document.getElementById('calendar');
+   
+    if (!calendarEl) {
+        console.error('Calendar element not found');
+        return;
     }
+   
+    try {
+        const config = getCalendarConfig();
+        calendarObj = new FullCalendar.Calendar(calendarEl, {
+            ...config,
+           
+            // Complete events function
+            events: function(fetchInfo, successCallback, failureCallback) {
+                console.log('=== Fetching announcements only ===');
+                
+                // Always show both past and upcoming events
+                const url = '/calendar/announcements?show_past=true';
+                console.log('Fetching from URL:', url);
+                
+                fetch(url)
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        console.log('Response headers:', response.headers);
+                        return response.text(); // Change to text first to see raw response
+                    })
+                    .then(text => {
+                        console.log('Raw response:', text);
+                        const announcements = JSON.parse(text);
+                        console.log('Parsed announcements:', announcements);
+                        console.log('Number of announcements:', announcements.length);
+                        
+                        successCallback(announcements || []);
+                    })
+                    .catch(error => {
+                        console.error('Error fetching announcements:', error);
+                        successCallback([]);
+                    });
+            },
+           
+            // Handle date changes
+            datesSet: function() {
+                updateCustomControls();
+                checkIfCurrentMonth();
+                adjustCalendarHeight();
+                updateMobileSelectors();
+                resizeMobileCalendarContainer();
+            },
+           
+            // Handle event clicks (read-only)
+            eventClick: function(info) {
+                console.log('Event clicked:', info.event);
+                info.jsEvent.preventDefault();
+                openAnnouncementDetailsModal(info.event);
+            },
+           
+            // Display settings
+            eventDisplay: 'block',
+            eventMaxStack: config.eventMaxStack,
+           
+            // Handle event styling - KEEP YOUR ENHANCED VERSION
+            eventDidMount: function(info) {
+                info.el.style.overflow = 'hidden';
+                info.el.style.textOverflow = 'ellipsis';
+                info.el.style.whiteSpace = 'nowrap';
+                
+                // Add announcement styling
+                if (info.event.extendedProps.source === 'announcement') {
+                    // Get CALENDAR'S displayed month and year (not today's date)
+                    const calendarDate = calendarObj.getDate();
+                    const displayedMonth = calendarDate.getMonth();
+                    const displayedYear = calendarDate.getFullYear();
+                    
+                    // Get event month and year
+                    const eventDate = new Date(info.event.start);
+                    const eventMonth = eventDate.getMonth();
+                    const eventYear = eventDate.getFullYear();
+                    
+                    // Check if event is in the DISPLAYED month (not current real month)
+                    const isDisplayedMonth = (displayedMonth === eventMonth && displayedYear === eventYear);
+                    
+                    // Check if announcement is expired/past deadline
+                    if (info.event.extendedProps.is_expired) {
+                        // Gray styling for past deadlines
+                        info.el.style.borderLeft = '4px solid #9CA3AF'; // Gray border
+                        info.el.style.backgroundColor = '#9CA3AF'; // Gray background
+                        info.el.setAttribute('title', '[Past] Announcement: ' + info.event.title);
+                    } else if (!isDisplayedMonth) {
+                        // Semi-transparent red for announcements not in the displayed month (but not expired)
+                        info.el.style.borderLeft = '4px solid rgba(247, 94, 76, 0.40)'; // Semi-transparent border
+                        info.el.style.backgroundColor = 'rgba(247, 94, 76, 0.40)'; // Semi-transparent background
+                        info.el.setAttribute('title', '[Other Month] Announcement: ' + info.event.title);
+                    } else {
+                        // Full red styling for active deadlines in the displayed month
+                        info.el.style.borderLeft = '4px solid #FF6347';  
+                        info.el.style.backgroundColor = '#FF6347';
+                        info.el.setAttribute('title', 'Announcement: ' + info.event.title);
+                    }
+                    
+                    // Force single day display for announcements
+                    info.el.style.position = 'relative';
+                    info.el.style.zIndex = '1';
+                    info.el.style.width = 'auto';
+                    info.el.style.maxWidth = '100%';
+                    info.el.classList.add('fc-event-single-day');
+                    
+                    // Add pointer cursor only to announcement events
+                    info.el.style.cursor = 'pointer';
+                    
+                    // Add data attribute for CSS targeting
+                    info.el.setAttribute('data-source', 'announcement');
+                    
+                    // Add expired data attribute if applicable
+                    if (info.event.extendedProps.is_expired) {
+                        info.el.setAttribute('data-expired', 'true');
+                    }
+                    
+                    // Add displayed month data attribute
+                    if (isDisplayedMonth) {
+                        info.el.setAttribute('data-displayed-month', 'true');
+                    }
+                } else if (info.event.extendedProps.source === 'proposal') {
+                    info.el.style.borderLeft = '4px solid #0085FF';
+                    info.el.setAttribute('title', 'Approved Proposal: ' + info.event.title);
+                    
+                    // Add pointer cursor to proposal events too
+                    info.el.style.cursor = 'pointer';
+                    
+                    // Add data attribute for CSS targeting
+                    info.el.setAttribute('data-source', 'proposal');
+                }
+                
+                // Handle long titles
+                const titleEl = info.el.querySelector('.fc-event-title');
+                if (titleEl) {
+                    const fullTitle = info.event.title;
+                    titleEl.setAttribute('data-full-title', fullTitle);
+                    info.el.setAttribute('title', fullTitle);
+                }
+            }
+        });
+       
+        // Render calendar immediately (like working version)
+        calendarObj.render();
+        setupCustomNavigation();
+       
+        // Setup year dropdown functionality
+        setupYearDropdown();
+        
+    } catch (error) {
+        console.error('Error initializing calendar:', error);
+        document.getElementById('calendar').innerHTML =
+            '<div class="flex items-center justify-center h-full p-8">' +
+            '<div class="text-red-600 text-center">' +
+            '<p class="text-xl font-bold">Calendar could not be loaded</p>' +
+            '<p class="mt-2">Please try refreshing the page</p>' +
+            '</div></div>';
+    }
+}
 
     function setupMobileToggle() {
     const toggleCheckbox = document.getElementById('show-past-toggle');
@@ -1650,4 +1647,5 @@ function updateCustomControls() {
 
 
 @endsection
+
 
