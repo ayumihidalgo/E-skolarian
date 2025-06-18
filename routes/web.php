@@ -40,27 +40,7 @@ use App\Http\Middleware\EnsureCurrentSessionisValid;
 Route::middleware(['guest', NoBackHistory::class])->group(function () {
     Route::get('/', function () {
         return view('auth.landingPage');
-    })->name('landing');
-
-
-    // Guest
-    Route::get('/guest/login', function () {
-        return view('guest.guestLogin');
-    })->name('guestLogin');
-    Route::post('/guest/send-otp', [GuestSubmitDocumentController::class, 'sendOtp'])
-        ->name('guest.sendOtp');
-    Route::get('/guest/verify', [GuestSubmitDocumentController::class, 'showOtpForm'])
-        ->name('guest.verifyForm');
-    Route::post('/guest/verify-otp', [GuestSubmitDocumentController::class, 'verifyOtp'])
-        ->name('guest.verifyOtp');
-    Route::post('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])
-        ->name('guest.resendOtp');
-    Route::get('/guest/submit', [GuestSubmitDocumentController::class, 'showSubmissionForm'])
-        ->name('guest.submissionForm');
-    Route::get('/guest/success', [GuestSubmitDocumentController::class, 'showSubmissionSuccess'])
-        ->name('guest.submissionSuccess');
-    Route::post('/guest/logout', [GuestSubmitDocumentController::class, 'logout'])
-        ->name('guest.logout');
+    })->name('landing'); 
 
     // Student Login
     Route::get('/student/login', function () {
@@ -127,6 +107,24 @@ Route::get('/notification', function () {
 
 // Moved out from middleware auth so that both authenticated students and guests can submit documents
 Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
+
+// Guest routes
+Route::get('/guest/login', [GuestSubmitDocumentController::class, 'showLoginForm'])
+    ->name('guestLogin');
+Route::post('/guest/send-otp', [GuestSubmitDocumentController::class, 'sendOtp'])
+    ->name('guest.sendOtp');
+Route::get('/guest/verify', [GuestSubmitDocumentController::class, 'showOtpForm'])
+    ->name('guest.verifyForm');
+Route::post('/guest/verify-otp', [GuestSubmitDocumentController::class, 'verifyOtp'])
+    ->name('guest.verifyOtp');
+Route::post('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])
+    ->name('guest.resendOtp');
+Route::get('/guest/submit', [GuestSubmitDocumentController::class, 'showSubmissionForm'])
+    ->name('guest.submissionForm');
+Route::get('/guest/success', [GuestSubmitDocumentController::class, 'showSubmissionSuccess'])
+    ->name('guest.submissionSuccess');
+Route::get('/guest/logout', [GuestSubmitDocumentController::class, 'logout'])
+    ->name('guest.logout');
 
 // ----------------------------------------
 // Authenticated Routes

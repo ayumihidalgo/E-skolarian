@@ -126,6 +126,7 @@ class GuestSubmitDocumentController extends Controller
         return view('guest.guestSubmissionSuccess');
     }
 
+    // Back to Login Button Functionality
     public function logout(Request $request)
     {
         Session::forget('guest_webmail');
