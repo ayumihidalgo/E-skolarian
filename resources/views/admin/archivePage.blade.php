@@ -9,12 +9,12 @@
         <div class="w-full min-h-screen bg-[#f2f4f7] px-6 py-8 flex flex-col">
             <!-- Header section with title and history page link -->
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-extrabold">Document Archive Table</h2>
+                <h2 class="md:text-2xl text-xl font-extrabold">Document Archive Table</h2>
 
                 <!-- Link back to document history page -->
                 <a href="{{ route('admin.documentHistory') }}"
                     class="text-[#7A1212] underline font-medium hover:text-[#DAA520] transition-colors duration-200">
-                    Return to Repors
+                    Return to Repository
                 </a>
             </div>
 
@@ -193,7 +193,7 @@
                                         {{ $displayType }}
                                     </td>
                                     <!-- Role column -->
-                                    <td class="px-4 py-2 cursor-pointer"
+                                    <td class="px-4 py-2 truncate cursor-pointer"
                                         onclick="viewDocument({{ $document->id }})">
                                         {{ $document->role_name ?? 'N/A' }}
                                     </td>

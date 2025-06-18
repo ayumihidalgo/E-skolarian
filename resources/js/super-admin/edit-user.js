@@ -644,6 +644,478 @@ document.addEventListener("DOMContentLoaded", function () {
         return true;
     }
 
+    // Add this after the existing validation functions
+    let emailHasError = false;
+    let recoveryEmailHasError = false;
+
+    // Update the validateEmail function
+    async function validateEmail() {
+        const email = emailInput.value.trim();
+        const MAX_EMAIL_LENGTH = 50;
+        const ALLOWED_DOMAINS = [
+            "gmail.com",
+            "yahoo.com",
+            "iskolarngbayan.pup.edu.ph",
+            "pup.edu.ph",
+        ];
+
+        emailError.classList.add("hidden");
+        emailInput.classList.remove("border-red-500");
+        emailHasError = false; // Reset error state
+
+        if (email === "") {
+            showEmailError("Email cannot be empty");
+            emailHasError = true;
+            disableSaveButton();
+            return false;
+        }
+
+        if (email.length > MAX_EMAIL_LENGTH) {
+            showEmailError(`Email must be less than ${MAX_EMAIL_LENGTH} characters`);
+            emailHasError = true;
+            disableSaveButton();
+            return false;
+        }
+
+        const domain = email.split("@")[1]?.toLowerCase();
+
+        if (!domain || !ALLOWED_DOMAINS.includes(domain)) {
+            showEmailError("Only @gmail.com, @yahoo.com, @iskolarngbayan.pup.edu.ph, or @pup.edu.ph email addresses are accepted");
+            emailHasError = true;
+            disableSaveButton();
+            return false;
+        }
+
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
+            showEmailError("Please enter a valid email address");
+            emailHasError = true;
+            disableSaveButton();
+            return false;
+        }
+
+        if (email.toLowerCase() !== initialFormState.email.toLowerCase()) {
+            try {
+                const exists = await checkEmailExists(email);
+                if (exists) {
+                    showEmailError("This email already exists");
+                    emailHasError = true;
+                    disableSaveButton();
+                    return false;
+                }
+            } catch (error) {
+                console.error("Error checking email:", error);
+                showEmailError("Error checking email availability");
+                emailHasError = true;
+                disableSaveButton();
+                return false;
+            }
+        }
+
+        checkSaveButtonState();
+        return true;
+    }
+
+    // Update the validateRecoveryEmail function
+    async function validateRecoveryEmail() {
+        const recoveryEmail = recoveryEmailInput.value.trim();
+        const MAX_EMAIL_LENGTH = 50;
+        const ALLOWED_DOMAINS = [
+            "gmail.com",
+            "yahoo.com",
+            "iskolarngbayan.pup.edu.ph",
+            "pup.edu.ph",
+        ];
+
+        recoveryEmailError.classList.add("hidden");
+        recoveryEmailInput.classList.remove("border-red-500");
+        recoveryEmailHasError = false; // Reset error state
+
+        // Recovery email is optional
+        if (recoveryEmail === "") {
+            return true;
+        }
+
+        if (recoveryEmail.length > MAX_EMAIL_LENGTH) {
+            showRecoveryEmailError(`Recovery email must be less than ${MAX_EMAIL_LENGTH} characters`);
+            recoveryEmailHasError = true;
+            disableSaveButton();
+            return false;
+        }
+
+        if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(recoveryEmail)) {
+            showRecoveryEmailError("Please enter a valid recovery email address");
+            recoveryEmailHasError = true;
+            disableSaveButton();
+            return false;
+        }
+
+        const domain = recoveryEmail.split("@")[1]?.toLowerCase();
+
+        if (!domain || !ALLOWED_DOMAINS.includes(domain)) {
+            showRecoveryEmailError("Only @gmail.com, @yahoo.com, @iskolarngbayan.pup.edu.ph, or @pup.edu.ph email addresses are accepted");
+            recoveryEmailHasError = true;
+            disableSaveButton();
+            return false;
+        }
+
+        const primaryEmail = emailInput.value.trim();
+        if (recoveryEmail.toLowerCase() === primaryEmail.toLowerCase()) {
+            showRecoveryEmailError("Recovery email cannot be the same as primary email");
+            recoveryEmailHasError = true;
+            disableSaveButton();
+            return false;
+        }
+
+        if (recoveryEmail.toLowerCase() !== initialFormState.recoveryEmail.toLowerCase()) {
+            try {
+                const exists = await checkRecoveryEmailExists(recoveryEmail);
+                if (exists) {
+                    showRecoveryEmailError("This recovery email is already in use");
+                    recoveryEmailHasError = true;
+                    disableSaveButton();
+                    return false;
+                }
+            } catch (error) {
+                console.error("Error checking recovery email:", error);
+                showRecoveryEmailError("Error checking recovery email availability");
+                recoveryEmailHasError = true;
+                disableSaveButton();
+                return false;
+            }
+        }
+
+        checkSaveButtonState();
+        return true;
+    }
+
+    // Add these helper functions
+    function disableSaveButton() {
+        const saveButton = document.querySelector('button[type="submit"]');
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.classList.add("opacity-50", "cursor-not-allowed");
+        }
+    }
+
+    function enableSaveButton() {
+        const saveButton = document.querySelector('button[type="submit"]');
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.classList.remove("opacity-50", "cursor-not-allowed");
+        }
+    }
+
+    function checkSaveButtonState() {
+        if (emailHasError || recoveryEmailHasError) {
+            disableSaveButton();
+        } else {
+            // Only enable if form has changes
+            if (checkFormChanged()) {
+                enableSaveButton();
+            }
+        }
+    }
+
+    // Update the checkFormChanged function
+    function checkFormChanged() {
+        const currentValues = {
+            username: document.getElementById("editUsername").value.trim(),
+            email: document.getElementById("editEmail").value.trim(),
+            recoveryEmail: document.getElementById("editRecoveryEmail").value.trim(),
+            roleName: document.getElementById("editRoleName").value,
+        };
+
+        const hasChanged = 
+            currentValues.username !== initialFormState.username ||
+            currentValues.email !== initialFormState.email ||
+            currentValues.recoveryEmail !== initialFormState.recoveryEmail ||
+            currentValues.roleName !== initialFormState.roleName;
+
+        // Check for validation errors before enabling button
+        if (hasChanged && !emailHasError && !recoveryEmailHasError) {
+            enableSaveButton();
+        } else {
+            disableSaveButton();
+        }
+
+        return hasChanged;
+    }
+
+    // Custom close functionality for edit modal to show user details modal again
+    if (closeEditModalBtn && editUserModal) {
+        closeEditModalBtn.addEventListener("click", function (e) {
+            e.preventDefault();
+            if (!isProcessing) {
+                // Only show confirmation if there are unsaved changes
+                if (checkFormChanged()) {
+                    // Show confirmation modal but don't close edit modal yet
+                    closeEditConfirmModal.classList.remove("hidden");
+                } else {
+                    // No changes, close without confirmation
+                    editUserModal.classList.add("hidden");
+                    setTimeout(() => {
+                        userDetailsModal.classList.remove("hidden");
+                    }, 100);
+                }
+            }
+        });
+    }
+
+    // Confirmation modal button handlers
+    if (cancelEditCloseBtn) {
+        cancelEditCloseBtn.addEventListener("click", function () {
+            closeEditConfirmModal.classList.add("hidden");
+        });
+    }
+
+    if (confirmEditCloseBtn) {
+        confirmEditCloseBtn.addEventListener("click", function () {
+            closeEditConfirmModal.classList.add("hidden");
+            editUserModal.classList.add("hidden");
+            userDetailsModal.classList.remove("hidden");
+            resetEditForm();
+            window.location.reload(); // Reload page to reset everything
+        });
+    }
+
+    // Add escape key handler for both modals
+    document.addEventListener("keydown", function (e) {
+        if (
+            e.key === "Escape" &&
+            editUserModal &&
+            !editUserModal.classList.contains("hidden")
+        ) {
+            if (editUserFormHasChanges) {
+                closeEditConfirmModal.classList.remove("hidden");
+            } else {
+                editUserModal.classList.add("hidden");
+            }
+        }
+    });
+
+    // Add click outside modal handler
+    closeEditConfirmModal.addEventListener("click", function (e) {
+        if (e.target === closeEditConfirmModal) {
+            closeEditConfirmModal.classList.add("hidden");
+        }
+    });
+
+    // Edit User Modal Event Listeners - Open modal when clicking edit button
+    if (editUserBtn && editUserModal) {
+        editUserBtn.addEventListener("click", async function () {
+            // Hide the user details modal
+            userDetailsModal.classList.add("hidden");
+
+            // Get current user data
+            const username =
+                document.getElementById("userUsername").textContent;
+            const email = document.getElementById("userEmail").textContent;
+            const recoveryEmail =
+                document.getElementById("userRecoveryEmail").textContent; // Add this line
+            const roleName = document.getElementById("userRole").textContent;
+            const acronym = document.getElementById("userAcronym")?.textContent;
+
+            try {
+                const isAdmin =
+                    roleName.toLowerCase() === "admin" ||
+                    roleName.toLowerCase().includes("services") ||
+                    roleName.toLowerCase().includes("director");
+
+                // Store the user type for later use
+                window.currentUserType = isAdmin ? "admin" : "student";
+
+                // Lock fields based on user type
+                const usernameInput = document.getElementById("editUsername");
+                const roleNameInput = document.getElementById("editRoleName");
+                const emailInput = document.getElementById("editEmail");
+                const recoveryEmailInput =
+                    document.getElementById("editRecoveryEmail"); // Add this line
+
+                // For admin users, only email and recovery email should be editable
+                if (isAdmin) {
+                    // Lock username and role
+                    usernameInput.readOnly = true;
+                    roleNameInput.readOnly = true;
+                    usernameInput.classList.add(
+                        "bg-gray-100",
+                        "cursor-not-allowed"
+                    );
+                    roleNameInput.classList.add(
+                        "bg-gray-100",
+                        "cursor-not-allowed"
+                    );
+
+                    // Keep email and recovery email editable
+                    emailInput.readOnly = false;
+                    recoveryEmailInput.readOnly = false; // Add this line
+                    emailInput.classList.remove(
+                        "bg-gray-100",
+                        "cursor-not-allowed"
+                    );
+                    recoveryEmailInput.classList.remove(
+                        "bg-gray-100",
+                        "cursor-not-allowed"
+                    ); // Add this line
+
+                    // Hide acronym field
+                    if (editAcronymField) {
+                        editAcronymField.classList.add("hidden");
+                    }
+                }
+
+                // Set form values
+                usernameInput.value = username;
+                roleNameInput.value = roleName;
+                emailInput.value = email;
+                recoveryEmailInput.value =
+                    recoveryEmail === "Not set" ? "" : recoveryEmail; // Add this line
+                document.getElementById("editActualRole").value = isAdmin
+                    ? "admin"
+                    : "student";
+
+                // Handle acronym field for student organizations
+                if (editAcronymField && editAcronymInput && !isAdmin) {
+                    if (roleName.toLowerCase().includes("organization")) {
+                        editAcronymField.classList.remove("hidden");
+                        editAcronymInput.value = acronym || "";
+                    } else {
+                        editAcronymField.classList.add("hidden");
+                    }
+                }
+
+                // Show modal and capture initial state
+                editUserModal.classList.remove("hidden");
+                captureInitialState();
+            } catch (error) {
+                console.error("Error setting up edit form:", error);
+                alert("Error loading user data. Please try again.");
+            }
+        });
+    }
+
+    // Add input event listeners to form fields
+    if (editUserForm) {
+        const formInputs = [
+            "editUsername",
+            "editEmail",
+            "editRecoveryEmail",
+            "editRoleName",
+        ]; // Add editRecoveryEmail
+        formInputs.forEach((inputId) => {
+            const element = document.getElementById(inputId);
+            if (element) {
+                // Add input event listener with debounce
+                let timeoutId;
+                element.addEventListener("input", function () {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => {
+                        checkFormChanged();
+                    }, 300);
+                });
+
+                // Add blur event listener to catch paste events
+                element.addEventListener("blur", function () {
+                    checkFormChanged();
+                });
+
+                // Add change event for select elements
+                if (element.tagName === "SELECT") {
+                    element.addEventListener("change", checkFormChanged);
+                }
+            }
+        });
+    }
+
+    // Email existence check function
+    async function checkEmailExists(email) {
+        // Add current user's ID to exclude from check
+        const response = await fetch("/check-email", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document
+                    .querySelector('meta[name="csrf-token"]')
+                    .getAttribute("content"),
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify({
+                email: email.toLowerCase(),
+                exclude_id: window.currentUserId, // Exclude current user
+            }),
+        });
+        const data = await response.json();
+        return data.exists;
+    }
+
+    async function checkUsernameExists(username) {
+        const response = await fetch("/check-username", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": document
+                    .querySelector('meta[name="csrf-token"]')
+                    .getAttribute("content"),
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            body: JSON.stringify({
+                username: username.toLowerCase(),
+                exclude_id: window.currentUserId, // Exclude current user
+            }),
+        });
+        const data = await response.json();
+        return data.exists;
+    }
+
+    // Validation functions
+    async function validateUsername() {
+        const username = usernameInput.value.trim();
+        const MAX_USERNAME_LENGTH = 150;
+
+        usernameError.classList.add("hidden");
+        usernameInput.classList.remove("border-red-500");
+
+        if (username === "") {
+            showUsernameError("Name cannot be empty");
+            return false;
+        }
+
+        if (username.length < 3) {
+            showUsernameError("Name must be at least 3 characters");
+            return false;
+        }
+
+        if (username.length > MAX_USERNAME_LENGTH) {
+            showUsernameError(
+                `Name must be less than ${MAX_USERNAME_LENGTH} characters`
+            );
+            return false;
+        }
+
+        if (!/^[a-zA-Z\s'-]+$/.test(username)) {
+            showUsernameError("Name can only contain letters, spaces, hyphens, and apostrophes");
+            return false;
+        }
+
+        // Only check for duplicate username if it's different from the original
+        if (
+            username.toLowerCase() !== initialFormState.username.toLowerCase()
+        ) {
+            try {
+                const exists = await checkUsernameExists(username);
+                if (exists) {
+                    showUsernameError("This name already exists");
+                    return false;
+                }
+            } catch (error) {
+                console.error("Error checking username:", error);
+                showUsernameError("Error checking username availability");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // Update the email validation function
     async function validateEmail() {
         const email = emailInput.value.trim();
@@ -653,54 +1125,61 @@ document.addEventListener("DOMContentLoaded", function () {
             "yahoo.com",
             "iskolarngbayan.pup.edu.ph",
             "pup.edu.ph",
-        ]; // Added pup.edu.ph
+        ];
 
         emailError.classList.add("hidden");
         emailInput.classList.remove("border-red-500");
+        emailHasError = false; // Reset error state
 
         if (email === "") {
             showEmailError("Email cannot be empty");
+            emailHasError = true;
+            disableSaveButton();
             return false;
         }
 
         if (email.length > MAX_EMAIL_LENGTH) {
-            showEmailError(
-                `Email must be less than ${MAX_EMAIL_LENGTH} characters`
-            );
+            showEmailError(`Email must be less than ${MAX_EMAIL_LENGTH} characters`);
+            emailHasError = true;
+            disableSaveButton();
             return false;
         }
 
-        // Extract domain from email
         const domain = email.split("@")[1]?.toLowerCase();
 
         if (!domain || !ALLOWED_DOMAINS.includes(domain)) {
-            showEmailError(
-                "Only @gmail.com, @yahoo.com, @iskolarngbayan.pup.edu.ph, or @pup.edu.ph email addresses are accepted"
-            ); // Updated error message
+            showEmailError("Only @gmail.com, @yahoo.com, @iskolarngbayan.pup.edu.ph, or @pup.edu.ph email addresses are accepted");
+            emailHasError = true;
+            disableSaveButton();
             return false;
         }
 
-        // Basic email format validation
         if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
             showEmailError("Please enter a valid email address");
+            emailHasError = true;
+            disableSaveButton();
             return false;
         }
 
-        // Only check for duplicate email if it's different from the original
         if (email.toLowerCase() !== initialFormState.email.toLowerCase()) {
             try {
                 const exists = await checkEmailExists(email);
                 if (exists) {
                     showEmailError("This email already exists");
+                    emailHasError = true;
+                    disableSaveButton();
                     return false;
                 }
             } catch (error) {
                 console.error("Error checking email:", error);
                 showEmailError("Error checking email availability");
+                emailHasError = true;
+                disableSaveButton();
                 return false;
             }
         }
 
+        checkSaveButtonState();
         return true;
     }
 
@@ -757,6 +1236,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         recoveryEmailError.classList.add("hidden");
         recoveryEmailInput.classList.remove("border-red-500");
+        recoveryEmailHasError = false; // Reset error state
 
         // Recovery email is optional, so empty is valid
         if (recoveryEmail === "") {
@@ -768,6 +1248,8 @@ document.addEventListener("DOMContentLoaded", function () {
             showRecoveryEmailError(
                 `Recovery email must be less than ${MAX_EMAIL_LENGTH} characters`
             );
+            recoveryEmailHasError = true;
+            disableSaveButton();
             return false;
         }
 
@@ -780,6 +1262,8 @@ document.addEventListener("DOMContentLoaded", function () {
             showRecoveryEmailError(
                 "Please enter a valid recovery email address"
             );
+            recoveryEmailHasError = true;
+            disableSaveButton();
             return false;
         }
 
@@ -791,12 +1275,16 @@ document.addEventListener("DOMContentLoaded", function () {
             showRecoveryEmailError(
                 "Only @gmail.com, @yahoo.com, @iskolarngbayan.pup.edu.ph, or @pup.edu.ph email addresses are accepted"
             ); // Updated error message
+            recoveryEmailHasError = true;
+            disableSaveButton();
             return false;
         }
 
         // Check for number instead of letter in domain (.c0m instead of .com)
         if (/\.c0m$|\.c0m@/.test(recoveryEmail.toLowerCase())) {
             showRecoveryEmailError("Invalid domain format");
+            recoveryEmailHasError = true;
+            disableSaveButton();
             return false;
         }
 
@@ -806,6 +1294,8 @@ document.addEventListener("DOMContentLoaded", function () {
             showRecoveryEmailError(
                 "Recovery email cannot be the same as primary email"
             );
+            recoveryEmailHasError = true;
+            disableSaveButton();
             return false;
         }
 
@@ -820,6 +1310,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     showRecoveryEmailError(
                         "This recovery email is already in use"
                     );
+                    recoveryEmailHasError = true;
+                    disableSaveButton();
                     return false;
                 }
             } catch (error) {
@@ -827,10 +1319,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 showRecoveryEmailError(
                     "Error checking recovery email availability"
                 );
+                recoveryEmailHasError = true;
+                disableSaveButton();
                 return false;
             }
         }
 
+        checkSaveButtonState();
         return true;
     }
 

@@ -101,14 +101,13 @@
                     <td class="py-3 px-4">{{ $record->type }}</td>
                     <td class="py-3 px-4">
                         @if (strtolower($record->status) === 'approved')
-                            <span
-                                class="inline-block bg-green-100 text-green-700 text-xs font-extrabold px-3 py-1 rounded-full">Approved</span>
-                        @elseif(strtolower($record->status) === 'rejected')
-                            <span
-                                class="inline-block bg-red-100 text-red-700 text-xs font-extrabold px-3 py-1 rounded-full">Rejected</span>
+                            <span class="inline-block bg-green-100 text-green-700 text-xs font-extrabold px-3 py-1 rounded-full">Approved</span>
+                        @elseif (strtolower($record->status) === 'returned')
+                            <span class="inline-block bg-red-100 text-xs font-extrabold px-3 py-1 rounded-full" style="color: #EF4444;">Returned</span>
+                        @elseif (strtolower($record->status) === 'under review')
+                            <span class="inline-block bg-yellow-100 text-xs font-extrabold px-3 py-1 rounded-full" style="color: #F59E0B;">Under review</span>
                         @else
-                            <span
-                                class="inline-block bg-gray-200 text-gray-800 text-xs font-extrabold px-3 py-1 rounded-full">{{ $record->status }}</span>
+                            <span class="inline-block bg-gray-200 text-gray-800 text-xs font-extrabold px-3 py-1 rounded-full">{{ $record->status }}</span>
                         @endif
                     </td>
                 </tr>
