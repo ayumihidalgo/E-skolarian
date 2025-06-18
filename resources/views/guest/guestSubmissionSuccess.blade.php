@@ -21,19 +21,17 @@
 
                 <img
                     class="mx-auto w-[333px]" 
-                    src="http://127.0.0.1:8000/images/guest-doc-submission-success.svg"
+                    src="{{ asset('images/guest-doc-submission-success.svg') }}"
                     alt="Class Representative Document Submission Successful" />
 
                 <p>Where would you like to go next?</p>
 
                 <div class="flex flex-col md:flex-row justify-between gap-4 w-full">
-                    <form method="POST" action="{{ route('guest.logout') }}" class="w-full md:w-auto">
-                        @csrf
-                        <button type="submit"
-                            class="w-full text-center font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] cursor-pointer transition">
-                            Back to Login Page
-                        </button>
-                    </form>
+                    <!-- Back to Login Button -->
+                    <a href="{{ route('guest.logout') }}"
+                        class="w-full md:w-auto text-center font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] transition">
+                        Back to Login Page
+                    </a>
 
                     <a href="{{ route('guest.submissionForm') }}"
                         class="w-full md:w-auto text-center font-semibold px-6 py-2 bg-[#7A1212] text-white rounded-[12px] hover:bg-[#a31515] cursor-pointer transition">

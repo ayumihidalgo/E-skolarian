@@ -364,6 +364,13 @@
 
                 <!-- Buttons -->
                 <div class="flex flex-col md:flex-row gap-4 justify-end">
+                    <!-- Back to Login Button -->
+                    <a href="{{ route('guest.logout') }}"
+                        class="w-full md:w-auto text-center font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] transition">
+                        Back to Login Page
+                    </a>
+
+                    <!-- Submit Button to Confimation Modal -->
                     <button id="mainSubmitButton" type="button" onclick="showConfirmPopup(event)"
                         class="order-1 md:order-2 w-full font-semibold bg-gray-500 text-white px-6 py-2 rounded-[12px] md:w-auto cursor-not-allowed transition"
                         disabled>Submit</button>

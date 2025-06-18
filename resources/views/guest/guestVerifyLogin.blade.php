@@ -55,13 +55,21 @@
                     </a>
                 </div>
 
-                <!-- Verify Button -->
-                <button
-                    type="submit"
-                    id="verifyBtn"
-                    class="w-full bg-[#7A1212] text-white py-2 px-4 rounded-md hover:bg-red-700 transition cursor-pointer">
-                    Verify OTP
-                </button>
+                <div class="flex flex-col md:flex-row justify-center gap-4 w-full">
+                    <!-- Back to Login Button -->
+                    <a href="{{ route('guest.logout') }}"
+                        class="w-full md:w-auto text-center font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] transition">
+                        Back to Login Page
+                    </a>
+
+                    <!-- Verify Button -->
+                    <button
+                        type="submit"
+                        id="verifyBtn"
+                        class="w-full md:w-auto text-center font-semibold px-6 py-2 bg-[#7A1212] text-white rounded-[12px] hover:bg-[#a31515] cursor-pointer transition">
+                        Verify OTP
+                    </button>
+                </div>
             </div>
         </form>
     </div>
