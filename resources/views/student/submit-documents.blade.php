@@ -450,6 +450,29 @@
     @endif
 
     <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+
+            window.addEventListener('beforeunload', (e) => {
+                if (!form) return;
+
+                const isDirty = Array.from(form.elements).some(el => {
+                    // Ignore disabled elements
+                    if (el.disabled) return false;
+
+                    // Check for any non-empty value, including hidden inputs
+                    const tag = el.tagName.toLowerCase();
+                    return (tag === 'input' || tag === 'textarea' || tag === 'select') &&
+                        el.value.trim() !== '';
+                });
+
+                if (isDirty) {
+                    e.preventDefault();
+                    e.returnValue = ''; // Required to trigger browser's native confirmation
+                }
+            });
+        });
+
         // Auto-select receiver when selecting doc type disabled at start
         let receiverAutoSelected = false;
         let myDropzone;
@@ -752,7 +775,7 @@
             }
 
             const minYear = currentAcademicYearStart - 4;
-            const terms = ['1st Semester', '2nd Semester', 'Midyear'];
+            const terms = ['Mid Year', '2nd Semester', '1st Semester'];
 
             // Loop from current academic year down to the 5th previous year
             for (let year = currentAcademicYearStart; year >= minYear; year--) {

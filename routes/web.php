@@ -40,27 +40,7 @@ use App\Http\Middleware\EnsureCurrentSessionisValid;
 Route::middleware(['guest', NoBackHistory::class])->group(function () {
     Route::get('/', function () {
         return view('auth.landingPage');
-    })->name('landing');
-
-
-    // Guest
-    Route::get('/guest/login', function () {
-        return view('guest.guestLogin');
-    })->name('guestLogin');
-    Route::post('/guest/send-otp', [GuestSubmitDocumentController::class, 'sendOtp'])
-        ->name('guest.sendOtp');
-    Route::get('/guest/verify', [GuestSubmitDocumentController::class, 'showOtpForm'])
-        ->name('guest.verifyForm');
-    Route::post('/guest/verify-otp', [GuestSubmitDocumentController::class, 'verifyOtp'])
-        ->name('guest.verifyOtp');
-    Route::post('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])
-        ->name('guest.resendOtp');
-    Route::get('/guest/submit', [GuestSubmitDocumentController::class, 'showSubmissionForm'])
-        ->name('guest.submissionForm');
-    Route::get('/guest/success', [GuestSubmitDocumentController::class, 'showSubmissionSuccess'])
-        ->name('guest.submissionSuccess');
-    Route::post('/guest/logout', [GuestSubmitDocumentController::class, 'logout'])
-        ->name('guest.logout');
+    })->name('landing'); 
 
     // Student Login
     Route::get('/student/login', function () {
@@ -127,6 +107,24 @@ Route::get('/notification', function () {
 
 // Moved out from middleware auth so that both authenticated students and guests can submit documents
 Route::post('/submit-document', [DocumentController::class, 'store'])->name('submit.document');
+
+// Guest routes
+Route::get('/guest/login', [GuestSubmitDocumentController::class, 'showLoginForm'])
+    ->name('guestLogin');
+Route::post('/guest/send-otp', [GuestSubmitDocumentController::class, 'sendOtp'])
+    ->name('guest.sendOtp');
+Route::get('/guest/verify', [GuestSubmitDocumentController::class, 'showOtpForm'])
+    ->name('guest.verifyForm');
+Route::post('/guest/verify-otp', [GuestSubmitDocumentController::class, 'verifyOtp'])
+    ->name('guest.verifyOtp');
+Route::post('/guest/resend-otp', [GuestSubmitDocumentController::class, 'resendOtp'])
+    ->name('guest.resendOtp');
+Route::get('/guest/submit', [GuestSubmitDocumentController::class, 'showSubmissionForm'])
+    ->name('guest.submissionForm');
+Route::get('/guest/success', [GuestSubmitDocumentController::class, 'showSubmissionSuccess'])
+    ->name('guest.submissionSuccess');
+Route::get('/guest/logout', [GuestSubmitDocumentController::class, 'logout'])
+    ->name('guest.logout');
 
 // ----------------------------------------
 // Authenticated Routes
@@ -239,6 +237,11 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
     Route::post('/admin/select-all-documents', [AdminDocumentController::class, 'selectAllDocuments'])->name('admin.selectAllDocuments');
     Route::post('/admin/select-all-archived-documents', [AdminDocumentController::class, 'selectAllArchivedDocuments'])->name('admin.selectAllArchivedDocuments');
     Route::post('admin/documents/check-updates', [DocumentReviewController::class, 'checkForUpdates'])->name('documents.check-updates');
+
+        //real time status document counts
+    Route::get('/admin/document-counts', [App\Http\Controllers\AdminDashboardController::class, 'getDocumentCounts'])
+    ->name('admin.document-counts')
+    ->middleware('auth');
 });
 // ---------------- Student ----------------
 Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
@@ -255,7 +258,16 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveSt
     Route::post('student/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('student.settings.verifyRecoveryCode');
     Route::post('student/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('student.settings.removeRecoveryEmail');
     Route::get('/student/archivePage', [StudentDocumentController::class, 'archivePage'])->name('student.archivePage');
+
+     //real time status document counts and announcements
+    Route::get('/student/document-counts', [App\Http\Controllers\StudentDashboardController::class, 'getDocumentCounts'])
+    ->name('student.document-counts')
+    ->middleware('auth');
+    Route::get('/student/announcements', [App\Http\Controllers\StudentDashboardController::class, 'getLatestAnnouncements'])
+    ->name('student.announcements')
+    ->middleware('auth');
     Route::post('/student/document/{id}/return-attachment', [StudentTrackerController::class, 'saveReturnedAttachment'])->name('student.document.return-attachment');
+
 });
 
 Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {

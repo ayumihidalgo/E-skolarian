@@ -30,10 +30,6 @@
             height: 90px;
         }
 
-        .logo {
-            width: 240px;
-        }
-
         .body-card {
             padding: 30px 0 15px;
             margin: auto;
@@ -115,7 +111,7 @@
 <body>
     <div class="card-container">
         <div class="header-card">
-            <img class="logo" src="{{ asset('images/e-skolarianLogo.png') }}" alt="E-skolarian Logo">
+            <img src="{{ asset('images/e-skolarianLogo.png') }}" alt="E-skolarian Logo" style="width: 100%; max-width: 240px;">
         </div>
         <div class="body-card" style="font-family: Arial, sans-serif; line-height: 1.6;">
             <p style="margin-bottom: 16px;">Hello,</p>

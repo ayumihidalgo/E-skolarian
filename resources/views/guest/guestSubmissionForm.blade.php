@@ -10,7 +10,7 @@
 
         <!-- Header (hidden on small screens, centered on desktop) -->
         <h1 class="hidden md:block mx-auto text-[20px] font-['Lexend']">
-            Document Submission (Guest)
+            Document Submission (Class Representative)
         </h1>
     </div>
 
@@ -364,6 +364,13 @@
 
                 <!-- Buttons -->
                 <div class="flex flex-col md:flex-row gap-4 justify-end">
+                    <!-- Back to Login Button -->
+                    <a href="{{ route('guest.logout') }}"
+                        class="w-full md:w-auto text-center font-semibold border-2 hover:bg-gray-100 text-[#7A1212] px-6 py-2 rounded-[12px] transition">
+                        Back to Login Page
+                    </a>
+
+                    <!-- Submit Button to Confimation Modal -->
                     <button id="mainSubmitButton" type="button" onclick="showConfirmPopup(event)"
                         class="order-1 md:order-2 w-full font-semibold bg-gray-500 text-white px-6 py-2 rounded-[12px] md:w-auto cursor-not-allowed transition"
                         disabled>Submit</button>
@@ -459,6 +466,29 @@
 @endif
 
 <script>
+    window.addEventListener('DOMContentLoaded', () => {
+        const form = document.querySelector('form');
+
+        window.addEventListener('beforeunload', (e) => {
+            if (!form) return;
+
+            const isDirty = Array.from(form.elements).some(el => {
+                // Ignore disabled elements
+                if (el.disabled) return false;
+
+                // Check for any non-empty value, including hidden inputs
+                const tag = el.tagName.toLowerCase();
+                return (tag === 'input' || tag === 'textarea' || tag === 'select') &&
+                    el.value.trim() !== '';
+            });
+
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = ''; // Required to trigger browser's native confirmation
+            }
+        });
+    });
+
     // Auto-select receiver when selecting doc type disabled at start
     let receiverAutoSelected = false;
     let myDropzone;
@@ -760,7 +790,7 @@
         }
 
         const minYear = currentAcademicYearStart - 1;
-        const terms = ['1st Semester', '2nd Semester', 'Midyear'];
+        const terms = ['Mid Year', '2nd Semester', '1st Semester'];
 
         // Loop from current academic year down to the previous year
         for (let year = currentAcademicYearStart; year >= minYear; year--) {

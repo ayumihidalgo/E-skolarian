@@ -74,7 +74,7 @@
                         </h2>
                         <button onclick="openPostAnnouncementModal()" title="Post New Announcement"
                             class="p-2 rounded-full hover:bg-gray-100 transition">
-                            <img src="{{ asset('images/add_annc.svg') }}" alt="Add Announcement" class="w-7 h-7">
+                            <img src="{{ asset('images/add_annc.svg') }}" alt="Add Announcement" class="w-7 h-7 cursor-pointer">
                         </button>
                     </div>
                     <div class="flex-1 max-h-[500px] overflow-y-auto pr-1">
@@ -105,7 +105,7 @@
                                         <!-- Ellipsis Button -->
                                         <div class="relative">
                                             <button
-                                                class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition"
+                                                class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition cursor-pointer"
                                                 onclick="toggleMenu('menu-{{ $announcement->id }}')" type="button">
                                                 <span class="sr-only">Open menu</span>
                                                 <svg class="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
@@ -118,7 +118,7 @@
                                             <div id="menu-{{ $announcement->id }}"
                                                 class="hidden absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow z-30">
                                                 <button
-                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition whitespace-nowrap"
+                                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition whitespace-nowrap cursor-pointer"
                                                     onclick="openEditModal(
                                                     {{ $announcement->id }},
                                                     `{{ addslashes($announcement->title) }}`,
@@ -137,7 +137,7 @@
                                                     onsubmit="return confirm('Move this announcement to archive?');">
                                                     @csrf
                                                     <button
-                                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition border-t border-gray-100 whitespace-nowrap"
+                                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition border-t border-gray-100 whitespace-nowrap cursor-pointer"
                                                         type="button" onclick="openArchiveModal({{ $announcement->id }})">
                                                         Move to Archive
                                                     </button>
@@ -236,7 +236,7 @@
                                             <!-- Ellipsis for archived (Restore/Delete) -->
                                             <div class="relative">
                                                 <button
-                                                    class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition"
+                                                    class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition cursor-pointer"
                                                     onclick="toggleMenu('archive-menu-{{ $announcement->id }}')"
                                                     type="button" aria-haspopup="true" aria-expanded="false">
                                                     <span class="sr-only">Open menu</span>
@@ -250,13 +250,13 @@
                                                 <div id="archive-menu-{{ $announcement->id }}"
                                                     class="hidden absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow z-30">
                                                     <button
-                                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition whitespace-nowrap"
+                                                        class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition whitespace-nowrap cursor-pointer"
                                                         type="button"
                                                         onclick="openRestoreModal({{ $announcement->id }})">
                                                         Restore
                                                     </button>
                                                     <button
-                                                        class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition whitespace-nowrap"
+                                                        class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition whitespace-nowrap cursor-pointer"
                                                         type="button"
                                                         onclick="openDeleteModal({{ $announcement->id }})">
                                                         Delete
@@ -267,7 +267,7 @@
                                             @if (!$showArchive)
                                                 <div class="relative">
                                                     <button
-                                                        class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition"
+                                                        class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition cursor-pointer"
                                                         onclick="toggleMenu('prev-menu-{{ $announcement->id }}')"
                                                         type="button" aria-haspopup="true" aria-expanded="false">
                                                         <span class="sr-only">Open menu</span>
@@ -282,7 +282,7 @@
                                                     <div id="prev-menu-{{ $announcement->id }}"
                                                         class="hidden absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow z-30">
                                                         <button
-                                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition whitespace-nowrap"
+                                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition whitespace-nowrap cursor-pointer"
                                                             type="button"
                                                             onclick="openArchiveModal({{ $announcement->id }})">
                                                             Move to Archive
@@ -592,13 +592,13 @@
                     <span class="font-semibold text-lg flex items-center">
                         Post Announcement
                         <!-- Tooltip Icon -->
-                        <button type="button" id="announcementInfoBtn" class="ml-2 focus:outline-none">
+                        <button type="button" id="announcementInfoBtn" class="ml-2 focus:outline-none cursor-pointer">
                             <img src="{{ asset('images/tooltip.png') }}" alt="Info"
                                 class="w-5 h-5 inline-block align-middle" />
                         </button>
                     </span>
                     <button onclick="closePostAnnouncementModal()"
-                        class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                        class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
                 </div>
                 <!-- Tooltip Content (responsive) -->
                 <div id="announcementInfoTooltip"
@@ -641,7 +641,7 @@
                     <!-- Schedule Section -->
                     <div>
                         <label class="inline-flex items-center mb-2">
-                            <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox">
+                            <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox cursor-pointer">
                             <span class="ml-2">Set Due Date</span>
                         </label>
                         <div id="scheduleFields" class="hidden">
@@ -666,18 +666,18 @@
                         <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
                         <div class="flex items-center space-x-4">
                             <label class="inline-flex items-center">
-                                <input type="radio" name="audience" value="all" checked class="form-radio"
+                                <input type="radio" name="audience" value="all" checked class="form-radio cursor-pointer"
                                     id="audienceAll">
                                 <span class="ml-2">All Student</span>
                             </label>
                             <label class="inline-flex items-center">
-                                <input type="radio" name="audience" value="custom" class="form-radio"
+                                <input type="radio" name="audience" value="custom" class="form-radio cursor-pointer"
                                     id="audienceCustom">
                                 <span class="ml-2">Custom</span>
                             </label>
                         </div>
                         <div id="customAudienceDropdown"
-                            class="mt-2 hidden border rounded-lg px-2 py-2 max-h-40 overflow-y-auto bg-white">
+                            class="mt-2 hidden border rounded-lg px-2 py-2 max-h-40 overflow-y-auto bg-white cursor-pointer">
                             @foreach ($users as $user)
                                 @if ($user->role === 'student')
                                     <label class="flex items-center py-1 border-b last:border-b-0">
@@ -692,7 +692,7 @@
                     </div>
                     <div class="text-right">
                         <button type="submit" id="submitBtn"
-                            class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c]"
+                            class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c] cursor-pointer"
                             style="background-color: #7A1212;">
                             Post Announcement
                         </button>
@@ -713,7 +713,7 @@
                     <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
                 </div>
                 <button onclick="closeAnnouncementModal()"
-                    class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                    class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
             <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
@@ -728,7 +728,7 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Edit Announcement</span>
-                <button onclick="closeEditModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                <button onclick="closeEditModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <form id="editAnnouncementForm" method="POST">
                 @csrf
@@ -754,7 +754,7 @@
                 <!-- Schedule Section -->
                 <div class="mb-3">
                     <label class="inline-flex items-center mb-2">
-                        <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
+                        <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox cursor-pointer">
                         <span class="ml-2">Set Due Date</span>
                     </label>
                     <div id="editScheduleFields" class="hidden">
@@ -779,12 +779,12 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
                     <div class="flex items-center space-x-4">
                         <label class="inline-flex items-center">
-                            <input type="radio" name="audience" value="all" class="form-radio"
+                            <input type="radio" name="audience" value="all" class="form-radio cursor-pointer"
                                 id="editAudienceAll">
                             <span class="ml-2">All Student</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="radio" name="audience" value="custom" class="form-radio"
+                            <input type="radio" name="audience" value="custom" class="form-radio cursor-pointer"
                                 id="editAudienceCustom">
                             <span class="ml-2">Custom</span>
                         </label>
@@ -795,7 +795,7 @@
                             @if ($user->role === 'student')
                                 <label class="flex items-center py-1 border-b last:border-b-0">
                                     <input type="checkbox" name="audience_students[]" value="{{ $user->id }}"
-                                        class="form-checkbox mr-2 editAudienceStudent">
+                                        class="form-checkbox mr-2 editAudienceStudent cursor-pointer">
                                     <span>{{ $user->username }}</span>
                                 </label>
                             @endif
@@ -805,7 +805,7 @@
                 </div>
                 <div class="text-right">
                     <button type="submit" id="saveChangesBtn"
-                        class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c]"
+                        class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c] cursor-pointer"
                         style="background-color: #7A1212;">
                         Save
                     </button>
@@ -838,7 +838,7 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Archive Announcement Confirmation</span>
-                <button onclick="closeArchiveModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                <button onclick="closeArchiveModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <div class="mb-4 text-gray-700">
                 Are you sure you want to archive this Announcement? Once archived, it will be removed from your list and
@@ -846,11 +846,11 @@
             </div>
             <div class="flex justify-end gap-2">
                 <button onclick="closeArchiveModal()"
-                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 cursor-pointer">Cancel</button>
                 <form id="archiveForm" method="POST" class="inline">
                     @csrf
                     <button type="submit"
-                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Archive</button>
+                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 cursor-pointer">Archive</button>
                 </form>
             </div>
         </div>
@@ -862,7 +862,7 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Restore Announcement Confirmation</span>
-                <button onclick="closeRestoreModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                <button onclick="closeRestoreModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <div class="mb-4 text-gray-700">
                 Are you sure you want to restore this announcement?<br>
@@ -870,11 +870,11 @@
             </div>
             <div class="flex justify-end gap-2">
                 <button onclick="closeRestoreModal()"
-                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 cursor-pointer">Cancel</button>
                 <form id="restoreForm" method="POST" class="inline">
                     @csrf
                     <button type="submit"
-                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Restore</button>
+                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 cursor-pointer">Restore</button>
                 </form>
             </div>
         </div>
@@ -886,19 +886,19 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Delete Announcement Confirmation</span>
-                <button onclick="closeDeleteModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                <button onclick="closeDeleteModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <div class="mb-4 text-gray-700">
                 Are you sure you want to permanently delete this announcement? This action cannot be undone.
             </div>
             <div class="flex justify-end gap-2">
                 <button onclick="closeDeleteModal()"
-                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 cursor-pointer">Cancel</button>
                 <form id="deleteForm" method="POST" class="inline">
                     @csrf
                     @method('DELETE')
                     <button type="submit"
-                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Delete</button>
+                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 cursor-pointer">Delete</button>
                 </form>
             </div>
         </div>
@@ -1743,17 +1743,17 @@
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Discard Changes?</span>
                 <button onclick="closeDiscardChangesModal()"
-                    class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                    class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <div class="mb-4 text-gray-700">
                 Are you sure you want to discard your changes? All unsaved edits will be lost.
             </div>
             <div class="flex justify-end gap-2">
                 <button onclick="confirmDiscardChanges()"
-                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Close without
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 cursor-pointer">Close without
                     saving</button>
                 <button onclick="closeDiscardChangesModal()"
-                    class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Keep editing</button>
+                    class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 cursor-pointer">Keep editing</button>
             </div>
         </div>
     </div>
