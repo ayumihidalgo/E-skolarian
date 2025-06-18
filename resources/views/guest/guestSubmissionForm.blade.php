@@ -760,7 +760,7 @@
         }
 
         const minYear = currentAcademicYearStart - 1;
-        const terms = ['1st Semester', '2nd Semester', 'Midyear'];
+        const terms = ['Mid Year', '2nd Semester', '1st Semester'];
 
         // Loop from current academic year down to the previous year
         for (let year = currentAcademicYearStart; year >= minYear; year--) {
