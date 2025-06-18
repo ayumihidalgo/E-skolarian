@@ -253,7 +253,7 @@
                                         {{ $displayType }}
                                     </td>
                                     <!-- Role column -->
-                                    <td class="px-4 py-2 cursor-pointer"
+                                    <td class="px-4 py-2 truncate cursor-pointer"
                                         onclick="viewDocument({{ $document->id }})">
                                         {{ $document->role_name ?? 'N/A' }}
                                     </td>
