@@ -1,5 +1,6 @@
 @extends('base')
 @section('content')
+    <script src="https://cdn.jsdelivr.net/npm/@pdftron/webviewer@10.8.0/webviewer.min.js"></script>
     @include('components.studentNavBarComponent')
     @include('components.studentSideBarComponent')
     <div id="main-content" class="transition-all duration-300 ml-[20%]">
@@ -31,10 +32,16 @@
                         <h3 class="font-semibold mb-1">Attachment</h3>
                         @if ($record->documentVersions->count() > 0)
                             <div class="space-y-2">
-                                @foreach ($record->documentVersions as $version)
+                                @foreach ($record->documentVersions->sortBy('version') as $version)
+                                    @php
+                                        $isLatest =
+                                            $version->id ===
+                                            $record->documentVersions->sortByDesc('version')->first()->id;
+                                    @endphp
                                     <div>
                                         <button type="button"
-                                            class="bg-white text-black text-sm px-4 py-2 rounded hover:bg-gray-200 transition inline-block preview-document-btn cursor-pointer"
+                                            class="bg-white text-black text-sm px-4 py-2 rounded hover:bg-gray-200 transition inline-block preview-document-btn cursor-pointer
+                                                {{ $isLatest ? '' : 'line-through opacity-50' }}"
                                             data-file-url="{{ asset('storage/' . $version->document_url) }}"
                                             data-file-name="{{ basename($version->document_url) }}">
                                             Version {{ $version->version }}:
@@ -239,7 +246,7 @@
                                                                 @endif
                                                             </div>
                                                             <div class="div">
-                                                                <button type="button" onclick="openReturnedImageModal()"
+                                                                <button type="button" onclick="openreturnDocumentModal()"
                                                                     class="mt-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition">
                                                                     Return Document
                                                                 </button>
@@ -257,10 +264,10 @@
 
                                         {{-- Returned Reason Image Modal --}}
                                         @if ($record->status === 'Returned' || $record->status === 'returned')
-                                            <div id="returnedImageModal"
+                                            <div id="returnDocumentModal"
                                                 class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
                                                 <div class="bg-white rounded-lg shadow-lg p-6 max-w-lg w-full relative">
-                                                    <button onclick="closeReturnedImageModal()"
+                                                    <button onclick="closereturnDocumentModal()"
                                                         class="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
                                                         <svg class="w-6 h-6" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
@@ -279,16 +286,21 @@
                                                             placeholder="Enter your summary here...">{{ old('returned_summary', $record->overview) }}</textarea>
                                                     </div>
                                                     <div class="mb-4">
-                                                        <label for="returned_attachment"
-                                                            class="block font-semibold text-black mb-1">Upload
-                                                            Document:</label>
-                                                        <input type="file" name="returned_attachment"
-                                                            id="returned_attachment"
-                                                            class="w-full p-2 border rounded text-black"
-                                                            accept=".jpg,.jpeg,.png,.pdf,.doc,.docx" />
+                                                        <form
+                                                            action="{{ route('student.document.return-attachment', $record->id) }}"
+                                                            method="POST" enctype="multipart/form-data"
+                                                            id="returnDocumentForm">
+                                                            @csrf
+                                                            <label for="returned_attachment">Upload Returned
+                                                                Attachment:</label>
+                                                            <input type="file" name="returned_attachment"
+                                                                class="w-full p-2 border rounded text-black" required>
+                                                            <textarea name="comments" placeholder="Comments (optional)"></textarea>
+                                                            <button type="submit">Submit Returned Document</button>
+                                                        </form>
                                                     </div>
                                                     <div class="flex justify-end gap-2 mt-6">
-                                                        <button onclick="closeReturnedImageModal()"
+                                                        <button onclick="closereturnDocumentModal()"
                                                             class="bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded">
                                                             Close
                                                         </button>
@@ -323,10 +335,10 @@
                                                                     </button>
                                                                     <button
                                                                         class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
-                                                                        type="submit">
+                                                                        type="button"
+                                                                        onclick="document.getElementById('returnDocumentForm').submit();">
                                                                         Finalize
                                                                     </button>
-                                                                    </form>
                                                                 </div>
                                                             </div>
                                                         </div>
@@ -343,12 +355,12 @@
                                                 </div>
                                             </div>
                                             <script>
-                                                function openReturnedImageModal() {
-                                                    document.getElementById('returnedImageModal').classList.remove('hidden');
+                                                function openreturnDocumentModal() {
+                                                    document.getElementById('returnDocumentModal').classList.remove('hidden');
                                                 }
 
-                                                function closeReturnedImageModal() {
-                                                    document.getElementById('returnedImageModal').classList.add('hidden');
+                                                function closereturnDocumentModal() {
+                                                    document.getElementById('returnDocumentModal').classList.add('hidden');
                                                 }
                                             </script>
                                         @endif
@@ -391,7 +403,19 @@
                     <div id="commentCont" class="overflow-y-auto max-h-80 pr-2 flex flex-col-reverse scroll-smooth"
                         style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;">
                         @foreach ($comments->reverse() as $comment)
-                            <!-- Modal for comment attachment preview -->
+                            @if ($comment->attachment)
+                                @php
+                                    $attachmentUrl = asset('storage/comment_attachments/' . $comment->attachment);
+                                    $attachmentName = basename($comment->attachment);
+                                    $attachmentType = \Illuminate\Support\Facades\Storage::mimeType(
+                                        'comment_attachments/' . $comment->attachment,
+                                    );
+                                @endphp
+                                <button type="button" class="text-blue-400 underline text-xs mt-1"
+                                    onclick="openCommentAttachmentPreview('{{ $attachmentUrl }}', '{{ $attachmentType }}', '{{ $attachmentName }}')">
+                                    View Attachment
+                                </button>
+                            @endif
                         @endforeach
                         @if ($comments->isEmpty())
                             <div class="text-gray-300 text-center">No comments yet.</div>
@@ -527,7 +551,7 @@
                         document.getElementById('imageViewer').classList.add('hidden');
                         document.getElementById('pdfViewer').classList.remove('hidden');
                         document.getElementById('downloadView').classList.add('hidden');
-                        if (['pdf'].includes(ext)) {
+                        if (['pdf', 'docx'].includes(ext)) {
                             document.getElementById('pdfViewer').innerHTML =
                                 `<iframe src="${fileUrl}#toolbar=0" class="w-full h-full" frameborder="0"></iframe>`;
                         } else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) {
@@ -565,8 +589,7 @@
             }
             // After successful approval (inside your finalize approval handler)
             document.getElementById('confirmFinalizeBtn').addEventListener('click', function() {
-                // ...your AJAX or approval logic...
-                // Get current date/time
+
                 const now = new Date();
                 const formatted = formatDateTime(now);
                 // Find the status history container and update it
