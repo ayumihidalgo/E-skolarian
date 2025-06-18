@@ -15,28 +15,28 @@
                     <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
                         <div>
                             <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Pending Documents</p>
-                            <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $pendingCount }}</div>
+                            <div id="pending-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $pendingCount }}</div>
                         </div>
                         <img src="{{ asset('images/pendingicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Pending Documents">
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
                         <div>
                             <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Under Review</p>
-                            <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $reviewCount }}</div>
+                            <div id="review-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $reviewCount }}</div>
                         </div>
                         <img src="{{ asset('images/reviewicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Under Review">
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
                         <div>
                             <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Approved Documents</p>
-                            <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $approvedCount }}</div>
+                            <div id="approved-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $approvedCount }}</div>
                         </div>
                         <img src="{{ asset('images/approvedicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Approved Documents">
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
                         <div>
                             <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Total Documents</p>
-                            <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $totalCount }}</div>
+                            <div id="total-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $totalCount }}</div>
                         </div>
                         <img src="{{ asset('images/totaldocicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Total Documents">
                     </div>
@@ -45,13 +45,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <!-- Announcements -->
                     <div class="md:col-span-2 bg-white rounded-xl shadow-md p-4">
-                       <h2 class="text-[16px] sm:text-[18px] md:text-[20px] lg:text-[22px] font-semibold mb-2 flex items-center gap-2">
-                            <img src="{{ asset('images/annc.svg') }}" alt="Announcements"
-                                class="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 inline-block align-middle" />
-                            Announcements
-                        </h2>
+                    <h2 class="text-[16px] sm:text-[18px] md:text-[20px] lg:text-[22px] font-semibold mb-2 flex items-center gap-2">
+                        <img src="{{ asset('images/annc.svg') }}" alt="Announcements"
+                            class="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 inline-block align-middle" />
+                        Announcements
+                    </h2>
+                    <div id="latest-announcements-container" class="space-y-4 h-64 overflow-y-auto pr-2">
                         @if ($latestAnnouncements->count())
-                            <div class="space-y-4 h-64 overflow-y-auto pr-2">
                                 @foreach ($latestAnnouncements as $announcement)
                                     @php
                                         $deadline = $announcement->deadline ? \Carbon\Carbon::parse($announcement->deadline) : null;
@@ -111,9 +111,10 @@
 
                     <!-- Previous Announcements -->
                     <div class="bg-white rounded-xl shadow-md p-4 md:row-span-2">
-                        <h2 class="text-lg font-semibold mb-2">Previous Announcements</h2>
+    <h2 class="text-lg font-semibold mb-2">Previous Announcements</h2>
+    <div id="previous-announcements-container" class="space-y-4 h-[32rem] overflow-y-auto pr-2">
                         @if ($previousAnnouncements->count())
-                            <div class="space-y-4 h-[32rem] overflow-y-auto pr-2">
+    
                                 @foreach ($previousAnnouncements as $announcement)
                                     <div class="border-b pb-2 border-gray-300">
                                         <h3 class="text-sm md:text-base font-semibold">
@@ -388,5 +389,222 @@
             // For PDFs and images, just open the file directly
             return `/storage/${filePath}`;
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+    // Function to update document counts
+    function updateDocumentCounts() {
+        fetch('/student/document-counts')
+            .then(response => response.json())
+            .then(data => {
+                // Store old values to check if they've changed
+                const oldValues = {
+                    pending: document.getElementById('pending-count').textContent,
+                    review: document.getElementById('review-count').textContent,
+                    approved: document.getElementById('approved-count').textContent,
+                    total: document.getElementById('total-count').textContent
+                };
+                
+                // Update with new values
+                document.getElementById('pending-count').textContent = data.pendingCount;
+                document.getElementById('review-count').textContent = data.reviewCount;
+                document.getElementById('approved-count').textContent = data.approvedCount;
+                document.getElementById('total-count').textContent = data.totalCount;
+                
+                // Add animation if values changed
+                if (oldValues.pending != data.pendingCount) {
+                    animateCountUpdate(document.getElementById('pending-count'));
+                }
+                if (oldValues.review != data.reviewCount) {
+                    animateCountUpdate(document.getElementById('review-count'));
+                }
+                if (oldValues.approved != data.approvedCount) {
+                    animateCountUpdate(document.getElementById('approved-count'));
+                }
+                if (oldValues.total != data.totalCount) {
+                    animateCountUpdate(document.getElementById('total-count'));
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching document counts:', error);
+            });
+    }
+    
+    // Function to animate count updates
+    function animateCountUpdate(element) {
+        element.classList.add('count-update');
+        setTimeout(() => {
+            element.classList.remove('count-update');
+        }, 1000);
+    }
+
+    // Update counts every 5 seconds
+    setInterval(updateDocumentCounts, 5000);
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Cache the DOM elements
+    const latestContainer = document.getElementById('latest-announcements-container');
+    const previousContainer = document.getElementById('previous-announcements-container');
+    const latestEmptyMessage = document.getElementById('latest-empty-message');
+    const previousEmptyMessage = document.getElementById('previous-empty-message');
+    
+    // Function to escape HTML to prevent XSS
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+    
+    // Function to update announcements
+    function updateAnnouncements() {
+        console.log('Fetching latest announcements...');
+        
+        fetch('/student/announcements')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Announcements data received');
+                
+                // Update latest announcements
+                if (data.latestAnnouncements.length > 0) {
+                    let latestHtml = '';
+                    
+                    data.latestAnnouncements.forEach(announcement => {
+                        const previewContent = announcement.isLong 
+                            ? announcement.content.substring(0, 150) + '...' 
+                            : announcement.content;
+                            
+                        latestHtml += `
+                            <div class="mb-4 pb-4 border-b border-gray-300">
+                                <h3 class="text-lg md:text-xl font-semibold">
+                                    ${announcement.title.length > 40 
+                                        ? `<span class="hidden md:inline cursor-help group relative">
+                                            ${escapeHtml(announcement.title.substring(0, 40))}...
+                                            <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                ${escapeHtml(announcement.title)}
+                                            </span>
+                                          </span>
+                                          <span class="md:hidden">
+                                            ${escapeHtml(announcement.title)}
+                                          </span>`
+                                        : escapeHtml(announcement.title)
+                                    }
+                                </h3>
+                                <p class="text-sm text-gray-500">
+                                    Posted by ${escapeHtml(announcement.author)} on ${announcement.postDate}
+                                    ${announcement.deadlineText 
+                                        ? `<span class="ml-2 text-red-600 font-semibold">${escapeHtml(announcement.deadlineText)}</span>` 
+                                        : ''}
+                                </p>
+                                <span class="text-gray-700 whitespace-pre-line break-words">${escapeHtml(previewContent)}</span>
+                                <button class="text-[#7B2323] hover:underline ml-2 text-sm"
+                                    onclick="showAnnouncementModal(
+                                        \`${escapeHtml(announcement.title).replace(/`/g, '\\`')}\`,
+                                        \`${escapeHtml(announcement.content).replace(/`/g, '\\`')}\`,
+                                        \`${escapeHtml(announcement.author).replace(/`/g, '\\`')}\`,
+                                        \`${announcement.postDate}\`,
+                                        \`${announcement.deadlineText ? announcement.deadlineText : ''}\`)">
+                                    View Post
+                                </button>
+                            </div>
+                        `;
+                    });
+                    
+                    latestContainer.innerHTML = latestHtml;
+                    if (latestEmptyMessage) {
+                        latestEmptyMessage.style.display = 'none';
+                    }
+                } else if (latestContainer.children.length === 0) {
+                    latestContainer.innerHTML = '<div class="text-gray-500 text-center py-8">No announcements at the moment</div>';
+                }
+                
+                // Update previous announcements
+                if (data.previousAnnouncements.length > 0) {
+                    let previousHtml = '';
+                    
+                    data.previousAnnouncements.forEach(announcement => {
+                        const maxLength = 100;
+                        const isLong = announcement.content.length > maxLength;
+                        const previewContent = isLong 
+                            ? announcement.content.substring(0, maxLength) + '...' 
+                            : announcement.content;
+                            
+                        previousHtml += `
+                            <div class="border-b pb-2 border-gray-300">
+                                <h3 class="text-sm md:text-base font-semibold">
+                                    ${announcement.title.length > 40 
+                                        ? `<span class="hidden md:inline cursor-help group relative">
+                                            ${escapeHtml(announcement.title.substring(0, 40))}...
+                                            <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                ${escapeHtml(announcement.title)}
+                                            </span>
+                                          </span>
+                                          <span class="md:hidden">
+                                            ${escapeHtml(announcement.title)}
+                                          </span>`
+                                        : escapeHtml(announcement.title)
+                                    }
+                                </h3>
+                                <p class="text-sm text-gray-500">
+                                    Posted by ${escapeHtml(announcement.author)} on ${announcement.postDate}
+                                </p>
+                                <span class="text-gray-700 whitespace-pre-line break-words">${escapeHtml(previewContent)}</span>
+                                ${isLong ? `
+                                    <button class="text-[#7B2323] hover:underline ml-2 text-sm"
+                                        onclick="showAnnouncementModal(
+                                            \`${escapeHtml(announcement.title).replace(/`/g, '\\`')}\`,
+                                            \`${escapeHtml(announcement.content).replace(/`/g, '\\`')}\`,
+                                            \`Posted by ${escapeHtml(announcement.author).replace(/`/g, '\\`')} on ${announcement.postDate}\`,
+                                            'previous'
+                                        )">
+                                        Read More
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                    
+                    previousContainer.innerHTML = previousHtml;
+                    if (previousEmptyMessage) {
+                        previousEmptyMessage.style.display = 'none';
+                    }
+                } else if (previousContainer.children.length === 0) {
+                    previousContainer.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <img src="{{ asset('images/Illustrations.svg') }}" alt="No previous post"
+                                class="w-24 h-24 mx-auto mb-2 opacity-80">
+                            <p>No previous post</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching announcements:', error);
+            });
+    }
+    
+    // Initially update immediately in case there were new announcements since page load
+    setTimeout(updateAnnouncements, 2000);
+
+    // Update announcements every 15 seconds
+    setInterval(updateAnnouncements, 15000);
+    
+    // Add event listener for visibility changes to optimize performance
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            // Update immediately when page becomes visible again
+            updateAnnouncements();
+        }
+    });
+});
     </script>
 @endsection

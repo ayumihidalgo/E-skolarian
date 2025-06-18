@@ -239,6 +239,11 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
     Route::post('/admin/select-all-documents', [AdminDocumentController::class, 'selectAllDocuments'])->name('admin.selectAllDocuments');
     Route::post('/admin/select-all-archived-documents', [AdminDocumentController::class, 'selectAllArchivedDocuments'])->name('admin.selectAllArchivedDocuments');
     Route::post('admin/documents/check-updates', [DocumentReviewController::class, 'checkForUpdates'])->name('documents.check-updates');
+
+        //real time status document counts
+    Route::get('/admin/document-counts', [App\Http\Controllers\AdminDashboardController::class, 'getDocumentCounts'])
+    ->name('admin.document-counts')
+    ->middleware('auth');
 });
 // ---------------- Student ----------------
 Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {
@@ -255,6 +260,13 @@ Route::middleware(['auth', NoBackHistory::class, IsStudent::class, CheckActiveSt
     Route::post('student/settings/verify-recovery-code', [SettingsController::class, 'verifyRecoveryCode'])->name('student.settings.verifyRecoveryCode');
     Route::post('student/settings/remove-recovery-email', [SettingsController::class, 'removeRecoveryEmail'])->name('student.settings.removeRecoveryEmail');
     Route::get('/student/archivePage', [StudentDocumentController::class, 'archivePage'])->name('student.archivePage');
+     //real time status document counts and announcements
+    Route::get('/student/document-counts', [App\Http\Controllers\StudentDashboardController::class, 'getDocumentCounts'])
+    ->name('student.document-counts')
+    ->middleware('auth');
+    Route::get('/student/announcements', [App\Http\Controllers\StudentDashboardController::class, 'getLatestAnnouncements'])
+    ->name('student.announcements')
+    ->middleware('auth');
 });
 
 Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiveStatus::class, EnsureCurrentSessionisValid::class])->group(function () {

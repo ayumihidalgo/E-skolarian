@@ -34,36 +34,35 @@
             <div class="flex-grow p-6 space-y-6">
                 <!-- Stats Section -->
            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                    <div>
-                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Pending Documents</p>
-                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $pendingCount }}</div>
-                    </div>
-                    <img src="{{ asset('images/pendingicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Pending Documents">
+            <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Pending Documents</p>
+                    <div id="pending-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $pendingCount }}</div>
                 </div>
-                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                    <div>
-                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Under Review</p>
-                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $reviewCount }}</div>
-                    </div>
-                    <img src="{{ asset('images/reviewicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Under Review">
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                    <div>
-                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Approved Documents</p>
-                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $approvedCount }}</div>
-                    </div>
-                    <img src="{{ asset('images/approvedicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Approved Documents">
-                </div>
-                <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                    <div>
-                        <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Total Documents</p>
-                        <div class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $totalCount }}</div>
-                    </div>
-                    <img src="{{ asset('images/totaldocicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Total Documents">
-                </div>
+                <img src="{{ asset('images/pendingicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Pending Documents">
             </div>
-
+            <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Under Review</p>
+                    <div id="review-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $reviewCount }}</div>
+                </div>
+                <img src="{{ asset('images/reviewicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Under Review">
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Approved Documents</p>
+                    <div id="approved-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $approvedCount }}</div>
+                </div>
+                <img src="{{ asset('images/approvedicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Approved Documents">
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                <div>
+                    <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Total Documents</p>
+                    <div id="total-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $totalCount }}</div>
+                </div>
+                <img src="{{ asset('images/totaldocicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Total Documents">
+            </div>
+        </div>
                 <!-- Announcement and Documents Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <!-- Left side: Announcements + Recent Documents stacked vertically -->
@@ -76,7 +75,7 @@
                                     Announcements
                                 </h2>
                                 <button onclick="openPostAnnouncementModal()" title="Post New Announcement"
-                                    class="p-2 rounded-full hover:bg-indigo-50 transition">
+                                     class="p-2 rounded-full hover:bg-indigo-50 transition cursor-pointer">
                                     <img src="{{ asset('images/add_annc.svg') }}" alt="Add Announcement" class="w-7 h-7">
                                 </button>
                             </div>
@@ -107,7 +106,7 @@
                                                 <!-- Ellipsis Button -->
                                                 <div class="relative">
                                                     <button
-                                                        class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition"
+                                                        class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition cursor-pointer"
                                                         onclick="toggleMenu('menu-{{ $announcement->id }}')" type="button"
                                                         aria-haspopup="true" aria-expanded="false">
                                                         <span class="sr-only">Open menu</span>
@@ -122,7 +121,7 @@
                                                     <div id="menu-{{ $announcement->id }}"
                                                         class="hidden absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow z-30">
                                                         <button
-                                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition whitespace-nowrap"
+                                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 transition whitespace-nowrap cursor-pointer"
                                                             onclick="tryOpenEditModal(
                                                                 {{ $announcement->id }},
                                                                 `{{ addslashes($announcement->title) }}`,
@@ -142,7 +141,7 @@
                                                             onsubmit="return confirm('Move this announcement to archive?');">
                                                             @csrf
                                                             <button
-                                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition border-t border-gray-100 whitespace-nowrap"
+                                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition border-t border-gray-100 whitespace-nowrap cursor-pointer"
                                                                 type="button"
                                                                 onclick="openArchiveModal({{ $announcement->id }}, {{ $announcement->user_id }})">
                                                                 Move to Archive
@@ -286,7 +285,7 @@
                                                 <!-- Ellipsis for archived (Restore/Delete) -->
                                                 <div class="relative">
                                                     <button
-                                                        class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition"
+                                                        class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition cursor-pointer"
                                                         onclick="toggleMenu('archive-menu-{{ $announcement->id }}')"
                                                         type="button" aria-haspopup="true" aria-expanded="false">
                                                         <span class="sr-only">Open menu</span>
@@ -300,13 +299,13 @@
                                                     <div id="archive-menu-{{ $announcement->id }}"
                                                         class="hidden absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow z-30">
                                                         <button
-                                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition whitespace-nowrap"
+                                                            class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 transition whitespace-nowrap cursor-pointer"
                                                             type="button"
                                                             onclick="openRestoreModal({{ $announcement->id }}, {{ $announcement->user_id }})">
                                                             Restore
                                                         </button>
                                                         <button
-                                                            class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition whitespace-nowrap"
+                                                            class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition whitespace-nowrap cursor-pointer"
                                                             type="button"
                                                             onclick="openDeleteModal({{ $announcement->id }}, {{ $announcement->user_id }})">
                                                             Delete
@@ -317,7 +316,7 @@
                                                 @if (!$showArchive)
                                                     <div class="relative">
                                                         <button
-                                                            class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition"
+                                                            class="ml-2 p-1 rounded-full hover:bg-gray-100 focus:outline-none transition cursor-pointer"
                                                             onclick="toggleMenu('prev-menu-{{ $announcement->id }}')"
                                                             type="button" aria-haspopup="true" aria-expanded="false">
                                                             <span class="sr-only">Open menu</span>
@@ -332,7 +331,7 @@
                                                         <div id="prev-menu-{{ $announcement->id }}"
                                                             class="hidden absolute right-0 mt-2 w-36 bg-white border border-gray-200 rounded shadow z-30">
                                                             <button
-                                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition whitespace-nowrap"
+                                                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 transition whitespace-nowrap cursor-pointer"
                                                                 type="button"
                                                                 onclick="openArchiveModal({{ $announcement->id }}, {{ $announcement->user_id }})">
                                                                 Move to Archive
@@ -400,11 +399,11 @@
                                     <div class="flex items-center">
                                     <h2 class="text-lg font-semibold mr-2">Post announcement</h2>
                                     <!-- Info Icon Tooltip -->
-                                    <button type="button" id="announcementInfoBtn" class="ml-1 focus:outline-none">
+                                    <button type="button" id="announcementInfoBtn" class="ml-1 focus:outline-none cursor-pointer">
                                         <img src="{{ asset('images/tooltip.png') }}" alt="Info" class="w-6 h-6 inline-block align-middle" />
                                     </button>
                                 </div>
-                                <button onclick="closePostAnnouncementModal()" type="button" class="text-2xl text-gray-500 hover:text-gray-700 ml-2">&times;</button>
+                                <button onclick="closePostAnnouncementModal()" type="button" class="text-2xl text-gray-500 hover:text-gray-700 ml-2 cursor-pointer">&times;</button>
                             </div>
                             <!-- Tooltip Content -->
                             <div id="announcementInfoTooltip" class="hidden absolute top-12 left-1/2 transform -translate-x-1/2 w-80 sm:w-96 max-w-xs sm:max-w-md bg-gray-800 text-white text-sm rounded-lg shadow-lg p-4 z-50 break-words">
@@ -438,7 +437,7 @@
                                 <!-- Schedule Section -->
                                 <div>
                                     <label class="inline-flex items-center mb-2">
-                                        <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox">
+                                        <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox cursor-pointer">
                                         <span class="ml-2">Set Due Date</span>
                                     </label>
                                     <div id="scheduleFields" class="hidden">
@@ -461,11 +460,11 @@
                                     <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
                                     <div class="flex items-center space-x-4">
                                         <label class="inline-flex items-center">
-                                            <input type="radio" name="audience" value="all" checked class="form-radio" id="audienceAll">
+                                            <input type="radio" name="audience" value="all" checked class="form-radio cursor-pointer" id="audienceAll">
                                             <span class="ml-2">All Student</span>
                                         </label>
                                         <label class="inline-flex items-center">
-                                            <input type="radio" name="audience" value="custom" class="form-radio" id="audienceCustom">
+                                            <input type="radio" name="audience" value="custom" class="form-radio cursor-pointer" id="audienceCustom">
                                             <span class="ml-2">Custom</span>
                                         </label>
                                     </div>
@@ -473,7 +472,7 @@
                                         @foreach($users as $user)
                                             @if($user->role === 'student')
                                                 <label class="flex items-center py-1 border-b last:border-b-0">
-                                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}" class="form-checkbox mr-2">
+                                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}" class="form-checkbox mr-2 cursor-pointer">
                                                     <span>{{ $user->username }}</span>
                                                 </label>
                                             @endif
@@ -483,7 +482,7 @@
                                 </div>
                                 <div class="text-right">
                                     <button type="submit" id="submitBtn"
-                                        class="px-6 py-2 text-white rounded-lg transition hover:opacity-90"
+                                        class="px-6 py-2 text-white rounded-lg transition hover:opacity-50"
                                         style="background-color: #7A1212;">
                                         Post Announcement
                                     </button>
@@ -509,7 +508,7 @@
                 <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
             </div>
             <button onclick="closeAnnouncementModal()"
-                class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
         </div>
         <!-- Modal Title -->
         <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
@@ -526,7 +525,7 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Edit Announcement</span>
-                <button onclick="closeEditModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                <button onclick="closeEditModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <form id="editAnnouncementForm" method="POST" class="show-loader-on-submit">
                 @csrf
@@ -552,7 +551,7 @@
                 <!-- Schedule Section -->
            <div class="mb-3">
                 <label class="inline-flex items-center mb-2">
-                    <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox">
+                    <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox cursor-pointer">
                     <span class="ml-2">Set Due Date</span>
                 </label>
                 <div id="editScheduleFields" class="hidden">
@@ -575,11 +574,11 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
                     <div class="flex items-center space-x-4">
                         <label class="inline-flex items-center">
-                            <input type="radio" name="audience" value="all" class="form-radio" id="editAudienceAll">
+                            <input type="radio" name="audience" value="all" class="form-radio cursor-pointer" id="editAudienceAll">
                             <span class="ml-2">All Student</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="radio" name="audience" value="custom" class="form-radio" id="editAudienceCustom">
+                            <input type="radio" name="audience" value="custom" class="form-radio cursor-pointer" id="editAudienceCustom">
                             <span class="ml-2">Custom</span>
                         </label>
                     </div>
@@ -587,7 +586,7 @@
                         @foreach($users as $user)
                             @if($user->role === 'student')
                                 <label class="flex items-center py-1 border-b last:border-b-0">
-                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}" class="form-checkbox mr-2 editAudienceStudent">
+                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}" class="form-checkbox mr-2 editAudienceStudent cursor-pointer">
                                     <span>{{ $user->username }}</span>
                             </label>
                             @endif
@@ -597,7 +596,7 @@
                 </div>
                 <div class="text-right">
                     <button type="submit" id="saveChangesBtn"
-                        class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c]"
+                        class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c] cursor-pointer"
                         style="background-color: #7A1212;">
                         Save
                     </button>
@@ -630,7 +629,7 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Archive Announcement Confirmation</span>
-                <button onclick="closeArchiveModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                <button onclick="closeArchiveModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <div class="mb-4 text-gray-700">
                 Are you sure you want to archive this Announcement? Once archived, it will be removed from your list and
@@ -638,11 +637,11 @@
             </div>
             <div class="flex justify-end gap-2">
                 <button onclick="closeArchiveModal()"
-                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 cursor-pointer">Cancel</button>
                 <form id="archiveForm" method="POST" class="inline">
                     @csrf
                     <button type="submit"
-                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Archive</button>
+                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 cursor-pointer">Archive</button>
                 </form>
             </div>
         </div>
@@ -654,7 +653,7 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Restore Announcement Confirmation</span>
-                <button onclick="closeRestoreModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                <button onclick="closeRestoreModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <div class="mb-4 text-gray-700">
                 Are you sure you want to restore this announcement?<br>
@@ -662,11 +661,11 @@
             </div>
             <div class="flex justify-end gap-2">
                 <button onclick="closeRestoreModal()"
-                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 cursor-pointer">Cancel</button>
                 <form id="restoreForm" method="POST" class="inline">
                     @csrf
                     <button type="submit"
-                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Restore</button>
+                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 cursor-pointer">Restore</button>
                 </form>
             </div>
         </div>
@@ -678,19 +677,19 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Delete Announcement Confirmation</span>
-                <button onclick="closeDeleteModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+                <button onclick="closeDeleteModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <div class="mb-4 text-gray-700">
                 Are you sure you want to permanently delete this announcement? This action cannot be undone.
             </div>
             <div class="flex justify-end gap-2">
                 <button onclick="closeDeleteModal()"
-                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Cancel</button>
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100 cursor-pointer">Cancel</button>
                 <form id="deleteForm" method="POST" class="inline">
                     @csrf
                     @method('DELETE')
                     <button type="submit"
-                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Delete</button>
+                        class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800 cursor-pointer">Delete</button>
                 </form>
             </div>
         </div>
@@ -1425,6 +1424,35 @@ document.addEventListener('click', function(e) {
     }
 });
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to update document counts
+    function updateDocumentCounts() {
+        fetch('/admin/document-counts')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('pending-count').textContent = data.pendingCount;
+                document.getElementById('review-count').textContent = data.reviewCount;
+                document.getElementById('approved-count').textContent = data.approvedCount;
+                document.getElementById('total-count').textContent = data.totalCount;
+            })
+            .catch(error => {
+                console.error('Error fetching document counts:', error);
+            });
+    }
+
+    // Update counts every 5 seconds
+    setInterval(updateDocumentCounts, 5000);
+
+    // animation to show count updates
+    function animateCountUpdate(element) {
+        element.classList.add('count-update');
+        setTimeout(() => {
+            element.classList.remove('count-update');
+        }, 1000);
+    }
+});
+    
+
     </script>
     
 <!-- Discard Changes Modal -->
@@ -1433,7 +1461,7 @@ document.addEventListener('click', function(e) {
     <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
         <div class="flex items-center justify-between mb-2">
             <span class="font-semibold text-lg">Discard Changes?</span>
-            <button onclick="closeDiscardChangesModal()" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+            <button onclick="closeDiscardChangesModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
         </div>
         <div class="mb-4 text-gray-700">
             Are you sure you want to discard your changes? All unsaved edits will be lost.

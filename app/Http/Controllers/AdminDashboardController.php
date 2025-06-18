@@ -107,4 +107,37 @@ class AdminDashboardController extends Controller
             'currentUserRole' => auth()->user()->role,
         ]);
     }
+    
+    public function getDocumentCounts()
+    {
+        $adminId = auth()->id();
+
+        // Pending: documents that are Pending and received by this admin, not Returned, not archived
+        $pendingCount = SubmittedDocument::where('status', 'Pending')
+            ->where('received_by', $adminId)
+            ->whereNull('archived_at')
+            ->count();
+
+        // Under Review: documents that are Under Review and received by this admin, not Returned, not archived
+        $reviewCount = SubmittedDocument::where('status', 'Under Review')
+            ->where('received_by', $adminId)
+            ->whereNull('archived_at')
+            ->count();
+
+        // Approved: documents that are Approved and received by this admin, not Returned, not archived
+        $approvedCount = SubmittedDocument::where('status', 'Approved')
+            ->where('received_by', $adminId)
+            ->whereNull('archived_at')
+            ->count();
+
+        // Total: sum of the three counts
+        $totalCount = $pendingCount + $reviewCount + $approvedCount;
+
+        return response()->json([
+            'pendingCount' => $pendingCount,
+            'reviewCount' => $reviewCount,
+            'approvedCount' => $approvedCount,
+            'totalCount' => $totalCount,
+        ]);
+    }
 }
