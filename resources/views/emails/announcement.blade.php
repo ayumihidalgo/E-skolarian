@@ -124,7 +124,7 @@
 <body>
     <div class="card-container">
         <div class="header-card">
-            <img class="logo" src="{{ asset('images/e-skolarianLogo.svg') }}" alt="E-skolarian Logo">
+            <img class="logo" src="{{ asset('images/e-skolarianLogo.png') }}" alt="E-skolarian Logo">
         </div>
         <div class="body-card">
             <h1>New Announcement</h1>

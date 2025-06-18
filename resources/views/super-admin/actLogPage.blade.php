@@ -237,15 +237,11 @@
 
         <!-- Custom Range -->
         <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]">Custom Range</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]">Select Date</label>
             <div class="space-y-2">
                 <div>
-                    <label class="text-xs text-gray-500 mb-1 block font-[Lexend]">Start Date</label>
+                    <label class="text-xs text-gray-500 mb-1 block font-[Lexend]">Date</label>
                     <input type="date" id="startDate" class="w-full p-2 text-sm border rounded font-[Lexend]">
-                </div>
-                <div>
-                    <label class="text-xs text-gray-500 mb-1 block font-[Lexend]">End Date</label>
-                    <input type="date" id="endDate" class="w-full p-2 text-sm border rounded font-[Lexend]">
                 </div>
             </div>
         </div>
@@ -793,18 +789,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Apply custom range filter
     applyFiltersBtn.addEventListener('click', function() {
         const startDate = startDateInput.value;
-        const endDate = endDateInput.value;
         
-        // Validate date range
-        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
-            alert('Start date cannot be after end date');
+        // Validate date selection
+        if (!startDate) {
+            alert('Please select a date');
             return;
         }
 
-        // Store current filter state - ADD THIS
+        // Store current filter state
         currentFilterType = 'custom';
         currentStartDate = startDate ? new Date(startDate) : null;
-        currentEndDate = endDate ? new Date(endDate) : null;
+        currentEndDate = null; // Remove end date functionality
 
         // Reset to first page
         resetToFirstPage();
@@ -812,12 +807,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove active state from quick filter buttons
         quickFilterBtns.forEach(btn => btn.classList.remove('bg-[#F5E6E6]'));
 
-        // Apply custom filter
-        filteredActivities = filterActivities(allActivities, 'custom', startDate, endDate);
+        // Apply custom filter for single date
+        filteredActivities = filterActivities(allActivities, 'custom', startDate, startDate);
 
         // Apply current search term if exists
         const searchTerm = searchInput.value.trim();
-        currentSearchTerm = searchTerm; // ADD THIS
+        currentSearchTerm = searchTerm;
         if (searchTerm) {
             filteredActivities = searchActivities(filteredActivities, searchTerm);
         }
@@ -855,9 +850,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear all input values
         searchInput.value = '';
         startDateInput.value = '';
-        endDateInput.value = '';
 
-        // Reset filter state - ADD THIS
+        // Reset filter state
         currentFilterType = null;
         currentStartDate = null;
         currentEndDate = null;
@@ -916,25 +910,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            if (!activities.length) {
-                alert('No activity logs found.');
+            // Determine target date based on current filter
+            let targetDate;
+            let targetDateString;
+            
+            if (currentFilterType === 'today') {
+                targetDate = new Date();
+                targetDateString = "Today";
+            } else if (currentFilterType === 'custom' && currentStartDate) {
+                // Use the selected date from custom filter
+                targetDate = new Date(currentStartDate);
+                targetDateString = targetDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            } else {
+                // Default to today if no specific date filter is active
+                targetDate = new Date();
+                targetDateString = "Today";
+            }
+
+            // Set target date to start of day
+            targetDate.setHours(0, 0, 0, 0);
+            const nextDay = new Date(targetDate);
+            nextDay.setDate(targetDate.getDate() + 1);
+
+            // Filter for target date activities only (1 day worth)
+            const targetDateActivities = activities.filter(activity => {
+                const activityDate = new Date(activity.created_at);
+                return activityDate >= targetDate && activityDate < nextDay;
+            });
+
+            if (!targetDateActivities.length) {
+                alert(`No activity logs found for ${targetDateString.toLowerCase()}.`);
                 button.innerHTML = originalContent;
                 button.disabled = false;
                 return;
             }
-
-            // Apply current filters to get the data that should be in the PDF - MODIFIED
-            const filteredData = applyCurrentFilters(activities);
-
-            if (!filteredData.length) {
-                alert('No activity logs found matching the current filter.');
-                button.innerHTML = originalContent;
-                button.disabled = false;
-                return;
-            }
-
-            // Get filter description - ADDED
-            const { description, recordCount } = getFilterDescription();
 
             // Create a container for PDF content
             const pdfContainer = document.createElement('div');
@@ -956,14 +965,14 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
             pdfContainer.appendChild(style);
 
-            // Add header with filter information - OPTIMIZED FOR SPACE
+            // Add header with target date
             const header = document.createElement('div');
             header.innerHTML = `
                 <div style="text-align: center; margin-bottom: 15px;">
-                    <h1 style="color: #4D0F0F; font-size: 20px; margin-bottom: 5px; font-family: Arial, sans-serif;">Activity Logs Report</h1>
+                    <h1 style="color: #4D0F0F; font-size: 20px; margin-bottom: 5px; font-family: Arial, sans-serif;">Daily Activity Logs Report</h1>
                     <p style="color: #666; font-size: 11px; font-family: Arial, sans-serif; margin: 2px 0;">Generated on ${new Date().toLocaleString()}</p>
-                    <p style="color: #4D0F0F; font-size: 12px; font-weight: bold; margin: 3px 0; font-family: Arial, sans-serif;">${description}</p>
-                    <p style="color: #666; font-size: 10px; font-family: Arial, sans-serif; margin: 2px 0;">${recordCount}</p>
+                    <p style="color: #4D0F0F; font-size: 12px; font-weight: bold; margin: 3px 0; font-family: Arial, sans-serif;">Activity Logs for ${targetDateString}</p>
+                    <p style="color: #666; font-size: 10px; font-family: Arial, sans-serif; margin: 2px 0;">Total Records: ${targetDateActivities.length}</p>
                     <hr style="border: 0.5px solid #4D0F0F; margin: 10px 0;">
                 </div>
             `;
@@ -978,7 +987,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 margin-top: 20px;
             `;
 
-            // Create table header - OPTIMIZED
+            // Create table header
             const thead = document.createElement('thead');
             const headerRow = document.createElement('tr');
             const headers = ['Timestamp', 'Name', 'Action', 'Target', 'Description'];
@@ -1000,15 +1009,15 @@ document.addEventListener('DOMContentLoaded', function() {
             thead.appendChild(headerRow);
             cleanTable.appendChild(thead);
 
-            // Create table body with filtered data - MODIFIED
+            // Create table body with target date activities
             const tbody = document.createElement('tbody');
-            filteredData.forEach((activity, index) => {
+            targetDateActivities.forEach((activity, index) => {
                 const newRow = document.createElement('tr');
                 newRow.style.cssText = `
                     background-color: ${index % 2 === 0 ? 'white' : '#f9f9f9'};
                 `;
 
-                // Timestamp cell - OPTIMIZED
+                // Timestamp cell
                 const timestampCell = document.createElement('td');
                 const dateObj = new Date(activity.created_at);
                 timestampCell.style.cssText = `
@@ -1024,7 +1033,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 newRow.appendChild(timestampCell);
 
-                // Name cell - OPTIMIZED
+                // Name cell
                 const nameCell = document.createElement('td');
                 let name = 'Unknown User';
                 let roleName = '';
@@ -1049,7 +1058,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 newRow.appendChild(nameCell);
 
-                // Action cell - OPTIMIZED
+                // Action cell
                 const actionCell = document.createElement('td');
                 actionCell.style.cssText = `
                     padding: 6px;
@@ -1065,7 +1074,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 newRow.appendChild(actionCell);
 
-                // Target cell - OPTIMIZED
+                // Target cell
                 const targetCell = document.createElement('td');
                 targetCell.style.cssText = `
                     padding: 6px;
@@ -1081,7 +1090,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 newRow.appendChild(targetCell);
 
-                // Description cell - OPTIMIZED
+                // Description cell
                 const descCell = document.createElement('td');
                 descCell.style.cssText = `
                     padding: 6px;
@@ -1101,45 +1110,20 @@ document.addEventListener('DOMContentLoaded', function() {
             cleanTable.appendChild(tbody);
             pdfContainer.appendChild(cleanTable);
 
-            // Generate filename based on current filters - MODIFIED
-            let filename = 'activity-logs';
-            if (currentFilterType) {
-                switch(currentFilterType) {
-                    case 'today':
-                        filename += '-today';
-                        break;
-                    case 'this-week':
-                        filename += '-this-week';
-                        break;
-                    case 'this-month':
-                        filename += '-this-month';
-                        break;
-                    case 'custom':
-                        filename += '-custom-range';
-                        break;
-                    case 'newest':
-                        filename += '-newest-first';
-                        break;
-                    case 'oldest':
-                        filename += '-oldest-first';
-                        break;
-                }
-            }
-            if (currentSearchTerm) {
-                filename += '-search';
-            }
-            filename += `-${new Date().toISOString().split('T')[0]}.pdf`;
+            // Generate filename with target date
+            const filenameDateStr = targetDate.toISOString().split('T')[0];
+            const filename = `activity-logs-daily-${filenameDateStr}.pdf`;
 
-            // PDF generation options - OPTIMIZED
+            // PDF generation options
             const opt = {
-                margin: [8, 8, 8, 8], // Reduced margins
+                margin: [8, 8, 8, 8],
                 filename: filename,
                 image: { 
                     type: 'jpeg', 
                     quality: 0.98 
                 },
                 html2canvas: { 
-                    scale: 1.3, // Slightly reduced scale
+                    scale: 1.3,
                     useCORS: true,
                     allowTaint: true,
                     backgroundColor: '#ffffff',
