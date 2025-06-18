@@ -37,7 +37,8 @@
         <div class="space-y-4 text-lg font-[Manrope]">
             @foreach ([['Dashboard', 'newDashboard.svg', route('student.dashboard')], ['Submit Documents', 'submitDocument.svg', route('student.submit-documents')], ['Tracker', 'tracker.svg', route('student.studentTracker')], ['Calendar', 'calendar.svg', route('calendar.index')], ['History', 'archive.svg', route('student.documentHistory')], ['Settings', 'settings.svg', route('student.settings')]] as [$label, $icon, $route])
                 <a href="{{ $route }}"
-                    class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200 sidebar-link">
+                    class="flex items-center space-x-3 hover:text-yellow-400 transition duration-200 sidebar-link"
+                    data-sidebar-link="{{ $label }}">
                     <img src="{{ asset("images/$icon") }}" class="h-6 w-6" alt="{{ $label }} Icon">
                     <span class="sidebar-text">{{ $label }}</span>
                 </a>
@@ -130,6 +131,14 @@
         </div>
     </div>
 </div>
+<style>
+    .active-sidebar-link {
+        background-color: #4d0F0F !important;
+        padding: 0.5rem 1rem !important; /* Optional: adjust padding for active link */
+        color: #FFD700 !important; /* Optional: highlight text color */
+        border-radius: 0.5rem;
+    }
+</style>
 <script>
     function openLogoutModal() {
         document.getElementById('logoutConfirmationModal').classList.remove('hidden');
@@ -283,8 +292,26 @@
         window.addEventListener('resize', handleResponsive);
         handleResponsive(); // Initial check
 
-        // Close mobile sidebar when clicking on navigation links
+        // Highlight active sidebar link
         const sidebarLinks = document.querySelectorAll('.sidebar-link');
+        // On page load, highlight the link matching the current URL
+        sidebarLinks.forEach(link => {
+            if (link.href === window.location.href) {
+                link.classList.add('active-sidebar-link');
+            }
+        });
+        // On click, highlight the clicked link
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                sidebarLinks.forEach(l => l.classList.remove('active-sidebar-link'));
+                this.classList.add('active-sidebar-link');
+                if (window.innerWidth < 768) {
+                    closeMobileSidebarFunc();
+                }
+            });
+        });
+
+        // Close mobile sidebar when clicking on navigation links
         sidebarLinks.forEach(link => {
             link.addEventListener('click', function() {
                 if (window.innerWidth < 768) {
