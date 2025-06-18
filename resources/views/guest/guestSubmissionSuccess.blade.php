@@ -10,7 +10,7 @@
 
         <!-- Header (hidden on small screens, centered on desktop) -->
         <h1 class="hidden md:block mx-auto text-[20px] font-['Lexend']">
-            Document Submission (Guest)
+            Document Submission (Class Representative)
         </h1>
     </div>
 
@@ -22,7 +22,7 @@
                 <img
                     class="mx-auto w-[333px]" 
                     src="http://127.0.0.1:8000/images/guest-doc-submission-success.svg"
-                    alt="Guest Document Submission Successful" />
+                    alt="Class Representative Document Submission Successful" />
 
                 <p>Where would you like to go next?</p>
 

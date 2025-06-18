@@ -10,7 +10,7 @@
 
         <!-- Header (hidden on small screens, centered on desktop) -->
         <h1 class="hidden md:block mx-auto text-[20px] font-['Lexend']">
-            Document Submission (Guest)
+            Document Submission (Class Representative)
         </h1>
     </div>
 
