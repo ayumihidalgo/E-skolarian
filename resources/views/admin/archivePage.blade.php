@@ -9,7 +9,7 @@
         <div class="w-full min-h-screen bg-[#f2f4f7] px-6 py-8 flex flex-col">
             <!-- Header section with title and history page link -->
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-extrabold">Document Archive Table</h2>
+                <h2 class="md:text-2xl text-xl font-extrabold">Document Archive Table</h2>
 
                 <!-- Link back to document history page -->
                 <a href="{{ route('admin.documentHistory') }}"

@@ -8,7 +8,7 @@
         <div class="w-full px-6 py-8 flex flex-col">
             <!-- Header section with title and archive page link -->
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-extrabold">Document Repository</h2>
+                <h2 class="md:text-2xl text-xl font-extrabold">Document Repository</h2>
 
                 <!-- Link to archive page for viewing archived documents -->
                 <a href="{{ route('admin.archivePage') }}"
