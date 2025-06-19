@@ -759,7 +759,6 @@
     </div>
 
     <script>
-        // Add this script after your form
         function checkEditFormValidity() {
             const title = document.getElementById('editTitle').value.trim();
             const content = document.getElementById('editContent').value.trim();
@@ -774,9 +773,54 @@
             const isValid = title !== '' && content !== '' && (document.getElementById('editAudienceAll').checked ||
                 customChecked);
             const btn = document.getElementById('saveChangesBtn');
-            btn.disabled = !isValid;
-            btn.style.opacity = isValid ? '1' : '0.5';
-            btn.style.cursor = isValid ? 'pointer' : 'not-allowed';
+
+            // Check if there are any changes compared to the original values
+            const originalTitle = document.getElementById('originalTitle').value.trim();
+            const originalContent = document.getElementById('originalContent').value.trim();
+            const originalScheduleDate = document.getElementById('originalScheduleDate').value;
+            const originalScheduleTime = document.getElementById('originalScheduleTime').value;
+            const originalAudience = document.getElementById('originalAudience').value;
+            const originalAudienceStudents = JSON.parse(document.getElementById('originalAudienceStudents').value || '[]');
+            const currentScheduleCheckbox = document.getElementById('editScheduleCheckbox').checked;
+            const currentScheduleDate = document.getElementById('editScheduleDate').value;
+            const currentScheduleTime = document.getElementById('editScheduleTime').value;
+            const currentAudience = document.getElementById('editAudienceAll').checked ? 'all' : 'custom';
+            const currentAudienceStudents = Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb =>
+                cb.value);
+
+            // Compare schedule
+            let scheduleChanged = false;
+            if (originalScheduleDate || currentScheduleDate) {
+                scheduleChanged = (
+                    (originalScheduleDate !== currentScheduleDate) ||
+                    (originalScheduleTime !== currentScheduleTime) ||
+                    (Boolean(originalScheduleDate) !== currentScheduleCheckbox)
+                );
+            }
+
+            // Compare audience
+            let audienceChanged = false;
+            if (originalAudience !== currentAudience) {
+                audienceChanged = true;
+            } else if (currentAudience === 'custom') {
+                // Compare arrays
+                const orig = originalAudienceStudents.slice().sort();
+                const curr = currentAudienceStudents.slice().sort();
+                if (orig.length !== curr.length || !orig.every((v, i) => v == curr[i])) {
+                    audienceChanged = true;
+                }
+            }
+
+            const hasChanges =
+                originalTitle !== title ||
+                originalContent !== content ||
+                scheduleChanged ||
+                audienceChanged;
+
+            // Only enable if valid AND there are changes
+            btn.disabled = !(isValid && hasChanges);
+            btn.style.opacity = (!btn.disabled) ? '1' : '0.5';
+            btn.style.cursor = (!btn.disabled) ? 'pointer' : 'not-allowed';
         }
 
         document.getElementById('editTitle').addEventListener('input', checkEditFormValidity);
@@ -840,7 +884,6 @@
         document.querySelectorAll('input[name="audience_students[]"]').forEach(cb => {
             cb.addEventListener('change', checkFormValidity);
         });
-        checkFormValidity();
 
         function decodeHtmlEntities(str) {
             var txt = document.createElement('textarea');
