@@ -19,7 +19,7 @@
                                     Unknown User
                                 @endif
                             </span>
-                            <span class="font-bold text-[16px] text-black font-[Lexend]">
+                            <span class="font-xl text-[16px] text-black font-[Lexend]">
                                 {{ \Carbon\Carbon::parse($activity->created_at)->format('h:i A') }}
                             </span>
                         </div>

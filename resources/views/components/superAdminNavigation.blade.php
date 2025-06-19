@@ -1,19 +1,20 @@
 @extends('base')
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <!-- Top Navigation Header -->
-<div class="w-full bg-[#4d0F0F] h-[90px] flex items-center justify-between px-4 md:px-10 lg:px-15">
+<div class="w-full bg-[#4d0F0F] h-auto min-h-[90px] flex flex-col sm:flex-row items-center justify-between px-4 md:px-10 lg:px-15 py-2 gap-y-2">
     <!-- Left side: Logo and Text -->
     <div class="flex items-center space-x-3">
         <img src="{{ asset('images/superAdminIcon.svg') }}" alt="Logo" class="h-12 w-12 sm:h-15 sm:w-15">
         <div class="text-white">
-            <h1 class="font-[Marcellus_SC] text-lg sm:text-xl leading-none">E-SKOLARI<span
-                    class="text-yellow-400">★</span>N</h1>
+            <h1 class="font-[Marcellus_SC] text-lg sm:text-xl leading-none">
+                E-SKOLARI<span class="text-yellow-400">★</span>N
+            </h1>
             <p class="text-xs tracking-wide font-[Marcellus_SC]">DOCUMENT MANAGEMENT</p>
         </div>
     </div>
 
     <!-- Right side: Reports and Super Admin Dropdown -->
-    <div class="flex items-center space-x-3 sm:space-x-4 md:space-x-6 text-white font-[Manrope]">
+    <div class="flex items-center space-x-3 sm:space-x-4 md:space-x-6 text-white font-[Manrope] mt-2 sm:mt-0">
         <!-- Reports Button -->
         <a href="{{ route('super-admin.reports') }}"
             class="relative flex items-center rounded border border-white space-x-2 p-1 hover:bg-gray-100/50 hover:text-red-500 transition duration-200 cursor-pointer group text-xs sm:text-base">
