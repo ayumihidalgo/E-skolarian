@@ -100,10 +100,12 @@
                                         </div>
                                         <div class="ml-3">
                                             <div class="text-l font-semibold text-gray-900 font-[Lexend] max-w-[450px] truncate">
-                                                <span class="font-semibold text-[18px] text-black text[Lexend]">
+                                                <span class="font-semibold text-[18px] text-black font-[Lexend]">
                                                     @if($activity->user)
-                                                        @if(in_array($activity->user_role_name, ['Admin', 'Superadmin']))
+                                                        @if(in_array($activity->user->role, ['admin', 'superadmin']))
                                                             {{ $activity->user->role_name }}
+                                                        @elseif($activity->user->role === 'student')
+                                                            {{ $activity->user->username }}
                                                         @else
                                                             {{ $activity->user->username }}
                                                         @endif
@@ -575,13 +577,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let profilePic = '{{ asset("images/dprofile.svg") }}';
 
         if (activity.user) {
-            if (['Admin', 'Superadmin'].includes(activity.user.role_name)) {
+            if (['admin', 'superadmin'].includes(activity.user.role)) {
                 displayName = activity.user.role_name;
+            } else if (activity.user.role === 'student') {
+                displayName = activity.user.username;
             } else {
                 displayName = activity.user.username;
             }
             roleName = activity.user.role_name;
-            
             if (activity.user.profile_pic) {
                 profilePic = `{{ asset('storage/') }}/${activity.user.profile_pic}`;
             }
@@ -728,9 +731,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const day = activityDate.getDate().toString();
             
             // Other searchable fields
-            const name = activity.user ? 
-                ((['Admin', 'Superadmin'].includes(activity.user.role_name)) ? 
-                 activity.user.role_name : activity.user.username) : 'Unknown User';
+            const name = activity.user
+                ? (['admin', 'super admin'].includes(activity.user.role)
+                    ? activity.user.role_name
+                    : (activity.user.role === 'student'
+                        ? activity.user.username
+                        : activity.user.username))
+                : 'Unknown User';
             const action = activity.action || '';
             const target = activity.target || '';
             const description = activity.description || '';
@@ -1069,11 +1076,26 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add this style to prevent row breaks
             const style = document.createElement('style');
             style.textContent = `
-                table, tr, td, th, tbody, thead, tfoot {
+                table {
+                    page-break-inside: auto !important;
+                    break-inside: auto !important;
+                }
+                tr {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid-row !important;
+                }
+                td, th {
                     page-break-inside: avoid !important;
                     break-inside: avoid !important;
                 }
+                thead {
+                    display: table-header-group !important;
+                }
+                tfoot {
+                    display: table-footer-group !important;
+                }
             `;
+            pdfContainer.appendChild(style);
             pdfContainer.appendChild(style);
 
             // Add header with target date
@@ -1149,13 +1171,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 let name = 'Unknown User';
                 let roleName = '';
                 if (activity.user) {
-                    if (['Admin', 'Superadmin'].includes(activity.user.role_name)) {
-                        name = activity.user.role_name;
-                    } else {
-                        name = activity.user.username;
-                    }
-                    roleName = activity.user.role_name;
+                if (['admin', 'super admin'].includes(activity.user.role)) {
+                    name = activity.user.role_name;
+                } else if (activity.user.role === 'student') {
+                    name = activity.user.username;
+                } else {
+                    name = activity.user.username;
                 }
+                roleName = activity.user.role_name;
+            }
                 nameCell.style.cssText = `
                     padding: 6px;
                     border: 1px solid #ddd;
