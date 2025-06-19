@@ -389,7 +389,7 @@
             <div class="flex justify-center mb-4">
                 <div class="space-y-4">
                     <img id="profilePreviewImage"
-                        src="{{ $user->profile_pic ? asset('storage/' . $user->profile_pic) : asset('images/dprofile.svg') }}"
+                        src="{{ $user->profile_pic ? url('/profile-picture/' . basename($user->profile_pic)) : asset('images/dprofile.svg') }}"
                         alt="Profile Preview"
                         class="w-50 h-50 sm:w-65 sm:h-65 md:w-65 md:h-65 lg:w-70 lg:h-70 rounded-full border-5 border-gray-300 object-cover">
                 </div>
