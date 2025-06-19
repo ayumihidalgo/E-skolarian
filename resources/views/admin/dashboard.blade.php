@@ -656,9 +656,9 @@
                     </div>
                 </div>
                 <div class="text-right">
-                    <button type="submit" id="submitBtn" class="px-6 py-2 text-white rounded-lg transition"
+                    <button type="submit" id="saveChangesBtn" class="px-6 py-2 text-white rounded-lg transition"
                         style="background-color: #7A1212; opacity: 0.5; cursor: not-allowed;" disabled>
-                        Post Announcement
+                        Save Changes
                     </button>
                 </div>
             </form>
@@ -760,6 +760,32 @@
 
     <script>
         // Add this script after your form
+        function checkEditFormValidity() {
+            const title = document.getElementById('editTitle').value.trim();
+            const content = document.getElementById('editContent').value.trim();
+            const audienceCustom = document.getElementById('editAudienceCustom').checked;
+            let customChecked = false;
+
+            if (audienceCustom) {
+                const customCheckboxes = document.querySelectorAll('.editAudienceStudent:checked');
+                customChecked = customCheckboxes.length > 0;
+            }
+
+            const isValid = title !== '' && content !== '' && (document.getElementById('editAudienceAll').checked ||
+                customChecked);
+            const btn = document.getElementById('saveChangesBtn');
+            btn.disabled = !isValid;
+            btn.style.opacity = isValid ? '1' : '0.5';
+            btn.style.cursor = isValid ? 'pointer' : 'not-allowed';
+        }
+
+        document.getElementById('editTitle').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editContent').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editAudienceAll').addEventListener('change', checkEditFormValidity);
+        document.getElementById('editAudienceCustom').addEventListener('change', checkEditFormValidity);
+        document.querySelectorAll('.editAudienceStudent').forEach(cb => {
+            cb.addEventListener('change', checkEditFormValidity);
+        });
 
         function clearAnnouncementForm() {
             document.getElementById('titleInput').value = '';
