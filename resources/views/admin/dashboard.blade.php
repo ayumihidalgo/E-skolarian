@@ -412,7 +412,7 @@
                             @endif
                         </div>
                     </div>
-
+                    @include('loading')                                           
                     <!-- Post New Announcements Modal -->
                     <div id="postAnnouncementModal" class="fixed inset-0 z-50 hidden">
                         <!-- Simple black overlay without blur -->
@@ -658,7 +658,7 @@
                 <div class="text-right">
                     <button type="submit" id="saveChangesBtn" class="px-6 py-2 text-white rounded-lg transition"
                         style="background-color: #7A1212; opacity: 0.5; cursor: not-allowed;" disabled>
-                        Save Changes
+                        Save
                     </button>
                 </div>
             </form>
@@ -1693,6 +1693,19 @@
                 }, 1000);
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+        // Listen for submit on any form in the document
+        document.addEventListener('submit', function(e) {
+            if (e.target.tagName.toLowerCase() === 'form') {
+                const loader = document.getElementById('loader');
+                if (loader) {
+                    loader.classList.remove('hidden');
+                    loader.classList.add('flex');
+                }
+            }
+        }, true); // Use capture to catch early
+    });
     </script>
 
     <!-- Discard Changes Modal -->

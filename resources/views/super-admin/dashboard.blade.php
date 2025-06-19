@@ -584,6 +584,7 @@
                 </nav>
             </div>
         </div>
+        @include('loading')
         <!-- Post New Announcements Modal -->
         <div id="postAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
             <div class="absolute inset-0 bg-black opacity-75"></div>
@@ -1735,6 +1736,17 @@
                 infoTooltip.classList.add('hidden');
             }
         });
+        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('submit', function(e) {
+            if (e.target.tagName.toLowerCase() === 'form') {
+                const loader = document.getElementById('loader');
+                if (loader) {
+                    loader.classList.remove('hidden');
+                    loader.classList.add('flex');
+                }
+            }
+        }, true);
+    });
     </script>
     <!-- Discard Changes Modal -->
     <div id="discardChangesModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
