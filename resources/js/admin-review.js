@@ -1842,60 +1842,91 @@ function updateDocumentDetailsView(docData) {
             
             // If we have multiple attachments/versions, display them all
             if (docData.attachments && docData.attachments.length > 0) {
-                // Add all versions with the latest version marked
-                const versions = docData.attachments;
-                versions.forEach((version, index) => {
-                    const fileName = version.document_url ? version.document_url.split('/').pop() : 'Unknown File';
-                    const isLatest = version.is_latest;
+                // Group attachments by filename to identify versions of the same file
+                const fileGroups = {};
+                
+                // First, group files by their base name (without version numbers)
+                docData.attachments.forEach(attachment => {
+                    const fileName = attachment.document_url ? attachment.document_url.split('/').pop() : 'Unknown File';
+                    // Extract base filename without the version suffix
+                    const baseFileName = fileName.replace(/\s*\(v\d+\)(?=\.\w+$|$)/i, '');
+                    
+                    if (!fileGroups[baseFileName]) {
+                    fileGroups[baseFileName] = [];
+                    }
+                    fileGroups[baseFileName].push(attachment);
+                });
+                
+                // Process each group of files
+                Object.entries(fileGroups).forEach(([baseFileName, attachments]) => {
+                    // Sort by version number (descending)
+                    attachments.sort((a, b) => b.version - a.version);
+                    
+                    // Mark only the highest version as latest
+                    const latestVersion = attachments[0].version;
+                    
+                    // Display each attachment
+                    attachments.forEach((attachment) => {
+                    const fileName = attachment.document_url ? attachment.document_url.split('/').pop() : 'Unknown File';
+                    const isLatest = attachment.version === latestVersion;
                     
                     // Create attachment button
                     const attachmentItem = document.createElement('div');
                     attachmentItem.className = 'mb-2';
                     
+                    // Apply different styling based on whether it's the latest version
+                    const buttonClass = isLatest 
+                        ? 'bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-300 text-sm md:text-base max-w-full' 
+                        : 'bg-gray-300 text-gray-600 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-400 text-sm md:text-base max-w-full opacity-50';
+                    
                     const button = document.createElement('button');
-                    button.className = 'bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-300 text-sm md:text-base max-w-full';
+                    button.className = buttonClass;
+                    
+                    // Apply line-through to text for previous versions
+                    const textClass = isLatest ? 'break-words truncate' : 'break-words truncate line-through';
                     
                     button.innerHTML = `
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                         </svg>
-                        <span class="break-words truncate">${fileName} (v${version.version})</span>
+                        <span class="${textClass}">${fileName} (v${attachment.version})</span>
                         ${isLatest ? '<span class="bg-green-500 text-white text-xs px-2 py-0.5 rounded ml-2">Latest</span>' : ''}
                     `;
                     
                     // Set up click handler for viewing the document
                     button.onclick = function() {
-                        openDocumentViewer(version.document_url, 'application/pdf');
+                        openDocumentViewer(attachment.document_url, 'application/pdf');
                     };
                     
                     attachmentItem.appendChild(button);
                     attachmentSection.appendChild(attachmentItem);
+                    });
                 });
             } else if (docData.document_url) {
-                // For backward compatibility - just one attachment
-                const fileName = docData.document_url.split('/').pop();
-                
-                // Create attachment button
-                const button = document.createElement('button');
-                button.id = 'documentAttachment';
-                button.className = 'bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-300 text-sm md:text-base max-w-full';
-                
-                button.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                    <span id="documentFileName" class="break-words truncate">${fileName}</span>
-                `;
-                
-                // Set up click handler for viewing the document
-                button.onclick = function() {
-                    openDocumentViewer(docData.document_url, 'application/pdf');
-                };
-                
-                attachmentSection.appendChild(button);
+            // For backward compatibility - just one attachment
+            const fileName = docData.document_url.split('/').pop();
+            
+            // Create attachment button
+            const button = document.createElement('button');
+            button.id = 'documentAttachment';
+            button.className = 'bg-gray-200 text-gray-800 inline-flex items-center rounded-lg px-3 md:px-4 py-1.5 md:py-2 cursor-pointer hover:bg-gray-300 text-sm md:text-base max-w-full';
+            
+            button.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                <span id="documentFileName" class="break-words truncate">${fileName}</span>
+            `;
+            
+            // Set up click handler for viewing the document
+            button.onclick = function() {
+                openDocumentViewer(docData.document_url, 'application/pdf');
+            };
+            
+            attachmentSection.appendChild(button);
             } else {
-                // No attachments
-                attachmentSection.innerHTML = '<p class="text-gray-500">No attachments available</p>';
+            // No attachments
+            attachmentSection.innerHTML = '<p class="text-gray-500">No attachments available</p>';
             }
         }
         
@@ -2011,6 +2042,9 @@ function updateDocumentDetailsView(docData) {
         const actionButtonsContainer = document.getElementById('actionButtonsContainer');
 
         if (statusHistory && docData.timeline && Array.isArray(docData.timeline)) {
+            // Debug log to see all timeline data
+            console.log("Timeline data:", docData.timeline);
+
             // Sort timeline by created_at
             const timeline = [...docData.timeline].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
             
@@ -2020,6 +2054,9 @@ function updateDocumentDetailsView(docData) {
             // Variables to track the latest return entry (if any)
             let hasBeenReturned = false;
             let latestReturnEntry = null;
+
+            // Track current status and current receiver
+            let currentStatus = null;
             
             // Group consecutive entries by the same user_role
             let currentUserRole = null;
@@ -2032,6 +2069,11 @@ function updateDocumentDetailsView(docData) {
                 if (entry.status === 'returned' || entry.action_type === 'Return') {
                     hasBeenReturned = true;
                     latestReturnEntry = entry;
+                }
+
+                // Track the current status (from the latest entry)
+                if (index === timeline.length - 1) {
+                    currentStatus = entry.status;
                 }
                 
                 if (entry.user_role !== currentUserRole) {
@@ -2101,6 +2143,10 @@ function updateDocumentDetailsView(docData) {
                             statusColor = 'text-orange-400'; 
                             bgColor = 'bg-orange-700';
                             break;
+                        case 'resubmit':     
+                            statusColor = 'text-white'; 
+                            bgColor = 'bg-orange-700';
+                            break;
                         default:
                             statusColor = 'text-white/90';
                             bgColor = 'bg-[#B07575]';
@@ -2140,14 +2186,15 @@ function updateDocumentDetailsView(docData) {
             // Show or hide action buttons and processed indicator based on document status
             const finalDecisionExists = docData.has_decision;
             const isCurrentReceiver = docData.is_current_receiver;
+            const isUnderReview = currentStatus === 'under_review';
 
             // Hide all status indicators first
             if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
             if (returnedStatusIndicator) returnedStatusIndicator.classList.add('hidden');
             
             // First handle returned status specifically
-            if (hasBeenReturned) {
-                // If document has been returned, hide action buttons
+            if (hasBeenReturned && !isUnderReview) {
+                // If document has been returned and NOT currently under review, hide action buttons
                 if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
                 
                 // Show returned status indicator
@@ -2172,6 +2219,28 @@ function updateDocumentDetailsView(docData) {
                     }
                 }
             } 
+            // Check if under review - show action buttons even if returned previously
+            else if (isUnderReview && isCurrentReceiver) {
+                // If document is under review and user is the current receiver
+                // Show action buttons and hide status indicators
+                if (actionButtonsContainer) actionButtonsContainer.classList.remove('hidden');
+                if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
+                if (returnedStatusIndicator) returnedStatusIndicator.classList.add('hidden');
+                
+                // Make sure buttons are enabled
+                const approveButton = document.getElementById('approveButton');
+                const rejectButton = document.getElementById('rejectButton');
+                
+                if (approveButton) {
+                    approveButton.disabled = false;
+                    approveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+                
+                if (rejectButton) {
+                    rejectButton.disabled = false;
+                    rejectButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
             // Then handle other cases
             else if (finalDecisionExists) {
                 // If a decision has been made, hide action buttons
@@ -2606,7 +2675,10 @@ function containsProfanity(text) {
         'lintik', 'ulol', 'tarantado', 'hinayupak', 'inutil',
         'buwisit', 'kupal', 'tanga', 'bobo', 'pakyu', 'leche',
         'hayop', 'siraulo', 'ungas', 'tae', 'burat', 'pekpek',
-        'pakshet', 'anak ng puta', 'iniyot', 'yawa', 'bilat'
+        'pakshet', 'anak ng puta', 'iniyot', 'yawa', 'bilat', 
+        'puday', 'kupal', 'siraulo', 'bayot', 'bayut', 'baliw', 
+        'putang', 'pota', 'namo', 'taena', 'maamlenybayot', 'iyot',
+        'kantot', 'lulu', 'buwisit', 'tite', 'puke'
     ];
     
     // Convert to lowercase for case-insensitive matching

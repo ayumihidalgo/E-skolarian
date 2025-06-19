@@ -83,6 +83,46 @@
         transition: opacity 0.2s ease-in-out;
     }
     
+     /* Add these new styles for document versioning */
+    .document-version {
+        transition: all 0.2s ease-in-out;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .document-version.previous-version {
+        opacity: 0.6;
+        background-color: #f1f1f1;
+    }
+
+    .document-version.previous-version .version-title {
+        text-decoration: line-through;
+    }
+
+    .document-version.current-version {
+        border-left: 3px solid #7A1212;
+    }
+    
+    .document-version:hover {
+        opacity: 1;
+    }
+    
+    /* Special styling for version labels */
+    .version-label {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 1rem;
+    }
+    
+    .current-version-label {
+        background-color: #7A1212;
+        color: white;
+    }
+    
+    .previous-version-label {
+        background-color: #d1d1d1;
+        color: #555;
+    }
 </style>
 
 @section('content')
@@ -94,7 +134,7 @@
             <div id="mainContentArea" class="p-2 sm:p-4 md:p-6 h-auto">
                 <!-- Table View -->
                 <div id="tableView" class="overflow-hidden h-full flex flex-col">
-                    <div class="text-black py-2 md:py-4 px-2 md:px-6 font-extrabold text-xl md:text-2xl">
+                    <div class="text-black py-2 md:py-4 px-2 md:px-6 font-extrabold text-xl md:text-3xl">
                         Admin Review
                     </div>
 
@@ -414,7 +454,7 @@
                 <div id="detailsView" class="hidden h-auto text-white">
                     <!-- Header with close button -->
                     <div class="flex items-start justify-between px-3 md:px-6 mb-2 md:mb-0">
-                        <h2 class="font-extrabold text-lg md:text-2xl text-black">Admin Review</h2>
+                        <h2 class="font-extrabold text-4xl md:text-2xl text-black">Admin Review</h2>
                         <!-- Action Buttons -->
                         <div class="flex justify-end space-x-2 mt-3 md:mt-4">
                             <div id="actionButtonsContainer" class="flex space-x-2 order-first md:order-none">
@@ -479,7 +519,7 @@
                                 <h2 class="text-base md:text-lg text-[#FFFFFF91] font-bold mb-1 md:mb-2">Status</h2>
                                 
                                 <!-- Status history with timeline style -->
-                                <div class="text-xs md:text-sm overflow-y-auto max-h-[250px] pb-2" id="statusHistory">
+                                <div class="text-xs md:text-sm overflow-y-auto max-h-[250px] pb-2" id="statusHistory" style="scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent;">
                                     <!-- Status history will be inserted here by JavaScript -->
                                     <div class="relative pl-6 border-l-2 border-gray-600">
                                         <div class="mb-4 relative">

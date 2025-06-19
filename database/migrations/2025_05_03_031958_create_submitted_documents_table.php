@@ -27,7 +27,7 @@ return new class extends Migration
             $table->float('fees')->nullable();
             $table->string('type');
             $table->string('control_tag')->unique()->default('AUTO');
-            $table->enum('status', ['Pending', 'Under Review', 'Approved', 'Returned'])->default('Pending');
+            $table->enum('status', ['Pending', 'Under Review', 'Approved', 'Returned', 'Resubmitted'])->default('Pending');
             $table->timestamps();
         });
     }
