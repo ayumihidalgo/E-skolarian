@@ -237,8 +237,8 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
     Route::post('/admin/select-all-documents', [AdminDocumentController::class, 'selectAllDocuments'])->name('admin.selectAllDocuments');
     Route::post('/admin/select-all-archived-documents', [AdminDocumentController::class, 'selectAllArchivedDocuments'])->name('admin.selectAllArchivedDocuments');
     Route::post('admin/documents/check-updates', [DocumentReviewController::class, 'checkForUpdates'])->name('documents.check-updates');
-
-        //real time status document counts
+    Route::get('/admin/documents/{id}/timeline-updates', [DocumentReviewController::class, 'checkTimelineUpdates'])->name('admin.documents.timeline-updates');
+    //real time status document counts
     Route::get('/admin/document-counts', [App\Http\Controllers\AdminDashboardController::class, 'getDocumentCounts'])
     ->name('admin.document-counts')
     ->middleware('auth');
@@ -338,9 +338,6 @@ Route::middleware(['auth', \App\Http\Middleware\NoBackHistory::class, CheckActiv
     Route::get('/admin/documentArchive', function () {
         return view('admin.documentArchive');
     })->name('admin.documentArchive');
-
-
-
 
     // Route for the document preview page (admin)
     Route::get('/document/preview/{id}', [AdminDocumentController::class, 'preview'])->name('admin.documentPreview');
