@@ -432,4 +432,4 @@ class SuperAdminController extends Controller
             return response()->json([]);
         }
     }
-}
+};

@@ -410,7 +410,7 @@ class DocumentReviewController extends Controller
             $this->logActivity(
                 'Approved',
                 'Submission #' . $document->id,
-                "{$user->username} approved submission titled '{$document->subject}'."
+                "{$user->role_name} approved submission titled '{$document->subject}'." //change the username to role_name
             );
             
             // Add to timeline - ONLY create the timeline entry here, not in the event
@@ -496,7 +496,7 @@ class DocumentReviewController extends Controller
             $this->logActivity(
                 'Returned',
                 'Submission #' . $document->id,
-                "{$user->username} returned document titled '{$document->subject}'."
+                "{$user->role_name} returned document titled '{$document->subject}'." // change the username to role_name
             );
             
             // Add to timeline - ONLY create the timeline entry here
