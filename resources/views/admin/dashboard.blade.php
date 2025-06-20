@@ -412,7 +412,6 @@
                             @endif
                         </div>
                     </div>
-                    @include('loading')
                     <!-- Post New Announcements Modal -->
                     <div id="postAnnouncementModal" class="fixed inset-0 z-50 hidden">
                         <!-- Simple black overlay without blur -->
@@ -1704,18 +1703,7 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
-            // Listen for submit on any form in the document
-            document.addEventListener('submit', function(e) {
-                if (e.target.tagName.toLowerCase() === 'form') {
-                    const loader = document.getElementById('loader');
-                    if (loader) {
-                        loader.classList.remove('hidden');
-                        loader.classList.add('flex');
-                    }
-                }
-            }, true); // Use capture to catch early
-        });
+
     </script>
 
     <!-- Discard Changes Modal -->

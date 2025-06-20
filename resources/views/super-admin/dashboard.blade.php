@@ -584,7 +584,6 @@
                 </nav>
             </div>
         </div>
-        @include('loading')
         <!-- Post New Announcements Modal -->
         <div id="postAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
             <div class="absolute inset-0 bg-black opacity-75"></div>
@@ -661,6 +660,8 @@
                                 </div>
                             </div>
                         </div>
+                         <p id="scheduleError" class="text-red-500 text-sm mt-1" style="display: none;">
+                                        </p>
                     </div>
                     <!-- Audience Section -->
                     <div>
@@ -1045,6 +1046,141 @@
     </div>
 
     <script>
+        function checkEditFormValidity() {
+            const title = document.getElementById('editTitle').value.trim();
+            const content = document.getElementById('editContent').value.trim();
+            const audienceCustom = document.getElementById('editAudienceCustom').checked;
+            let customChecked = false;
+
+            if (audienceCustom) {
+                const customCheckboxes = document.querySelectorAll('.editAudienceStudent:checked');
+                customChecked = customCheckboxes.length > 0;
+            }
+
+            const isValid = title !== '' && content !== '' && (document.getElementById('editAudienceAll').checked ||
+                customChecked);
+            const btn = document.getElementById('saveChangesBtn');
+
+            // Check if there are any changes compared to the original values
+            const originalTitle = document.getElementById('originalTitle').value.trim();
+            const originalContent = document.getElementById('originalContent').value.trim();
+            const originalScheduleDate = document.getElementById('originalScheduleDate').value;
+            const originalScheduleTime = document.getElementById('originalScheduleTime').value;
+            const originalAudience = document.getElementById('originalAudience').value;
+            const originalAudienceStudents = JSON.parse(document.getElementById('originalAudienceStudents').value || '[]');
+            const currentScheduleCheckbox = document.getElementById('editScheduleCheckbox').checked;
+            const currentScheduleDate = document.getElementById('editScheduleDate').value;
+            const currentScheduleTime = document.getElementById('editScheduleTime').value;
+            const currentAudience = document.getElementById('editAudienceAll').checked ? 'all' : 'custom';
+            const currentAudienceStudents = Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb =>
+                cb.value);
+
+            // Compare schedule
+            let scheduleChanged = false;
+            if (originalScheduleDate || currentScheduleDate) {
+                scheduleChanged = (
+                    (originalScheduleDate !== currentScheduleDate) ||
+                    (originalScheduleTime !== currentScheduleTime) ||
+                    (Boolean(originalScheduleDate) !== currentScheduleCheckbox)
+                );
+            }
+
+            // Compare audience
+            let audienceChanged = false;
+            if (originalAudience !== currentAudience) {
+                audienceChanged = true;
+            } else if (currentAudience === 'custom') {
+                // Compare arrays
+                const orig = originalAudienceStudents.slice().sort();
+                const curr = currentAudienceStudents.slice().sort();
+                if (orig.length !== curr.length || !orig.every((v, i) => v == curr[i])) {
+                    audienceChanged = true;
+                }
+            }
+
+            // Only enable if valid AND there are changes
+            // Disable if schedule date/time is equal to original (no change)
+            const scheduleUnchanged = (
+                originalScheduleDate === currentScheduleDate &&
+                originalScheduleTime === currentScheduleTime &&
+                (Boolean(originalScheduleDate) === currentScheduleCheckbox)
+            );
+            btn.disabled = !(isValid && (
+                originalTitle !== title ||
+                originalContent !== content ||
+                !scheduleUnchanged ||
+                audienceChanged
+            ));
+            btn.style.opacity = (!btn.disabled) ? '1' : '0.5';
+            btn.style.cursor = (!btn.disabled) ? 'pointer' : 'not-allowed';
+        }
+        document.getElementById('editScheduleDate').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editScheduleTime').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editScheduleCheckbox').addEventListener('change', checkEditFormValidity);
+        document.getElementById('editTitle').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editContent').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editAudienceAll').addEventListener('change', checkEditFormValidity);
+        document.getElementById('editAudienceCustom').addEventListener('change', checkEditFormValidity);
+        document.querySelectorAll('.editAudienceStudent').forEach(cb => {
+            cb.addEventListener('change', checkEditFormValidity);
+        });
+
+        // Add event listeners for schedule date and time fields in edit modal
+
+
+        function clearAnnouncementForm() {
+            document.getElementById('titleInput').value = '';
+            document.getElementById('contentInput').value = '';
+            document.getElementById('audienceAll').checked = true;
+            document.getElementById('audienceCustom').checked = false;
+
+            // Uncheck all custom audience checkboxes
+            document.querySelectorAll('input[name="audience_students[]"]').forEach(cb => cb.checked = false);
+
+            // Hide custom audience dropdown if visible
+            document.getElementById('customAudienceDropdown').classList.add('hidden');
+
+            // Reset schedule fields
+            document.getElementById('scheduleCheckbox').checked = false;
+            document.getElementById('scheduleFields').classList.add('hidden');
+            document.getElementById('scheduleDate').value = '';
+            document.getElementById('scheduleTime').value = '';
+
+            // Hide error messages
+            document.getElementById('titleError').style.display = 'none';
+            document.getElementById('contentError').style.display = 'none';
+
+            // Disable and style the submit button
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+        }
+
+        function checkFormValidity() {
+            const title = document.getElementById('titleInput').value.trim();
+            const content = document.getElementById('contentInput').value.trim();
+            const audienceCustom = document.getElementById('audienceCustom').checked;
+            let customChecked = false;
+
+            if (audienceCustom) {
+                const customCheckboxes = document.querySelectorAll('input[name="audience_students[]"]:checked');
+                customChecked = customCheckboxes.length > 0;
+            }
+
+            const isValid = title !== '' && content !== '' && (audienceAll || customChecked);
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = !isValid;
+            btn.style.opacity = isValid ? '1' : '0.5';
+            btn.style.cursor = isValid ? 'pointer' : 'not-allowed';
+        }
+
+        document.getElementById('titleInput').addEventListener('input', checkFormValidity);
+        document.getElementById('contentInput').addEventListener('input', checkFormValidity);
+        document.getElementById('audienceCustom').addEventListener('change', checkFormValidity);
+        document.querySelectorAll('input[name="audience_students[]"]').forEach(cb => {
+            cb.addEventListener('change', checkFormValidity);
+        });
         function decodeHtmlEntities(str) {
             var txt = document.createElement('textarea');
             txt.innerHTML = str;
@@ -1259,6 +1395,8 @@
             document.getElementById('editAnnouncementModal').classList.remove('hidden');
             document.getElementById('editAnnouncementForm').action =
                 `/announcements/${id}`; ////////etooo walang super admin
+
+            checkEditFormValidity();
         }
 
         // Close Edit Modal
@@ -1414,6 +1552,8 @@
         // Modal functions for Post New Announcement
         function openPostAnnouncementModal() {
             document.getElementById('postAnnouncementModal').classList.remove('hidden');
+         
+        checkFormValidity(); 
         }
 
         function closePostAnnouncementModal() {
@@ -1736,17 +1876,7 @@
                 infoTooltip.classList.add('hidden');
             }
         });
-        document.addEventListener('DOMContentLoaded', function() {
-        document.addEventListener('submit', function(e) {
-            if (e.target.tagName.toLowerCase() === 'form') {
-                const loader = document.getElementById('loader');
-                if (loader) {
-                    loader.classList.remove('hidden');
-                    loader.classList.add('flex');
-                }
-            }
-        }, true);
-    });
+
     </script>
     <!-- Discard Changes Modal -->
     <div id="discardChangesModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
