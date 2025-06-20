@@ -222,35 +222,6 @@
                                                                 Returned, Submitted on
                                                                 {{ $record->returned_at ? $record->returned_at->format('F j Y, g:iA') : ($record->updated_at ? $record->updated_at->format('F j Y, g:iA') : 'N/A') }}
                                                             </span>
-                                                            <div class="block text-red-400 text-l font-semibold mt-2">
-                                                                <span class="">
-                                                                    This document was returned on
-                                                                    {{ $record->returned_at ? $record->returned_at->format('F j Y, g:iA') : ($record->updated_at ? $record->updated_at->format('F j Y, g:iA') : 'N/A') }}.
-                                                                </span>
-                                                            </div>
-                                                            <div class="div">
-                                                                @php
-                                                                    $timelineMessage = \App\Models\DocumentTimeline::where(
-                                                                        'document_id',
-                                                                        $record->id,
-                                                                    )
-                                                                        ->where('status', 'Returned')
-                                                                        ->orderByDesc('created_at')
-                                                                        ->value('message');
-                                                                @endphp
-                                                                @if ($timelineMessage)
-                                                                    <div class="text-red-300 text-sm mt-2">
-                                                                        <strong>Return Reason:</strong>
-                                                                        {{ $timelineMessage }}
-                                                                    </div>
-                                                                @endif
-                                                            </div>
-                                                            <div class="div">
-                                                                <button type="button" onclick="openreturnDocumentModal()"
-                                                                    class="mt-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition">
-                                                                    Return Document
-                                                                </button>
-                                                            </div>
                                                         @elseif ($record->status === 'rejected')
                                                             <span>
                                                                 Rejected,
@@ -261,6 +232,42 @@
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <div class="bg-[#DBEAFE] rounded-lg p-3" style="border-left: 5px solid #2b7FFF;">
+                                            <div class="block text-l font-semibold mt-2" style="color: #3F5CE7;">
+                                                <span>
+                                                    This document was returned on
+                                                    {{ $record->returned_at ? $record->returned_at->format('F j Y, g:iA') : ($record->updated_at ? $record->updated_at->format('F j Y, g:iA') : 'N/A') }}.
+                                                </span>
+                                            </div>
+                                            <div>
+                                                @php
+                                                    $timelineMessage = \App\Models\DocumentTimeline::where(
+                                                        'document_id',
+                                                        $record->id,
+                                                    )
+                                                        ->where('status', 'Returned')
+                                                        ->orderByDesc('created_at')
+                                                        ->value('message');
+                                                @endphp
+                                                @if ($timelineMessage)
+                                                    <div class="text-sm mt-2" style="color: #3F5CE7;">
+                                                        <strong>Return Reason:</strong>
+                                                        {{ $timelineMessage }}
+                                                    </div>
+                                                @endif
+                                            </div>
+                                            <div>
+                                                <button type="button" onclick="openreturnDocumentModal()"
+                                                    class="mt-2 cursor-pointer"
+                                                    style="background-color: #EF4444; color: #FFFFFF; padding: 7px 19px; border-radius: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 600; transition: background 0.2s ease-in, color 0.2s ease-in; cursor: pointer;"
+                                                    onmouseover="this.style.backgroundColor='#FFFFFF';this.style.color='#EF4444';"
+                                                    onmouseout="this.style.backgroundColor='#EF4444';this.style.color='#FFFFFF';">
+                                                    Return Document
+                                                </button>
+                                            </div>
+                                        </div>
+
 
                                         {{-- Returned Reason Image Modal --}}
                                         @if ($record->status === 'Returned' || $record->status === 'returned')
@@ -275,7 +282,9 @@
                                                                 stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                                                         </svg>
                                                     </button>
-                                                    <h3 class="text-lg font-semibold mb-4 text-black">Return Document</h3>
+                                                    <h3 class="text-lg font-semibold mb-4 text-white rounded px-4 py-2" style="background-color: #6B0F10;">
+                                                        Return Document
+                                                    </h3>
                                                     <div class="mb-2">
                                                         <span class="font-semibold text-black">Title:</span>
                                                         <span class="text-gray-800">{{ $record->subject }}</span>
@@ -301,12 +310,19 @@
                                                     </div>
                                                     <div class="flex justify-end gap-2 mt-6">
                                                         <button onclick="closereturnDocumentModal()"
-                                                            class="bg-gray-300 hover:bg-gray-400 text-black font-semibold px-4 py-2 rounded">
+                                                            class="font-semibold px-4 py-2 cursor-pointer transition-colors"
+                                                            style="background-color: #FFFFFF; color: #6B0F10; border: 1px solid #6B0F10; border-radius: 6px; width: 74px;"
+                                                            onmouseover="this.style.backgroundColor='#6B0F10';this.style.color='#FFFFFF';this.style.borderColor='#FFFFFF';"
+                                                            onmouseout="this.style.backgroundColor='#FFFFFF';this.style.color='#6B0F10';this.style.borderColor='#6B0F10';">
                                                             Close
                                                         </button>
                                                         <button
-                                                            class="bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded"
-                                                            type="button" onclick="openFinalizeModal()">
+                                                            class="font-semibold px-4 py-2 rounded cursor-pointer"
+                                                            style="background-color: #6B0F10; color: #FFFFFF; border: 1px solid #6B0F10; transition: background 0.2s, color 0.2s, border-color 0.2s;"
+                                                            type="button"
+                                                            onmouseover="this.style.backgroundColor='#FFFFFF';this.style.color='#6B0F10';this.style.borderColor='#6B0F10';"
+                                                            onmouseout="this.style.backgroundColor='#6B0F10';this.style.color='#FFFFFF';this.style.borderColor='#6B0F10';"
+                                                            onclick="openFinalizeModal()">
                                                             Return
                                                         </button>
 
