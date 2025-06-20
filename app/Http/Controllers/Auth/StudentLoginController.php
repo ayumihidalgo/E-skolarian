@@ -77,7 +77,7 @@ class StudentLoginController extends Controller
         $this->logActivity(
             'Login',
             'User',
-            "{$authenticatedUser->role_name} successfully logged in."
+            "{$authenticatedUser->organization_acronym} successfully logged in." // change role_name to organization_acronym
         );
 
         return redirect('/student/dashboard');

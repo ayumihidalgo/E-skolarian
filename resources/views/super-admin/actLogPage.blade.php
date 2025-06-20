@@ -3,7 +3,7 @@
 @section('content')
     @include('components.superAdminNavigation')
 
-    <div class="max-h-screen bg-[#F2F4F7] bg-opacity-30 px-10 py-8">
+    <div class="max-h-screen bg-[#F2F4F7] bg-opacity-30 px-10 py-5">
         <!-- Header Section -->
         <div class="flex justify-between items-center mb-6">
             <div class="flex items-center">
@@ -63,7 +63,7 @@
 
             <!-- Table Content -->
             <div 
-                class="overflow-x-auto"
+                class="overflow-x-auto h-[615px]"
                 style="max-height: 60vh; min-height: 200px;"
                 id="activityTableWrapper"
             >
@@ -100,10 +100,12 @@
                                         </div>
                                         <div class="ml-3">
                                             <div class="text-l font-semibold text-gray-900 font-[Lexend] max-w-[450px] truncate">
-                                                <span class="font-semibold text-[18px] text-black text[Lexend]">
+                                                <span class="font-semibold text-[18px] text-black font-[Lexend]">
                                                     @if($activity->user)
-                                                        @if(in_array($activity->user_role_name, ['Admin', 'Superadmin']))
+                                                        @if(in_array($activity->user->role, ['admin', 'superadmin']))
                                                             {{ $activity->user->role_name }}
+                                                        @elseif($activity->user->role === 'student')
+                                                            {{ $activity->user->username }}
                                                         @else
                                                             {{ $activity->user->username }}
                                                         @endif
@@ -131,7 +133,7 @@
                                     </span>
                                 </td>
                                 <td class="w-[25%] px-6 py-2 text-l text-gray-900 font-[Lexend]">
-                                    <div class="max-w-xs truncate" title="{{ $activity->description }}">
+                                    <div class="max-h-[48px] overflow-y-auto line-clamp-2 whitespace-normal" style="word-break: break-word;">
                                         {{ $activity->description }}
                                     </div>
                                 </td>
@@ -141,7 +143,7 @@
                 </table>
                 
                 <!-- Move no results outside of tbody -->
-                <div id="noResultsRow" class="hidden bg-white h-[600px]">
+                <div id="noResultsRow" class="hidden bg-white h-[565px]">
                     <div class="text-center py-12 text-gray-500 font-[Lexend]">
                         <div class="flex flex-col items-center justify-center">
                             <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
@@ -222,7 +224,9 @@
     </div>
 
     <!-- Filter Modal -->
-<div id="filterModal" class="hidden absolute right-[250px] top-[245px] w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+<div id="filterModal"
+    class="hidden absolute right-[250px] top-[245px] w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+    style="transition: left 0.2s, right 0.2s, top 0.2s;">
     <div class="p-4">
         <h3 class="text-sm font-semibold text-gray-900 mb-3 font-[Lexend]">Filter Activities</h3>
         
@@ -237,11 +241,15 @@
 
         <!-- Custom Range -->
         <div class="mb-4">
-            <label class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]">Select Date</label>
+            <label class="block text-sm font-medium text-gray-700 mb-1 font-[Lexend]">Custom Range</label>
             <div class="space-y-2">
                 <div>
-                    <label class="text-xs text-gray-500 mb-1 block font-[Lexend]">Date</label>
+                    <label class="text-xs text-gray-500 mb-1 block font-[Lexend]">Start Date</label>
                     <input type="date" id="startDate" class="w-full p-2 text-sm border rounded font-[Lexend]">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 mb-1 block font-[Lexend]">End Date</label>
+                    <input type="date" id="endDate" class="w-full p-2 text-sm border rounded font-[Lexend]">
                 </div>
             </div>
         </div>
@@ -254,6 +262,23 @@
             <button id="applyFilters" class="px-3 py-1 text-sm bg-[#4D0F0F] text-white rounded font-[Lexend] hover:bg-red-800">
                 Apply
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Range Error Modal -->
+<div id="customRangeErrorModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div class="absolute inset-0 bg-black opacity-30"></div>
+    <div class="relative bg-white rounded-xl shadow-lg max-w-xs w-full p-6 z-10">
+        <div class="flex items-center justify-between mb-2">
+            <span class="font-semibold text-lg text-[#7A1212]">Invalid Date Range</span>
+            <button type="button" id="customRangeErrorCloseBtn" class="text-2xl text-gray-500 hover:text-gray-700">&times;</button>
+        </div>
+        <div class="mb-4 text-gray-700">
+            End date cannot be earlier than start date. Please select a valid date range.
+        </div>
+        <div class="flex justify-end">
+            <button type="button" id="customRangeErrorOkBtn" class="px-4 py-2 rounded bg-[#7A1212] text-white hover:bg-red-800">OK</button>
         </div>
     </div>
 </div>
@@ -552,13 +577,14 @@ document.addEventListener('DOMContentLoaded', function() {
         let profilePic = '{{ asset("images/dprofile.svg") }}';
 
         if (activity.user) {
-            if (['Admin', 'Superadmin'].includes(activity.user.role_name)) {
+            if (['admin', 'superadmin'].includes(activity.user.role)) {
                 displayName = activity.user.role_name;
+            } else if (activity.user.role === 'student') {
+                displayName = activity.user.username;
             } else {
                 displayName = activity.user.username;
             }
             roleName = activity.user.role_name;
-            
             if (activity.user.profile_pic) {
                 profilePic = `{{ asset('storage/') }}/${activity.user.profile_pic}`;
             }
@@ -599,7 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 </span>
             </td>
             <td class="w-[25%] px-6 py-2 text-l text-gray-900 font-[Lexend]">
-                <div class="max-w-xs truncate" title="${activity.description || ''}">
+                <div class="max-h-[48px] overflow-y-auto line-clamp-2 whitespace-normal" style="word-break: break-word;">
                     ${activity.description || ''}
                 </div>
             </td>
@@ -684,16 +710,45 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const term = searchTerm.toLowerCase();
         return activities.filter(activity => {
-            const dateStr = new Date(activity.created_at).toLocaleDateString();
-            const name = activity.user ? 
-                ((['Admin', 'Superadmin'].includes(activity.user.role_name)) ? 
-                 activity.user.role_name : activity.user.username) : 'Unknown User';
+            // Get the activity date and format it for searching
+            const activityDate = new Date(activity.created_at);
+            const formattedDate = activityDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const formattedTime = activityDate.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+            
+            // Include all searchable parts of the date
+            const monthName = activityDate.toLocaleDateString('en-US', { month: 'long' });
+            const monthNameShort = activityDate.toLocaleDateString('en-US', { month: 'short' });
+            const year = activityDate.getFullYear().toString();
+            const day = activityDate.getDate().toString();
+            
+            // Other searchable fields
+            const name = activity.user
+                ? (['admin', 'super admin'].includes(activity.user.role)
+                    ? activity.user.role_name
+                    : (activity.user.role === 'student'
+                        ? activity.user.username
+                        : activity.user.username))
+                : 'Unknown User';
             const action = activity.action || '';
             const target = activity.target || '';
             const description = activity.description || '';
             const roleName = activity.user ? activity.user.role_name : '';
             
-            return dateStr.toLowerCase().includes(term) ||
+            return formattedDate.toLowerCase().includes(term) ||
+                   formattedTime.toLowerCase().includes(term) ||
+                   monthName.toLowerCase().includes(term) ||
+                   monthNameShort.toLowerCase().includes(term) ||
+                   year.includes(term) ||
+                   day.includes(term) ||
                    name.toLowerCase().includes(term) ||
                    action.toLowerCase().includes(term) ||
                    target.toLowerCase().includes(term) ||
@@ -708,12 +763,57 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const cells = row.querySelectorAll('td');
         cells.forEach(cell => {
-            const text = cell.textContent;
-            if (text.toLowerCase().includes(searchTerm.toLowerCase())) {
-                const regex = new RegExp(`(${searchTerm})`, 'gi');
-                cell.innerHTML = cell.innerHTML.replace(regex, '<mark style="background-color: yellow;">$1</mark>');
+            // Store original content structure by cloning
+            const originalContent = cell.cloneNode(true);
+            
+            // Check if cell text includes the search term
+            if (cell.textContent.toLowerCase().includes(searchTerm.toLowerCase())) {
+                // Process text nodes only, preserving HTML structure
+                highlightTextNodesInElement(cell, searchTerm);
             }
         });
+    }
+
+    // Helper function to process text nodes only
+    function highlightTextNodesInElement(element, searchTerm) {
+        if (!element) return;
+        
+        // Skip certain elements that shouldn't be highlighted (like images)
+        if (element.nodeName === 'IMG') return;
+        
+        // Case insensitive search term regex with proper escaping
+        const searchRegex = new RegExp(searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        
+        // If this is a text node, highlight the content
+        if (element.nodeType === Node.TEXT_NODE) {
+            const text = element.textContent;
+            if (text.trim() === '') return; // Skip empty text nodes
+            
+            if (searchRegex.test(text)) {
+                // Create a span with highlighted content
+                const highlightedContent = text.replace(searchRegex, match => 
+                    `<mark style="background-color: yellow;">${match}</mark>`
+                );
+                
+                // Replace the text node with our highlighted HTML
+                const tempSpan = document.createElement('span');
+                tempSpan.innerHTML = highlightedContent;
+                
+                // Insert the new highlighted content
+                element.parentNode.insertBefore(tempSpan, element);
+                element.parentNode.removeChild(element);
+            }
+            return;
+        }
+        
+        // For element nodes, process all child nodes recursively
+        if (element.nodeType === Node.ELEMENT_NODE) {
+            // Create a copy of childNodes because the collection will change as we highlight
+            const childNodes = Array.from(element.childNodes);
+            childNodes.forEach(child => {
+                highlightTextNodesInElement(child, searchTerm);
+            });
+        }
     }
 
     // Initialize page
@@ -789,17 +889,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Apply custom range filter
     applyFiltersBtn.addEventListener('click', function() {
         const startDate = startDateInput.value;
-        
-        // Validate date selection
-        if (!startDate) {
-            alert('Please select a date');
+        const endDate = endDateInput.value;
+
+        // Validate date range
+        if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+            showCustomRangeErrorModal();
             return;
         }
 
         // Store current filter state
         currentFilterType = 'custom';
         currentStartDate = startDate ? new Date(startDate) : null;
-        currentEndDate = null; // Remove end date functionality
+        currentEndDate = endDate ? new Date(endDate) : null;
 
         // Reset to first page
         resetToFirstPage();
@@ -807,8 +908,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Remove active state from quick filter buttons
         quickFilterBtns.forEach(btn => btn.classList.remove('bg-[#F5E6E6]'));
 
-        // Apply custom filter for single date
-        filteredActivities = filterActivities(allActivities, 'custom', startDate, startDate);
+        // Apply custom filter for range
+        filteredActivities = filterActivities(allActivities, 'custom', startDate, endDate);
 
         // Apply current search term if exists
         const searchTerm = searchInput.value.trim();
@@ -820,6 +921,18 @@ document.addEventListener('DOMContentLoaded', function() {
         renderActivities(filteredActivities, searchTerm);
         filterModal.classList.add('hidden');
     });
+
+    // Show/Hide custom range error modal
+    function showCustomRangeErrorModal() {
+        document.getElementById('customRangeErrorModal').classList.remove('hidden');
+    }
+    function closeCustomRangeErrorModal() {
+        document.getElementById('customRangeErrorModal').classList.add('hidden');
+    }
+
+    // Fix close and ok button in custom range error modal
+    document.getElementById('customRangeErrorCloseBtn').onclick = closeCustomRangeErrorModal;
+    document.getElementById('customRangeErrorOkBtn').onclick = closeCustomRangeErrorModal;
 
     // Clear filters
     clearFiltersBtn.addEventListener('click', function() {
@@ -850,6 +963,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear all input values
         searchInput.value = '';
         startDateInput.value = '';
+        endDateInput.value = ''; // <-- Ensure end date is cleared
 
         // Reset filter state
         currentFilterType = null;
@@ -910,24 +1024,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Determine target date based on current filter
+            // --- Only 1 day worth of logs for PDF ---
             let targetDate;
             let targetDateString;
-            
+
             if (currentFilterType === 'today') {
                 targetDate = new Date();
                 targetDateString = "Today";
             } else if (currentFilterType === 'custom' && currentStartDate) {
-                // Use the selected date from custom filter
-                targetDate = new Date(currentStartDate);
+                // Use startDate if set, else endDate if only that is set
+                targetDate = currentStartDate;
+                targetDateString = targetDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            } else if (currentFilterType === 'custom' && currentEndDate) {
+                targetDate = currentEndDate;
                 targetDateString = targetDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
             } else {
-                // Default to today if no specific date filter is active
+                // Default to today
                 targetDate = new Date();
                 targetDateString = "Today";
             }
 
             // Set target date to start of day
+            targetDate = new Date(targetDate);
             targetDate.setHours(0, 0, 0, 0);
             const nextDay = new Date(targetDate);
             nextDay.setDate(targetDate.getDate() + 1);
@@ -958,11 +1076,26 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add this style to prevent row breaks
             const style = document.createElement('style');
             style.textContent = `
-                table, tr, td, th, tbody, thead, tfoot {
+                table {
+                    page-break-inside: auto !important;
+                    break-inside: auto !important;
+                }
+                tr {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid-row !important;
+                }
+                td, th {
                     page-break-inside: avoid !important;
                     break-inside: avoid !important;
                 }
+                thead {
+                    display: table-header-group !important;
+                }
+                tfoot {
+                    display: table-footer-group !important;
+                }
             `;
+            pdfContainer.appendChild(style);
             pdfContainer.appendChild(style);
 
             // Add header with target date
@@ -1038,13 +1171,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 let name = 'Unknown User';
                 let roleName = '';
                 if (activity.user) {
-                    if (['Admin', 'Superadmin'].includes(activity.user.role_name)) {
-                        name = activity.user.role_name;
-                    } else {
-                        name = activity.user.username;
-                    }
-                    roleName = activity.user.role_name;
+                if (['admin', 'super admin'].includes(activity.user.role)) {
+                    name = activity.user.role_name;
+                } else if (activity.user.role === 'student') {
+                    name = activity.user.username;
+                } else {
+                    name = activity.user.username;
                 }
+                roleName = activity.user.role_name;
+            }
                 nameCell.style.cssText = `
                     padding: 6px;
                     border: 1px solid #ddd;
@@ -1097,11 +1232,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     border: 1px solid #ddd;
                     font-size: 10px;
                     vertical-align: top;
-                    word-wrap: break-word;
-                    max-width: 200px;
                     font-family: Arial, sans-serif;
                 `;
-                descCell.textContent = activity.description || '';
+
+                // Create a div for description content with multi-line support
+                const descDiv = document.createElement('div');
+                descDiv.style.cssText = `
+                    max-height: 48px;
+                    overflow-y: auto;
+                    word-break: break-word;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    line-height: 1.3;
+                `;
+                descDiv.textContent = activity.description || '';
+                descCell.appendChild(descDiv);
                 newRow.appendChild(descCell);
 
                 tbody.appendChild(newRow);
@@ -1242,6 +1388,54 @@ document.addEventListener('DOMContentLoaded', function() {
         if (realTimeInterval) {
             clearInterval(realTimeInterval);
         }
+    });
+
+    // Responsive positioning for filter modal (always below the filter button)
+    function updateFilterModalPosition() {
+        const modal = document.getElementById('filterModal');
+        const filterBtn = document.getElementById('openFilterModal');
+        if (!modal || !filterBtn) return;
+
+        // Reset styles
+        modal.style.left = '';
+        modal.style.right = '';
+        modal.style.top = '';
+        modal.style.width = '';
+        modal.style.transform = '';
+
+        // Get button position
+        const btnRect = filterBtn.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+        if (window.innerWidth < 640) {
+            // Small screens: modal full width below button
+            modal.style.position = 'absolute';
+            modal.style.left = '5vw';
+            modal.style.right = '5vw';
+            modal.style.width = '90vw';
+            modal.style.minWidth = '0';
+            modal.style.top = (btnRect.bottom + scrollTop + 8) + 'px';
+            modal.style.transform = '';
+        } else {
+            // Desktop: modal below button, right-aligned
+            modal.style.position = 'absolute';
+            modal.style.width = '16rem'; // 64 * 0.25rem
+            modal.style.minWidth = '';
+            // Align right edge of modal with right edge of button
+            const containerRect = modal.offsetParent ? modal.offsetParent.getBoundingClientRect() : { left: 0, top: 0 };
+            const rightOffset = (containerRect.right - btnRect.right) + 0;
+            modal.style.right = rightOffset + 'px';
+            modal.style.left = '';
+            modal.style.top = (btnRect.bottom + scrollTop + 8 - containerRect.top) + 'px';
+            modal.style.transform = '';
+        }
+    }
+    window.addEventListener('resize', updateFilterModalPosition);
+    document.addEventListener('DOMContentLoaded', updateFilterModalPosition);
+    // Also update position when opening the modal
+    document.getElementById('openFilterModal').addEventListener('click', function() {
+        setTimeout(updateFilterModalPosition, 0);
     });
 });
 </script>

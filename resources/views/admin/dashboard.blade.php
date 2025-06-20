@@ -7,7 +7,7 @@
     <div id="main-content" class="flex flex-col min-h-screen ml-[20%] transition-all duration-300 bg-[#F2F4F7]">
         @include('components.adminNavBarComponent')
         <div class="flex-grow p-6 space-y-6">
-           <h5 class="font-['Manrope'] font-extrabold text-[23px] md:text-[20px] lg:text-[30px] mb-1">
+            <h5 class="font-['Manrope'] font-extrabold text-[23px] md:text-[20px] lg:text-[30px] mb-1">
                 Dashboard
             </h5>
             @if (session('success'))
@@ -33,36 +33,51 @@
 
             <div class="flex-grow p-6 space-y-6">
                 <!-- Stats Section -->
-           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                <div>
-                    <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Pending Documents</p>
-                    <div id="pending-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $pendingCount }}</div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Pending Documents</p>
+                            <div id="pending-count"
+                                class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">
+                                {{ $pendingCount }}</div>
+                        </div>
+                        <img src="{{ asset('images/pendingicon.svg') }}"
+                            class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto"
+                            alt="Pending Documents">
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Under Review</p>
+                            <div id="review-count"
+                                class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">
+                                {{ $reviewCount }}</div>
+                        </div>
+                        <img src="{{ asset('images/reviewicon.svg') }}"
+                            class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto"
+                            alt="Under Review">
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Approved Documents</p>
+                            <div id="approved-count"
+                                class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">
+                                {{ $approvedCount }}</div>
+                        </div>
+                        <img src="{{ asset('images/approvedicon.svg') }}"
+                            class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto"
+                            alt="Approved Documents">
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
+                        <div>
+                            <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Total Documents</p>
+                            <div id="total-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">
+                                {{ $totalCount }}</div>
+                        </div>
+                        <img src="{{ asset('images/totaldocicon.svg') }}"
+                            class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto"
+                            alt="Total Documents">
+                    </div>
                 </div>
-                <img src="{{ asset('images/pendingicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Pending Documents">
-            </div>
-            <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                <div>
-                    <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Under Review</p>
-                    <div id="review-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $reviewCount }}</div>
-                </div>
-                <img src="{{ asset('images/reviewicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Under Review">
-            </div>
-            <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                <div>
-                    <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Approved Documents</p>
-                    <div id="approved-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $approvedCount }}</div>
-                </div>
-                <img src="{{ asset('images/approvedicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Approved Documents">
-            </div>
-            <div class="bg-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                <div>
-                    <p class="text-[10px] xs:text-xs sm:text-sm md:text-base text-gray-500">Total Documents</p>
-                    <div id="total-count" class="text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold">{{ $totalCount }}</div>
-                </div>
-                <img src="{{ asset('images/totaldocicon.svg') }}" class="w-6 h-6 xs:w-7 xs:h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 max-w-full h-auto" alt="Total Documents">
-            </div>
-        </div>
                 <!-- Announcement and Documents Section -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     <!-- Left side: Announcements + Recent Documents stacked vertically -->
@@ -70,12 +85,14 @@
                         <!-- Latest Announcements -->
                         <div class="bg-white rounded-xl shadow-md p-4 flex flex-col">
                             <div class="flex items-center justify-between mb-2">
-                                <h2 class="text-[15px] sm:text-[17px] md:text-[20px] lg:text-[22px] font-semibold flex items-center gap-2">
-                                    <img src="{{ asset('images/annc.svg') }}" alt="Announcements" class="w-6 h-6 sm:w-7 sm:h-7 inline-block align-middle max-w-full" />
+                                <h2
+                                    class="text-[15px] sm:text-[17px] md:text-[20px] lg:text-[22px] font-semibold flex items-center gap-2">
+                                    <img src="{{ asset('images/annc.svg') }}" alt="Announcements"
+                                        class="w-6 h-6 sm:w-7 sm:h-7 inline-block align-middle max-w-full" />
                                     Announcements
                                 </h2>
                                 <button onclick="openPostAnnouncementModal()" title="Post New Announcement"
-                                     class="p-2 rounded-full hover:bg-indigo-50 transition cursor-pointer">
+                                    class="p-2 rounded-full hover:bg-indigo-50 transition cursor-pointer">
                                     <img src="{{ asset('images/add_annc.svg') }}" alt="Add Announcement" class="w-7 h-7">
                                 </button>
                             </div>
@@ -85,24 +102,25 @@
                                         <div class="mb-4 pb-4 border-b border-gray-300 relative">
                                             <div class="flex items-center justify-between">
                                                 <h3 class="text-md md:text-xl font-bold text-gray-800 mb-1">
-                                                                    @if (strlen($announcement->title) > 40)
-                                                                        <!-- For desktop -->
-                                                                        <span class="hidden md:inline cursor-help group relative">
-                                                                            {{ Str::limit($announcement->title, 40) }}
-                                                                            <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                    @if (strlen($announcement->title) > 40)
+                                                        <!-- For desktop -->
+                                                        <span class="hidden md:inline cursor-help group relative">
+                                                            {{ Str::limit($announcement->title, 40) }}
+                                                            <span
+                                                                class="invisible group-hover:visible absolute left-0 top-full mt-1 
                                                                                 bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
-                                                                                {{ $announcement->title }}
-                                                                            </span>
-                                                                        </span>
-                                                                        
-                                                                        <!-- For mobile -->
-                                                                        <span class="md:hidden">
-                                                                            {{ $announcement->title }}
-                                                                        </span>
-                                                                    @else
-                                                                        {{ $announcement->title }}
-                                                                    @endif
-                                                                </h3>
+                                                                {{ $announcement->title }}
+                                                            </span>
+                                                        </span>
+
+                                                        <!-- For mobile -->
+                                                        <span class="md:hidden">
+                                                            {{ $announcement->title }}
+                                                        </span>
+                                                    @else
+                                                        {{ $announcement->title }}
+                                                    @endif
+                                                </h3>
                                                 <!-- Ellipsis Button -->
                                                 <div class="relative">
                                                     <button
@@ -129,7 +147,7 @@
                                                                 `{{ $announcement->deadline ? \Carbon\Carbon::parse($announcement->deadline)->format('Y-m-d') : '' }}`,
                                                                 `{{ $announcement->deadline ? \Carbon\Carbon::parse($announcement->deadline)->format('H:i') : '' }}`,
                                                                 `{{ $announcement->audience ?? 'all' }}`,
-                                                                '{{ htmlspecialchars(json_encode($announcement->audience_students ?? []), ENT_QUOTES, "UTF-8") }}',
+                                                                '{{ htmlspecialchars(json_encode($announcement->audience_students ?? []), ENT_QUOTES, 'UTF-8') }}',
                                                                 {{ $announcement->user_id }}
                                                             )"
                                                             type="button">
@@ -153,13 +171,14 @@
                                             <p class="text-sm text-gray-500 mb-1">
                                                 Posted by {{ $announcement->user->role_name }} on
                                                 {{ $announcement->created_at->format('F j, Y') }}
-                                                @if($announcement->deadline)
+                                                @if ($announcement->deadline)
                                                     @php
                                                         $deadline = \Carbon\Carbon::parse($announcement->deadline);
                                                         $hasTime = $deadline->format('H:i:s') !== '00:00:00';
                                                     @endphp
                                                     <span class="ml-2 text-red-600 font-semibold">
-                                                        Deadline: {{ $hasTime ? $deadline->format('F j, Y g:i A') : $deadline->format('F j, Y') }}
+                                                        Deadline:
+                                                        {{ $hasTime ? $deadline->format('F j, Y g:i A') : $deadline->format('F j, Y') }}
                                                     </span>
                                                 @endif
                                             </p>
@@ -170,7 +189,9 @@
                                                     $preview = $isLong
                                                         ? mb_substr($announcement->content, 0, $maxLength) . '...'
                                                         : $announcement->content;
-                                                    $meta = "Posted by {$announcement->user->role_name} on {$announcement->created_at->format('F j, Y',)}";
+                                                    $meta = "Posted by {$announcement->user->role_name} on {$announcement->created_at->format(
+    'F j, Y',
+)}";
                                                 @endphp
                                                 <span class="break-words whitespace-pre-line">{{ $preview }}</span>
                                                 @if ($isLong)
@@ -195,7 +216,7 @@
                         <!-- Recent Documents -->
                         <div class="bg-white rounded-xl shadow-md p-4 flex-1 flex flex-col">
                             <h2 class="text-lg font-semibold mb-2">Recent Documents</h2>
-                            @if($recentDocuments->count())
+                            @if ($recentDocuments->count())
                                 <div class="overflow-x-auto">
                                     <table class="min-w-full text-sm text-left bg-white rounded-xl">
                                         <thead>
@@ -208,17 +229,20 @@
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            @foreach($recentDocuments as $doc)
+                                            @foreach ($recentDocuments as $doc)
                                                 <tr class="border-b">
-                                                    <td class="px-3 py-2 font-extrabold text-black">{{ $doc->control_tag }}</td>
-                                                    <td class="px-3 py-2 max-w-[180px] truncate" title="{{ $doc->user->username ?? '' }}">
-                                                        @if(is_null($doc->user_id))
+                                                    <td class="px-3 py-2 font-extrabold text-black">
+                                                        {{ $doc->control_tag }}</td>
+                                                    <td class="px-3 py-2 max-w-[180px] truncate"
+                                                        title="{{ $doc->user->username ?? '' }}">
+                                                        @if (is_null($doc->user_id))
                                                             Guest Student
                                                         @else
                                                             {{ $doc->user->username ?? 'Unknown' }}
                                                         @endif
                                                     </td>
-                                                    <td class="px-3 py-2 max-w-[200px] truncate" title="{{ $doc->subject }}">
+                                                    <td class="px-3 py-2 max-w-[200px] truncate"
+                                                        title="{{ $doc->subject }}">
                                                         {{ $doc->subject }}
                                                     </td>
                                                     <td class="px-3 py-2">
@@ -242,7 +266,7 @@
 
                     <!-- Right side: Previous/Archived Announcements -->
                     <div class="bg-white rounded-xl shadow-md p-4 flex flex-col h-full"
-                         style="min-height: 0; height: 100%;">
+                        style="min-height: 0; height: 100%;">
                         <div class="flex justify-between items-center mb-2">
                             <h2 class="text-lg font-semibold">
                                 {{ $showArchive ? 'Archived Announcements' : 'Previous Announcements' }}
@@ -264,23 +288,24 @@
                                     <div class="mb-4 pb-4 border-b border-gray-300 relative">
                                         <div class="flex items-center justify-between">
                                             <h3 class="text-sm md:text-md font-bold text-gray-800 mb-1">
-                                            @if (strlen($announcement->title) > 40)
-                                                <!-- For desktop -->
-                                                <span class="hidden md:inline cursor-help group relative">
-                                                    {{ Str::limit($announcement->title, 40) }}
-                                                    <span class="invisible group-hover:visible absolute left-0 top-full mt-1 
+                                                @if (strlen($announcement->title) > 40)
+                                                    <!-- For desktop -->
+                                                    <span class="hidden md:inline cursor-help group relative">
+                                                        {{ Str::limit($announcement->title, 40) }}
+                                                        <span
+                                                            class="invisible group-hover:visible absolute left-0 top-full mt-1 
                                                         bg-gray-800 text-white text-sm rounded p-2 max-w-xs z-10">
+                                                            {{ $announcement->title }}
+                                                        </span>
+                                                    </span>
+                                                    <!-- For mobile -->
+                                                    <span class="md:hidden">
                                                         {{ $announcement->title }}
                                                     </span>
-                                                </span>
-                                                <!-- For mobile -->
-                                                <span class="md:hidden">
+                                                @else
                                                     {{ $announcement->title }}
-                                                </span>
-                                            @else
-                                                {{ $announcement->title }}
-                                            @endif
-                                        </h3>
+                                                @endif
+                                            </h3>
                                             @if ($showArchive)
                                                 <!-- Ellipsis for archived (Restore/Delete) -->
                                                 <div class="relative">
@@ -344,13 +369,14 @@
                                         <p class="text-sm text-gray-500 mb-2">
                                             Posted by {{ $announcement->user->role_name }} on
                                             {{ $announcement->created_at->format('F j, Y') }}
-                                            @if($announcement->deadline)
+                                            @if ($announcement->deadline)
                                                 @php
                                                     $deadline = \Carbon\Carbon::parse($announcement->deadline);
                                                     $hasTime = $deadline->format('H:i:s') !== '00:00:00';
                                                 @endphp
                                                 <span class="ml-2 text-red-600 font-semibold">
-                                                    Deadline: {{ $hasTime ? $deadline->format('F j, Y g:i A') : $deadline->format('F j, Y') }}
+                                                    Deadline:
+                                                    {{ $hasTime ? $deadline->format('F j, Y g:i A') : $deadline->format('F j, Y') }}
                                                 </span>
                                             @endif
                                         </p>
@@ -386,138 +412,165 @@
                             @endif
                         </div>
                     </div>
-
-                   <!-- Post New Announcements Modal -->
-                 <div id="postAnnouncementModal" class="fixed inset-0 z-50 hidden">
-                <!-- Simple black overlay without blur -->
-                <div class="fixed inset-0 bg-black opacity-75"></div>         
+                    @include('loading')
+                    <!-- Post New Announcements Modal -->
+                    <div id="postAnnouncementModal" class="fixed inset-0 z-50 hidden">
+                        <!-- Simple black overlay without blur -->
+                        <div class="fixed inset-0 bg-black opacity-75"></div>
                         <!-- Modal content wrapper -->
                         <div class="relative flex items-center justify-center min-h-screen p-4">
                             <div class="bg-white rounded-lg shadow-lg w-full max-w-lg p-6 relative">
                                 <!-- ...existing modal header... -->
                                 <div class="flex items-center mb-4 justify-between">
                                     <div class="flex items-center">
-                                    <h2 class="text-lg font-semibold mr-2">Post announcement</h2>
-                                    <!-- Info Icon Tooltip -->
-                                    <button type="button" id="announcementInfoBtn" class="ml-1 focus:outline-none cursor-pointer">
-                                        <img src="{{ asset('images/tooltip.png') }}" alt="Info" class="w-6 h-6 inline-block align-middle" />
-                                    </button>
+                                        <h2 class="text-lg font-semibold mr-2">Post announcement</h2>
+                                        <!-- Info Icon Tooltip -->
+                                        <button type="button" id="announcementInfoBtn"
+                                            class="ml-1 focus:outline-none cursor-pointer">
+                                            <img src="{{ asset('images/tooltip.png') }}" alt="Info"
+                                                class="w-6 h-6 inline-block align-middle" />
+                                        </button>
+                                    </div>
+                                    <button onclick="closePostAnnouncementModal()" type="button"
+                                        class="text-2xl text-gray-500 hover:text-gray-700 ml-2 cursor-pointer">&times;</button>
                                 </div>
-                                <button onclick="closePostAnnouncementModal()" type="button" class="text-2xl text-gray-500 hover:text-gray-700 ml-2 cursor-pointer">&times;</button>
-                            </div>
-                            <!-- Tooltip Content -->
-                            <div id="announcementInfoTooltip" class="hidden absolute top-12 left-1/2 transform -translate-x-1/2 w-80 sm:w-96 max-w-xs sm:max-w-md bg-gray-800 text-white text-sm rounded-lg shadow-lg p-4 z-50 break-words">
-                                <div class="mb-2 font-semibold">You can now create and share announcements with your team or organization!</div>
-                                <ol class="list-decimal list-inside mb-2">
-                                    <li>
-                                        <span class="font-semibold">Regular Announcements</span> – Ideal for general updates, reminders, or important messages.
-                                    </li>
-                                    <li>
-                                        <span class="font-semibold">Announcements with Deadlines</span> – Perfect for time-sensitive updates like submission schedules, event registrations, or task deadlines. These announcements allow you to set a due date to help users stay on track.
-                                    </li>
-                                </ol>
-                                <span>Start posting announcements to keep everyone informed and organized!</span>
-                            </div>
-                            <form id="announcementForm" action="{{ route('announcements.store') }}" method="POST" class="show-loader-on-submit space-y-4">
-                                @csrf
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                                    <input type="text" id="titleInput" name="title" maxlength="60"
-                                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                        placeholder="Enter announcement title">
-                                    <p id="titleError" class="text-red-500 text-sm mt-1" style="display: none;">Title is required.</p>
+                                <!-- Tooltip Content -->
+                                <div id="announcementInfoTooltip"
+                                    class="hidden absolute top-12 left-1/2 transform -translate-x-1/2 w-80 sm:w-96 max-w-xs sm:max-w-md bg-gray-800 text-white text-sm rounded-lg shadow-lg p-4 z-50 break-words">
+                                    <div class="mb-2 font-semibold">You can now create and share announcements with your
+                                        team or organization!</div>
+                                    <ol class="list-decimal list-inside mb-2">
+                                        <li>
+                                            <span class="font-semibold">Regular Announcements</span> – Ideal for general
+                                            updates, reminders, or important messages.
+                                        </li>
+                                        <li>
+                                            <span class="font-semibold">Announcements with Deadlines</span> – Perfect for
+                                            time-sensitive updates like submission schedules, event registrations, or task
+                                            deadlines. These announcements allow you to set a due date to help users stay on
+                                            track.
+                                        </li>
+                                    </ol>
+                                    <span>Start posting announcements to keep everyone informed and organized!</span>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
-                                    <textarea name="content" id="contentInput" rows="4" maxlength="1000"
-                                        class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                        placeholder="Enter announcement content"></textarea>
-                                    <p id="contentError" class="text-red-500 text-sm mt-1" style="display: none;">Content is required.</p>
-                                </div>
-                                <!-- Schedule Section -->
-                                <div>
-                                    <label class="inline-flex items-center mb-2">
-                                        <input type="checkbox" id="scheduleCheckbox" name="schedule" class="form-checkbox cursor-pointer">
-                                        <span class="ml-2">Set Due Date</span>
-                                    </label>
-                                    <div id="scheduleFields" class="hidden">
-                                        <div class="flex space-x-4">
-                                            <div class="flex-1">
-                                                <label for="scheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                                                <input type="date" id="scheduleDate" name="schedule_date"
-                                                    class="w-full border rounded px-2 py-1" min="{{ date('Y-m-d') }}">
-                                            </div>
-                                            <div class="flex-1">
-                                                <label for="scheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
-                                                <input type="time" id="scheduleTime" name="schedule_time"
-                                                    class="w-full border rounded px-2 py-1">
+                                <form id="announcementForm" action="{{ route('announcements.store') }}" method="POST"
+                                    class="show-loader-on-submit space-y-4">
+                                    @csrf
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                                        <input type="text" id="titleInput" name="title" maxlength="60"
+                                            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                            placeholder="Enter announcement title">
+                                        <p id="titleError" class="text-red-500 text-sm mt-1" style="display: none;">Title
+                                            is required.</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                                        <textarea name="content" id="contentInput" rows="4" maxlength="1000"
+                                            class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                            placeholder="Enter announcement content"></textarea>
+                                        <p id="contentError" class="text-red-500 text-sm mt-1" style="display: none;">
+                                            Content is required.</p>
+                                    </div>
+                                    <!-- Schedule Section -->
+                                    <div>
+                                        <label class="inline-flex items-center mb-2">
+                                            <input type="checkbox" id="scheduleCheckbox" name="schedule"
+                                                class="form-checkbox cursor-pointer">
+                                            <span class="ml-2">Set Due Date</span>
+                                        </label>
+                                        <div id="scheduleFields" class="hidden">
+                                            <div class="flex space-x-4">
+                                                <div class="flex-1">
+                                                    <label for="scheduleDate"
+                                                        class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                                    <input type="date" id="scheduleDate" name="schedule_date"
+                                                        class="w-full border rounded px-2 py-1"
+                                                        min="{{ date('Y-m-d') }}">
+                                                </div>
+                                                <div class="flex-1">
+                                                    <label for="scheduleTime"
+                                                        class="block text-sm font-medium text-gray-700 mb-1">Time
+                                                        (Optional)</label>
+                                                    <input type="time" id="scheduleTime" name="schedule_time"
+                                                        class="w-full border rounded px-2 py-1">
+                                                </div>
                                             </div>
                                         </div>
+                                        <p id="scheduleError" class="text-red-500 text-sm mt-1" style="display: none;">
+                                        </p>
                                     </div>
-                                </div>
-                                <!-- Audience Section -->
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
-                                    <div class="flex items-center space-x-4">
-                                        <label class="inline-flex items-center">
-                                            <input type="radio" name="audience" value="all" checked class="form-radio cursor-pointer" id="audienceAll">
-                                            <span class="ml-2">All Student</span>
-                                        </label>
-                                        <label class="inline-flex items-center">
-                                            <input type="radio" name="audience" value="custom" class="form-radio cursor-pointer" id="audienceCustom">
-                                            <span class="ml-2">Custom</span>
-                                        </label>
+                                    <!-- Audience Section -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this
+                                            announcement?</label>
+                                        <div class="flex items-center space-x-4">
+                                            <label class="inline-flex items-center">
+                                                <input type="radio" name="audience" value="all" checked
+                                                    class="form-radio cursor-pointer" id="audienceAll">
+                                                <span class="ml-2">All Student</span>
+                                            </label>
+                                            <label class="inline-flex items-center">
+                                                <input type="radio" name="audience" value="custom"
+                                                    class="form-radio cursor-pointer" id="audienceCustom">
+                                                <span class="ml-2">Custom</span>
+                                            </label>
+                                        </div>
+                                        <div id="customAudienceDropdown"
+                                            class="mt-2 hidden border rounded-lg px-2 py-2 max-h-40 overflow-y-auto bg-white">
+                                            @foreach ($users as $user)
+                                                @if ($user->role === 'student')
+                                                    <label class="flex items-center py-1 border-b last:border-b-0">
+                                                        <input type="checkbox" name="audience_students[]"
+                                                            value="{{ $user->id }}"
+                                                            class="form-checkbox mr-2 cursor-pointer">
+                                                        <span>{{ $user->username }}</span>
+                                                    </label>
+                                                @endif
+                                            @endforeach
+                                            <p class="text-xs text-gray-500 mt-1">Check students who should see the
+                                                announcement.</p>
+                                        </div>
                                     </div>
-                                    <div id="customAudienceDropdown" class="mt-2 hidden border rounded-lg px-2 py-2 max-h-40 overflow-y-auto bg-white">
-                                        @foreach($users as $user)
-                                            @if($user->role === 'student')
-                                                <label class="flex items-center py-1 border-b last:border-b-0">
-                                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}" class="form-checkbox mr-2 cursor-pointer">
-                                                    <span>{{ $user->username }}</span>
-                                                </label>
-                                            @endif
-                                        @endforeach
-                                        <p class="text-xs text-gray-500 mt-1">Check students who should see the announcement.</p>
+                                    <div class="text-right">
+                                        <button type="submit" id="submitBtn"
+                                            class="px-6 py-2 text-white rounded-lg transition"
+                                            style="background-color: #7A1212; opacity: 0.5; cursor: not-allowed;" disabled>
+                                            Post Announcement
+                                        </button>
                                     </div>
-                                </div>
-                                <div class="text-right">
-                                    <button type="submit" id="submitBtn"
-                                        class="px-6 py-2 text-white rounded-lg transition hover:opacity-50"
-                                        style="background-color: #7A1212;">
-                                        Post Announcement
-                                    </button>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        </div>
         @include('components.footer')
     </div>
-   
+
     {{-- Modal for full announcement --}}
-<div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-    <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
-    <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-2">
-                <img src="{{ asset('images/annc.svg') }}" alt="Announcement" class="w-8 h-8 inline-block align-middle" />
-                <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
+    <div id="announcementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div id="modalBackdrop" class="absolute inset-0 bg-black" style="opacity:0.2;"></div>
+        <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <img src="{{ asset('images/annc.svg') }}" alt="Announcement"
+                        class="w-8 h-8 inline-block align-middle" />
+                    <span id="modalLabel" class="font-semibold text-lg">Announcement</span>
+                </div>
+                <button onclick="closeAnnouncementModal()"
+                    class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
-            <button onclick="closeAnnouncementModal()"
-                class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
+            <!-- Modal Title -->
+            <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
+            <!-- Modal Meta -->
+            <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
+            <!-- Modal Content -->
+            <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words"></div>
         </div>
-        <!-- Modal Title -->
-        <h3 id="modalTitle" class="text-lg font-bold mb-1"></h3>
-        <!-- Modal Meta -->
-        <div id="modalMeta" class="text-xs text-gray-500 mb-3"></div>
-        <!-- Modal Content -->
-        <div id="modalContent" class="text-gray-700 whitespace-pre-line break-words"></div>
     </div>
-</div>
 
     {{-- Edit Announcement Modal --}}
     <div id="editAnnouncementModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
@@ -525,7 +578,8 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-xl w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Edit Announcement</span>
-                <button onclick="closeEditModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
+                <button onclick="closeEditModal()"
+                    class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <form id="editAnnouncementForm" method="POST" class="show-loader-on-submit">
                 @csrf
@@ -549,55 +603,61 @@
                         class="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400" required></textarea>
                 </div>
                 <!-- Schedule Section -->
-           <div class="mb-3">
-                <label class="inline-flex items-center mb-2">
-                    <input type="checkbox" id="editScheduleCheckbox" name="schedule" class="form-checkbox cursor-pointer">
-                    <span class="ml-2">Set Due Date</span>
-                </label>
-                <div id="editScheduleFields" class="hidden">
-                    <div class="flex space-x-4">
-                        <div class="flex-1">
-                            <label for="editScheduleDate" class="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                            <input type="date" id="editScheduleDate" name="schedule_date" 
-                                class="w-full border rounded px-2 py-1">
-                        </div>
-                        <div class="flex-1">
-                            <label for="editScheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time (Optional)</label>
-                            <input type="time" id="editScheduleTime" name="schedule_time" 
-                                class="w-full border rounded px-2 py-1">
+                <div class="mb-3">
+                    <label class="inline-flex items-center mb-2">
+                        <input type="checkbox" id="editScheduleCheckbox" name="schedule"
+                            class="form-checkbox cursor-pointer">
+                        <span class="ml-2">Set Due Date</span>
+                    </label>
+                    <div id="editScheduleFields" class="hidden">
+                        <div class="flex space-x-4">
+                            <div class="flex-1">
+                                <label for="editScheduleDate"
+                                    class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                <input type="date" id="editScheduleDate" name="schedule_date"
+                                    class="w-full border rounded px-2 py-1">
+                            </div>
+                            <div class="flex-1">
+                                <label for="editScheduleTime" class="block text-sm font-medium text-gray-700 mb-1">Time
+                                    (Optional)</label>
+                                <input type="time" id="editScheduleTime" name="schedule_time"
+                                    class="w-full border rounded px-2 py-1">
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
                 <!-- Audience Section -->
                 <div class="mb-3">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Who can see this announcement?</label>
                     <div class="flex items-center space-x-4">
                         <label class="inline-flex items-center">
-                            <input type="radio" name="audience" value="all" class="form-radio cursor-pointer" id="editAudienceAll">
+                            <input type="radio" name="audience" value="all" class="form-radio cursor-pointer"
+                                id="editAudienceAll">
                             <span class="ml-2">All Student</span>
                         </label>
                         <label class="inline-flex items-center">
-                            <input type="radio" name="audience" value="custom" class="form-radio cursor-pointer" id="editAudienceCustom">
+                            <input type="radio" name="audience" value="custom" class="form-radio cursor-pointer"
+                                id="editAudienceCustom">
                             <span class="ml-2">Custom</span>
                         </label>
                     </div>
-                    <div id="editCustomAudienceDropdown" class="mt-2 hidden border rounded-lg px-2 py-2 max-h-40 overflow-y-auto bg-white">
-                        @foreach($users as $user)
-                            @if($user->role === 'student')
+                    <div id="editCustomAudienceDropdown"
+                        class="mt-2 hidden border rounded-lg px-2 py-2 max-h-40 overflow-y-auto bg-white">
+                        @foreach ($users as $user)
+                            @if ($user->role === 'student')
                                 <label class="flex items-center py-1 border-b last:border-b-0">
-                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}" class="form-checkbox mr-2 editAudienceStudent cursor-pointer">
+                                    <input type="checkbox" name="audience_students[]" value="{{ $user->id }}"
+                                        class="form-checkbox mr-2 editAudienceStudent cursor-pointer">
                                     <span>{{ $user->username }}</span>
-                            </label>
+                                </label>
                             @endif
                         @endforeach
                         <p class="text-xs text-gray-500 mt-1">Check students who should see the announcement.</p>
                     </div>
                 </div>
                 <div class="text-right">
-                    <button type="submit" id="saveChangesBtn"
-                        class="px-6 py-2 text-white rounded-lg transition duration-200 hover:bg-[#a43c3c] cursor-pointer"
-                        style="background-color: #7A1212;">
+                    <button type="submit" id="saveChangesBtn" class="px-6 py-2 text-white rounded-lg transition"
+                        style="background-color: #7A1212; opacity: 0.5; cursor: not-allowed;" disabled>
                         Save
                     </button>
                 </div>
@@ -629,7 +689,8 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Archive Announcement Confirmation</span>
-                <button onclick="closeArchiveModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
+                <button onclick="closeArchiveModal()"
+                    class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <div class="mb-4 text-gray-700">
                 Are you sure you want to archive this Announcement? Once archived, it will be removed from your list and
@@ -653,7 +714,8 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Restore Announcement Confirmation</span>
-                <button onclick="closeRestoreModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
+                <button onclick="closeRestoreModal()"
+                    class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <div class="mb-4 text-gray-700">
                 Are you sure you want to restore this announcement?<br>
@@ -677,7 +739,8 @@
         <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
             <div class="flex items-center justify-between mb-2">
                 <span class="font-semibold text-lg">Delete Announcement Confirmation</span>
-                <button onclick="closeDeleteModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
+                <button onclick="closeDeleteModal()"
+                    class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
             </div>
             <div class="mb-4 text-gray-700">
                 Are you sure you want to permanently delete this announcement? This action cannot be undone.
@@ -694,8 +757,144 @@
             </div>
         </div>
     </div>
-    
+
     <script>
+        function checkEditFormValidity() {
+            const title = document.getElementById('editTitle').value.trim();
+            const content = document.getElementById('editContent').value.trim();
+            const audienceCustom = document.getElementById('editAudienceCustom').checked;
+            let customChecked = false;
+
+            if (audienceCustom) {
+                const customCheckboxes = document.querySelectorAll('.editAudienceStudent:checked');
+                customChecked = customCheckboxes.length > 0;
+            }
+
+            const isValid = title !== '' && content !== '' && (document.getElementById('editAudienceAll').checked ||
+                customChecked);
+            const btn = document.getElementById('saveChangesBtn');
+
+            // Check if there are any changes compared to the original values
+            const originalTitle = document.getElementById('originalTitle').value.trim();
+            const originalContent = document.getElementById('originalContent').value.trim();
+            const originalScheduleDate = document.getElementById('originalScheduleDate').value;
+            const originalScheduleTime = document.getElementById('originalScheduleTime').value;
+            const originalAudience = document.getElementById('originalAudience').value;
+            const originalAudienceStudents = JSON.parse(document.getElementById('originalAudienceStudents').value || '[]');
+            const currentScheduleCheckbox = document.getElementById('editScheduleCheckbox').checked;
+            const currentScheduleDate = document.getElementById('editScheduleDate').value;
+            const currentScheduleTime = document.getElementById('editScheduleTime').value;
+            const currentAudience = document.getElementById('editAudienceAll').checked ? 'all' : 'custom';
+            const currentAudienceStudents = Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb =>
+                cb.value);
+
+            // Compare schedule
+            let scheduleChanged = false;
+            if (originalScheduleDate || currentScheduleDate) {
+                scheduleChanged = (
+                    (originalScheduleDate !== currentScheduleDate) ||
+                    (originalScheduleTime !== currentScheduleTime) ||
+                    (Boolean(originalScheduleDate) !== currentScheduleCheckbox)
+                );
+            }
+
+            // Compare audience
+            let audienceChanged = false;
+            if (originalAudience !== currentAudience) {
+                audienceChanged = true;
+            } else if (currentAudience === 'custom') {
+                // Compare arrays
+                const orig = originalAudienceStudents.slice().sort();
+                const curr = currentAudienceStudents.slice().sort();
+                if (orig.length !== curr.length || !orig.every((v, i) => v == curr[i])) {
+                    audienceChanged = true;
+                }
+            }
+
+            // Only enable if valid AND there are changes
+            // Disable if schedule date/time is equal to original (no change)
+            const scheduleUnchanged = (
+                originalScheduleDate === currentScheduleDate &&
+                originalScheduleTime === currentScheduleTime &&
+                (Boolean(originalScheduleDate) === currentScheduleCheckbox)
+            );
+            btn.disabled = !(isValid && (
+                originalTitle !== title ||
+                originalContent !== content ||
+                !scheduleUnchanged ||
+                audienceChanged
+            ));
+            btn.style.opacity = (!btn.disabled) ? '1' : '0.5';
+            btn.style.cursor = (!btn.disabled) ? 'pointer' : 'not-allowed';
+        }
+        document.getElementById('editScheduleDate').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editScheduleTime').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editScheduleCheckbox').addEventListener('change', checkEditFormValidity);
+        document.getElementById('editTitle').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editContent').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editAudienceAll').addEventListener('change', checkEditFormValidity);
+        document.getElementById('editAudienceCustom').addEventListener('change', checkEditFormValidity);
+        document.querySelectorAll('.editAudienceStudent').forEach(cb => {
+            cb.addEventListener('change', checkEditFormValidity);
+        });
+
+        // Add event listeners for schedule date and time fields in edit modal
+
+
+        function clearAnnouncementForm() {
+            document.getElementById('titleInput').value = '';
+            document.getElementById('contentInput').value = '';
+            document.getElementById('audienceAll').checked = true;
+            document.getElementById('audienceCustom').checked = false;
+
+            // Uncheck all custom audience checkboxes
+            document.querySelectorAll('input[name="audience_students[]"]').forEach(cb => cb.checked = false);
+
+            // Hide custom audience dropdown if visible
+            document.getElementById('customAudienceDropdown').classList.add('hidden');
+
+            // Reset schedule fields
+            document.getElementById('scheduleCheckbox').checked = false;
+            document.getElementById('scheduleFields').classList.add('hidden');
+            document.getElementById('scheduleDate').value = '';
+            document.getElementById('scheduleTime').value = '';
+
+            // Hide error messages
+            document.getElementById('titleError').style.display = 'none';
+            document.getElementById('contentError').style.display = 'none';
+
+            // Disable and style the submit button
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            submitBtn.style.cursor = 'not-allowed';
+        }
+
+        function checkFormValidity() {
+            const title = document.getElementById('titleInput').value.trim();
+            const content = document.getElementById('contentInput').value.trim();
+            const audienceCustom = document.getElementById('audienceCustom').checked;
+            let customChecked = false;
+
+            if (audienceCustom) {
+                const customCheckboxes = document.querySelectorAll('input[name="audience_students[]"]:checked');
+                customChecked = customCheckboxes.length > 0;
+            }
+
+            const isValid = title !== '' && content !== '' && (audienceAll || customChecked);
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = !isValid;
+            btn.style.opacity = isValid ? '1' : '0.5';
+            btn.style.cursor = isValid ? 'pointer' : 'not-allowed';
+        }
+
+        document.getElementById('titleInput').addEventListener('input', checkFormValidity);
+        document.getElementById('contentInput').addEventListener('input', checkFormValidity);
+        document.getElementById('audienceCustom').addEventListener('change', checkFormValidity);
+        document.querySelectorAll('input[name="audience_students[]"]').forEach(cb => {
+            cb.addEventListener('change', checkFormValidity);
+        });
+
         function decodeHtmlEntities(str) {
             var txt = document.createElement('textarea');
             txt.innerHTML = str;
@@ -713,6 +912,8 @@
 
         function closeAnnouncementModal() {
             document.getElementById('announcementModal').classList.add('hidden');
+
+            clearAnnouncementForm();
         }
 
         const form = document.getElementById('announcementForm');
@@ -744,15 +945,21 @@
             const scheduleTime = document.getElementById('scheduleTime');
 
             if (scheduleCheckbox.checked) {
+                // Hide previous error
+                const scheduleError = document.getElementById('scheduleError');
+                scheduleError.style.display = 'none';
+                scheduleError.textContent = '';
+
                 if (!scheduleDate.value) {
-                    alert('Please select today or a future date for the schedule.');
+                    scheduleError.textContent = 'Please select today or a future date for the schedule.';
+                    scheduleError.style.display = 'block';
                     valid = false;
                 } else {
                     const now = new Date();
-                    now.setSeconds(0,0); // ignore seconds/milliseconds for comparison
+                    now.setSeconds(0, 0); // ignore seconds/milliseconds for comparison
 
                     const selectedDate = new Date(scheduleDate.value);
-                    selectedDate.setHours(0,0,0,0);
+                    selectedDate.setHours(0, 0, 0, 0);
 
                     // If selected date is today, require time and it must be at least 1 hour from now
                     if (
@@ -761,31 +968,40 @@
                         selectedDate.getDate() === now.getDate()
                     ) {
                         if (!scheduleTime.value) {
-                            alert('Please specify a time for today\'s schedule.');
+                            scheduleError.textContent = "Please specify a time for today's schedule.";
+                            scheduleError.style.display = 'block';
                             valid = false;
                         } else {
                             // Combine date and time for accurate comparison
                             const selectedDateTime = new Date(scheduleDate.value + 'T' + scheduleTime.value);
                             const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
                             if (selectedDateTime < oneHourLater) {
-                                alert('Please select a time at least 1 hour from now.');
+                                scheduleError.textContent = 'Please select a time at least 1 hour from now.';
+                                scheduleError.style.display = 'block';
                                 valid = false;
                             }
                         }
                     } else {
                         // Not today: must be in the future
                         if (selectedDate < now) {
-                            alert('Please select today or a future date for the schedule.');
+                            scheduleError.textContent = 'Please select today or a future date for the schedule.';
+                            scheduleError.style.display = 'block';
                             valid = false;
                         }
                     }
                 }
+            } else {
+                // Hide error if schedule is not checked
+                const scheduleError = document.getElementById('scheduleError');
+                scheduleError.style.display = 'none';
+                scheduleError.textContent = '';
             }
 
             // Audience validation
             const audienceCustom = document.getElementById('audienceCustom');
             if (audienceCustom.checked) {
-                const checkedStudents = document.querySelectorAll('#customAudienceDropdown input[type="checkbox"]:checked');
+                const checkedStudents = document.querySelectorAll(
+                    '#customAudienceDropdown input[type="checkbox"]:checked');
                 if (checkedStudents.length === 0) {
                     alert('Please select at least one student for the custom audience.');
                     valid = false;
@@ -815,6 +1031,14 @@
                 contentError.style.display = 'none';
             }
         });
+        document.getElementById('scheduleDate').addEventListener('input', function() {
+            document.getElementById('scheduleError').style.display = 'none';
+            document.getElementById('scheduleError').textContent = '';
+        });
+        document.getElementById('scheduleTime').addEventListener('input', function() {
+            document.getElementById('scheduleError').style.display = 'none';
+            document.getElementById('scheduleError').textContent = '';
+        });
         setTimeout(() => {
             const toast = document.getElementById('Toast');
             if (toast) {
@@ -838,31 +1062,33 @@
                 document.querySelectorAll('[id^="menu-"]').forEach(menu => menu.classList.add('hidden'));
             }
         });
-    // Get current user info from Blade
+        // Get current user info from Blade
         const currentUserId = {{ json_encode(session('currentUserId', auth()->id())) }};
         const currentUserRole = {!! json_encode(session('currentUserRole', auth()->user()->role)) !!};
 
-        function tryOpenEditModal(id, title, content, scheduleDate = '', scheduleTime = '', audience = 'all', audienceStudents = '[]', announcementUserId = null) {
-    // Only allow if current user is super admin or is the owner
-    if (currentUserRole !== 'super admin' && currentUserId != announcementUserId) {
-        // Show warning toast
-        const toast = document.getElementById('EditNotAllowedToast');
-        if (toast) {
-            toast.style.display = 'flex';
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, 3000);
-        } else {
-            alert('You are not authorized to edit this announcement.');
-        }
-        return;
-    }
+        function tryOpenEditModal(id, title, content, scheduleDate = '', scheduleTime = '', audience = 'all',
+            audienceStudents = '[]', announcementUserId = null) {
+            // Only allow if current user is super admin or is the owner
+            if (currentUserRole !== 'super admin' && currentUserId != announcementUserId) {
+                // Show warning toast
+                const toast = document.getElementById('EditNotAllowedToast');
+                if (toast) {
+                    toast.style.display = 'flex';
+                    setTimeout(() => {
+                        toast.style.display = 'none';
+                    }, 3000);
+                } else {
+                    alert('You are not authorized to edit this announcement.');
+                }
+                return;
+            }
 
             // Otherwise, open the edit modal
             openEditModal(id, title, content, scheduleDate, scheduleTime, audience, audienceStudents);
         }
         // Open Edit Modal 
-        function openEditModal(id, title, content, scheduleDate = '', scheduleTime = '', audience = 'all', audienceStudents = '[]') {
+        function openEditModal(id, title, content, scheduleDate = '', scheduleTime = '', audience = 'all',
+            audienceStudents = '[]') {
             // Always parse audienceStudents as JSON
             try {
                 audienceStudents = JSON.parse(audienceStudents) || [];
@@ -872,7 +1098,7 @@
 
             document.getElementById('editAnnouncementId').value = id;
             document.getElementById('editTitle').value = title;
-            document.getElementById('editContent').value  = decodeHtmlEntities(content);
+            document.getElementById('editContent').value = decodeHtmlEntities(content);
             document.getElementById('originalTitle').value = title;
             document.getElementById('originalContent').value = content;
 
@@ -899,22 +1125,23 @@
                 scheduleTimeInput.value = '';
             }
 
-           // Audience handling
+            // Audience handling
             if (audience === 'all') {
                 document.getElementById('editAudienceAll').checked = true;
                 document.getElementById('editCustomAudienceDropdown').classList.add('hidden');
             } else {
                 document.getElementById('editAudienceCustom').checked = true;
                 document.getElementById('editCustomAudienceDropdown').classList.remove('hidden');
-                
+
                 // Remove any existing reminder messages first
                 const existingMessages = document.querySelectorAll('.audience-reminder');
                 existingMessages.forEach(msg => msg.remove());
-                
+
                 // Add new reminder message
                 const customAudienceDropdown = document.getElementById('editCustomAudienceDropdown');
                 const messageElement = document.createElement('div');
-                messageElement.className = 'text-yellow-600 text-sm mb-2 audience-reminder'; // Added audience-reminder class
+                messageElement.className =
+                    'text-yellow-600 text-sm mb-2 audience-reminder'; // Added audience-reminder class
                 messageElement.textContent = 'Please reselect the audience for confirmation';
                 customAudienceDropdown.insertBefore(messageElement, customAudienceDropdown.firstChild);
             }
@@ -933,6 +1160,9 @@
         // Close Edit Modal
         function closeEditModal() {
             document.getElementById('editAnnouncementModal').classList.add('hidden');
+
+            // Example: Call this when modal is closed
+
         }
 
         document.getElementById('editAnnouncementForm').addEventListener('submit', function(e) {
@@ -948,60 +1178,62 @@
             const currentScheduleTime = document.getElementById('editScheduleTime').value;
 
             const originalAudience = document.getElementById('originalAudience').value;
-            const originalAudienceStudents = JSON.parse(document.getElementById('originalAudienceStudents').value || '[]');
+            const originalAudienceStudents = JSON.parse(document.getElementById('originalAudienceStudents').value ||
+                '[]');
             const currentAudience = document.getElementById('editAudienceAll').checked ? 'all' : 'custom';
-            const currentAudienceStudents = Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb => cb.value);
+            const currentAudienceStudents = Array.from(document.querySelectorAll('.editAudienceStudent:checked'))
+                .map(cb => cb.value);
 
-    // Audience validation for edit modal
-    if (document.getElementById('editAudienceCustom').checked) {
-        if (currentAudienceStudents.length === 0) {
-            alert('Please select at least one student for the custom audience.');
-            e.preventDefault();
-            return;
-        }
-    }
-
-    // Validate schedule (must not be in the past, and if today, time is required and must be in the future)
-    if (currentScheduleCheckbox) {
-        if (!currentScheduleDate) {
-            alert('Please select today or a future date for the schedule.');
-            e.preventDefault();
-            return;
-        }
-        const now = new Date();
-        now.setSeconds(0,0); // ignore seconds/milliseconds for comparison
-
-        const selectedDate = new Date(currentScheduleDate);
-        selectedDate.setHours(0,0,0,0);
-
-        // If selected date is today, require time and it must be in the future
-        if (
-            selectedDate.getFullYear() === now.getFullYear() &&
-            selectedDate.getMonth() === now.getMonth() &&
-            selectedDate.getDate() === now.getDate()
-        ) {
-            if (!currentScheduleTime) {
-                alert('Please specify a time for today\'s schedule.');
-                e.preventDefault();
-                return;
+            // Audience validation for edit modal
+            if (document.getElementById('editAudienceCustom').checked) {
+                if (currentAudienceStudents.length === 0) {
+                    alert('Please select at least one student for the custom audience.');
+                    e.preventDefault();
+                    return;
+                }
             }
-            // Combine date and time for accurate comparison
-            const selectedDateTime = new Date(currentScheduleDate + 'T' + currentScheduleTime);
-            if (selectedDateTime <= now) {
-                alert('Please select a future time for today\'s schedule.');
-                e.preventDefault();
-                return;
+
+            // Validate schedule (must not be in the past, and if today, time is required and must be in the future)
+            if (currentScheduleCheckbox) {
+                if (!currentScheduleDate) {
+                    alert('Please select today or a future date for the schedule.');
+                    e.preventDefault();
+                    return;
+                }
+                const now = new Date();
+                now.setSeconds(0, 0); // ignore seconds/milliseconds for comparison
+
+                const selectedDate = new Date(currentScheduleDate);
+                selectedDate.setHours(0, 0, 0, 0);
+
+                // If selected date is today, require time and it must be in the future
+                if (
+                    selectedDate.getFullYear() === now.getFullYear() &&
+                    selectedDate.getMonth() === now.getMonth() &&
+                    selectedDate.getDate() === now.getDate()
+                ) {
+                    if (!currentScheduleTime) {
+                        alert('Please specify a time for today\'s schedule.');
+                        e.preventDefault();
+                        return;
+                    }
+                    // Combine date and time for accurate comparison
+                    const selectedDateTime = new Date(currentScheduleDate + 'T' + currentScheduleTime);
+                    if (selectedDateTime <= now) {
+                        alert('Please select a future time for today\'s schedule.');
+                        e.preventDefault();
+                        return;
+                    }
+                } else {
+                    // Not today: must be in the future
+                    if (selectedDate < now) {
+                        alert('Please select today or a future date for the schedule.');
+                        e.preventDefault();
+                        return;
+                    }
+                }
+
             }
-        } else {
-            // Not today: must be in the future
-            if (selectedDate < now) {
-                alert('Please select today or a future date for the schedule.');
-                e.preventDefault();
-                return;
-            }
-        }
-        
-    }
 
             // Compare schedule
             let scheduleChanged = false;
@@ -1060,6 +1292,7 @@
             form.action = `/admin/announcements/${announcementId}/archive`;
             document.getElementById('archiveConfirmModal').classList.remove('hidden');
         }
+
         function closeArchiveModal() {
             document.getElementById('archiveConfirmModal').classList.add('hidden');
         }
@@ -1097,6 +1330,7 @@
             form.action = `/admin/announcements/${announcementId}/delete`;
             document.getElementById('deleteConfirmModal').classList.remove('hidden');
         }
+
         function closeDeleteModal() {
             document.getElementById('deleteConfirmModal').classList.add('hidden');
         }
@@ -1105,31 +1339,34 @@
         function openPostAnnouncementModal() {
             document.getElementById('postAnnouncementModal').classList.remove('hidden');
         }
+
         function closePostAnnouncementModal() {
             // Get the form element
-        const announcementForm = document.getElementById('announcementForm');
-        
-        // Reset all form fields
-        announcementForm.reset();
-        
-        // Clear any displayed error messages
-        document.getElementById('titleError').style.display = 'none';
-        document.getElementById('contentError').style.display = 'none';
-        
-        // Reset specific UI elements
-        
-        // Hide schedule fields if they were showing
-        document.getElementById('scheduleFields').classList.add('hidden');
-        
-        // Hide custom audience dropdown if it was showing
-        document.getElementById('customAudienceDropdown').classList.add('hidden');
-        
-        // Set audience radio back to 'all' (default)
-        document.getElementById('audienceAll').checked = true;
-        
-        // Hide the modal
-        document.getElementById('postAnnouncementModal').classList.add('hidden');
-    }
+            const announcementForm = document.getElementById('announcementForm');
+
+            // Reset all form fields
+            announcementForm.reset();
+
+            // Clear any displayed error messages
+            document.getElementById('titleError').style.display = 'none';
+            document.getElementById('contentError').style.display = 'none';
+            document.getElementById('scheduleError').style.display = 'none';
+
+
+            // Reset specific UI elements
+
+            // Hide schedule fields if they were showing
+            document.getElementById('scheduleFields').classList.add('hidden');
+
+            // Hide custom audience dropdown if it was showing
+            document.getElementById('customAudienceDropdown').classList.add('hidden');
+
+            // Set audience radio back to 'all' (default)
+            document.getElementById('audienceAll').checked = true;
+
+            // Hide the modal
+            document.getElementById('postAnnouncementModal').classList.add('hidden');
+        }
 
         // Schedule toggle
         document.getElementById('scheduleCheckbox').addEventListener('change', function() {
@@ -1166,312 +1403,342 @@
         });
 
 
-// --- Draft Save/Restore Logic ---
-const DRAFT_KEY_POST = 'announcementDraft';
-const DRAFT_KEY_EDIT = 'editAnnouncementDraft';
+        // --- Draft Save/Restore Logic ---
+        const DRAFT_KEY_POST = 'announcementDraft';
+        const DRAFT_KEY_EDIT = 'editAnnouncementDraft';
 
-function saveDraft(type) {
-    if (type === 'post') {
-        localStorage.setItem(DRAFT_KEY_POST, JSON.stringify({
-            title: titleInput.value,
-            content: contentInput.value,
-            schedule: document.getElementById('scheduleCheckbox').checked,
-            schedule_date: document.getElementById('scheduleDate').value,
-            schedule_time: document.getElementById('scheduleTime').value,
-            audience: document.getElementById('audienceAll').checked ? 'all' : 'custom',
-            audience_students: Array.from(document.querySelectorAll('#customAudienceDropdown input[type="checkbox"]:checked')).map(cb => cb.value)
-        }));
-    } else if (type === 'edit') {
-        localStorage.setItem(DRAFT_KEY_EDIT, JSON.stringify({
-            id: document.getElementById('editAnnouncementId').value,
-            title: document.getElementById('editTitle').value,
-            content: document.getElementById('editContent').value,
-            schedule: document.getElementById('editScheduleCheckbox').checked,
-            schedule_date: document.getElementById('editScheduleDate').value,
-            schedule_time: document.getElementById('editScheduleTime').value,
-            audience: document.getElementById('editAudienceAll').checked ? 'all' : 'custom',
-            audience_students: Array.from(document.querySelectorAll('.editAudienceStudent:checked')).map(cb => cb.value)
-        }));
-    }
-}
-
-function restoreDraft(type) {
-    let draft = null;
-    if (type === 'post') {
-        draft = localStorage.getItem(DRAFT_KEY_POST);
-        if (draft) {
-            draft = JSON.parse(draft);
-            titleInput.value = draft.title || '';
-            contentInput.value = draft.content || '';
-            document.getElementById('scheduleCheckbox').checked = !!draft.schedule;
-            document.getElementById('scheduleFields').classList.toggle('hidden', !draft.schedule);
-            document.getElementById('scheduleDate').value = draft.schedule_date || '';
-            document.getElementById('scheduleTime').value = draft.schedule_time || '';
-            if (draft.audience === 'all') {
-                document.getElementById('audienceAll').checked = true;
-                document.getElementById('customAudienceDropdown').classList.add('hidden');
-            } else {
-                document.getElementById('audienceCustom').checked = true;
-                document.getElementById('customAudienceDropdown').classList.remove('hidden');
+        function saveDraft(type) {
+            if (type === 'post') {
+                localStorage.setItem(DRAFT_KEY_POST, JSON.stringify({
+                    title: titleInput.value,
+                    content: contentInput.value,
+                    schedule: document.getElementById('scheduleCheckbox').checked,
+                    schedule_date: document.getElementById('scheduleDate').value,
+                    schedule_time: document.getElementById('scheduleTime').value,
+                    audience: document.getElementById('audienceAll').checked ? 'all' : 'custom',
+                    audience_students: Array.from(document.querySelectorAll(
+                        '#customAudienceDropdown input[type="checkbox"]:checked')).map(cb => cb.value)
+                }));
+            } else if (type === 'edit') {
+                localStorage.setItem(DRAFT_KEY_EDIT, JSON.stringify({
+                    id: document.getElementById('editAnnouncementId').value,
+                    title: document.getElementById('editTitle').value,
+                    content: document.getElementById('editContent').value,
+                    schedule: document.getElementById('editScheduleCheckbox').checked,
+                    schedule_date: document.getElementById('editScheduleDate').value,
+                    schedule_time: document.getElementById('editScheduleTime').value,
+                    audience: document.getElementById('editAudienceAll').checked ? 'all' : 'custom',
+                    audience_students: Array.from(document.querySelectorAll('.editAudienceStudent:checked'))
+                        .map(cb => cb.value)
+                }));
             }
-            // Uncheck all first
-            document.querySelectorAll('#customAudienceDropdown input[type="checkbox"]').forEach(cb => cb.checked = false);
-            // Check those in audience_students
-            (draft.audience_students || []).forEach(id => {
-                const cb = document.querySelector('#customAudienceDropdown input[type="checkbox"][value="' + String(id) + '"]');
-                if (cb) cb.checked = true;
-            });
         }
-    } else if (type === 'edit') {
-        draft = localStorage.getItem(DRAFT_KEY_EDIT);
-        if (draft) {
-            draft = JSON.parse(draft);
-            // Only restore if editing the same announcement
-            if (draft.id == document.getElementById('editAnnouncementId').value) {
-                document.getElementById('editTitle').value = draft.title || '';
-                document.getElementById('editContent').value = draft.content || '';
-                document.getElementById('editScheduleCheckbox').checked = !!draft.schedule;
-                document.getElementById('editScheduleFields').classList.toggle('hidden', !draft.schedule);
-                document.getElementById('editScheduleDate').value = draft.schedule_date || '';
-                document.getElementById('editScheduleTime').value = draft.schedule_time || '';
-                if (draft.audience === 'all') {
-                    document.getElementById('editAudienceAll').checked = true;
-                    document.getElementById('editCustomAudienceDropdown').classList.add('hidden');
-                } else {
-                    document.getElementById('editAudienceCustom').checked = true;
-                    document.getElementById('editCustomAudienceDropdown').classList.remove('hidden');
+
+        function restoreDraft(type) {
+            let draft = null;
+            if (type === 'post') {
+                draft = localStorage.getItem(DRAFT_KEY_POST);
+                if (draft) {
+                    draft = JSON.parse(draft);
+                    titleInput.value = draft.title || '';
+                    contentInput.value = draft.content || '';
+                    document.getElementById('scheduleCheckbox').checked = !!draft.schedule;
+                    document.getElementById('scheduleFields').classList.toggle('hidden', !draft.schedule);
+                    document.getElementById('scheduleDate').value = draft.schedule_date || '';
+                    document.getElementById('scheduleTime').value = draft.schedule_time || '';
+                    if (draft.audience === 'all') {
+                        document.getElementById('audienceAll').checked = true;
+                        document.getElementById('customAudienceDropdown').classList.add('hidden');
+                    } else {
+                        document.getElementById('audienceCustom').checked = true;
+                        document.getElementById('customAudienceDropdown').classList.remove('hidden');
+                    }
+                    // Uncheck all first
+                    document.querySelectorAll('#customAudienceDropdown input[type="checkbox"]').forEach(cb => cb.checked =
+                        false);
+                    // Check those in audience_students
+                    (draft.audience_students || []).forEach(id => {
+                        const cb = document.querySelector('#customAudienceDropdown input[type="checkbox"][value="' +
+                            String(id) + '"]');
+                        if (cb) cb.checked = true;
+                    });
                 }
-                // Uncheck all first
-                document.querySelectorAll('.editAudienceStudent').forEach(cb => cb.checked = false);
-                // Check those in audience_students
-                (draft.audience_students || []).forEach(id => {
-                    const cb = document.querySelector('.editAudienceStudent[value="' + String(id) + '"]');
-                    if (cb) cb.checked = true;
-                });
+            } else if (type === 'edit') {
+                draft = localStorage.getItem(DRAFT_KEY_EDIT);
+                if (draft) {
+                    draft = JSON.parse(draft);
+                    // Only restore if editing the same announcement
+                    if (draft.id == document.getElementById('editAnnouncementId').value) {
+                        document.getElementById('editTitle').value = draft.title || '';
+                        document.getElementById('editContent').value = draft.content || '';
+                        document.getElementById('editScheduleCheckbox').checked = !!draft.schedule;
+                        document.getElementById('editScheduleFields').classList.toggle('hidden', !draft.schedule);
+                        document.getElementById('editScheduleDate').value = draft.schedule_date || '';
+                        document.getElementById('editScheduleTime').value = draft.schedule_time || '';
+                        if (draft.audience === 'all') {
+                            document.getElementById('editAudienceAll').checked = true;
+                            document.getElementById('editCustomAudienceDropdown').classList.add('hidden');
+                        } else {
+                            document.getElementById('editAudienceCustom').checked = true;
+                            document.getElementById('editCustomAudienceDropdown').classList.remove('hidden');
+                        }
+                        // Uncheck all first
+                        document.querySelectorAll('.editAudienceStudent').forEach(cb => cb.checked = false);
+                        // Check those in audience_students
+                        (draft.audience_students || []).forEach(id => {
+                            const cb = document.querySelector('.editAudienceStudent[value="' + String(id) + '"]');
+                            if (cb) cb.checked = true;
+                        });
+                    }
+                }
             }
         }
-    }
-}
 
-function clearDraft(type) {
-    if (type === 'post') localStorage.removeItem(DRAFT_KEY_POST);
-    if (type === 'edit') localStorage.removeItem(DRAFT_KEY_EDIT);
-}
-
-// --- Modal State & Change Detection ---
-let isPostModalOpen = false;
-let isEditModalOpen = false;
-let hasPostChanges = false;
-let hasEditChanges = false;
-
-// Watch for changes in post modal
-['input', 'change'].forEach(evt => {
-    form.addEventListener(evt, () => {
-        hasPostChanges = true;
-        saveDraft('post');
-    });
-});
-
-// Watch for changes in edit modal
-['input', 'change'].forEach(evt => {
-    document.getElementById('editAnnouncementForm').addEventListener(evt, () => {
-        hasEditChanges = true;
-        saveDraft('edit');
-    });
-});
-
-// Override open/close modal functions
-const originalOpenPostAnnouncementModal = openPostAnnouncementModal;
-openPostAnnouncementModal = function() {
-    isPostModalOpen = true;
-    hasPostChanges = false;
-    originalOpenPostAnnouncementModal();
-    restoreDraft('post');
-};
-const originalClosePostAnnouncementModal = closePostAnnouncementModal;
-closePostAnnouncementModal = function() {
-    if (hasPostChanges && (titleInput.value || contentInput.value)) {
-        showDiscardChangesModal('post');
-    } else {
-        isPostModalOpen = false;
-        hasPostChanges = false;
-        clearDraft('post');
-        originalClosePostAnnouncementModal();
-    }
-};
-
-const originalOpenEditModal = openEditModal;
-openEditModal = function(...args) {
-    isEditModalOpen = true;
-    hasEditChanges = false;
-    originalOpenEditModal(...args);
-    restoreDraft('edit');
-};
-const originalCloseEditModal = closeEditModal;
-closeEditModal = function() {
-    if (hasEditChanges && (document.getElementById('editTitle').value || document.getElementById('editContent').value)) {
-        showDiscardChangesModal('edit');
-    } else {
-        isEditModalOpen = false;
-        hasEditChanges = false;
-        clearDraft('edit');
-        originalCloseEditModal();
-    }
-};
-
-// --- Discard Changes Modal Logic ---
-let discardType = null;
-function showDiscardChangesModal(type) {
-    discardType = type;
-    document.getElementById('discardChangesModal').classList.remove('hidden');
-}
-function closeDiscardChangesModal() {
-    document.getElementById('discardChangesModal').classList.add('hidden');
-}
-function confirmDiscardChanges() {
-    closeDiscardChangesModal();
-    if (discardType === 'post') {
-        isPostModalOpen = false;
-        hasPostChanges = false;
-        clearDraft('post');
-        originalClosePostAnnouncementModal();
-    } else if (discardType === 'edit') {
-        isEditModalOpen = false;
-        hasEditChanges = false;
-        clearDraft('edit');
-        originalCloseEditModal();
-    }
-    discardType = null;
-}
-
-// --- Intercept Refresh/Back/Exit ---
-window.addEventListener('beforeunload', function(e) {
-    if ((isPostModalOpen && hasPostChanges) || (isEditModalOpen && hasEditChanges)) {
-        // Save draft before leaving
-        if (isPostModalOpen) saveDraft('post');
-        if (isEditModalOpen) saveDraft('edit');
-        // Show browser warning (required for beforeunload)
-        e.preventDefault();
-        e.returnValue = '';
-    }
-});
-
-// --- On Modal Submit, Clear Draft ---
-form.addEventListener('submit', function() {
-    clearDraft('post');
-    hasPostChanges = false;
-    isPostModalOpen = false;
-});
-document.getElementById('editAnnouncementForm').addEventListener('submit', function() {
-    clearDraft('edit');
-    hasEditChanges = false;
-    isEditModalOpen = false;
-});
-
-// Optional: ESC key closes modal with warning
-document.addEventListener('keydown', function(e) {
-    if (e.key === "Escape" || e.key === "Esc") {
-        if (isPostModalOpen && (titleInput.value || contentInput.value)) {
-            closePostAnnouncementModal();
+        function clearDraft(type) {
+            if (type === 'post') localStorage.removeItem(DRAFT_KEY_POST);
+            if (type === 'edit') localStorage.removeItem(DRAFT_KEY_EDIT);
         }
-        if (isEditModalOpen && (document.getElementById('editTitle').value || document.getElementById('editContent').value)) {
-            closeEditModal();
+
+        // --- Modal State & Change Detection ---
+        let isPostModalOpen = false;
+        let isEditModalOpen = false;
+        let hasPostChanges = false;
+        let hasEditChanges = false;
+
+        // Watch for changes in post modal
+        ['input', 'change'].forEach(evt => {
+            form.addEventListener(evt, () => {
+                hasPostChanges = true;
+                saveDraft('post');
+            });
+        });
+
+        // Watch for changes in edit modal
+        ['input', 'change'].forEach(evt => {
+            document.getElementById('editAnnouncementForm').addEventListener(evt, () => {
+                hasEditChanges = true;
+                saveDraft('edit');
+            });
+        });
+
+        // Override open/close modal functions
+        const originalOpenPostAnnouncementModal = openPostAnnouncementModal;
+        openPostAnnouncementModal = function() {
+            isPostModalOpen = true;
+            hasPostChanges = false;
+            originalOpenPostAnnouncementModal();
+            restoreDraft('post');
+        };
+        const originalClosePostAnnouncementModal = closePostAnnouncementModal;
+        closePostAnnouncementModal = function() {
+            if (hasPostChanges && (titleInput.value || contentInput.value)) {
+                showDiscardChangesModal('post');
+            } else {
+                isPostModalOpen = false;
+                hasPostChanges = false;
+                clearDraft('post');
+                originalClosePostAnnouncementModal();
+                clearAnnouncementForm();
+            }
+        };
+
+        const originalOpenEditModal = openEditModal;
+        openEditModal = function(...args) {
+            isEditModalOpen = true;
+            hasEditChanges = false;
+            originalOpenEditModal(...args);
+            restoreDraft('edit');
+        };
+        const originalCloseEditModal = closeEditModal;
+        closeEditModal = function() {
+            if (hasEditChanges && (document.getElementById('editTitle').value || document.getElementById('editContent')
+                    .value)) {
+                showDiscardChangesModal('edit');
+            } else {
+                isEditModalOpen = false;
+                hasEditChanges = false;
+                clearDraft('edit');
+                originalCloseEditModal();
+
+                clearAnnouncementForm();
+            }
+        };
+
+        // --- Discard Changes Modal Logic ---
+        let discardType = null;
+
+        function showDiscardChangesModal(type) {
+            discardType = type;
+            document.getElementById('discardChangesModal').classList.remove('hidden');
         }
-    }
-});
 
-// Set min date and min time for scheduling announcements (AnnouncementModal only)
-const scheduleDate = document.getElementById('scheduleDate');
-const scheduleTime = document.getElementById('scheduleTime');
+        function closeDiscardChangesModal() {
+            document.getElementById('discardChangesModal').classList.add('hidden');
 
-function setMinScheduleTime() {
-    const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
 
-    if (scheduleDate.value === todayStr) {
-        // Set min time to 1 hour from now if today is selected
-        const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
-        const minTime = oneHourLater.toTimeString().slice(0, 5);
-        scheduleTime.min = minTime;
-    } else {
-        // Allow any time for future dates
-        scheduleTime.min = '';
-    }
-}
+        }
 
-// Set min date to today
-scheduleDate.min = new Date().toISOString().slice(0, 10);
+        function confirmDiscardChanges() {
+            closeDiscardChangesModal();
+            if (discardType === 'post') {
+                isPostModalOpen = false;
+                hasPostChanges = false;
+                clearDraft('post');
+                originalClosePostAnnouncementModal();
+                clearAnnouncementForm();
+            } else if (discardType === 'edit') {
+                isEditModalOpen = false;
+                hasEditChanges = false;
+                clearDraft('edit');
+                originalCloseEditModal();
+            }
+            discardType = null;
+        }
 
-// Listen for changes on scheduleDate
-scheduleDate.addEventListener('change', setMinScheduleTime);
+        // --- Intercept Refresh/Back/Exit ---
+        window.addEventListener('beforeunload', function(e) {
+            if ((isPostModalOpen && hasPostChanges) || (isEditModalOpen && hasEditChanges)) {
+                // Save draft before leaving
+                if (isPostModalOpen) saveDraft('post');
+                if (isEditModalOpen) saveDraft('edit');
+                // Show browser warning (required for beforeunload)
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
 
-// Also call on page load in case today is pre-selected
-setMinScheduleTime();
+        // --- On Modal Submit, Clear Draft ---
+        form.addEventListener('submit', function() {
+            clearDraft('post');
+            hasPostChanges = false;
+            isPostModalOpen = false;
+        });
+        document.getElementById('editAnnouncementForm').addEventListener('submit', function() {
+            clearDraft('edit');
+            hasEditChanges = false;
+            isEditModalOpen = false;
+        });
+
+        // Optional: ESC key closes modal with warning
+        document.addEventListener('keydown', function(e) {
+            if (e.key === "Escape" || e.key === "Esc") {
+                if (isPostModalOpen && (titleInput.value || contentInput.value)) {
+                    closePostAnnouncementModal();
+                }
+                if (isEditModalOpen && (document.getElementById('editTitle').value || document.getElementById(
+                        'editContent').value)) {
+                    closeEditModal();
+                }
+            }
+        });
+
+        // Set min date and min time for scheduling announcements (AnnouncementModal only)
+        const scheduleDate = document.getElementById('scheduleDate');
+        const scheduleTime = document.getElementById('scheduleTime');
+
+        function setMinScheduleTime() {
+            const now = new Date();
+            const todayStr = now.toISOString().slice(0, 10);
+
+            if (scheduleDate.value === todayStr) {
+                // Set min time to 1 hour from now if today is selected
+                const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+                const minTime = oneHourLater.toTimeString().slice(0, 5);
+                scheduleTime.min = minTime;
+            } else {
+                // Allow any time for future dates
+                scheduleTime.min = '';
+            }
+        }
+
+        // Set min date to today
+        scheduleDate.min = new Date().toISOString().slice(0, 10);
+
+        // Listen for changes on scheduleDate
+        scheduleDate.addEventListener('change', setMinScheduleTime);
+
+        // Also call on page load in case today is pre-selected
+        setMinScheduleTime();
 
         // Tooltip toggle logic
-const infoBtn = document.getElementById('announcementInfoBtn');
-const infoTooltip = document.getElementById('announcementInfoTooltip');
+        const infoBtn = document.getElementById('announcementInfoBtn');
+        const infoTooltip = document.getElementById('announcementInfoTooltip');
 
-infoBtn.addEventListener('click', function(e) {
-    e.stopPropagation();
-    infoTooltip.classList.toggle('hidden');
-});
+        infoBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            infoTooltip.classList.toggle('hidden');
+        });
 
-// Hide tooltip when clicking outside
-document.addEventListener('click', function(e) {
-    if (!infoTooltip.classList.contains('hidden')) {
-        infoTooltip.classList.add('hidden');
-    }
-});
+        // Hide tooltip when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!infoTooltip.classList.contains('hidden')) {
+                infoTooltip.classList.add('hidden');
+            }
+        });
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Function to update document counts
-    function updateDocumentCounts() {
-        fetch('/admin/document-counts')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('pending-count').textContent = data.pendingCount;
-                document.getElementById('review-count').textContent = data.reviewCount;
-                document.getElementById('approved-count').textContent = data.approvedCount;
-                document.getElementById('total-count').textContent = data.totalCount;
-            })
-            .catch(error => {
-                console.error('Error fetching document counts:', error);
-            });
-    }
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to update document counts
+            function updateDocumentCounts() {
+                fetch('/admin/document-counts')
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('pending-count').textContent = data.pendingCount;
+                        document.getElementById('review-count').textContent = data.reviewCount;
+                        document.getElementById('approved-count').textContent = data.approvedCount;
+                        document.getElementById('total-count').textContent = data.totalCount;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching document counts:', error);
+                    });
+            }
 
-    // Update counts every 5 seconds
-    setInterval(updateDocumentCounts, 5000);
+            // Update counts every 5 seconds
+            setInterval(updateDocumentCounts, 5000);
 
-    // animation to show count updates
-    function animateCountUpdate(element) {
-        element.classList.add('count-update');
-        setTimeout(() => {
-            element.classList.remove('count-update');
-        }, 1000);
-    }
-});
-    
+            // animation to show count updates
+            function animateCountUpdate(element) {
+                element.classList.add('count-update');
+                setTimeout(() => {
+                    element.classList.remove('count-update');
+                }, 1000);
+            }
+        });
 
+        document.addEventListener('DOMContentLoaded', function() {
+            // Listen for submit on any form in the document
+            document.addEventListener('submit', function(e) {
+                if (e.target.tagName.toLowerCase() === 'form') {
+                    const loader = document.getElementById('loader');
+                    if (loader) {
+                        loader.classList.remove('hidden');
+                        loader.classList.add('flex');
+                    }
+                }
+            }, true); // Use capture to catch early
+        });
     </script>
-    
-<!-- Discard Changes Modal -->
-<div id="discardChangesModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-    <div class="absolute inset-0 bg-black opacity-20"></div>
-    <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
-        <div class="flex items-center justify-between mb-2">
-            <span class="font-semibold text-lg">Discard Changes?</span>
-            <button onclick="closeDiscardChangesModal()" class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
+
+    <!-- Discard Changes Modal -->
+    <div id="discardChangesModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black opacity-20"></div>
+        <div class="relative bg-white rounded-xl shadow-lg max-w-md w-full p-6 z-10">
+            <div class="flex items-center justify-between mb-2">
+                <span class="font-semibold text-lg">Discard Changes?</span>
+                <button onclick="closeDiscardChangesModal()"
+                    class="text-2xl text-gray-500 hover:text-gray-700 cursor-pointer">&times;</button>
+            </div>
+            <div class="mb-4 text-gray-700">
+                Are you sure you want to discard your changes? All unsaved edits will be lost.
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="confirmDiscardChanges()"
+                    class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Close without
+                    saving</button>
+                <button onclick="closeDiscardChangesModal()"
+                    class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Keep editing</button>
+            </div>
         </div>
-        <div class="mb-4 text-gray-700">
-            Are you sure you want to discard your changes? All unsaved edits will be lost.
-        </div>
-        <div class="flex justify-end gap-2">
-            <button onclick="confirmDiscardChanges()" class="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100">Close without saving</button>
-            <button onclick="closeDiscardChangesModal()" class="px-4 py-2 rounded bg-red-700 text-white hover:bg-red-800">Keep editing</button>
-        </div> 
     </div>
-</div>       
     <div id="EditNotAllowedToast"
         class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
         role="alert">
@@ -1489,60 +1756,60 @@ document.addEventListener('DOMContentLoaded', function() {
                 onclick="document.getElementById('EditNotAllowedToast').style.display='none';">&times;</button>
         </div>
     </div>
-<!-- Archive Not Allowed Toast -->
-<div id="ArchiveNotAllowedToast"
-    class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
-    role="alert">
-    <div class="w-full flex justify-between">
-        <div class="flex items-center gap-4">
-            <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
-            <div>
-                <h6 class="font-bold font-['Manrope']">
-                    You are not authorized to archive this announcement.
-                </h6>
+    <!-- Archive Not Allowed Toast -->
+    <div id="ArchiveNotAllowedToast"
+        class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+        role="alert">
+        <div class="w-full flex justify-between">
+            <div class="flex items-center gap-4">
+                <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
+                <div>
+                    <h6 class="font-bold font-['Manrope']">
+                        You are not authorized to archive this announcement.
+                    </h6>
+                </div>
             </div>
+            <button type="button"
+                class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+                onclick="document.getElementById('ArchiveNotAllowedToast').style.display='none';">&times;</button>
         </div>
-        <button type="button"
-            class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
-            onclick="document.getElementById('ArchiveNotAllowedToast').style.display='none';">&times;</button>
     </div>
-</div>
-<!-- Restore Not Allowed Toast -->
-<div id="RestoreNotAllowedToast"
-    class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
-    role="alert">
-    <div class="w-full flex justify-between">
-        <div class="flex items-center gap-4">
-            <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
-            <div>
-                <h6 class="font-bold font-['Manrope']">
-                    You are not authorized to restore this announcement.
-                </h6>
+    <!-- Restore Not Allowed Toast -->
+    <div id="RestoreNotAllowedToast"
+        class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+        role="alert">
+        <div class="w-full flex justify-between">
+            <div class="flex items-center gap-4">
+                <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
+                <div>
+                    <h6 class="font-bold font-['Manrope']">
+                        You are not authorized to restore this announcement.
+                    </h6>
+                </div>
             </div>
+            <button type="button"
+                class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+                onclick="document.getElementById('RestoreNotAllowedToast').style.display='none';">&times;</button>
         </div>
-        <button type="button"
-            class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
-            onclick="document.getElementById('RestoreNotAllowedToast').style.display='none';">&times;</button>
     </div>
-</div>
-<!-- Delete Not Allowed Toast -->
-<div id="DeleteNotAllowedToast"
-    class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
-    role="alert">
-    <div class="w-full flex justify-between">
-        <div class="flex items-center gap-4">
-            <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
-            <div>
-                <h6 class="font-bold font-['Manrope']">
-                    You are not authorized to delete this announcement.
-                </h6>
+    <!-- Delete Not Allowed Toast -->
+    <div id="DeleteNotAllowedToast"
+        class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-400 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50"
+        role="alert">
+        <div class="w-full flex justify-between">
+            <div class="flex items-center gap-4">
+                <img src="{{ asset('images/warning.PNG') }}" alt="Warning Icon" class="w-6 h-6">
+                <div>
+                    <h6 class="font-bold font-['Manrope']">
+                        You are not authorized to delete this announcement.
+                    </h6>
+                </div>
             </div>
+            <button type="button"
+                class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
+                onclick="document.getElementById('DeleteNotAllowedToast').style.display='none';">&times;</button>
         </div>
-        <button type="button"
-            class="Cursor-pointer text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer"
-            onclick="document.getElementById('DeleteNotAllowedToast').style.display='none';">&times;</button>
     </div>
-</div>
 
 
 

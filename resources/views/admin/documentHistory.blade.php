@@ -40,13 +40,13 @@
                     <div class="relative w-40">
                         <select id="organizationFilter"
                             class="appearance-none border px-4 py-2 rounded-full bg-[#7A1212] text-white w-full pr-8 hover:bg-[#DAA520] hover:text-white transition-colors duration-200">
-                            <option class="bg-white text-black" value="Organization" disabled selected>Organization
+                            <option class="bg-white text-black truncate" value="Organization" disabled selected>Organization
                             </option>
-                            <option class="bg-white text-black" value="All">All Organizations</option>
+                            <option class="bg-white text-black truncate" value="All">All Organizations</option>
                             <!-- Dynamic organization options from database -->
                             @if(isset($availableOrganizations))
                                 @foreach($availableOrganizations as $org)
-                                    <option class="bg-white text-black" value="{{ $org }}">{{ $org }}</option>
+                                    <option class="bg-white text-black truncate" value="{{ $org }}">{{ $org }}</option>
                                 @endforeach
                             @endif
                         </select>
@@ -443,8 +443,8 @@
             <div class="w-full px-6 flex justify-end mb-8 mt-4">
                 <div class="relative inline-block">
                     <button id="floatingExportBtn"
-                        class="px-4 py-2 bg-[#7A1212] text-white rounded-full shadow-lg hover:bg-[#DAA520] transition-colors duration-200 flex items-center gap-2"
-                        onclick="toggleExportDropdown()">
+                        class="px-4 py-2 bg-[#7A1212] text-white rounded-full shadow-lg hover:bg-[#DAA520] transition-colors duration-200 flex items-center gap-2 {{ count($documents) === 0 ? 'opacity-50 cursor-not-allowed' : '' }}"
+                        onclick="toggleExportDropdown()" {{ count($documents) === 0 ? 'disabled' : '' }}>
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
@@ -1607,10 +1607,13 @@
         }, 5000);
     }
 
-    // Toggle export dropdown visibility
     function toggleExportDropdown() {
-        const dropdown = document.getElementById('exportDropdown');
-        dropdown.classList.toggle('hidden');
+        const floatingExportBtn = document.getElementById('floatingExportBtn');
+        // Only toggle dropdown if button is not disabled
+        if (!floatingExportBtn.disabled) {
+            const dropdown = document.getElementById('exportDropdown');
+            dropdown.classList.toggle('hidden');
+        }
     }
 
     // Close dropdown when clicking outside

@@ -8,6 +8,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Models\DocumentVersion;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Review;
+use App\Models\DocumentTimeline;
 
 class StudentTrackerController extends Controller
 {
@@ -85,6 +87,74 @@ class StudentTrackerController extends Controller
         return view('student.components.viewRecordSubmitted', compact('record'));
     }
 
+    // public function saveReturnedAttachment(Request $request, $id)
+    // {
+    //     $request->validate([
+    //         'returned_attachment' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:20480',
+    //         'comments' => 'nullable|string',
+    //     ]);
+
+    //     // Find the original document
+    //     $submittedDocument = \App\Models\SubmittedDocument::where('user_id', Auth::id())->findOrFail($id);
+
+    //     // Determine next version number
+    //     $latestVersion = DocumentVersion::where('document_id', $id)->max('version');
+    //     $nextVersion = $latestVersion ? $latestVersion + 1 : 2;
+
+    //     // Store the file
+    //     $file = $request->file('returned_attachment');
+    //     $originalName = $file->getClientOriginalName();
+    //     $filePath = $file->storeAs('documents', $originalName, 'public');
+
+    //     // Save as new DocumentVersion
+    //     $docVersion = DocumentVersion::create([
+    //         'document_id' => $id,
+    //         'uploaded_by' => Auth::id(),
+    //         'version' => $nextVersion,
+    //         'document_url' => $filePath,
+    //         'comments' => $request->comments,
+    //         'submitted_at' => now(),
+    //     ]);
+
+    //     // Update the latest review entry to status 'Under Review'
+    //     $review = Review::where('document_id', $id)
+    //         ->latest('created_at')
+    //         ->first();
+
+    //     if ($review) {
+    //         $review->status = 'Under Review';
+    //         $review->updated_at = now();
+    //         $review->save();
+    //     }
+
+    //     // Get timeline data from document_timeline table
+    //     $timeline = DocumentTimeline::with(['user', 'forwardedToUser'])
+    //         ->where('document_id', $id)
+    //         ->orderBy('created_at')
+    //         ->get()
+    //         ->map(function($entry) {
+    //             return [
+    //                 'id' => $entry->id,
+    //                 'action_type' => $entry->action_type,
+    //                 'status' => $entry->status,
+    //                 'message' => $entry->message,
+    //                 'user_id' => $entry->user_id,
+    //                 'user_name' => $entry->user->username ?? 'Unknown',
+    //                 'forwarded_to' => $entry->forwarded_to,
+    //                 'forwarded_to_name' => $entry->forwardedToUser->username ?? null,
+    //                 'created_at' => $entry->created_at,
+    //                 'updated_at' => $entry->updated_at,
+    //                 'user_role' => $entry->user->role_name ?? 'Unknown'
+    //             ];
+    //         });
+
+    //     // Update the submitted document's status to 'Under Review'
+    //     $submittedDocument->status = 'Under Review';
+    //     $submittedDocument->save();
+
+    //     return redirect()->back()->with('success', 'Returned document uploaded as version ' . $nextVersion);
+    // }
+
     public function saveReturnedAttachment(Request $request, $id)
     {
         $request->validate([
@@ -113,6 +183,59 @@ class StudentTrackerController extends Controller
             'comments' => $request->comments,
             'submitted_at' => now(),
         ]);
+
+        // Update the latest review entry
+        $review = Review::where('document_id', $id)
+            ->latest('created_at')
+            ->first();
+
+        // Update the submitted document's status to 'Resubmitted'
+        $submittedDocument->status = 'Resubmitted';
+        $submittedDocument->save();
+
+        // if ($review) {
+        //     $review->status = 'Resubmitted';
+        //     $review->updated_at = now();
+        //     $review->save();
+        // }
+
+        // Add a timeline entry for resubmission
+        DocumentTimeline::create([
+            'document_id' => $id,
+            'user_id' => Auth::id(),
+            'action_type' => 'resubmission',
+            'status' => 'resubmit',
+            'message' => 'Student resubmitted the document.',
+            'related_review_id' => $review ? $review->id : null,
+        ]);
+
+        // Delete the previous review entry for this document
+        Review::where('document_id', $id)->delete();
+
+        // Get timeline data from document_timeline table
+        $timeline = DocumentTimeline::with(['user', 'forwardedToUser'])
+            ->where('document_id', $id)
+            ->orderBy('created_at')
+            ->get()
+            ->map(function($entry) {
+                return [
+                    'id' => $entry->id,
+                    'action_type' => $entry->action_type,
+                    'status' => $entry->status,
+                    'message' => $entry->message,
+                    'user_id' => $entry->user_id,
+                    'user_name' => $entry->user->username ?? 'Unknown',
+                    'forwarded_to' => $entry->forwarded_to,
+                    'forwarded_to_name' => $entry->forwardedToUser->username ?? null,
+                    'created_at' => $entry->created_at,
+                    'updated_at' => $entry->updated_at,
+                    'user_role' => $entry->user->role_name ?? 'Unknown'
+                ];
+            });
+
+        // Update the submitted document's status to 'Under Review'
+        $submittedDocument->status = 'Under Review';
+        $submittedDocument->save();
 
         return redirect()->back()->with('success', 'Returned document uploaded as version ' . $nextVersion);
     }

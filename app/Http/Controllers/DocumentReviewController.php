@@ -237,7 +237,7 @@ class DocumentReviewController extends Controller
                     'forwarded_to_name' => $entry->forwardedToUser->username ?? null,
                     'created_at' => $entry->created_at,
                     'updated_at' => $entry->updated_at,
-                    'user_role' => $entry->user->role_name ?? 'Unknown'
+                    'user_role' => $entry->user->organization_acronym ?? $entry->user->role_name ?? 'Unknown'
                 ];
             });
             
@@ -314,57 +314,48 @@ class DocumentReviewController extends Controller
         try {
             $user = Auth::user();
             $document = SubmittedDocument::findOrFail($id);
-            
-            // Check if the document is either directly assigned to this admin
-            // OR if this admin has forwarded the document to someone else
-            $canAccess = ($document->received_by == $user->id) || 
-                        DocumentForward::where('document_id', $id)
-                                    ->where('forwarded_by', $user->id)
-                                    ->exists();
-            
-            if (!$canAccess) {
+
+            // Only allow if the current user is the receiver
+            if ($document->received_by != $user->id) {
                 return response()->json([
-                    'success' => false, 
+                    'success' => false,
                     'error' => 'This document is not assigned to you'
                 ], 403);
             }
-            
-            // Only create a review record if this user is the current receiver
-            if ($document->received_by == $user->id) {
-                // Check if a review already exists for this document by the current user
-                $existingReview = Review::where('document_id', $id)
-                    ->where('reviewed_by', $user->id)
-                    ->first();
-                    
-                // If no review exists, create one with "Under Review" status
-                if (!$existingReview) {
-                    $review = Review::create([
-                        'document_id' => $id,
-                        'reviewed_by' => $user->id,
-                        'status' => 'Under Review',
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ]);
-                    
-                    // Update document status to Under Review
-                    $document->status = 'Under Review';
-                    $document->save();
-                    
-                    // Add this to the timeline
-                    DocumentTimeline::create([
-                        'document_id' => $id,
-                        'user_id' => $user->id,
-                        'action_type' => 'review',
-                        'status' => 'under_review',
-                        'message' => 'Document opened for review',
-                        'related_review_id' => $review->id
-                    ]);
-                    
-                    // Dispatch event for notification
-                    event(new DocumentStatusUpdated($document));
-                }
+
+            // Check if a review already exists for this document by the current user (any status)
+            $existingReview = Review::where('document_id', $id)
+                ->where('reviewed_by', $user->id)
+                ->first();
+
+            // Only create a new review if none exists
+            if (!$existingReview) {
+                $review = Review::create([
+                    'document_id' => $id,
+                    'reviewed_by' => $user->id,
+                    'status' => 'Under Review',
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+
+                // Update document status to Under Review
+                $document->status = 'Under Review';
+                $document->save();
+
+                // Add this to the timeline
+                DocumentTimeline::create([
+                    'document_id' => $id,
+                    'user_id' => $user->id,
+                    'action_type' => 'review',
+                    'status' => 'under_review',
+                    'message' => 'Document opened for review',
+                    'related_review_id' => $review->id
+                ]);
+
+                // Dispatch event for notification
+                event(new DocumentStatusUpdated($document));
             }
-            
+
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
@@ -419,7 +410,7 @@ class DocumentReviewController extends Controller
             $this->logActivity(
                 'Approved',
                 'Submission #' . $document->id,
-                "{$user->username} approved submission titled '{$document->subject}'."
+                "{$user->role_name} approved submission titled '{$document->subject}'." //change the username to role_name
             );
             
             // Add to timeline - ONLY create the timeline entry here, not in the event
@@ -505,7 +496,7 @@ class DocumentReviewController extends Controller
             $this->logActivity(
                 'Returned',
                 'Submission #' . $document->id,
-                "{$user->username} returned document titled '{$document->subject}'."
+                "{$user->role_name} returned document titled '{$document->subject}'." // change the username to role_name
             );
             
             // Add to timeline - ONLY create the timeline entry here
@@ -646,6 +637,75 @@ class DocumentReviewController extends Controller
                 'currentTime' => now()->toIso8601String(),
                 'hasUpdates' => false,
                 'documents' => []
+            ], 200); // Return 200 to prevent frontend errors
+        }
+    }
+
+    /**
+    * Check for timeline updates and return any new entries
+    *
+    * @param \Illuminate\Http\Request $request
+    * @param int $id
+    * @return \Illuminate\Http\JsonResponse
+    */
+    public function checkTimelineUpdates(Request $request, $id)
+    {
+        try {
+            // Get the timestamp of the last update from the request
+            $lastUpdate = $request->input('lastUpdate');
+            $lastUpdateTime = $lastUpdate ? Carbon::parse($lastUpdate) : null;
+            
+            // Find the document
+            $document = SubmittedDocument::findOrFail($id);
+            
+            // Get timeline data from document_timeline table
+            $timelineQuery = DocumentTimeline::with(['user', 'forwardedToUser'])
+                ->where('document_id', $id)
+                ->orderBy('created_at');
+                
+            // If we have a last update timestamp, only get newer entries
+            if ($lastUpdateTime) {
+                $timelineQuery->where('created_at', '>', $lastUpdateTime);
+            }
+            
+            $timeline = $timelineQuery->get()
+                ->map(function($entry) {
+                    return [
+                        'id' => $entry->id,
+                        'action_type' => $entry->action_type,
+                        'status' => $entry->status,
+                        'message' => $entry->message,
+                        'user_id' => $entry->user_id,
+                        'user_name' => $entry->user->username ?? 'Unknown',
+                        'forwarded_to' => $entry->forwarded_to,
+                        'forwarded_to_name' => $entry->forwardedToUser->username ?? null,
+                        'created_at' => $entry->created_at,
+                        'updated_at' => $entry->updated_at,
+                        'user_role' => $entry->user->organization_acronym ?? $entry->user->role_name ?? 'Unknown'
+                    ];
+                });
+                
+            // Get the latest timestamp for the next check
+            $latestTimestamp = '';
+            if ($timeline->count() > 0) {
+                $latestTimestamp = $timeline->sortByDesc('created_at')->first()['created_at'];
+            } else {
+                // If no new entries, use the current time
+                $latestTimestamp = now()->toIso8601String();
+            }
+            
+            return response()->json([
+                'timeline' => $timeline,
+                'latestTimestamp' => $latestTimestamp,
+                'hasNewEntries' => $timeline->count() > 0
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Could not check for timeline updates',
+                'details' => $e->getMessage(),
+                'latestTimestamp' => now()->toIso8601String(),
+                'hasNewEntries' => false,
+                'timeline' => []
             ], 200); // Return 200 to prevent frontend errors
         }
     }

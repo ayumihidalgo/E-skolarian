@@ -86,60 +86,25 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#D9D9D9]/70" id="reportsTableBody">
-                        <!-- No Results Row - Initially Hidden -->
-                        <tr id="noResultsRow" class="hidden">
-                            <td colspan="4" class="text-center py-12 text-gray-500 font-[Lexend]">
-                                <div class="flex flex-col items-center justify-center">
-                                    <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
-                                    <span class="text-lg font-semibold mb-2">No reports found</span>
-                                    <span class="text-l text-gray-400">Try adjusting your search or filter to find what you're looking for.</span>
-                                    <button id="clearSearchBtn"
-                                        class="mt-6 px-4 py-2 bg-[#7A1212] text-white rounded-lg font-[Lexend] hover:bg-red-800 transition cursor-pointer focus:outline-none focus:ring-0">
-                                        Clear Search
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Data Rows -->
-                        @forelse($reports as $report)
-                            <tr class="cursor-pointer hover:bg-gray-50 {{ !$report->viewed ? 'bg-red-50 border-l-4 border-red-500' : '' }}" 
-                                    onclick="openReportModal({{ 
-                                        json_encode([
-                                            'id' => $report->id,
-                                            'created_at' => $report->created_at,
-                                            'email' => $report->email,
-                                            'description' => $report->description,
-                                           'attachment' => $report->file_path ? asset('storage/' . $report->file_path) : null
-                                        ]) 
-                                }})">
-                                <td class="w-[10%] px-13 py-2 whitespace-nowrap text-l {{ !$report->viewed ? 'text-red-700 font-semibold' : 'text-[#000000]' }} font-[Lexend]">
-                                    {{ $report->created_at->format('F j, Y') }}<br>
-                                    <span class="text-m {{ !$report->viewed ? 'text-red-500' : 'text-gray-500' }}">{{ $report->created_at->format('h:i A') }}</span>
-                                </td>
-                                <td class="w-[15%] px-6 py-1 whitespace-nowrap {{ !$report->viewed ? 'text-red-700 font-bold' : '' }}">
-                                    @if(!$report->viewed)
-                                        <div class="flex items-center">
-                                            <div class="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-2"></div>
-                                            RPT-{{ str_pad($report->id, 3, '0', STR_PAD_LEFT) }}
-                                        </div>
-                                    @else
-                                        RPT-{{ str_pad($report->id, 3, '0', STR_PAD_LEFT) }}
-                                    @endif
-                                </td>
-                                <td class="w-[25%] px-6 py-2 whitespace-nowrap {{ !$report->viewed ? 'text-red-700 font-semibold' : '' }}">
-                                    {{ $report->email }}
-                                </td>
-                                <td class="w-[45%] px-6 py-2 text-l {{ !$report->viewed ? 'text-red-700 font-semibold' : 'text-gray-900' }} font-[Lexend] max-w-l truncate">
-                                    <div class="max-w-full overflow-hidden text-ellipsis">
-                                        {{ Str::limit($report->description, 85) }}
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                        @endforelse
+                        <!-- Data Rows will be rendered by JS -->
                     </tbody>
                 </table>
+                <!-- No Results Row - OUTSIDE tbody for JS control, but INSIDE the table wrapper, BELOW thead/ABOVE pagination -->
+                <div id="noResultsRow" class="hidden bg-white h-[565px] flex items-center justify-center">
+                    <div class="w-full">
+                        <div class="text-center py-12 text-gray-500 font-[Lexend]">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fas fa-box-open text-5xl text-gray-300 mb-4"></i>
+                                <span class="text-lg font-semibold mb-2">No reports found</span>
+                                <span class="text-l text-gray-400">Try adjusting your search or filter to find what you're looking for.</span>
+                                <button id="clearSearchBtn"
+                                    class="mt-6 px-4 py-2 bg-[#7A1212] text-white rounded-lg font-[Lexend] hover:bg-red-800 transition cursor-pointer focus:outline-none focus:ring-0">
+                                    Clear Search
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -218,7 +183,9 @@
 </div>
 
 <!-- Filter Modal -->
-<div id="filterModal" class="hidden absolute right-[250px] top-[245px] w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+<div id="filterModal"
+    class="hidden absolute right-[250px] top-[245px] w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+    style="transition: left 0.2s, right 0.2s, top 0.2s;">
     <div class="p-4">
         <h3 class="text-sm font-semibold text-gray-900 mb-3 font-[Lexend]">Filter Reports</h3>
         
@@ -343,11 +310,29 @@ document.addEventListener('DOMContentLoaded', function() {
     function renderReports(reports, searchTerm = '') {
         tableBody.innerHTML = '';
 
+        // Hide the noResultsRow by default
+        const noResultsDiv = document.getElementById('noResultsRow');
+        if (noResultsDiv) noResultsDiv.classList.add('hidden');
+
         if (reports.length === 0) {
-            noResultsRow.classList.remove('hidden');
+            // Show the no results div just below the table header (above pagination)
+            if (noResultsDiv) {
+                noResultsDiv.classList.remove('hidden');
+                // Move the noResultsDiv just after the table (not inside tbody)
+                const table = tableBody.closest('table');
+                if (table && table.parentNode) {
+                    // Insert after the table, but before pagination if needed
+                    if (noResultsDiv.previousElementSibling !== table) {
+                        table.parentNode.insertBefore(noResultsDiv, table.nextSibling);
+                    }
+                }
+            }
             updatePagination(0);
             return;
         }
+
+        // Hide no results if there are rows
+        if (noResultsDiv) noResultsDiv.classList.add('hidden');
 
         // Calculate pagination
         const totalPages = Math.ceil(reports.length / itemsPerPage);
@@ -355,23 +340,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const endIndex = startIndex + itemsPerPage;
         const currentPageReports = reports.slice(startIndex, endIndex);
 
-        // Render current page reports
         currentPageReports.forEach(report => {
             const row = createReportRow(report);
-            
-            // Apply search highlighting if search term exists
             if (searchTerm) {
                 highlightSearchTerm(row, searchTerm);
             }
-            
             tableBody.appendChild(row);
         });
 
-        // Add no results row to DOM
-        tableBody.appendChild(noResultsRow);
-        noResultsRow.classList.add('hidden');
-
-        // Update pagination controls
         updatePagination(totalPages);
     }
 
@@ -618,12 +594,36 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const term = searchTerm.toLowerCase();
         return reports.filter(report => {
-            const dateStr = new Date(report.created_at).toLocaleDateString();
+            // Get the report date and format it for searching
+            const reportDate = new Date(report.created_at);
+            const formattedDate = reportDate.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            const formattedTime = reportDate.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            
+            // Include all searchable parts of the date
+            const monthName = reportDate.toLocaleDateString('en-US', { month: 'long' });
+            const monthNameShort = reportDate.toLocaleDateString('en-US', { month: 'short' });
+            const year = reportDate.getFullYear().toString();
+            const day = reportDate.getDate().toString();
+            
+            // Other searchable fields
             const reportId = `RPT-${String(report.id).padStart(3, '0')}`;
             const email = report.email || '';
             const description = report.description || '';
             
-            return dateStr.toLowerCase().includes(term) ||
+            return formattedDate.toLowerCase().includes(term) ||
+                   formattedTime.toLowerCase().includes(term) ||
+                   monthName.toLowerCase().includes(term) ||
+                   monthNameShort.toLowerCase().includes(term) ||
+                   year.includes(term) ||
+                   day.includes(term) ||
                    reportId.toLowerCase().includes(term) ||
                    email.toLowerCase().includes(term) ||
                    description.toLowerCase().includes(term);
@@ -636,10 +636,36 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const cells = row.querySelectorAll('td');
         cells.forEach(cell => {
-            const text = cell.textContent;
-            if (text.toLowerCase().includes(searchTerm.toLowerCase())) {
-                const regex = new RegExp(`(${searchTerm})`, 'gi');
-                cell.innerHTML = cell.innerHTML.replace(regex, '<mark style="background-color: yellow;">$1</mark>');
+            // Store original text content
+            const originalText = cell.textContent;
+            
+            // Check if this cell contains the search term
+            if (originalText.toLowerCase().includes(searchTerm.toLowerCase())) {
+                // Create a text node for proper highlighting
+                const textContent = cell.textContent;
+                
+                // Clear the cell
+                cell.innerHTML = '';
+                
+                // Create a regex that's case insensitive
+                const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                
+                // Split by matches
+                const parts = textContent.split(regex);
+                
+                // Reconstruct with highlighting
+                parts.forEach((part, index) => {
+                    if (part.toLowerCase() === searchTerm.toLowerCase()) {
+                        // This part matches the search term - highlight it
+                        const mark = document.createElement('mark');
+                        mark.style.backgroundColor = 'yellow';
+                        mark.textContent = part;
+                        cell.appendChild(mark);
+                    } else if (part) {
+                        // Regular text
+                        cell.appendChild(document.createTextNode(part));
+                    }
+                });
             }
         });
     }
@@ -862,7 +888,7 @@ document.addEventListener('DOMContentLoaded', function() {
             button.innerHTML = `
                 <svg class="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <path class="opacity-75" fill="currentColor" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 Generating PDF...
             `;
@@ -1346,6 +1372,54 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.classList.add('hidden');
     }
     window.closeDocumentViewer = closeDocumentViewer;
+
+    // Responsive positioning for filter modal (always below the filter button)
+    function updateFilterModalPosition() {
+        const modal = document.getElementById('filterModal');
+        const filterBtn = document.getElementById('openFilterModal');
+        if (!modal || !filterBtn) return;
+
+        // Reset styles
+        modal.style.left = '';
+        modal.style.right = '';
+        modal.style.top = '';
+        modal.style.width = '';
+        modal.style.transform = '';
+
+        // Get button position
+        const btnRect = filterBtn.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+
+        if (window.innerWidth < 640) {
+            // Small screens: modal full width below button
+            modal.style.position = 'absolute';
+            modal.style.left = '5vw';
+            modal.style.right = '5vw';
+            modal.style.width = '90vw';
+            modal.style.minWidth = '0';
+            modal.style.top = (btnRect.bottom + scrollTop + 8) + 'px';
+            modal.style.transform = '';
+        } else {
+            // Desktop: modal below button, right-aligned
+            modal.style.position = 'absolute';
+            modal.style.width = '16rem'; // 64 * 0.25rem
+            modal.style.minWidth = '';
+            // Align right edge of modal with right edge of button
+            const containerRect = modal.offsetParent ? modal.offsetParent.getBoundingClientRect() : { left: 0, top: 0 };
+            const rightOffset = (containerRect.right - btnRect.right) + 0;
+            modal.style.right = rightOffset + 'px';
+            modal.style.left = '';
+            modal.style.top = (btnRect.bottom + scrollTop + 8 - containerRect.top) + 'px';
+            modal.style.transform = '';
+        }
+    }
+    window.addEventListener('resize', updateFilterModalPosition);
+    document.addEventListener('DOMContentLoaded', updateFilterModalPosition);
+    // Also update position when opening the modal
+    document.getElementById('openFilterModal').addEventListener('click', function() {
+        setTimeout(updateFilterModalPosition, 0);
+    });
 });
 </script>
 @endsection

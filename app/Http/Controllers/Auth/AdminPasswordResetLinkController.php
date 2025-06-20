@@ -140,7 +140,7 @@ class AdminPasswordResetLinkController extends Controller
          $this->logActivity(
         'Reset',
         'Password',
-        "$user->organization_acronym reset their account password.",
+        "$user->role_name reset their account password.", //changed organization_acronym to role_name
         $user
     );
         // Always redirect as admin
