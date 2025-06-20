@@ -184,7 +184,7 @@
                                         <option class="bg-white text-black truncate cursor-pointer" value="Constitution and By-Laws">Constitution and By-Laws</option>
                                         <option class="bg-white text-black truncate cursor-pointer" value="Fundraising Activities">Fundraising Activities</option>
                                         <option class="bg-white text-black truncate cursor-pointer" value="Request Letter">Request Letter</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Off-Petition and Concern">Petition and Concern</option>
+                                        <option class="bg-white text-black truncate cursor-pointer" value="Petition and Concern">Petition and Concern</option>
                                         <option class="bg-white text-black truncate cursor-pointer" value="Memorandum of Agreement">Memorandum of Agreement</option>
                                         <option class="bg-white text-black truncate cursor-pointer" value="Off Campus Activities">Off Campus Activities</option>
                                         <option class="bg-white text-black truncate cursor-pointer" value="Others">Others</option>
