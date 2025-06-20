@@ -412,7 +412,7 @@
                             @endif
                         </div>
                     </div>
-                    @include('loading')                                           
+                    @include('loading')
                     <!-- Post New Announcements Modal -->
                     <div id="postAnnouncementModal" class="fixed inset-0 z-50 hidden">
                         <!-- Simple black overlay without blur -->
@@ -811,18 +811,25 @@
                 }
             }
 
-            const hasChanges =
+            // Only enable if valid AND there are changes
+            // Disable if schedule date/time is equal to original (no change)
+            const scheduleUnchanged = (
+                originalScheduleDate === currentScheduleDate &&
+                originalScheduleTime === currentScheduleTime &&
+                (Boolean(originalScheduleDate) === currentScheduleCheckbox)
+            );
+            btn.disabled = !(isValid && (
                 originalTitle !== title ||
                 originalContent !== content ||
-                scheduleChanged ||
-                audienceChanged;
-
-            // Only enable if valid AND there are changes
-            btn.disabled = !(isValid && hasChanges);
+                !scheduleUnchanged ||
+                audienceChanged
+            ));
             btn.style.opacity = (!btn.disabled) ? '1' : '0.5';
             btn.style.cursor = (!btn.disabled) ? 'pointer' : 'not-allowed';
         }
-
+        document.getElementById('editScheduleDate').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editScheduleTime').addEventListener('input', checkEditFormValidity);
+        document.getElementById('editScheduleCheckbox').addEventListener('change', checkEditFormValidity);
         document.getElementById('editTitle').addEventListener('input', checkEditFormValidity);
         document.getElementById('editContent').addEventListener('input', checkEditFormValidity);
         document.getElementById('editAudienceAll').addEventListener('change', checkEditFormValidity);
@@ -830,6 +837,9 @@
         document.querySelectorAll('.editAudienceStudent').forEach(cb => {
             cb.addEventListener('change', checkEditFormValidity);
         });
+
+        // Add event listeners for schedule date and time fields in edit modal
+
 
         function clearAnnouncementForm() {
             document.getElementById('titleInput').value = '';
@@ -1695,17 +1705,17 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-        // Listen for submit on any form in the document
-        document.addEventListener('submit', function(e) {
-            if (e.target.tagName.toLowerCase() === 'form') {
-                const loader = document.getElementById('loader');
-                if (loader) {
-                    loader.classList.remove('hidden');
-                    loader.classList.add('flex');
+            // Listen for submit on any form in the document
+            document.addEventListener('submit', function(e) {
+                if (e.target.tagName.toLowerCase() === 'form') {
+                    const loader = document.getElementById('loader');
+                    if (loader) {
+                        loader.classList.remove('hidden');
+                        loader.classList.add('flex');
+                    }
                 }
-            }
-        }, true); // Use capture to catch early
-    });
+            }, true); // Use capture to catch early
+        });
     </script>
 
     <!-- Discard Changes Modal -->
