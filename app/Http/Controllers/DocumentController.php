@@ -118,9 +118,16 @@ class DocumentController extends Controller
                 }
 
                 Session::put('guest_submitted', true);
-                return redirect()->route('guest.submissionSuccess');
+                return back()->with([
+                    'success' => 'Document submitted successfully!',
+                    'control_tag' => $document->control_tag,
+                    'guest_confirm_popup' => true, // Flag to trigger redirect after hitting "Confirm" in the control tag popup
+                ]);
             }
-            return back()->with('success', 'Document submitted successfully!');
+            return back()->with([
+                'success' => 'Document submitted successfully!',
+                'control_tag' => $document->control_tag,
+            ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->validator)->withInput();
         } catch (\Exception $e) {
