@@ -178,15 +178,11 @@
                                     <select id="documentTypeFilter" class="block cursor-pointer appearance-none w-full bg-[#7A1212] hover:bg-[#DAA520] text-white py-2 px-4 pr-6 rounded-full leading-tight hover:text-white transition-colors duration-200 truncate">
                                         <option class="bg-white text-black truncate" value="" disabled selected>Document Type</option>
                                         <option class="bg-white text-black truncate cursor-pointer" value="">All</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Event Proposal">Event Proposal</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="General Plan">General Plan of Activities</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Reports of Proceedings">Reports of Proceedings</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Constitution and By-Laws">Constitution and By-Laws</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Fundraising Activities">Fundraising Activities</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Request Letter">Request Letter</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Petition and Concern">Petition and Concern</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Memorandum of Agreement">Memorandum of Agreement</option>
-                                        <option class="bg-white text-black truncate cursor-pointer" value="Off Campus Activities">Off Campus Activities</option>
+                                        @foreach($documentTypes as $type)
+                                            <option class="bg-white text-black truncate cursor-pointer" value="{{ $type }}" {{ $selectedType == $type ? 'selected' : '' }}>
+                                                {{ $type }}
+                                            </option>
+                                        @endforeach
                                         <option class="bg-white text-black truncate cursor-pointer" value="Others">Others</option>
                                     </select>
                                     <div class="pointer-events-none absolute top-2 right-0 flex items-center px-3 text-white">
@@ -454,10 +450,11 @@
                 <div id="detailsView" class="hidden h-auto text-white">
                     <!-- Header with close button -->
                     <div class="flex items-start justify-between px-3 md:px-6 mb-2 md:mb-0">
-                        <h2 class="font-extrabold text-4xl md:text-2xl text-black">Admin Review</h2>
+                        <h2 class="font-extrabold text-xl md:text-2xl text-black">Admin Review</h2>
                         <!-- Action Buttons -->
                         <div class="flex justify-end space-x-2 mt-3 md:mt-4">
                             <div id="actionButtonsContainer" class="flex space-x-2 order-first md:order-none">
+                                <button id="forwardButton" class="bg-[#E28400] hover:bg-yellow-700 text-white font-bold py-1.5 md:py-2 px-5 md:px-8 text-sm md:text-base rounded-full cursor-pointer">Forward</button>
                                 <button id="rejectButton" class="bg-[#C42E2E] hover:bg-red-700 text-white font-bold py-1.5 md:py-2 px-6 md:px-10 text-sm md:text-base rounded-full cursor-pointer">Return</button>
                                 <button id="approveButton" class="bg-[#478642] hover:bg-green-700 text-white font-bold py-1.5 md:py-2 px-5 md:px-8 text-sm md:text-base rounded-full cursor-pointer">Approve</button>
                             </div>
@@ -542,7 +539,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                 <!-- Returned status indicator - Initially hidden, will be shown by JS -->
+                                <!-- Returned status indicator - Initially hidden, will be shown by JS -->
                                 <div id="returnedStatusIndicator" class="hidden mt-2 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 rounded max-h-[200px] overflow-y-auto" style="scrollbar-width: thin; scrollbar-color: rgba(0, 142, 188, 0.53) transparent;">
                                     <div class="flex">
                                         <div class="flex-shrink-0">
@@ -554,6 +551,21 @@
                                             <p class="text-sm font-medium break-words">You've requested resubmission for this document on <span id="forwardedDate">loading date...</span></p>
                                             <p class="text-sm mt-1 break-words">Message: <span id="forwardedMessage" class="italic break-words">Loading message...</span></p>
                                             <p class="text-xs mt-2 font-medium break-words">You can still view this document, but you can only perform actions once the organization resubmits the document.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Forwarded status indicator - Initially hidden, will be shown by JS -->
+                                <div id="forwardedStatusIndicator" class="hidden mt-2 p-3 bg-blue-100 border-l-4 border-blue-500 text-blue-700 rounded max-h-[200px] overflow-y-auto" style="scrollbar-width: thin; scrollbar-color: rgba(0, 142, 188, 0.53) transparent;">
+                                    <div class="flex">
+                                        <div class="flex-shrink-0">
+                                            <svg class="h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div class="ml-3 overflow-hidden">
+                                            <p class="text-sm font-medium break-words">You've forwarded document to <span id="forward-recipient" class="font-semibold">loading admin...</span> on <span id="forward-date">loading date...</span></p>
+                                            <p class="text-sm mt-1 break-words">Message: <span id="forward-message" class="italic break-words">Loading message...</span></p>
+                                            <p class="text-xs mt-2 font-medium break-words">You can still view this document, but you can only perform actions once the admin forwards the document again.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -659,6 +671,78 @@
                             Download Document
                         </a>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forward Document Modal -->
+        <div id="forwardModal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
+            <div class="bg-white w-[30rem] rounded-2xl shadow-xl p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-lg font-bold text-black">FORWARD</h3>
+                    <button id="closeForwardModalBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <p class="text-sm text-gray-600 mb-8">
+                    SEND TO ANOTHER ADMIN
+                </p>
+                
+                <div class="mt-4 space-y-4">
+                    <div>
+                        <div class="relative">
+                            <label for="adminSelect" class="absolute -top-2 left-10 bg-white px-1 text-xs text-black font-bold">Send to</label>
+                            <select id="adminSelect" class="block w-full border border-black rounded-md py-2 px-3 shadow-sm focus:ring-[#7A1212] focus:border-[#7A1212] text-sm">
+                                <option value="" disabled selected>Select admin</option>
+                                <!-- Admin options will be populated via JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="relative mt-1">
+                            <label for="forwardMessage" class="absolute -top-2 left-6 bg-white px-1 text-xs text-black font-bold">Message</label>
+                            <textarea id="forwardMessage" rows="4" class="mt-1 block w-full border border-black rounded-md py-2 px-3 shadow-sm focus:ring-[#7A1212] focus:border-[#7A1212] text-sm"></textarea>
+                            <div class="text-right text-xs text-gray-500 mt-1">
+                                <span id="forwardMessageCounter">0/500</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <button id="submitForwardBtn" class="w-full bg-[#7A1212] hover:bg-[#5e0b0b] text-white py-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7A1212] focus:ring-opacity-50 text-sm font-semibold uppercase cursor-pointer">
+                            Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forward Confirmation Modal -->
+        <div id="forwardConfirmationModal" class="hidden fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm" style="background-color: rgba(0,0,0,0.3);">
+            <div class="bg-white w-[30rem] rounded-lg shadow-xl p-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-lg font-semibold text-gray-800">Forward Confirmation</h3>
+                    <button id="closeForwardConfirmModalBtn" class="text-gray-500 hover:text-gray-700 focus:outline-none cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                
+                <p class="text-sm text-gray-600 mb-6">
+                   Are you sure you want to forward this document to <span id="selectedAdminName" class="font-semibold"></span>? This marks the document as forwarded, stopping any further review unless returned back by the admin.
+                </p>
+                
+                <div class="flex justify-end space-x-3">
+                    <button id="cancelForwardBtn" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 cursor-pointer">
+                        Cancel
+                    </button>
+                    <button id="finalizeForwardBtn" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 cursor-pointer">
+                        Confirm
+                    </button>
                 </div>
             </div>
         </div>
