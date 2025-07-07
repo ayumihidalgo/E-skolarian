@@ -16,6 +16,8 @@ class Review extends Model
         'document_id',
         'message',
         'status',
+        'forwarded_to',
+        'forward_message'
     ];
 
     /**
@@ -25,6 +27,15 @@ class Review extends Model
     {
         return $this->belongsTo(User::class, 'reviewed_by');
     }
+
+    /**
+     * Get the user to whom the document was forwarded
+     */
+    public function forwardedToUser()
+    {
+        return $this->belongsTo(User::class, 'forwarded_to', 'id');
+    }
+
 
     /**
      * Get the document being reviewed

@@ -6,10 +6,12 @@ window.openCommentAttachmentPreview = openCommentAttachmentPreview;
 // Added this line to make sortTable accessible globally
 window.sortTable = sortTable;
 window.reviewDecisionMade = false;
-
+// Mark that the document is now in forwarded state
+window.documentForwarded = false;
 const MESSAGE_CHARACTER_LIMITS = {
     'resubmissionMessage': 1000,   // For resubmission feedback (needs more detail)
-    'approvalMessage': 500         // For approval messages
+    'approvalMessage': 500,         // For approval messages
+    'forwardMessage': 500          // For forwarding messages
 };
 
 // Toast timeout storage
@@ -23,6 +25,7 @@ window.ASSET_URLS = window.ASSET_URLS || {
 // Variables to track comment polling
 let commentPollingInterval;
 let lastCommentTimestamp = '';
+let currentUserId = null;
 
 /**
  * Start polling for new comments
@@ -362,9 +365,7 @@ function createDocumentRow(doc) {
     
     // Get doc type display name
     const predefinedDocTypes = [
-        'Event Proposal', 'General Plan of Activities', 'Calendar of Activities',
-        'Accomplishment Report', 'Constitution and By-Laws', 'Request Letter',
-        'Off-Campus', 'Petition and Concern'
+         'Event Proposal', 'General Plan of Activities', 'Reports of Proceedings', 'Constitution and By-Laws', 'Fundraising Activities', 'Request Letter', 'Petition and Concern', 'Memorandum of Agreement', 'Off Campus Activities'
     ];
     const displayType = predefinedDocTypes.includes(doc.type) ? doc.type : 'Others';
     
@@ -490,7 +491,14 @@ function repositionActionButtons() {
         // If any status indicator is visible, the buttons should be hidden
         if ((processedStatusIndicator && !processedStatusIndicator.classList.contains('hidden')) || 
             (returnedStatusIndicator && !returnedStatusIndicator.classList.contains('hidden'))) {
-            container.classList.add('hidden');
+            // Keep the container visible but hide specific buttons
+            if (container) {
+                const rejectButton = document.getElementById('rejectButton');
+                const approveButton = document.getElementById('approveButton');
+                
+                if (rejectButton) rejectButton.classList.add('hidden');
+                if (approveButton) approveButton.classList.add('hidden');
+            }
         } else {
             container.classList.remove('hidden'); // Only show if document is not processed
         }
@@ -733,8 +741,8 @@ function fixModalLabelOverlap() {
     // Find the associated label
     const label = field.parentNode.querySelector('label[for="' + field.id + '"]');
     if (label) {
-      label.style.top = '-10px';
-      label.style.left = '10px';
+      label.style.top = '-8px';
+      label.style.left = '24px';
     }
   });
 }
@@ -936,6 +944,11 @@ function hideDocumentLoader() {
 }
 
 // Modify the handleRowClick function to show and hide the loader
+// Add a variable to track click state
+let isRowClickInProgress = false;
+let lastClickedRowId = null;
+let clickDebounceTimeout = null;
+
 function handleRowClick(row) {
     // Get document ID from the data attribute
     const documentId = row.getAttribute('data-document-id');
@@ -946,6 +959,33 @@ function handleRowClick(row) {
         console.error('Document ID is missing for this row.');
         return;
     }
+    
+    // Prevent double-clicks or clicks while another request is in progress
+    if (isRowClickInProgress) {
+        console.log("Click ignored - another request is already in progress");
+        return;
+    }
+    
+    // Prevent rapidly clicking the same row multiple times
+    if (lastClickedRowId === documentId && clickDebounceTimeout) {
+        console.log("Debouncing click on the same row");
+        return;
+    }
+    
+    // Set the lock to prevent concurrent requests
+    isRowClickInProgress = true;
+    lastClickedRowId = documentId;
+    
+    // Clear any existing timeout
+    if (clickDebounceTimeout) {
+        clearTimeout(clickDebounceTimeout);
+    }
+    
+    // Set a debounce timeout that will reset after 1 second
+    clickDebounceTimeout = setTimeout(() => {
+        isRowClickInProgress = false;
+        clickDebounceTimeout = null;
+    }, 1000);
     
     // Show the loader immediately when row is clicked
     showDocumentLoader();
@@ -1019,11 +1059,17 @@ function handleRowClick(row) {
         
         // Hide the loader now that everything is loaded
         hideDocumentLoader();
+        
+        // Reset click lock after successful load
+        isRowClickInProgress = false;
     })
     .catch(error => {
         console.error('Error:', error);
         // Hide the loader on error
         hideDocumentLoader();
+        
+        // Reset click lock on error to allow retry
+        isRowClickInProgress = false;
         
         // Show an error message to the user
         showDocumentActionToast('error', 'Failed to load document details: ' + error.message, false);
@@ -1054,6 +1100,7 @@ function initSearchAndFilters() {
     const documentTypeFilter = document.getElementById('documentTypeFilter');
     const searchButton = document.getElementById('searchButton');
     const clearButton = document.getElementById('clearButton');
+    const clearSearchBtn = document.getElementById('clearSearchBtn'); // Make sure this element exists
     
     // Initialize from URL parameters on page load
     const urlParams = new URLSearchParams(window.location.search);
@@ -1061,6 +1108,10 @@ function initSearchAndFilters() {
     // Set search input from URL
     if (searchInput && urlParams.has('search')) {
         searchInput.value = urlParams.get('search');
+        // Show clear button if there's a search value
+        if (searchInput.value.trim()) {
+            toggleSearchClearButton(true);
+        }
     }
     
     // Set organization filter from URL
@@ -1076,14 +1127,7 @@ function initSearchAndFilters() {
     // Set document type filter from URL
     if (documentTypeFilter && urlParams.has('documentType')) {
         const docTypeValue = urlParams.get('documentType');
-        
-        // Define the predefined document types
-        const predefinedDocTypes = [
-            "", "All", "Event Proposal", "General Plan", "Calendar", 
-            "Accomplishment Report", "Constitution", "Request Letter", 
-            "Off-Campus", "Petition"
-        ];
-        
+
         // First check if the value exists in the options
         const optionExists = Array.from(documentTypeFilter.options).some(option => option.value === docTypeValue);
         
@@ -1149,23 +1193,26 @@ function initSearchAndFilters() {
             
             // Special handling for "Others" document type filter
             if (documentTypeFilter && documentTypeFilter.value === "Others") {
-                // Show loader first (this line is missing)
+                // Show loader first
                 showLoader();
                 
-                // Create a custom search parameter that indicates we want documents 
-                // with types not in the predefined list
+                // Get all current document types from the dropdown (excluding empty, "All", and "Others" options)
+                const documentTypes = Array.from(documentTypeFilter.options)
+                    .filter(option => option.value && option.value !== 'Others' && option.value !== 'All')
+                    .map(option => option.value);
+                
+                // Create search parameters
                 const searchParams = new URLSearchParams(window.location.search);
                 
-                // Define the predefined document types (same list as above)
-                const predefinedDocTypes = [
-                    "", "All", "Event Proposal", "General Plan", "Calendar", 
-                    "Accomplishment Report", "Constitution", "Request Letter", 
-                    "Off-Campus", "Petition"
-                ];
-                
-                // Set a special parameter to indicate we want "other" document types
+                // Set document type to "Others"
                 searchParams.set('documentType', 'Others');
-                searchParams.set('excludeTypes', predefinedDocTypes.filter(t => t !== "" && t !== "All").join(','));
+                
+                // Add the excluded types
+                searchParams.set('excludeTypes', documentTypes.join(','));
+                
+                // Keep other existing parameters
+                if (searchInput.value) searchParams.set('search', searchInput.value);
+                if (organizationFilter.value) searchParams.set('organization', organizationFilter.value);
                 
                 // Update URL
                 const newUrl = window.location.pathname + '?' + searchParams.toString();
@@ -1180,11 +1227,11 @@ function initSearchAndFilters() {
                 .then(response => response.text())
                 .then(html => {
                     updateTableContent(html);
-                    hideLoader(); // Add this to hide loader when done
+                    hideLoader(); // Hide loader when done
                 })
                 .catch(error => {
                     console.error('Error fetching results:', error);
-                    hideLoader(); // Add this to hide loader on error
+                    hideLoader(); // Hide loader on error
                 });
             } else {
                 // For normal filters, apply the combined search and filters
@@ -1211,6 +1258,7 @@ function initSearchAndFilters() {
                 searchInput.value = '';
                 organizationFilter.selectedIndex = 0; // Use selectedIndex to reset to first option
                 documentTypeFilter.selectedIndex = 0; // Use selectedIndex to reset to first option
+                toggleSearchClearButton(false); // Hide the clear button
                 
                 // Reset URL and refresh content
                 history.pushState(null, '', window.location.pathname);
@@ -2039,6 +2087,7 @@ function updateDocumentDetailsView(docData) {
         const statusHistory = document.getElementById('statusHistory');
         const processedStatusIndicator = document.getElementById('processedStatusIndicator');
         const returnedStatusIndicator = document.getElementById('returnedStatusIndicator');
+        const forwardedStatusIndicator = document.getElementById('forwardedStatusIndicator');
         const actionButtonsContainer = document.getElementById('actionButtonsContainer');
 
         if (statusHistory && docData.timeline && Array.isArray(docData.timeline)) {
@@ -2147,6 +2196,10 @@ function updateDocumentDetailsView(docData) {
                             statusColor = 'text-white'; 
                             bgColor = 'bg-orange-700';
                             break;
+                        case 'forwarded':     
+                            statusColor = 'text-white'; 
+                            bgColor = 'bg-blue-700';
+                            break;
                         default:
                             statusColor = 'text-white/90';
                             bgColor = 'bg-[#B07575]';
@@ -2187,10 +2240,75 @@ function updateDocumentDetailsView(docData) {
             const finalDecisionExists = docData.has_decision;
             const isCurrentReceiver = docData.is_current_receiver;
             const isUnderReview = currentStatus === 'under_review';
+            const isApproved = currentStatus === 'approved';
 
             // Hide all status indicators first
             if (processedStatusIndicator) processedStatusIndicator.classList.add('hidden');
             if (returnedStatusIndicator) returnedStatusIndicator.classList.add('hidden');
+            if (forwardedStatusIndicator) forwardedStatusIndicator.classList.add('hidden');
+
+            if (docData.is_forwarded && forwardedStatusIndicator) {
+                // Hide action buttons
+                if (actionButtonsContainer) {
+                    actionButtonsContainer.classList.add('hidden');
+                }
+                
+                // Show forwarded status
+                forwardedStatusIndicator.classList.remove('hidden');
+                
+                // Update forwarded info
+                const forwardDate = document.getElementById('forward-date');
+                const forwardingMessage = document.getElementById('forward-message');
+                
+                if (forwardDate && docData.forward_info) {
+                    forwardDate.textContent = new Date(docData.forward_info.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                }
+
+                // Forward recipient information
+                if (forwardedStatusIndicator) {
+                    const forwardRecipient = document.getElementById('forward-recipient');
+                    if (forwardRecipient && docData.forward_info) {
+                        let recipientName = 'Another Admin'; // Default fallback
+
+                        // if (docData.forward_info) {
+                        //     console.log('Forward info structure:', JSON.stringify(docData.forward_info, null, 2));
+                        // }
+                        
+                        // Try to get the role name from the forwardedToUser relationship
+                        if (docData.forward_info.forwarded_to_user && docData.forward_info.forwarded_to_user.role_name) {
+                            recipientName = docData.forward_info.forwarded_to_user.role_name;
+                        } else if (docData.forward_info.forwarded_to_user && docData.forward_info.forwarded_to_user.username) {
+                            recipientName = docData.forward_info.forwarded_to_user.username;
+                        }
+                        
+                        forwardRecipient.textContent = recipientName;
+                        console.log('Forward recipient set to:', recipientName); // Debug log
+                    }
+                }
+                
+                if (forwardingMessage && docData.forward_info) {
+                    forwardingMessage.textContent = docData.forward_info.forward_message || 'No message provided';
+                }
+            } else if (isApproved) {
+                // Document is approved - show the processed indicator
+                if (processedStatusIndicator) {
+                    processedStatusIndicator.classList.remove('hidden');
+                }
+                
+                // Keep the container visible but hide specific buttons
+                if (actionButtonsContainer) {
+                    actionButtonsContainer.classList.remove('hidden');
+                    const rejectButton = document.getElementById('rejectButton');
+                    const approveButton = document.getElementById('approveButton');
+                    
+                    if (rejectButton) rejectButton.classList.add('hidden');
+                    if (approveButton) approveButton.classList.add('hidden');
+                }
+            }
             
             // First handle returned status specifically
             if (hasBeenReturned && !isUnderReview) {
@@ -2219,6 +2337,7 @@ function updateDocumentDetailsView(docData) {
                     }
                 }
             } 
+
             // Check if under review - show action buttons even if returned previously
             else if (isUnderReview && isCurrentReceiver) {
                 // If document is under review and user is the current receiver
@@ -2243,9 +2362,15 @@ function updateDocumentDetailsView(docData) {
             }
             // Then handle other cases
             else if (finalDecisionExists) {
-                // If a decision has been made, hide action buttons
-                if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
-                if (processedStatusIndicator) processedStatusIndicator.classList.remove('hidden');
+                // Keep the container visible but hide specific buttons
+                if (actionButtonsContainer) {
+                    actionButtonsContainer.classList.remove('hidden');
+                    const rejectButton = document.getElementById('rejectButton');
+                    const approveButton = document.getElementById('approveButton');
+                    
+                    if (rejectButton) rejectButton.classList.add('hidden');
+                    if (approveButton) approveButton.classList.add('hidden');
+                }
             } else if (!isCurrentReceiver) {
                 // If user is not the current receiver, hide buttons
                 if (actionButtonsContainer) actionButtonsContainer.classList.add('hidden');
@@ -2275,6 +2400,11 @@ function updateDocumentDetailsView(docData) {
 
 // Close button handler
 window.closeDetailsPanel = function() {
+    // Check if document is forwarded before closing
+    const forwardedStatusIndicator = document.getElementById('forwardedStatusIndicator');
+    const isForwarded = forwardedStatusIndicator && !forwardedStatusIndicator.classList.contains('hidden');
+    const docId = currentDocumentId;
+    
     // Hide details view and show table view
     document.getElementById('detailsView').classList.add('hidden');
     document.getElementById('tableView').classList.remove('hidden');
@@ -2289,6 +2419,25 @@ window.closeDetailsPanel = function() {
     // Reset lastCommentTimestamp
     lastCommentTimestamp = '';
     
+    // If document was forwarded, delete the review entry
+    if (isForwarded && docId) {
+        // Call API to delete the forwarded review
+        fetch(`/admin/reviews/forwarded/${docId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Forwarded review deletion result:', data);
+        })
+        .catch(error => {
+            console.error('Error deleting forwarded review:', error);
+        });
+    }
+    
     // Check if a review decision was made
     if (window.reviewDecisionMade) {
         console.log('Reloading table after review decision...');
@@ -2300,13 +2449,10 @@ window.closeDetailsPanel = function() {
         reloadTableData();
         
         // Optional: remove the row if you want to immediately hide it
-        // This is useful if your backend is removing it from the list anyway
         if (previousDocumentId) {
             const documentRow = document.getElementById(`document-row-${previousDocumentId}`);
             if (documentRow) {
-                // Either hide or remove the row
-                // documentRow.remove(); // Remove completely
-                documentRow.style.display = 'none'; // Or just hide it visually
+                documentRow.remove();
             }
         }
     }
@@ -3039,6 +3185,529 @@ window.closeDocumentViewer = function() {
     modal.classList.add('hidden');
 }
 
+// Fetch admin list for forward select dropdown
+function loadAdminList() {
+    fetch('/api/admins')
+        .then(response => response.json())
+        .then(admins => {
+            const adminSelect = document.getElementById('adminSelect');
+            if (!adminSelect) return;
+            
+            // Clear any existing options except the first disabled one
+            while (adminSelect.options.length > 1) {
+                adminSelect.remove(1);
+            }
+            
+            // Add admin options
+            admins.forEach(admin => {
+                // Skip the current user
+                if (admin.id === currentUserId) return;
+                
+                const option = document.createElement('option');
+                option.value = admin.id;
+                option.textContent = admin.role_name;
+                option.dataset.name = admin.role_name;
+                adminSelect.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading admin list:', error);
+        });
+}
+
+// Handle Forward button click
+document.addEventListener('DOMContentLoaded', function() {
+    const forwardButton = document.getElementById('forwardButton');
+    const forwardModal = document.getElementById('forwardModal');
+    const closeForwardModalBtn = document.getElementById('closeForwardModalBtn');
+    const adminSelect = document.getElementById('adminSelect');
+    const forwardMessage = document.getElementById('forwardMessage');
+    const submitForwardBtn = document.getElementById('submitForwardBtn');
+    
+    // Add forwardMessage to character limit tracking
+    setupCharacterLimits();
+    
+    // Track changes in the forward modal
+    let hasForwardModalChanges = false;
+    let originalAdminSelection = '';
+    let originalForwardMessage = '';
+    
+    // Function to check for unsaved changes in the forward modal
+    function checkForForwardModalChanges() {
+        if (!forwardModal || forwardModal.classList.contains('hidden')) {
+            return false;
+        }
+        
+        const currentAdminValue = adminSelect ? adminSelect.value : '';
+        const currentMessageValue = forwardMessage ? forwardMessage.value : '';
+        
+        // Check if either field has changed from its original state
+        return (currentAdminValue !== originalAdminSelection || 
+                currentMessageValue !== originalForwardMessage);
+    }
+    
+    // Function to update the global unsaved changes flag based on forward modal state
+    function updateUnsavedChangesFlag() {
+        hasForwardModalChanges = checkForForwardModalChanges();
+        // Update the global flag used by other functions
+        hasUnsavedChanges = hasForwardModalChanges;
+    }
+    
+    // Forward button click
+    if (forwardButton) {
+        forwardButton.addEventListener('click', function() {
+            // Load admin list when opening the modal
+            loadAdminList();
+            
+            // Show the forward modal
+            if (forwardModal) {
+                forwardModal.classList.remove('hidden');
+                
+                // Reset form
+                if (adminSelect) adminSelect.selectedIndex = 0;
+                if (forwardMessage) forwardMessage.value = '';
+                
+                // Store original values for tracking changes
+                originalAdminSelection = adminSelect ? adminSelect.value : '';
+                originalForwardMessage = '';
+                
+                // Store original values for unsaved changes tracking
+                if (forwardMessage) forwardMessage.setAttribute('data-original-value', '');
+                
+                // Reset the unsaved changes flag
+                hasForwardModalChanges = false;
+                
+                // Update character counter
+                updateCharacterCount(
+                    document.getElementById('forwardMessage'),
+                    document.getElementById('forwardMessageCounter'),
+                    MESSAGE_CHARACTER_LIMITS.forwardMessage
+                );
+            }
+        });
+    }
+    
+    // Track changes in admin select dropdown
+    if (adminSelect) {
+        adminSelect.addEventListener('change', function() {
+            updateUnsavedChangesFlag();
+        });
+    }
+    
+    // Track changes in forward message text area
+    if (forwardMessage) {
+        forwardMessage.addEventListener('input', function() {
+            updateUnsavedChangesFlag();
+        });
+    }
+    
+    // Close button
+    if (closeForwardModalBtn) {
+        closeForwardModalBtn.addEventListener('click', function(e) {
+            // Check for unsaved changes
+            if (checkForForwardModalChanges()) {
+                // Show confirmation popup
+                if (!window.confirm('You have unsaved changes. Are you sure you want to close this dialog?')) {
+                    // User clicked Cancel, prevent closing
+                    e.preventDefault();
+                    return;
+                }
+                // User clicked OK, reset flags and continue closing
+                hasForwardModalChanges = false;
+                hasUnsavedChanges = false;
+            }
+            forwardModal.classList.add('hidden');
+        });
+    }
+    
+    // Submit forward button
+    if (submitForwardBtn) {
+        submitForwardBtn.addEventListener('click', function() {
+            // Get the selected admin and message
+            const adminSelectField = document.getElementById('adminSelect');
+            const messageField = document.getElementById('forwardMessage');
+            const selectedAdmin = adminSelectField.value;
+            const message = messageField.value.trim();
+            
+            let hasErrors = false;
+            
+            // Validate admin selection
+            if (!selectedAdmin) {
+                // Show error styling
+                adminSelectField.classList.add('border-red-500');
+                
+                // Add error message below select if it doesn't exist already
+                let adminErrorMsg = document.getElementById('adminSelectError');
+                if (!adminErrorMsg) {
+                    adminErrorMsg = document.createElement('p');
+                    adminErrorMsg.id = 'adminSelectError';
+                    adminErrorMsg.className = 'text-red-500 text-sm mt-1';
+                    adminErrorMsg.textContent = 'Please select an admin to forward this document to.';
+                    adminSelectField.parentNode.appendChild(adminErrorMsg);
+                }
+                
+                // Shake the select field to indicate error
+                adminSelectField.classList.add('error-shake');
+                setTimeout(() => {
+                    adminSelectField.classList.remove('error-shake');
+                }, 500);
+                
+                hasErrors = true;
+            }
+            
+            // Validate message
+            if (!message) {
+                // Show error styling
+                messageField.classList.add('border-red-500');
+                
+                // Add error message below textarea if it doesn't exist already
+                let messageErrorMsg = document.getElementById('forwardMessageError');
+                if (!messageErrorMsg) {
+                    messageErrorMsg = document.createElement('p');
+                    messageErrorMsg.id = 'forwardMessageError';
+                    messageErrorMsg.className = 'text-red-500 text-sm mt-1';
+                    messageErrorMsg.textContent = 'Please provide a message for the forwarded document.';
+                    messageField.parentNode.appendChild(messageErrorMsg);
+                }
+                
+                // Shake the message field to indicate error
+                messageField.classList.add('error-shake');
+                setTimeout(() => {
+                    messageField.classList.remove('error-shake');
+                }, 500);
+                
+                hasErrors = true;
+            }
+            
+            // Stop execution if there are errors
+            if (hasErrors) {
+                return;
+            }
+            
+            // If validation passed, remove all error styling
+            adminSelectField.classList.remove('border-red-500');
+            messageField.classList.remove('border-red-500');
+            
+            const adminErrorMsg = document.getElementById('adminSelectError');
+            if (adminErrorMsg) {
+                adminErrorMsg.remove();
+            }
+            
+            const messageErrorMsg = document.getElementById('forwardMessageError');
+            if (messageErrorMsg) {
+                messageErrorMsg.remove();
+            }
+            
+            // Get the selected admin's name for the confirmation modal
+            const selectedOption = adminSelectField.options[adminSelectField.selectedIndex];
+            const adminName = selectedOption ? selectedOption.text : 'selected admin';
+            
+            // Show confirmation modal
+            const confirmationModal = document.getElementById('forwardConfirmationModal');
+            confirmationModal.classList.remove('hidden');
+            
+            // Set the selected admin name in the confirmation modal
+            const selectedAdminNameElement = document.getElementById('selectedAdminName');
+            if (selectedAdminNameElement) {
+                selectedAdminNameElement.textContent = adminName;
+            }
+        });
+    }
+
+    // Add real-time validation for admin select field
+    if (adminSelect) {
+        adminSelect.addEventListener('focus', function() {
+            this.classList.remove('border-red-500');
+            const errorMsg = document.getElementById('adminSelectError');
+            if (errorMsg) errorMsg.remove();
+        });
+        
+        adminSelect.addEventListener('change', function() {
+            if (this.value) {
+                this.classList.remove('border-red-500');
+                const errorMsg = document.getElementById('adminSelectError');
+                if (errorMsg) errorMsg.remove();
+            }
+            updateUnsavedChangesFlag();
+        });
+    }
+
+    // Add real-time validation for forward message field
+    if (forwardMessage) {
+        forwardMessage.addEventListener('focus', function() {
+            this.classList.remove('border-red-500');
+            const errorMsg = document.getElementById('forwardMessageError');
+            if (errorMsg) errorMsg.remove();
+        });
+        
+        forwardMessage.addEventListener('input', function() {
+            if (this.value.trim()) {
+                this.classList.remove('border-red-500');
+                const errorMsg = document.getElementById('forwardMessageError');
+                if (errorMsg) errorMsg.remove();
+            }
+            updateUnsavedChangesFlag();
+        });
+    }
+    
+    // Handle forward confirmation
+    const finalizeForwardBtn = document.getElementById('finalizeForwardBtn');
+    if (finalizeForwardBtn) {
+        finalizeForwardBtn.addEventListener('click', function() {
+            // Get the forward message and selected admin
+            const selectedAdmin = adminSelect.value;
+            const forwardMessage = document.getElementById('forwardMessage').value.trim();
+            
+            // Validate form
+            if (!selectedAdmin) {
+                showDocumentActionToast('forwarded', 'Please select an admin to forward this document to.', false);
+                return;
+            }
+            
+            if (!forwardMessage) {
+                showDocumentActionToast('forwarded', 'Please enter a message to accompany the forwarded document.', false);
+                return;
+            }
+
+            // Make sure we have a valid ID - ADD MORE DEBUGGING
+            console.log('Current Document ID before forward:', currentDocumentId);
+            if (!currentDocumentId) {
+                showDocumentActionToast('forwarded', "Error: Document ID is missing. Please try again.", false);
+                return;
+            }
+            
+            // Reset the flag since we're submitting the form
+            hasForwardModalChanges = false;
+            hasUnsavedChanges = false;
+            
+            // Reset original message values
+            originalAdminSelection = '';
+            originalForwardMessage = '';
+            
+            // Show loading state
+            setButtonLoading('finalizeForwardBtn', true, 'forwardConfirmationModal');
+
+            // Disable cancel button for the finalize forwarding modal when submitting
+            const cancelForwardBtn = document.getElementById('cancelForwardBtn');
+            const closeForwardConfirmModalBtn = document.getElementById('closeForwardConfirmModalBtn');
+
+            // Set button to disabled state
+            if (cancelForwardBtn) {
+                cancelForwardBtn.disabled = true;
+                cancelForwardBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                cancelForwardBtn.style.pointerEvents = 'none';
+            }
+
+            // Also disable the close button
+            if (closeForwardConfirmModalBtn) {
+                closeForwardConfirmModalBtn.disabled = true;
+                closeForwardConfirmModalBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                closeForwardConfirmModalBtn.style.pointerEvents = 'none';
+            }
+            
+            // Submit the forward request
+            fetch(`/admin/documents/${currentDocumentId}/forward`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({
+                    forwarded_to: selectedAdmin,
+                    message: forwardMessage
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'Server error');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Reset the forward form fields
+                    if (adminSelect) adminSelect.selectedIndex = 0;
+                    if (document.getElementById('forwardMessage')) document.getElementById('forwardMessage').value = '';
+                    
+                    // Update character counter if it exists
+                    const forwardMessageCounter = document.getElementById('forwardMessageCounter');
+                    if (forwardMessageCounter) {
+                        forwardMessageCounter.textContent = '0/500';
+                    }
+                    
+                    // Show success toast
+                    showDocumentActionToast('forwarded', data.message, true);
+                    
+                    // Close the modals
+                    document.getElementById('forwardConfirmationModal').classList.add('hidden');
+                    document.getElementById('forwardModal').classList.add('hidden');
+
+                    // Mark that we've made a review decision
+                    window.reviewDecisionMade = true;
+                    window.documentForwarded = true;
+                    
+                    // IMPORTANT: Store currentDocumentId in a local variable before the fetch
+                    const docIdForRefresh = currentDocumentId;
+                    console.log('Document ID for refresh:', docIdForRefresh);
+                    
+                    // Validate the document ID again before making the refresh call
+                    if (!docIdForRefresh) {
+                        console.error('Document ID is null/undefined after forward success');
+                        showDocumentActionToast('forwarded', 'Document forwarded but unable to refresh details. Please reload the page.', false);
+                        return;
+                    }
+                    
+                    // Update the UI to reflect the forwarding
+                    fetch(`/admin/documents/${docIdForRefresh}/details`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => {
+                        console.log('Details fetch response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`Failed to fetch updated document details: ${response.status} ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(docData => {
+                        // Update the status history and other details
+                        updateDocumentDetailsView(docData);
+                        
+                        // Reload comments to include any system-generated comments
+                        loadComments(docIdForRefresh);
+                        
+                        // Update UI to show document is forwarded
+                        const actionButtonsContainer = document.getElementById('actionButtonsContainer');
+                        if (actionButtonsContainer) {
+                            actionButtonsContainer.classList.add('hidden');
+                        }
+                        
+                        // Show forwardedStatusIndicator
+                        const forwardedStatusIndicator = document.getElementById('forwardedStatusIndicator');
+                        if (forwardedStatusIndicator) {
+                            forwardedStatusIndicator.classList.remove('hidden');
+                            
+                            // Update the forwarded date and message
+                            const forwardDate = document.getElementById('forward-date');
+                            if (forwardDate) {
+                                forwardDate.textContent = new Date().toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric'
+                                });
+                            }
+                            
+                            const forwardMessageElement = document.getElementById('forward-message');
+                            if (forwardMessageElement) {
+                                forwardMessageElement.textContent = forwardMessage || 'No message provided';
+                            }
+                            
+                            // Update forward-recipient if it exists
+                            const forwardRecipient = document.getElementById('forward-recipient');
+                            if (forwardRecipient && docData.forward_info) {
+                                let recipientName = 'Another Admin'; // Default fallback
+
+                                // if (docData.forward_info) {
+                                //     console.log('Forward info structure:', JSON.stringify(docData.forward_info, null, 2));
+                                // }
+                                
+                                // Try to get the role name from the forwardedToUser relationship
+                                if (docData.forward_info.forwarded_to_user && docData.forward_info.forwarded_to_user.role_name) {
+                                    recipientName = docData.forward_info.forwarded_to_user.role_name;
+                                } else if (docData.forward_info.forwarded_to_user && docData.forward_info.forwarded_to_user.username) {
+                                    recipientName = docData.forward_info.forwarded_to_user.username;
+                                }
+                                
+                                forwardRecipient.textContent = recipientName;
+                                console.log('Forward recipient set to:', recipientName); // Debug log
+                            }
+                        }
+                        
+                        // Ensure other status indicators are hidden
+                        const processedStatusIndicator = document.getElementById('processedStatusIndicator');
+                        if (processedStatusIndicator) {
+                            processedStatusIndicator.classList.add('hidden');
+                        }
+                        
+                        const returnedStatusIndicator = document.getElementById('returnedStatusIndicator');
+                        if (returnedStatusIndicator) {
+                            returnedStatusIndicator.classList.add('hidden');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error refreshing document details:', error);
+                        console.error('Document ID used:', docIdForRefresh);
+                        console.error('Full URL attempted:', `/admin/documents/${docIdForRefresh}/details`);
+                        
+                        // Show a user-friendly message but don't treat this as a critical error
+                        // since the forward operation itself was successful
+                        showDocumentActionToast('forwarded', 'Document forwarded successfully, but page refresh failed. Please reload to see updated status.', true);
+                    });
+                } else {
+                    showDocumentActionToast('forwarded', data.error || 'Failed to forward document.', false);
+                }
+            })
+            .catch(error => {
+                console.error('Error forwarding document:', error);
+                showDocumentActionToast('forwarded', error.message || 'An error occurred while forwarding the document.', false);
+            })
+            .finally(() => {
+                // Reset button state
+                setButtonLoading('finalizeForwardBtn', false, 'forwardConfirmationModal');
+            });
+        });
+    }
+    
+    // Cancel forward confirmation
+    const cancelForwardBtn = document.getElementById('cancelForwardBtn');
+    if (cancelForwardBtn) {
+        cancelForwardBtn.addEventListener('click', function(e) {
+            // Check if we have unsaved changes in the forward modal
+            if (checkForForwardModalChanges()) {
+                // Show confirmation popup
+                if (!window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+                    // User clicked Cancel, prevent closing
+                    e.preventDefault();
+                    return;
+                }
+            }
+            document.getElementById('forwardConfirmationModal').classList.add('hidden');
+        });
+    }
+    
+    // Close forward confirmation modal
+    const closeForwardConfirmModalBtn = document.getElementById('closeForwardConfirmModalBtn');
+    if (closeForwardConfirmModalBtn) {
+        closeForwardConfirmModalBtn.addEventListener('click', function(e) {
+            // Check if we have unsaved changes in the forward modal
+            if (checkForForwardModalChanges()) {
+                // Show confirmation popup
+                if (!window.confirm('You have unsaved changes. Are you sure you want to close this dialog?')) {
+                    // User clicked Cancel, prevent closing
+                    e.preventDefault();
+                    return;
+                }
+            }
+            document.getElementById('forwardConfirmationModal').classList.add('hidden');
+        });
+    }
+    
+    // Add beforeunload event to handle page reload/navigation when changes exist
+    window.addEventListener('beforeunload', function(e) {
+        // Check if forward modal is open and has unsaved changes
+        if (!forwardModal.classList.contains('hidden') && checkForForwardModalChanges()) {
+            // Standard message for beforeunload event (browsers will show their own message)
+            const confirmationMessage = 'You have unsaved changes in the forward form. If you leave now, your changes will be lost.';
+            e.returnValue = confirmationMessage;
+            return confirmationMessage;
+        }
+    });
+});
+
 // Handle Approve button
 document.addEventListener('DOMContentLoaded', function () {
     const approveButton = document.getElementById('approveButton');
@@ -3407,9 +4076,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         loadComments(currentDocumentId);
                         
                         // Update UI to show document is approved
-                        const actionButtonsContainer = document.getElementById('actionButtonsContainer');
                         if (actionButtonsContainer) {
-                            actionButtonsContainer.classList.add('hidden');
+                            actionButtonsContainer.classList.remove('hidden');
+                            const rejectButton = document.getElementById('rejectButton');
+                            const approveButton = document.getElementById('approveButton');
+                            
+                            if (rejectButton) rejectButton.classList.add('hidden');
+                            if (approveButton) approveButton.classList.add('hidden');
                         }
                         
                         // Show processedStatusIndicator
@@ -3769,6 +4442,12 @@ function showDocumentActionToast(action, message = '', isSuccess = true) {
             defaultMessage = isSuccess 
                 ? 'The document has been returned to the submitter for revisions.' 
                 : 'Failed to return the document. Please try again later.';
+            break;
+        case 'forwarded':
+            title = isSuccess ? 'Document Forwarded Successfully' : 'Forward Failed';
+            defaultMessage = isSuccess 
+                ? 'The document has been forwarded to another admin.' 
+                : 'Failed to forward the document. Please try again later.';
             break;
         default:
             title = isSuccess ? 'Action Successful' : 'Action Failed';

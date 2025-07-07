@@ -4,10 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\SubmittedDocument;
 use App\Models\Review;
-use App\Models\DocumentForward;
-use App\Models\Document;
-use App\Models\DocumentVersion;
-use App\Notifications\DocumentResubmissionRequested;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -116,6 +112,15 @@ class DocumentReviewController extends Controller
                             ->unique()  // Remove duplicates
                             ->values(); // Reset array keys
         
+
+        // Get all unique document types from the submitted_documents table
+        $documentTypes = SubmittedDocument::distinct()
+                        ->orderBy('type')
+                        ->pluck('type')
+                        ->filter()  // Remove any null values
+                        ->unique()  // Remove duplicates
+                        ->values(); // Reset array keys
+
         // Apply document type filter if provided
         if ($selectedType && $selectedType !== 'All') {
             // Check if we're filtering for "Others"
@@ -130,23 +135,8 @@ class DocumentReviewController extends Controller
                     });
                 }
             } else {
-                // Original code for specific document type filtering
-                $docTypeMap = [
-                    'Event Proposal' => 'Event Proposal',
-                    'General Plan' => 'General Plan of Activities',
-                    'Reports' => 'Reports of Proceedings',
-                    'Constitution' => 'Constitution and By-Laws',
-                    'Fundraising' => 'Fundraising Activities',
-                    'Request Letter' => 'Request Letter',
-                    'Petition' => 'Petition and Concern',
-                    'Memorandum' => 'Memorandum of Agreement',
-                    'Off-Campus' => 'Off Campus Activities'
-                ];
-                
-                // Get full document type name
-                $fullTypeName = $docTypeMap[$selectedType] ?? $selectedType;
-                
-                $documentsQuery->where('type', 'LIKE', "%{$fullTypeName}%");
+                // Filter by exact document type
+                $documentsQuery->where('type', $selectedType);
             }
         }
         
@@ -194,10 +184,10 @@ class DocumentReviewController extends Controller
 
         // Check if this is an AJAX request
         if ($request->ajax()) {
-            return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType', 'organizations'));
+            return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType', 'organizations', 'documentTypes'));
         }
 
-        return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType', 'organizations'));
+         return view('admin.documentReview', compact('documents', 'tagColors', 'searchTerm', 'selectedOrg', 'selectedType', 'organizations', 'documentTypes'));
     }
 
     public function getDetails($id)
@@ -213,9 +203,19 @@ class DocumentReviewController extends Controller
             }
         ])
         ->where(function($query) use ($user) {
-            $query->where('received_by', $user->id);
+            // Allow access if user is current receiver OR if user has forwarded this document
+            $query->where('received_by', $user->id)
+                ->orWhereHas('reviews', function($reviewQuery) use ($user) {
+                    $reviewQuery->where('reviewed_by', $user->id);
+                });
         })
         ->findOrFail($id);
+
+        // Check if this document was forwarded by the current user
+        $forwardedByCurrentUser = Review::where('document_id', $id)
+            ->where('reviewed_by', $user->id)
+            ->where('status', 'Forwarded')
+            ->exists();
         
         // Determine if user is current receiver (for UI permission control)
         $isCurrentReceiver = $document->received_by == $user->id;
@@ -259,6 +259,14 @@ class DocumentReviewController extends Controller
             'status' => $document->status,
             'created_at' => $document->created_at,
             'organization' => $document->user ? $document->user->username : 'Unknown',
+            'is_forwarded' => $forwardedByCurrentUser,
+            'forward_info' => Review::where('document_id', $id)
+                ->where('reviewed_by', $user->id)
+                ->where('status', 'Forwarded')
+                ->with(['forwardedToUser' => function($query) {
+                    $query->select('id', 'username', 'role_name');
+                }])
+                ->first(),
             'user' => $document->user ? [
                 'id' => $document->user->id,
                 'username' => $document->user->username,
@@ -359,6 +367,145 @@ class DocumentReviewController extends Controller
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Forward a document to another admin for review
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function forwardDocument(Request $request, $id)
+    {
+        try {
+            $user = Auth::user();
+            $document = SubmittedDocument::where('received_by', Auth::id())
+                ->findOrFail($id);
+            
+            // Validate forwarded_to is a valid admin user
+            $forwardToAdmin = User::where('id', $request->input('forwarded_to'))
+                ->where('role', 'admin')
+                ->where('active', true)
+                ->firstOrFail();
+            
+            // Update the document receiver to the new admin
+            $previousReceiver = $document->received_by;
+            $document->received_by = $forwardToAdmin->id;
+            $document->status = 'Forwarded';
+            $document->save();
+            
+            // Find or create a review entry
+            $existingReview = Review::where('document_id', $id)
+                ->where('reviewed_by', Auth::id())
+                ->first();
+                
+            $reviewId = null;    
+            if ($existingReview) {
+                // Update the existing review
+                $existingReview->status = 'Forwarded';
+                $existingReview->forwarded_to = $forwardToAdmin->id;
+                $existingReview->forward_message = $request->input('message');
+                $existingReview->updated_at = now();
+                $existingReview->save();
+                $reviewId = $existingReview->id;
+                 // Delete the existing review
+                // $existingReview->delete();
+            } else {
+                // Create a new review
+                $review = Review::create([
+                    'document_id' => $id,
+                    'reviewed_by' => Auth::id(),
+                    'forwarded_to' => $forwardToAdmin->id,
+                    'status' => 'Forwarded',
+                    'forward_message' => $request->input('message'),
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+                $reviewId = $review->id;
+            }
+
+            // Log the activity
+            $this->logActivity(
+                'Forwarded',
+                'Submission #' . $document->id,
+                "{$user->role_name} forwarded document titled '{$document->subject}' to {$forwardToAdmin->username}."
+            );
+            
+            // Add to timeline
+            DocumentTimeline::create([
+                'document_id' => $id,
+                'user_id' => Auth::id(),
+                'action_type' => 'forward',
+                'status' => 'forwarded',
+                'message' => $request->input('message', 'Document forwarded for further review.'),
+                'forwarded_to' => $forwardToAdmin->id,
+                'related_review_id' => $reviewId
+            ]);
+            
+            // Dispatch event for notification
+            // event(new \App\Events\DocumentStatusUpdated($document));
+            
+            // // Notify the receiving admin
+            // $forwardToAdmin->notify(new \App\Notifications\DocumentForwarded([
+            //     'document_id' => $document->id,
+            //     'document_title' => $document->subject,
+            //     'message' => $request->input('message', 'Document forwarded for your review.'),
+            //     'forwarded_by' => $user->username
+            // ]));
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Document forwarded successfully to ' . $forwardToAdmin->username
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Document forwarding error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete the forwarded review entry for the current user
+     *
+     * @param int $documentId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteForwardedReview($documentId)
+    {
+        try {
+            $user = Auth::user();
+            
+            // Find the forwarded review by the current user
+            $review = Review::where('document_id', $documentId)
+                ->where('reviewed_by', $user->id)
+                ->where('status', 'Forwarded')
+                ->first();
+                
+            if ($review) {
+                // Delete the review
+                $review->delete();
+                
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Forwarded review deleted successfully'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No forwarded review found'
+                ], 404);
+            }
+        } catch (\Exception $e) {
+            Log::error('Error deleting forwarded review: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete forwarded review',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
