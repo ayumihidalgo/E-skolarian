@@ -205,12 +205,15 @@
                                                     <div class="flex items-center gap-3">
                                                         <span
                                                             class="ml-[1.2px] mt-[0.8px] w-3 h-3 rounded-full transition-all duration-300
-                                                            @if ($record->status === 'under_review' || $record->status === 'Approved') bg-green-400
-                                                            @elseif ($record->status === 'Returned' || $record->status === 'returned')
-                                                                bg-red-400
-                                                            @else
-                                                                bg-[#D4B2B2] @endif
-                                                            border-2 border-[#D4B2B2] shadow-lg z-10">
+                                                                @if ($record->status === 'under_review' || $record->status === 'Approved') bg-green-400
+                                                                @elseif ($record->status === 'Returned' || $record->status === 'returned')
+                                                                    bg-red-400
+                                                                @elseif ($record->status === 'Forwarded' || $record->status === 'forwarded')
+                                                                    bg-blue-400
+                                                                @else
+                                                                    bg-[#D4B2B2]
+                                                                @endif
+                                                                border-2 border-[#D4B2B2] shadow-lg z-10">
                                                         </span>
                                                         @if ($record->status === 'Approved')
                                                             <span>
@@ -226,6 +229,11 @@
                                                             <span>
                                                                 Rejected,
                                                                 {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'April 15 2025, 1:45PM' }}
+                                                            </span>
+                                                        @elseif ($record->status === 'Forwarded' || $record->status === 'forwarded')
+                                                            <span>
+                                                                Forwarded,
+                                                                {{ $record->reviewed_at ? $record->reviewed_at->format('F j Y, g:iA') : 'N/A' }}
                                                             </span>
                                                         @endif
                                                     </div>
