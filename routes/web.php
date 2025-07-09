@@ -228,10 +228,23 @@ Route::middleware(['auth', NoBackHistory::class, IsAdmin::class, CheckActiveStat
     Route::get('/admin/documents/{id}/details', [DocumentReviewController::class, 'getDetails'])->name('admin.documents.details');
     Route::post('/admin/documents/{id}/mark-as-opened', [DocumentReviewController::class, 'markAsOpened'])->name('admin.documents.mark-as-opened');
     Route::post('/admin/documents/{id}/approve', [DocumentReviewController::class, 'approveDocument'])->name('admin.documents.approve');
-    Route::post('/admin/documents/{id}/forward', [DocumentReviewController::class, 'forwardDocument'])->name('admin.documents.forward');
-    Route::post('/admin/documents/{id}/reject', [DocumentReviewController::class, 'rejectDocument'])->name('admin.documents.reject');
+    // Forward document to another admin
+    Route::post('/admin/documents/{id}/forward', [DocumentReviewController::class, 'forwardDocument'])->name('documents.forward');
+    Route::delete('/admin/reviews/forwarded/{documentId}', [DocumentReviewController::class, 'deleteForwardedReview'])->middleware('auth');
     Route::post('/admin/documents/{id}/request-resubmission', [DocumentReviewController::class, 'requestResubmission'])->name('admin.documents.request-resubmission');
-    Route::get('/admin/get-admins', [DocumentReviewController::class, 'getAdmins'])->name('admin.get-admins');
+    // API route to get admin users for forwarding
+    Route::get('/api/admins', function () {
+        $currentUser = Auth::user();
+        
+        return response()->json(
+            \App\Models\User::where('role', 'admin')
+                ->where('active', true)
+                ->where('id', '!=', $currentUser->id) // Exclude current logged-in user
+                ->select('id', 'username', 'role_name')
+                ->orderBy('username')
+                ->get()
+        );
+    })->middleware('auth');
     Route::post('/admin/restore-documents', [AdminDocumentController::class, 'restoreDocuments'])->name('admin.restoreDocuments');
     Route::post('/admin/archive-documents', [AdminDocumentController::class, 'archiveDocuments'])->name('admin.archiveDocuments');
     Route::post('/admin/select-all-documents', [AdminDocumentController::class, 'selectAllDocuments'])->name('admin.selectAllDocuments');

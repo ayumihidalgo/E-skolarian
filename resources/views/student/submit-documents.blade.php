@@ -389,6 +389,24 @@
         </div>
         @include('components.footer')
     </div>
+    <!-- Control Tag Pop-up -->
+    <div id="controlTagPopup" class="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50 hidden">
+        <div class="bg-white rounded-xl p-6 w-[95%] max-w-2xl shadow-lg text-gray-800">
+            <h1 class="text-2xl font-bold mb-2">Tag Tracker</h1>
+
+            <p class="mb-6 text-base">
+                Kindly write this document tag on your hard copy document:
+                <span class="font-bold">{{ session('control_tag') }}</span>
+            </p>
+
+            <div class="flex justify-end">
+                <button onclick="closeControlTagPopup()"
+                    class="w-full md:w-auto font-semibold px-4 py-2 bg-[#7A1212] text-white rounded-md hover:bg-[#a31515] cursor-pointer">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
     <!-- Error Toast -->
     <div id="errorToast"
         class="hidden fixed top-5 right-5 w-[90%] max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl bg-white border-l-4 border-red-300 text-gray-800 shadow-lg rounded-lg flex items-start px-5 py-2 space-x-3 z-50">
@@ -431,11 +449,12 @@
         <button type="button" onclick="hideToast('fail')"
             class="text-gray-500 hover:text-gray-700 text-2xl leading-none cursor-pointer self-center">&times;</button>
     </div>
-    <!-- Display document submision success message -->
+    <!-- Display control tag pop-up and document submision success message -->
     @if (session('success'))
         <script>
             window.addEventListener('DOMContentLoaded', () => {
                 showToast('success');
+                document.getElementById('controlTagPopup').classList.remove('hidden');
             });
         </script>
     @endif
@@ -895,6 +914,10 @@
             });
 
             setTimeout(() => firstEl.focus(), 0);
+        }
+
+        function closeControlTagPopup() {
+            document.getElementById("controlTagPopup").classList.add("hidden");
         }
 
         function closeConfirmPopup() {
